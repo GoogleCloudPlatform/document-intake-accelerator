@@ -256,3 +256,5 @@ For code reviewers, go to the Pull Requests page of the origin repo on Github.
 branch.
 * Alternatively, you can use Github CLI `gh` to check out a PR and run the codes locally: https://cli.github.com/manual/gh_pr_checkout
 * If all goes well with tests passed, click Merge pull request to merge the changes to the master.
+
+Test for PR changes
