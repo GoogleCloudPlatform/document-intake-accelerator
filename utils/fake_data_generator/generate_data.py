@@ -1,10 +1,16 @@
 from faker import Faker
+from faker.providers.phone_number import Provider
 import csv
 import json
 import datetime
 import argparse
 
 faker = None
+
+class CustomPhoneNumberProvider(Provider):
+    def custom_phone_number(self, country_code="+1", num_digits=9):
+        return f'{country_code}{self.msisdn()[:num_digits]}'
+
 
 def generate_data_row(fields, **options):
   row_data = {}
@@ -21,7 +27,11 @@ def generate_data_row(fields, **options):
 
     # Generate fake data if faker_function is defined. Otherwise, use the
     # default value.
-    if faker_function:
+    if faker_function == "phone_number":
+      field_value = faker.custom_phone_number(
+          country_code=str(field.get("country_code", "+1")),
+          num_digits=field.get("num_digits", 9))
+    elif faker_function:
       field_value = eval(f"faker.{faker_function}({params_str})")
     else:
       field_value = field["value"]
@@ -119,7 +129,10 @@ if __name__ == "__main__":
 
   print(f"Generating test data for {args.num_rows} rows...")
   config = load_config_file(args.config)
+
   faker = Faker(config.get("languages", ["en_US"]))
+  faker.add_provider(CustomPhoneNumberProvider)
+
   data = generate_data(config, args.num_rows, **options)
   write_to_csv(args.output, data)
 

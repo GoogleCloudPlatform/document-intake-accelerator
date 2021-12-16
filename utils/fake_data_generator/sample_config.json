@@ -46,7 +46,9 @@
     },
     {
       "name": "phone_number",
-      "faker_function": "phone_number"
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 9
     },
     {
       "name": "ip_address",
