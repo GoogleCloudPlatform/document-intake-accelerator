@@ -4,6 +4,8 @@ import csv
 import json
 import argparse
 import time
+import pathlib
+import re
 
 
 async def run_browser(config, data_list, **options):
@@ -29,7 +31,7 @@ async def run_page(page, config, data_row, screenshot_filename, **options):
   viewport_height = config.get("viewport_height", 1200)
 
   await page.setViewport({ "width": viewport_width, "height": viewport_height})
-  await page.goto("file:///Users/jonchen/workspace/claims-processing/utils/fake_data_generator/page_template.html")
+  await page.goto(f"file:///{pathlib.Path().resolve()}/page_template.html")
 
   # Adding font link in Head tag.
   font_tag = f'<link href="{config.get("font_link")}" rel="stylesheet">'
@@ -43,6 +45,7 @@ async def run_page(page, config, data_row, screenshot_filename, **options):
 
     .custom-font {
       font-family: """ + config.get("font_family") + """, serif;
+      font-size: """ + str(config.get("font_size", 12)) + """;
     }
   """
   css_class = "\\n" + css_class.replace("\n", " ") + "\\n"
@@ -51,7 +54,17 @@ async def run_page(page, config, data_row, screenshot_filename, **options):
   # Adding floating text tags to the end of Body tag.
   additional_tags = ""
   for field in config.get("fields", []):
-    data_value = data_row[field.get("name")]
+    field_name = field.get("name")
+    data_value = data_row[field_name]
+
+    # Extract sub value using regex.
+    if "regex" in field:
+      matches = re.match(field["regex"], data_value)
+      if not matches:
+        raise Exception(f"Unable to match value for {field_name} using regex: "
+            + field["regex"])
+      data_value = matches[field.get("regex_match_group", 1)]
+
     position_x = field.get("position_x", 0)
     position_y = field.get("position_y", 0)
     additional_tags += \
@@ -80,9 +93,6 @@ async def prepend_text_to_tag(page, css_selector, text):
   await page.evaluate(javascript)
 
 def generate_image(config, data_list, **options):
-  print(config)
-  print(data_list)
-
   asyncio.get_event_loop().run_until_complete(
     run_browser(config, data_list, **options))
 

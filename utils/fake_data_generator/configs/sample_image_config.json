@@ -1,10 +1,11 @@
 {
-  "image_file": "https://www.pdffiller.com/preview/16/821/16821874/large.png",
+  "image_file": "empty_forms/illinois_state.png",
   "image_name_prefix": "image-",
   "viewport_width": 800,
   "viewport_height": 1200,
   "font_link": "https://fonts.googleapis.com/css2?family=Reenie+Beanie",
   "font_family": "Reenie Beanie",
+  "font_size": 12,
   "row_limit": 1,
   "fields": [
     {
@@ -36,7 +37,9 @@
     {
       "name": "ssn",
       "position_x": 529,
-      "position_y": 172
+      "position_y": 172,
+      "regex": "(\\d{3})-(\\d{3})-(\\d{3})",
+      "regex_match_group": 1
     }
 
   ]
