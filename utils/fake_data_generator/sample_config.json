@@ -45,6 +45,14 @@
       "faker_function": "email"
     },
     {
+      "name": "phone_number",
+      "faker_function": "phone_number"
+    },
+    {
+      "name": "ip_address",
+      "faker_function": "ipv4"
+    },
+    {
       "name": "ssn",
       "faker_function": "ssn"
     },

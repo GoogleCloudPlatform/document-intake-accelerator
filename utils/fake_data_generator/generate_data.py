@@ -4,7 +4,7 @@ import json
 import datetime
 import argparse
 
-faker = Faker()
+faker = None
 
 def generate_data_row(fields, **options):
   row_data = {}
@@ -119,6 +119,7 @@ if __name__ == "__main__":
 
   print(f"Generating test data for {args.num_rows} rows...")
   config = load_config_file(args.config)
+  faker = Faker(config.get("languages", ["en_US"]))
   data = generate_data(config, args.num_rows, **options)
   write_to_csv(args.output, data)
 
