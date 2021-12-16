@@ -1,0 +1,43 @@
+{
+  "image_file": "https://www.pdffiller.com/preview/16/821/16821874/large.png",
+  "image_name_prefix": "image-",
+  "viewport_width": 800,
+  "viewport_height": 1200,
+  "font_link": "https://fonts.googleapis.com/css2?family=Reenie+Beanie",
+  "font_family": "Reenie Beanie",
+  "row_limit": 1,
+  "fields": [
+    {
+      "name": "name",
+      "position_x": 158,
+      "position_y": 175
+    },
+    {
+      "name": "address",
+      "position_x": 177,
+      "position_y": 199
+    },
+    {
+      "name": "city",
+      "position_x": 149,
+      "position_y": 224
+    },
+    {
+      "name": "state",
+      "position_x": 465,
+      "position_y": 223
+    },
+    {
+      "name": "zipcode",
+      "position_x": 598,
+      "position_y": 223,
+      "remove_quotes": true
+    },
+    {
+      "name": "ssn",
+      "position_x": 529,
+      "position_y": 172
+    }
+
+  ]
+}

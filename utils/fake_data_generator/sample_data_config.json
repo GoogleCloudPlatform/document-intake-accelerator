@@ -2,16 +2,8 @@
   "languages": ["en_US"],
   "fields": [
     {
-      "name": "first_name",
-      "faker_function": "first_name"
-    },
-    {
-      "name": "middle_name",
-      "faker_function": "first_name"
-    },
-    {
-      "name": "last_name",
-      "faker_function": "last_name"
+      "name": "name",
+      "faker_function": "name"
     },
     {
       "name": "date_of_birth",
@@ -32,17 +24,28 @@
       "faker_function": "address"
     },
     {
+      "name": "city",
+      "derive_from": "address",
+      "derive_sub_field": "city",
+      "derive_regex": "(.*)(\\\\n|\\n)([\\w\\s]*),?\\s*(\\w+)\\s*(\\d+)",
+      "derive_match_group": 3
+    },
+    {
       "name": "state",
-      "faker_function": "state"
+      "derive_from": "address",
+      "derive_regex": "(.*)(\\\\n|\\n)([\\w\\s]*),?\\s*(\\w+)\\s*(\\d+)",
+      "derive_match_group": 4
+    },
+    {
+      "name": "zipcode",
+      "derive_from": "address",
+      "derive_regex": "(.*)(\\\\n|\\n)([\\w\\s]*),?\\s*(\\w+)\\s*(\\d+)",
+      "derive_match_group": 5,
+      "double_quotes": true
     },
     {
       "name": "country",
       "value": "USA"
-    },
-    {
-      "name": "zipcode",
-      "faker_function": "zipcode",
-      "double_quotes": true
     },
     {
       "name": "email",
@@ -63,8 +66,16 @@
       "faker_function": "ssn"
     },
     {
+      "name": "employer",
+      "faker_function": "company"
+    },
+    {
       "name": "job_title",
       "faker_function": "job"
+    },
+    {
+      "name": "employer",
+      "faker_function": "company"
     }
   ],
   "conditions": []
