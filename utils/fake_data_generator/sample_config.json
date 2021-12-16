@@ -32,6 +32,10 @@
       "faker_function": "address"
     },
     {
+      "name": "state",
+      "faker_function": "state"
+    },
+    {
       "name": "country",
       "value": "USA"
     },
@@ -48,7 +52,7 @@
       "name": "phone_number",
       "faker_function": "phone_number",
       "country_code": "+1",
-      "num_digits": 9
+      "num_digits": 10
     },
     {
       "name": "ip_address",
