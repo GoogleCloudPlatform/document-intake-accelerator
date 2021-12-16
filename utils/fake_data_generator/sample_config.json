@@ -1,0 +1,71 @@
+{
+  "languages": ["en_US"],
+  "fields": [
+    {
+      "name": "first_name",
+      "faker_function": "first_name"
+    },
+    {
+      "name": "middle_name",
+      "faker_function": "first_name"
+    },
+    {
+      "name": "last_name",
+      "faker_function": "last_name"
+    },
+    {
+      "name": "date_of_birth",
+      "faker_function": "date_of_birth",
+      "faker_params": {
+        "tzinfo": null,
+        "minimum_age": 20,
+        "maximum_age": 65
+      },
+      "date_format": "%Y-%m-%d"
+    },
+    {
+      "name": "last_name",
+      "faker_function": "last_name"
+    },
+    {
+      "name": "address",
+      "faker_function": "address"
+    },
+    {
+      "name": "state",
+      "faker_function": "state"
+    },
+    {
+      "name": "country",
+      "value": "USA"
+    },
+    {
+      "name": "zipcode",
+      "faker_function": "zipcode",
+      "double_quotes": true
+    },
+    {
+      "name": "email",
+      "faker_function": "email"
+    },
+    {
+      "name": "phone_number",
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 10
+    },
+    {
+      "name": "ip_address",
+      "faker_function": "ipv4"
+    },
+    {
+      "name": "ssn",
+      "faker_function": "ssn"
+    },
+    {
+      "name": "job_title",
+      "faker_function": "job"
+    }
+  ],
+  "conditions": []
+}
