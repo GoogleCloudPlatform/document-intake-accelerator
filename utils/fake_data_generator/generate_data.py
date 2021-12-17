@@ -34,6 +34,12 @@ def generate_data_row(fields, **options):
           country_code=str(field.get("country_code", "+1")),
           num_digits=field.get("num_digits", 9))
 
+    elif faker_function == "address":
+      field_value = faker.address()
+      if field.get("exclude_po_box", True):
+        while re.match(".*(\s|\n)+(FPO|DPO|APO) (AA|AP|AE).*", field_value):
+          field_value = faker.address()
+
     elif faker_function:
       field_value = eval(f"faker.{faker_function}({params_str})")
 

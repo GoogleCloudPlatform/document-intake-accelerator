@@ -7,6 +7,7 @@ import time
 import pathlib
 import re
 import random
+from datetime import datetime
 
 
 async def run_browser(config, data_list, **options):
@@ -19,7 +20,7 @@ async def run_browser(config, data_list, **options):
     screenshot_filename = output_folder + "/" + \
       config.get("image_name_prefix", "image-") + str(index + 1) + ".png"
 
-    print(f"Generating image for row #{index + 1}")
+    print(f"Generating image for row #{index + 1}: {screenshot_filename}")
     if debug:
       print(data_row)
 
@@ -44,6 +45,7 @@ async def run_page(page, config, data_row, screenshot_filename, **options):
   # Adding font link in Head tag.
   font_option = random.choices(config.get("font_options", []))[0]
   font_tag = f'<link href="{font_option.get("font_link")}" rel="stylesheet">'
+  font_size = font_option.get("font_size", 14)
   await prepend_text_to_tag(page, "head", font_tag)
 
   # Adding image width class to style tag.
@@ -53,8 +55,8 @@ async def run_page(page, config, data_row, screenshot_filename, **options):
     }
 
     .custom-font {
-      font-family: """ + font_option.get("font_family") + """, serif;
-      font-size: """ + str(font_option.get("font_size", 14)) + """;
+      font-family: \\'""" + font_option.get("font_family") + """\\', serif;
+      font-size: """ + str(font_size) + """;
     }
   """
   css_class = "\\n" + css_class.replace("\n", " ") + "\\n"
@@ -63,8 +65,12 @@ async def run_page(page, config, data_row, screenshot_filename, **options):
   # Adding floating text tags to the end of Body tag.
   additional_tags = ""
   for field in config.get("fields", []):
-    field_name = field.get("name")
-    data_value = data_row[field_name]
+    field_name = field.get("name", None)
+
+    if "function" in field:
+      data_value = get_function_field_value(field)
+    else:
+      data_value = data_row[field_name]
 
     # Extract sub value using regex.
     if "regex" in field:
@@ -76,9 +82,11 @@ async def run_page(page, config, data_row, screenshot_filename, **options):
 
     position_x = field.get("position_x", 0)
     position_y = field.get("position_y", 0)
+    text_font_size = field.get("font_size", font_size)
     additional_tags += \
       f'<div class="float-text custom-font" \
-        style="top: {position_y}px; left: {position_x}px;">{data_value}</div>'
+        style="font-size: {text_font_size}px; top: {position_y}px; \
+        left: {position_x}px;">{data_value}</div>'
   await append_text_to_tag(page, "body", additional_tags)
 
   # Sleep 1 seconds
@@ -100,6 +108,18 @@ async def prepend_text_to_tag(page, css_selector, text):
     dom.innerHTML = '""" + text + """' + dom.innerHTML;
   """
   await page.evaluate(javascript)
+
+def get_function_field_value(field):
+  field_function = field.get("function", None)
+
+  if field_function == "today":
+    return datetime.today().strftime('%Y-%m-%d')
+
+  elif field_function == "text":
+    return field.get("text")
+
+  else:
+    return ""
 
 def generate_image(config, data_list, **options):
   asyncio.get_event_loop().run_until_complete(
@@ -160,7 +180,6 @@ if __name__ == "__main__":
 
   config = load_json_file(args.config)
   data_list = load_csv_file(args.data)
-
   generate_image(config, data_list, **options)
 
   print(f"Wrote {len(data_list)} images to {args.output_folder}")

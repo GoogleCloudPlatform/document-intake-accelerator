@@ -20,25 +20,31 @@
       "faker_function": "last_name"
     },
     {
+      "name": "full_address",
+      "faker_function": "address",
+      "exclude_po_box": true
+    },
+    {
       "name": "address",
-      "faker_function": "address"
+      "derive_from": "full_address",
+      "derive_regex": "(.*)(\\\\n|\\n)([\\w\\s]*),?\\s*(\\w+)\\s*(\\d+)",
+      "derive_match_group": 1
     },
     {
       "name": "city",
-      "derive_from": "address",
-      "derive_sub_field": "city",
+      "derive_from": "full_address",
       "derive_regex": "(.*)(\\\\n|\\n)([\\w\\s]*),?\\s*(\\w+)\\s*(\\d+)",
       "derive_match_group": 3
     },
     {
       "name": "state",
-      "derive_from": "address",
+      "derive_from": "full_address",
       "derive_regex": "(.*)(\\\\n|\\n)([\\w\\s]*),?\\s*(\\w+)\\s*(\\d+)",
       "derive_match_group": 4
     },
     {
       "name": "zipcode",
-      "derive_from": "address",
+      "derive_from": "full_address",
       "derive_regex": "(.*)(\\\\n|\\n)([\\w\\s]*),?\\s*(\\w+)\\s*(\\d+)",
       "derive_match_group": 5,
       "double_quotes": true

@@ -1,6 +1,6 @@
 {
-  "image_file": "empty_forms/illinois_state.png",
-  "image_name_prefix": "illinois-test-form-",
+  "image_file": "empty_forms/ohio_state.png",
+  "image_name_prefix": "ohio-test-form-",
   "viewport_width": 800,
   "viewport_height": 1200,
   "font_options": [
@@ -34,70 +34,79 @@
   "fields": [
     {
       "name": "name",
-      "position_x": 134,
-      "position_y": 230,
+      "position_x": 115,
+      "position_y": 317,
       "regex": "(\\w+) (\\w+)",
       "regex_match_group": 1
     },
     {
       "name": "name",
-      "position_x": 544,
-      "position_y": 230,
+      "position_x": 117,
+      "position_y": 355,
       "regex": "(\\w+) (\\w+)",
       "regex_match_group": 2
     },
     {
-      "name": "date_of_birth",
-      "position_x": 210,
-      "position_y": 249,
-      "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+      "name": "address",
+      "position_x": 65,
+      "position_y": 563
+    },
+    {
+      "name": "city",
+      "position_x": 76,
+      "position_y": 597
+    },
+    {
+      "name": "state",
+      "position_x": 412,
+      "position_y": 592
+    },
+    {
+      "name": "zipcode",
+      "position_x": 673,
+      "position_y": 592,
+      "regex": "\\\"(\\d*)\\\"",
       "regex_match_group": 1
     },
     {
-      "name": "date_of_birth",
-      "position_x": 274,
-      "position_y": 249,
-      "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+      "name": "phone_number",
+      "position_x": 54,
+      "position_y": 639,
+      "regex": "(\\+1)(\\d{3})(\\d{7})",
       "regex_match_group": 2
     },
     {
-      "name": "date_of_birth",
-      "position_x": 339,
-      "position_y": 249,
-      "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+      "name": "phone_number",
+      "position_x": 101,
+      "position_y": 639,
+      "regex": "(\\+1)(\\d{3})(\\d{7})",
       "regex_match_group": 3
     },
     {
       "name": "email",
-      "position_x": 153,
-      "position_y": 277
+      "position_x": 540,
+      "position_y": 897
     },
     {
-      "name": "ssn",
-      "position_x": 510,
-      "position_y": 208,
-      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
-      "regex_match_group": 1
+      "name": "name",
+      "position_x": 97,
+      "position_y": 961
     },
     {
-      "name": "ssn",
-      "position_x": 575,
-      "position_y": 208,
-      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
-      "regex_match_group": 2
+      "name": "name",
+      "position_x": 404,
+      "position_y": 961
     },
     {
-      "name": "ssn",
-      "position_x": 637,
-      "position_y": 208,
-      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
-      "regex_match_group": 3
+      "function": "today",
+      "position_x": 625,
+      "position_y": 959
     },
     {
       "function": "text",
       "text": "✔",
-      "position_x": 112,
-      "position_y": 930
+      "position_x": 52,
+      "position_y": 228
     }
   ]
 }
