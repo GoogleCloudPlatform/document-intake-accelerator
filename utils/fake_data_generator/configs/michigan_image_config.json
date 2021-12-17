@@ -1,0 +1,150 @@
+{
+  "image_file": "empty_forms/michigan_state.png",
+  "image_name_prefix": "michigan-test-form-",
+  "viewport_width": 800,
+  "viewport_height": 1200,
+  "font_options": [
+    {
+      "font_link": "https://fonts.googleapis.com/css2?family=Reenie+Beanie",
+      "font_family": "Reenie Beanie",
+      "font_size": 16
+    },
+    {
+      "font_link": "https://fonts.googleapis.com/css2?family=Shalimar",
+      "font_family": "Shalimar",
+      "font_size": 16
+    },
+    {
+      "font_link": "https://fonts.googleapis.com/css2?family=Oooh+Baby",
+      "font_family": "Oooh Baby",
+      "font_size": 16
+    },
+    {
+      "font_link": "https://fonts.googleapis.com/css2?family=Rock+Salt",
+      "font_family": "Rock Salt",
+      "font_size": 13
+    },
+    {
+      "font_link": "",
+      "font_family": "serif",
+      "font_size": 16
+    }
+  ],
+  "row_limit": 1,
+  "fields": [
+    {
+      "name": "name",
+      "position_x": 94,
+      "position_y": 179
+    },
+    {
+      "name": "address",
+      "position_x": 95,
+      "position_y": 241
+    },
+    {
+      "name": "city",
+      "position_x": 90,
+      "position_y": 304
+    },
+    {
+      "name": "state",
+      "position_x": 411,
+      "position_y": 305
+    },
+    {
+      "name": "zipcode",
+      "position_x": 484,
+      "position_y": 305,
+      "regex": "\\\"(\\d*)\\\"",
+      "regex_match_group": 1
+    },
+    {
+      "name": "date_of_birth",
+      "position_x": 91,
+      "position_y": 435,
+      "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+      "regex_match_group": 1
+    },
+    {
+      "name": "date_of_birth",
+      "position_x": 161,
+      "position_y": 435,
+      "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+      "regex_match_group": 2
+    },
+    {
+      "name": "date_of_birth",
+      "position_x": 214,
+      "position_y": 435,
+      "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+      "regex_match_group": 3
+    },
+    {
+      "name": "ssn",
+      "position_x": 297,
+      "position_y": 436,
+      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+      "regex_match_group": 1
+    },
+    {
+      "name": "ssn",
+      "position_x": 363,
+      "position_y": 436,
+      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+      "regex_match_group": 2
+    },
+    {
+      "name": "ssn",
+      "position_x": 423,
+      "position_y": 436,
+      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+      "regex_match_group": 3
+    },
+    {
+      "name": "phone_number",
+      "position_x": 92,
+      "position_y": 513,
+      "regex": "(\\+1)(\\d{3})(\\d{3})(\\d{4})",
+      "regex_match_group": 2
+    },
+    {
+      "name": "phone_number",
+      "position_x": 144,
+      "position_y": 513,
+      "regex": "(\\+1)(\\d{3})(\\d{3})(\\d{4})",
+      "regex_match_group": 3
+    },
+    {
+      "name": "phone_number",
+      "position_x": 207,
+      "position_y": 513,
+      "regex": "(\\+1)(\\d{3})(\\d{3})(\\d{4})",
+      "regex_match_group": 4
+    },
+    {
+      "name": "name",
+      "position_x": 94,
+      "position_y": 924,
+      "font_size": 24
+    },
+    {
+      "name": "function",
+      "function": "today",
+      "position_x": 635,
+      "position_y": 939
+    },
+    {
+      "function": "text",
+      "text": "✔",
+      "position_x": 561,
+      "position_y": 576
+    },
+    {
+      "function": "text",
+      "text": "✔",
+      "position_x": 455,
+      "position_y": 645
+    }
+  ]
+}

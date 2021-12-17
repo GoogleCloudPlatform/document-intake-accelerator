@@ -4,6 +4,7 @@ import csv
 import json
 import datetime
 import argparse
+import re
 
 faker = None
 
@@ -18,6 +19,7 @@ def generate_data_row(fields, **options):
     field_name = field["name"]
     faker_params = field.get("faker_params", {})
     faker_function = field.get("faker_function", None)
+    derive_from = field.get("derive_from", None)
     debug = options.get("debug", False)
 
     param_list = []
@@ -31,19 +33,27 @@ def generate_data_row(fields, **options):
       field_value = faker.custom_phone_number(
           country_code=str(field.get("country_code", "+1")),
           num_digits=field.get("num_digits", 9))
+
+    elif faker_function == "address":
+      field_value = faker.address()
+      if field.get("exclude_po_box", True):
+        while re.match(".*(\s|\n)+(FPO|DPO|APO) (AA|AP|AE).*", field_value):
+          field_value = faker.address()
+
     elif faker_function:
       field_value = eval(f"faker.{faker_function}({params_str})")
+
+    elif derive_from:
+      derive_regex = field.get("derive_regex", "")
+      matches = re.match(derive_regex, row_data[derive_from], re.IGNORECASE)
+      field_value = matches[field.get("derive_match_group", 1)]
+
     else:
       field_value = field["value"]
 
     # Convert string format.
     if isinstance(field_value, datetime.date) and "date_format" in field:
       field_value = field_value.strftime(field["date_format"])
-
-    # Convert all values to string and remove line breaks.
-    field_value = str(field_value)
-    field_value = " ".join(field_value.split())
-    field_value = field_value.replace("\n", " ")
 
     if field.get("single_quotes", False):
       field_value = f"'{field_value}'"
@@ -55,6 +65,12 @@ def generate_data_row(fields, **options):
   if debug:
     print("Adding row:")
     print(row_data)
+
+  # Convert all values to string and remove line breaks.
+  for field_key in row_data.keys():
+    field_value = str(field_value)
+    field_value = " ".join(field_value.split())
+    row_data[field_key] = row_data[field_key].replace("\n", " ")
 
   return row_data
 
@@ -79,10 +95,10 @@ def write_to_csv(file_name, data_list):
       csv_writer.writerow(row.values())
   return file_name
 
-def load_config_file(file_path):
+def load_json_file(file_path):
   with open(file_path, "r", encoding="utf-8") as f:
-    config = json.load(f)
-    return config
+    json_dict = json.load(f)
+    return json_dict
 
 def get_parser():
   # Read command line arguments
@@ -128,7 +144,7 @@ if __name__ == "__main__":
   }
 
   print(f"Generating test data for {args.num_rows} rows...")
-  config = load_config_file(args.config)
+  config = load_json_file(args.config)
 
   faker = Faker(config.get("languages", ["en_US"]))
   faker.add_provider(CustomPhoneNumberProvider)
