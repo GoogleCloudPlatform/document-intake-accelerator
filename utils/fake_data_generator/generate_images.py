@@ -6,6 +6,7 @@ import argparse
 import time
 import pathlib
 import re
+import random
 
 
 async def run_browser(config, data_list, **options):
@@ -18,8 +19,8 @@ async def run_browser(config, data_list, **options):
     screenshot_filename = output_folder + "/" + \
       config.get("image_name_prefix", "image-") + str(index + 1) + ".png"
 
+    print(f"Generating image for row #{index + 1}")
     if debug:
-      print(f"Generating image for row #{index + 1}")
       print(data_row)
 
     await run_page(page, config, data_row, screenshot_filename)
@@ -33,8 +34,16 @@ async def run_page(page, config, data_row, screenshot_filename, **options):
   await page.setViewport({ "width": viewport_width, "height": viewport_height})
   await page.goto(f"file:///{pathlib.Path().resolve()}/page_template.html")
 
+  # Update background image.
+  javascript = """
+    dom = document.querySelector('#form-image');
+    dom.setAttribute('src', '""" + config.get("image_file") + """');
+  """
+  await page.evaluate(javascript)
+
   # Adding font link in Head tag.
-  font_tag = f'<link href="{config.get("font_link")}" rel="stylesheet">'
+  font_option = random.choices(config.get("font_options", []))[0]
+  font_tag = f'<link href="{font_option.get("font_link")}" rel="stylesheet">'
   await prepend_text_to_tag(page, "head", font_tag)
 
   # Adding image width class to style tag.
@@ -44,8 +53,8 @@ async def run_page(page, config, data_row, screenshot_filename, **options):
     }
 
     .custom-font {
-      font-family: """ + config.get("font_family") + """, serif;
-      font-size: """ + str(config.get("font_size", 12)) + """;
+      font-family: """ + font_option.get("font_family") + """, serif;
+      font-size: """ + str(font_option.get("font_size", 14)) + """;
     }
   """
   css_class = "\\n" + css_class.replace("\n", " ") + "\\n"

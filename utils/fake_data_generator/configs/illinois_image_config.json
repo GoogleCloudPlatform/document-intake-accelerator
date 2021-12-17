@@ -1,11 +1,25 @@
 {
   "image_file": "empty_forms/illinois_state.png",
-  "image_name_prefix": "image-",
+  "image_name_prefix": "illinois-test-form-",
   "viewport_width": 800,
   "viewport_height": 1200,
-  "font_link": "https://fonts.googleapis.com/css2?family=Reenie+Beanie",
-  "font_family": "Reenie Beanie",
-  "font_size": 16,
+  "font_options": [
+    {
+      "font_link": "https://fonts.googleapis.com/css2?family=Shalimar",
+      "font_family": "Reenie Beanie",
+      "font_size": 16
+    },
+    {
+      "font_link": "https://fonts.googleapis.com/css2?family=Shalimar",
+      "font_family": "Shalimar",
+      "font_size": 16
+    },
+    {
+      "font_link": "https://fonts.googleapis.com/css2?family=Covered+By+Your+Grace",
+      "font_family": "Covered By Your Grace",
+      "font_size": 16
+    }
+  ],
   "row_limit": 1,
   "fields": [
     {
@@ -25,21 +39,21 @@
     {
       "name": "date_of_birth",
       "position_x": 210,
-      "position_y": 525,
+      "position_y": 249,
       "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
       "regex_match_group": 1
     },
     {
       "name": "date_of_birth",
       "position_x": 274,
-      "position_y": 525,
+      "position_y": 249,
       "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
       "regex_match_group": 2
     },
     {
       "name": "date_of_birth",
       "position_x": 339,
-      "position_y": 525,
+      "position_y": 249,
       "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
       "regex_match_group": 3
     },
