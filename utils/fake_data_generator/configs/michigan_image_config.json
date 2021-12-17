@@ -5,7 +5,7 @@
   "viewport_height": 1200,
   "font_options": [
     {
-      "font_link": "https://fonts.googleapis.com/css2?family=Shalimar",
+      "font_link": "https://fonts.googleapis.com/css2?family=Reenie+Beanie",
       "font_family": "Reenie Beanie",
       "font_size": 16
     },
@@ -22,7 +22,7 @@
     {
       "font_link": "https://fonts.googleapis.com/css2?family=Rock+Salt",
       "font_family": "Rock Salt",
-      "font_size": 16
+      "font_size": 13
     },
     {
       "font_link": "",

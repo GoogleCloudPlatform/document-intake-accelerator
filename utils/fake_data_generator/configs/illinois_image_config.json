@@ -5,7 +5,7 @@
   "viewport_height": 1200,
   "font_options": [
     {
-      "font_link": "https://fonts.googleapis.com/css2?family=Shalimar",
+      "font_link": "https://fonts.googleapis.com/css2?family=Reenie+Beanie",
       "font_family": "Reenie Beanie",
       "font_size": 16
     },
@@ -20,8 +20,8 @@
       "font_size": 16
     },
     {
-      "font_link": "https://fonts.googleapis.com/css2?family=Rock+Salt",
-      "font_family": "Rock Salt",
+      "font_link": "https://fonts.googleapis.com/css2?family=Shadows+Into+Light",
+      "font_family": "Shadows Into Light",
       "font_size": 16
     },
     {
@@ -35,35 +35,35 @@
     {
       "name": "name",
       "position_x": 134,
-      "position_y": 230,
+      "position_y": 225,
       "regex": "(\\w+) (\\w+)",
       "regex_match_group": 1
     },
     {
       "name": "name",
       "position_x": 544,
-      "position_y": 230,
+      "position_y": 225,
       "regex": "(\\w+) (\\w+)",
       "regex_match_group": 2
     },
     {
       "name": "date_of_birth",
       "position_x": 210,
-      "position_y": 249,
+      "position_y": 257,
       "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
       "regex_match_group": 1
     },
     {
       "name": "date_of_birth",
       "position_x": 274,
-      "position_y": 249,
+      "position_y": 257,
       "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
       "regex_match_group": 2
     },
     {
       "name": "date_of_birth",
       "position_x": 339,
-      "position_y": 249,
+      "position_y": 257,
       "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
       "regex_match_group": 3
     },
@@ -75,21 +75,21 @@
     {
       "name": "ssn",
       "position_x": 510,
-      "position_y": 208,
+      "position_y": 205,
       "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
       "regex_match_group": 1
     },
     {
       "name": "ssn",
       "position_x": 575,
-      "position_y": 208,
+      "position_y": 205,
       "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
       "regex_match_group": 2
     },
     {
       "name": "ssn",
       "position_x": 637,
-      "position_y": 208,
+      "position_y": 205,
       "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
       "regex_match_group": 3
     },
