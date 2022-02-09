@@ -45,8 +45,9 @@ class VertexPredictions:
         print(" deployed_model_id:", response.deployed_model_id)
         # See gs://google-cloud-aiplatform/schema/predict/prediction/image_classification_1.0.0.yaml for the format of the predictions.
         predictions = response.predictions
-        for prediction in predictions:
-            print(" prediction:", dict(prediction))
+        return dict(predictions[0])
+        # for prediction in predictions:
+        #     print(" prediction:", dict(prediction))
 
 
     def get_batch_predictions(self, job_name, gcs_inp_jsonl_path, gcs_outpath, model_id="2155997166533869568"):
@@ -80,7 +81,8 @@ if __name__ =="__main__":
 
     # vertex_predictor.get_batch_predictions(job_name='test_bp', gcs_inp_jsonl_path=inp, gcs_outpath=out)
 
-    img_path = "/Users/sumitvaise/Downloads/Dataset/Final/04_02_2022_11_16_28_Arkansas9_0.png"
-    vertex_predictor.endpoint_image_classification(endpoint_id='7305902922850631680',  filename=img_path)
+    img_path = "/Users/sumitvaise//Downloads/DocAI/Dataset/Final/04_02_2022_11_16_28_Arkansas9_0.png"
+    predictions = vertex_predictor.endpoint_image_classification(endpoint_id='7305902922850631680',  filename=img_path)
+    print(type(predictions))
 
 

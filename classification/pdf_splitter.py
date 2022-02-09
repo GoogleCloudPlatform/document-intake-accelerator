@@ -16,7 +16,7 @@ class PDFManager:
 
     def __init__(self, pdf_file, out_path):
         self.inp_file_pdf = pdf_file
-        self.out_path = out_path
+        self.out_path = out_path        
         self.timestamp = datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
         self.inp_doc = fitz.open(self.inp_file_pdf)
 
@@ -36,7 +36,7 @@ class PDFManager:
         Returns:
         """
         if page_num < self.inp_doc.page_count:
-            self.save2image(page_num, self.inp_doc.load_page(page_num), save)
+            return self.save2image(page_num, self.inp_doc.load_page(page_num), save)
         else:
             print("Page number doesnot exist")
             exit(-1)
@@ -58,6 +58,7 @@ class PDFManager:
             self.out_path, file_name[:-4] + "_%s.png"% str(pg_num))    
         if save: 
             pix.save(output)
+            return output
         else:
             return page
         
@@ -122,7 +123,10 @@ if __name__ == "__main__":
     for i_file in files:
         file_path = os.path.join(path, i_file)
         pdf_manager = PDFManager(file_path, outpath)
-        pdf_manager.split_save2img()
+
+        # extract any random page in image format of a pdf file
+        page_num=0 # front page
+        pdf_manager.split_save2img(page_num=0, save=True)
 
     # if args['split_into'] is 'images':
     #     pdf_manager.split_all_save2img()
