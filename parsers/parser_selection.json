@@ -1,0 +1,32 @@
+{
+  "driver_license":  {
+                "parser_name": "DriverLicenseParser",
+                "location": "us",
+                "processor_id": "baf0cf598e3ddd6b"
+  },
+
+  "driver_license_2":  {
+                "parser_name": "DocumentOCR",
+                "location": "us",
+                "processor_id": "b21eb6ae2ee990f9"
+  },
+
+  "birth_certificate":  null,
+
+  "utility_bill":  {
+                "parser_name": "UtilityParser",
+                "location": "us",
+                "processor_id": "73d7348f7955db4f"
+  },
+  "unemployment_form": {
+                "parser_name": "FormParser",
+                "location": "us",
+                "processor_id": "58d7348f7955db9c"
+  },
+  "bank_statement": {
+                "parser_name": "BankStatementParser",
+                "location": "us",
+                "processor_id": "32d7348f7955ed3f"
+  }
+}
+
