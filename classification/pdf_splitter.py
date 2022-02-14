@@ -68,7 +68,7 @@ class PDFManager:
         writer = PdfFileWriter()
         writer.addPage(page)
 
-        file_name = self.timestamp + '_' + os.path.basename(self.inp_file_pdf) 
+        file_name = os.path.basename(self.inp_file_pdf)[:-4] + '_' + self.timestamp + '.pdf'
         file_name = os.path.join(self.out_path, file_name[:-4] + "%s.pdf"% str(page_num))
 
         with open(file_name, "wb") as out_stream:
@@ -108,8 +108,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     ## Comment/delete later these 4 lines below
-    path = "/Users/sumitvaise/Downloads/Dataset/Arkansas/UE_forms"
-    outpath = "/Users/sumitvaise/Downloads/Dataset/Arkansas/UE_Imgs"
+    path = "/Users/sumitvaise/Downloads/DocAI/Dataset/pdf_forms/ClaimForms"
+    outpath = "/Users/sumitvaise/Downloads/DocAI/Dataset/Form_wise_images/Claim"
 
    # args['inp_pdf_path'], args['output'] = path, outpath
 
@@ -122,11 +122,12 @@ if __name__ == "__main__":
 
     for i_file in files:
         file_path = os.path.join(path, i_file)
-        pdf_manager = PDFManager(file_path, outpath)
+        if 'Arizona' in file_path:
+            pdf_manager = PDFManager(file_path, outpath)
 
-        # extract any random page in image format of a pdf file
-        page_num=0 # front page
-        pdf_manager.split_save2img(page_num=0, save=True)
+            # extract any random page in image format of a pdf file
+            page_num=0 # front page
+            pdf_manager.split_save2img(page_num=0, save=True)
 
     # if args['split_into'] is 'images':
     #     pdf_manager.split_all_save2img()
