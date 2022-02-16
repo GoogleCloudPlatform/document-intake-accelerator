@@ -1,10 +1,11 @@
 import json
 import os
 import proto
+import random
 from google.cloud import documentai_v1 as documentai
 
 
-def doc_extract(parser_details: dict, doc_path: str):
+def doc_extract(parser_details: dict, doc: str):
     """
     Parameters
     ----------
@@ -21,10 +22,11 @@ def doc_extract(parser_details: dict, doc_path: str):
     location = parser_details["location"]
     processor_id = parser_details["processor_id"]
     parser_name = parser_details["parser_name"]
-    # project_id = parser_details["project_name"]
-    project_id = os.environ['GCP_PROJECT']  # later read this variable from project config files
 
-    print(project_id, location, processor_id, parser_name)
+    # These variables will be removed later
+    project_id = "claims-processing-dev"  # later read this variable from project config files
+    doc_path = os.path.join(doc_folder, doc)
+    # print(project_id, location, processor_id, parser_name)
 
     opts = {}
 
@@ -46,12 +48,24 @@ def doc_extract(parser_details: dict, doc_path: str):
 
     result = client.process_document(request=request)
 
-    json_string = proto.Message.to_json(result.document)
+    parser_doc_data = result.document
+
+    # extract dl entities
+    extracted_entity_dict = dl_entities_extraction(parser_doc_data)
+
+    # save extracted entities json
+    with open("{}.json".format(os.path.join(extracted_entities, doc.split('.')[0])), "w") as outfile:
+        json.dump(extracted_entity_dict, outfile, indent=4)
+
+    # convert to json
+    json_string = proto.Message.to_json(parser_doc_data)
     data = json.loads(json_string)
 
     # Remove unnecessary information parser json response
     not_required_attributes_from_parser_response = ["textStyles", "textChanges", "revisions",
                                                     "pages.image"]
+
+    # not_required_attributes_from_parser_response = []
 
     for each_attr in not_required_attributes_from_parser_response:
         if "." in each_attr:
@@ -59,29 +73,35 @@ def doc_extract(parser_details: dict, doc_path: str):
 
             for idx in range(len(data.get(parent_attr, 0))):
                 data[parent_attr][idx].pop(child_attr, None)
-
         else:
             data.pop(each_attr, None)
 
-    # save output to json
-
-    with open("{}.json".format(doc_path.split('.')[0]), "w") as outfile:
+    # save parser op output
+    with open("{}.json".format(os.path.join(parser_op, doc.split('.')[0])), "w") as outfile:
         json.dump(data, outfile)
 
     print("process completed")
 
-    exit()
+    # exit()
 
-    document_pages = document.pages
 
-    # Read the text recognition output from the processor
-    print("The document contains the following paragraphs:")
-    for page in document_pages:
-        paragraphs = page.paragraphs
-        for paragraph in paragraphs:
-            print(paragraph)
-            paragraph_text = get_text(paragraph.layout, document)
-            print(f"Paragraph text: {paragraph_text}")
+def dl_entities_extraction(parser_doc_data):
+    parser_doc_entities = parser_doc_data.entities
+    # Read the entities from the processor
+
+    # entities will vary based on parser
+    temp_dict = {"text": "", "confidence": 0}
+    entity_dict = {"Family Name": temp_dict, "Given Names": temp_dict, "Document Id": temp_dict, "Expiration Date": temp_dict,
+                   "Date Of Birth": temp_dict, "Issue Date": temp_dict, "Address": temp_dict, "Portrait": temp_dict, "Name": temp_dict}
+
+    for each_entity in parser_doc_entities:
+        key, val, confidence = each_entity.type_, each_entity.mention_text, round(each_entity.confidence,2)
+        entity_dict[key] = {"text": val, "confidence": confidence}
+
+    entity_dict["Name"]["text"] = (entity_dict["Given Names"]["text"] + " " + entity_dict["Given Names"]["text"]).strip()
+    entity_dict["Name"]["confidence"] = round((entity_dict["Given Names"]["confidence"] + entity_dict["Given Names"]["confidence"])/2, 2)
+
+    return entity_dict
 
 
 def get_text(doc_element: dict, document: dict):
@@ -90,6 +110,7 @@ def get_text(doc_element: dict, document: dict):
     in document text. This function converts offsets
     to text snippets.
     """
+
     response = ""
 
     for segment in doc_element.text_anchor.text_segments:
@@ -106,20 +127,31 @@ def get_text(doc_element: dict, document: dict):
 if __name__ == "__main__":
 
     # Extract API Provides label and document
-    label = "DriverLicense_2"
-    file_path = "arizona-driver-form-15-ocr.pdf"
+    label = "driver_license"
+    # file_path = "ip_docs/arizona-driver-form-15-ocr.pdf"
+    doc_folder = "ip_docs"
+    parser_op = "parser-json"
+    extracted_entities = "extracted-entities"
+
+    # read ip doc folder
+    inp_docs = os.listdir(doc_folder)
+    random.shuffle(inp_docs)
 
     # Read json configuration file
-    with open("parser_selection.json", 'r') as j:
+    with open("parser_config.json", 'r') as j:
 
         parsers_info = json.loads(j.read())
 
-        parser_information = parsers_info.get(label)
+        for each_doc in inp_docs:
 
-        # call parser api to get response
-        if parser_information:
-            print('parser available')
-            doc_extract(parser_information, file_path)
-        else:
-            # send to HITL Process
-            print('parser not available for this document')
+            parser_information = parsers_info.get(label)
+
+            # file_path = os.path.join(doc_folder, each_doc)
+
+            # call parser api
+            if parser_information:
+                # print('parser available')
+                doc_extract(parser_information, each_doc)
+            else:
+                # send to HITL Process
+                print('parser not available for this document')

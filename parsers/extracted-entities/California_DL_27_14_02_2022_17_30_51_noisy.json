@@ -1,0 +1,38 @@
+{
+    "Family Name": {
+        "text": "Bartlett",
+        "confidence": 1.0
+    },
+    "Given Names": {
+        "text": "Nicole",
+        "confidence": 1.0
+    },
+    "Document Id": {
+        "text": "62369683",
+        "confidence": 0.23
+    },
+    "Expiration Date": {
+        "text": "2014-01-29",
+        "confidence": 1.0
+    },
+    "Date Of Birth": {
+        "text": "Nicole Nicole",
+        "confidence": 1.0
+    },
+    "Issue Date": {
+        "text": "2009-01-29",
+        "confidence": 0.69
+    },
+    "Address": {
+        "text": "361 Collins Tunnel Apt. 781 West Caroline, VT 70843",
+        "confidence": 0.86
+    },
+    "Portrait": {
+        "text": "",
+        "confidence": 0.92
+    },
+    "Name": {
+        "text": "Nicole Nicole",
+        "confidence": 1.0
+    }
+}

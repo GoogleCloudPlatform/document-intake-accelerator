@@ -1,0 +1,38 @@
+{
+    "Family Name": {
+        "text": "Hughes",
+        "confidence": 0.99
+    },
+    "Given Names": {
+        "text": "Steven\nJessica",
+        "confidence": 1.0
+    },
+    "Document Id": {
+        "text": "Y-93703670",
+        "confidence": 0.74
+    },
+    "Expiration Date": {
+        "text": "Steven\nJessica Steven\nJessica",
+        "confidence": 1.0
+    },
+    "Date Of Birth": {
+        "text": "1977-03-13",
+        "confidence": 0.84
+    },
+    "Issue Date": {
+        "text": "Steven\nJessica Steven\nJessica",
+        "confidence": 1.0
+    },
+    "Address": {
+        "text": "676 Melissa Green Beanhaven, VT 82850",
+        "confidence": 0.99
+    },
+    "Portrait": {
+        "text": "",
+        "confidence": 0.89
+    },
+    "Name": {
+        "text": "Steven\nJessica Steven\nJessica",
+        "confidence": 1.0
+    }
+}
