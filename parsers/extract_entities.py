@@ -3,6 +3,7 @@ import os
 import proto
 import random
 from google.cloud import documentai_v1 as documentai
+from utils_functions import entities_extraction
 
 
 def doc_extract(parser_details: dict, doc: str):
@@ -20,9 +21,20 @@ def doc_extract(parser_details: dict, doc: str):
     # projects/project-id/locations/location/processor/processor-id
 
     location = parser_details["location"]
+
     processor_id = parser_details["processor_id"]
+
     parser_name = parser_details["parser_name"]
 
+    required_entities = parser_details["required_entities"]
+
+    """
+    dl_required_entities = ["Family Name", "Given Names", "Document Id", "Expiration Date", "Date Of Birth", "Issue Date",
+                         "Address", "Name", "Sex"]
+
+    utility_required_entities = ["invoice_id", "invoice_date", "due_date", "receiver_name", "service_address", "total_tax_amount",
+                                            "supplier_account_number"]
+    """
     # These variables will be removed later
     project_id = "claims-processing-dev"  # later read this variable from project config files
     doc_path = os.path.join(doc_folder, doc)
@@ -50,13 +62,6 @@ def doc_extract(parser_details: dict, doc: str):
 
     parser_doc_data = result.document
 
-    # extract dl entities
-    extracted_entity_dict = dl_entities_extraction(parser_doc_data)
-
-    # save extracted entities json
-    with open("{}.json".format(os.path.join(extracted_entities, doc.split('.')[0])), "w") as outfile:
-        json.dump(extracted_entity_dict, outfile, indent=4)
-
     # convert to json
     json_string = proto.Message.to_json(parser_doc_data)
     data = json.loads(json_string)
@@ -80,48 +85,20 @@ def doc_extract(parser_details: dict, doc: str):
     with open("{}.json".format(os.path.join(parser_op, doc.split('.')[0])), "w") as outfile:
         json.dump(data, outfile)
 
+
+    # extract dl entities
+    extracted_entity_dict = entities_extraction(data, required_entities)
+
+    # save extracted entities json
+    with open("{}.json".format(os.path.join(extracted_entities, doc.split('.')[0])), "w") as outfile:
+        json.dump(extracted_entity_dict, outfile, indent=4)
+
+
     print("process completed")
 
     # exit()
 
 
-def dl_entities_extraction(parser_doc_data):
-    parser_doc_entities = parser_doc_data.entities
-    # Read the entities from the processor
-
-    # entities will vary based on parser
-    temp_dict = {"text": "", "confidence": 0}
-    entity_dict = {"Family Name": temp_dict, "Given Names": temp_dict, "Document Id": temp_dict, "Expiration Date": temp_dict,
-                   "Date Of Birth": temp_dict, "Issue Date": temp_dict, "Address": temp_dict, "Portrait": temp_dict, "Name": temp_dict}
-
-    for each_entity in parser_doc_entities:
-        key, val, confidence = each_entity.type_, each_entity.mention_text, round(each_entity.confidence,2)
-        entity_dict[key] = {"text": val, "confidence": confidence}
-
-    entity_dict["Name"]["text"] = (entity_dict["Given Names"]["text"] + " " + entity_dict["Given Names"]["text"]).strip()
-    entity_dict["Name"]["confidence"] = round((entity_dict["Given Names"]["confidence"] + entity_dict["Given Names"]["confidence"])/2, 2)
-
-    return entity_dict
-
-
-def get_text(doc_element: dict, document: dict):
-    """
-    Document AI identifies form fields by their offsets
-    in document text. This function converts offsets
-    to text snippets.
-    """
-
-    response = ""
-
-    for segment in doc_element.text_anchor.text_segments:
-        start_index = (
-            int(segment.start_index)
-            if segment in doc_element.text_anchor.text_segments
-            else 0
-        )
-        end_index = int(segment.end_index)
-        response += document.text[start_index:end_index]
-    return response
 
 
 if __name__ == "__main__":
@@ -129,9 +106,9 @@ if __name__ == "__main__":
     # Extract API Provides label and document
     label = "driver_license"
     # file_path = "ip_docs/arizona-driver-form-15-ocr.pdf"
-    doc_folder = "ip_docs"
-    parser_op = "parser-json"
-    extracted_entities = "extracted-entities"
+    doc_folder = "dl-docs/ip-docs/without-noisy"
+    parser_op = "dl-docs/parser-json/without-noisy"
+    extracted_entities = "dl-docs/extracted-entities/without-noisy"
 
     # read ip doc folder
     inp_docs = os.listdir(doc_folder)
@@ -147,7 +124,7 @@ if __name__ == "__main__":
             parser_information = parsers_info.get(label)
 
             # file_path = os.path.join(doc_folder, each_doc)
-
+            print("file", each_doc)
             # call parser api
             if parser_information:
                 # print('parser available')
@@ -155,3 +132,5 @@ if __name__ == "__main__":
             else:
                 # send to HITL Process
                 print('parser not available for this document')
+
+            # exit()

@@ -2,7 +2,12 @@
   "driver_license":  {
                 "parser_name": "DriverLicenseParser",
                 "location": "us",
-                "processor_id": "baf0cf598e3ddd6b"
+                "processor_id": "baf0cf598e3ddd6b",
+                "required_entities": {
+                         "default_entities":["Family Name", "Given Names", "Document Id", "Expiration Date", "Date Of Birth", "Issue Date",
+                                              "Address"],
+                          "derived_entities": {"Name": {"rule": ["Given Names", "Family Name"]}, "Sex": {"rule": "pattern"}}
+                }
   },
 
   "driver_license_2":  {
@@ -16,8 +21,12 @@
   "utility_bill":  {
                 "parser_name": "UtilityParser",
                 "location": "us",
-                "processor_id": "73d7348f7955db4f"
-  },
+                "processor_id": "5be161d11102be84",
+                "required_entities": {
+                         "default_entities": ["invoice_id", "invoice_date", "due_date", "receiver_name", "service_address", "total_tax_amount",
+                                            "supplier_account_number"]
+                        }
+                },
   "unemployment_form": {
                 "parser_name": "FormParser",
                 "location": "us",
