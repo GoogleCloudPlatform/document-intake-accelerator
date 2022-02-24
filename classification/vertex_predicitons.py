@@ -76,11 +76,6 @@ class VertexPredictions:
 if __name__ =="__main__":
     vertex_predictor = VertexPredictions(project_id='claims-processing-dev')
 
-    inp = "gs://claim-processing-classification-dataset/instances.jsonl"
-    out = "gs://claim-processing-classification-dataset/out.jsonl"
-
-    # vertex_predictor.get_batch_predictions(job_name='test_bp', gcs_inp_jsonl_path=inp, gcs_outpath=out)
-
     img_path = "/Users/sumitvaise//Downloads/DocAI/Dataset/Final/04_02_2022_11_16_28_Arkansas9_0.png"
     predictions = vertex_predictor.endpoint_image_classification(endpoint_id='7305902922850631680',  filename=img_path)
     print(type(predictions))
