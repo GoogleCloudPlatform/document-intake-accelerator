@@ -16,6 +16,10 @@ requires:
   configs: [sample-service]
   activeProfiles:  *dev_and_custom_backends
 
+- path: ./microservices/upload_service
+  configs: [upload-service]
+  activeProfiles:  *dev_and_custom_backends
+
 profiles:
 - name: custom
 - name: dev

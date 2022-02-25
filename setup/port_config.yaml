@@ -4,3 +4,4 @@ metadata:
   name: config-port-config
 data:
   sample-service.PORT: "8888"
+  upload-service.PORT: "8889"
