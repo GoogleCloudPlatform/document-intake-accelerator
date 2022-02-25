@@ -1,0 +1,7 @@
+pytest
+pytest - custom_exit_code
+pytest - cov
+pylint
+pytest - mock
+mock
+requests
