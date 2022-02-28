@@ -4,6 +4,7 @@ import proto
 import random
 from google.cloud import documentai_v1 as documentai
 from utils_functions import entities_extraction
+from test import download_pdf_gcs
 
 
 def doc_extract(parser_details: dict, doc: str):
@@ -49,11 +50,18 @@ def doc_extract(parser_details: dict, doc: str):
 
     name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
 
+    blob = download_pdf_gcs(
+        gcs_uri='gs://async_form_parser/input/arizona-driver-form-13.pdf'
+    )
+
+    document = {"content": blob.download_as_bytes(), "mime_type": "application/pdf"}
+    """
     # Read the file into memory
     with open(doc_path, "rb") as image:
         image_content = image.read()
 
     document = {"content": image_content, "mime_type": "application/pdf"}
+    """
 
     # Configure the process request
     request = {"name": name, "raw_document": document}
@@ -106,9 +114,9 @@ if __name__ == "__main__":
     # Extract API Provides label and document
     label = "driver_license"
     # file_path = "ip_docs/arizona-driver-form-15-ocr.pdf"
-    doc_folder = "dl-docs/ip-docs/without-noisy"
-    parser_op = "dl-docs/parser-json/without-noisy"
-    extracted_entities = "dl-docs/extracted-entities/without-noisy"
+    doc_folder = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/dl-docs/ip-docs/without-noisy"
+    parser_op = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/dl-docs/parser-json/without-noisy"
+    extracted_entities = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/dl-docs/extracted-entities/without-noisy"
 
     # read ip doc folder
     inp_docs = os.listdir(doc_folder)

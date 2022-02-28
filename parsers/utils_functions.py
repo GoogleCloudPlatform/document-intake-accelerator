@@ -103,6 +103,8 @@ def get_text(doc_element: dict, document: dict):
         response += document.text[start_index:end_index]
     return response
 
+
+
 if __name__=="__main__":
     parser_json = "utility-docs/parser-json/without-noisy"
     extracted_entities = "utility-docs/extracted-entities/without-noisy"
