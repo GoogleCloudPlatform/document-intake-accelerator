@@ -1,3 +1,9 @@
+"""
+  UUJO - E2E tests for checking
+  microservice endpoints
+  are accessible
+"""
+
 import requests
 from endpoint_proxy import get_baseurl
 
