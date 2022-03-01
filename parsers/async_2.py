@@ -4,7 +4,7 @@ import re
 import json
 from google.cloud import documentai_v1 as documentai
 from google.cloud import storage
-from arizona_application_mapping import APPLICATION_MAPPING_DICT
+from application_mapping import APPLICATION_MAPPING_DICT
 
 # project details
 project_id = 'claims-processing-dev'
