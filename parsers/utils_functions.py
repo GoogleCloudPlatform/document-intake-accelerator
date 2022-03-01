@@ -31,11 +31,22 @@ def default_entities_extraction(entity_dict, parser_entities, default_entities):
 
     return entity_dict
 
-def dl_derived_entities_extraction(entity_dict, parser_data, derived_entities):
+# Generic function to create name from given name and first name
+def name_entity_creation(entity_dict):
 
     name_text = (entity_dict["Given Names"]["text"] + " " + entity_dict["Family Name"]["text"]).strip()
-    name_confidence = round((entity_dict["Given Names"]["confidence"] + entity_dict["Family Name"]["confidence"])/2, 2)
-    entity_dict["Name"] = {"text": name_text, "confience": name_confidence}
+    name_confidence = round((entity_dict["Given Names"]["confidence"] + entity_dict["Family Name"]["confidence"]) / 2,
+                            2)
+    name_dict = {"text": name_text, "confience": name_confidence}
+
+    return name_dict
+
+
+def dl_derived_entities_extraction(entity_dict, parser_data, derived_entities):
+
+    name_dict = name_entity_creation(entity_dict)
+
+    entity_dict["Name"] = name_dict
 
     sex = pattern_based_entities(parser_data)
 

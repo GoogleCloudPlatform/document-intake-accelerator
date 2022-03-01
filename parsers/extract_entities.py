@@ -7,6 +7,7 @@ from google.cloud import documentai_v1 as documentai
 from google.cloud import storage
 from application_mapping import APPLICATION_MAPPING_DICT
 from utils_functions import entities_extraction, download_pdf_gcs, extract_form_fields, del_gcs_folder
+from config import *
 
 def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: str):
     """
@@ -31,11 +32,7 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
 
     required_entities = parser_details["required_entities"]
 
-    # These variables will be removed later
-    project_id = "claims-processing-dev"  # later read this variable from project config files
-
-    # doc_path = os.path.join(doc_folder, doc)
-    # print(project_id, location, processor_id, parser_name)
+    project_id = PROJECT_NAME
 
     opts = {}
 
@@ -71,13 +68,7 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
     json_string = proto.Message.to_json(parser_doc_data)
     data = json.loads(json_string)
 
-    # Remove unnecessary information parser json response
-    not_required_attributes_from_parser_response = ["textStyles", "textChanges", "revisions",
-                                                    "pages.image"]
-
-    # not_required_attributes_from_parser_response = []
-
-    for each_attr in not_required_attributes_from_parser_response:
+    for each_attr in NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE:
         if "." in each_attr:
             parent_attr, child_attr = each_attr.split(".")
 
@@ -217,33 +208,32 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
     # save extracted entities json
 
     with open(
-            "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/extracted-entities/without-noisy/{}.json".format(
-                    "Arizona9"), "w") as outfile:
+            "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/async-parser-json/{}.json".format(
+                    "Arizona2"), "w") as outfile:
         json.dump(extracted_entity_list, outfile, indent=4)
 
     # Extract desired entities only
 
     with open(
             "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/extracted-entities/without-noisy/{}.json".format(
-                    "Arizona9_desired"), "w") as outfile:
+                    "Arizona2_desired"), "w") as outfile:
         json.dump(required_entities_list, outfile, indent=4)
 
 
 if __name__ == "__main__":
 
-    # Extract API Provides label and document
-    doc_type = "unemployment_form"
+
     # file_path = "ip_docs/arizona-driver-form-15-ocr.pdf"
 
     doc_folder = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/dl-docs/ip-docs/without-noisy"
 
-    parser_op = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/dl-docs/parser-json/without-noisy"
+    parser_op = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/async-parser-json"
 
-    extracted_entities = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/dl-docs/extracted-entities/without-noisy"
+    extracted_entities = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/extracted-entities/without-noisy"
 
     gcs_doc_path = "gs://async_form_parser/input/arizona-driver-form-13.pdf"
 
-    gcs_doc_path = "gs://async_form_parser/input/Arizona9.pdf"
+    # gcs_doc_path = "gs://async_form_parser/input/Arizona2.pdf"
 
 
     # read ip doc folder
@@ -253,6 +243,9 @@ if __name__ == "__main__":
 
     # API Integration will start from here
 
+    # Extract API Provides label and document
+    doc_type = "driver_license"
+
     os.environ[
         'GOOGLE_APPLICATION_CREDENTIALS'] = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/claims-processing-dev-sa.json"
 
@@ -260,21 +253,20 @@ if __name__ == "__main__":
     with open("parser_config.json", 'r') as j:
 
         parsers_info = json.loads(j.read())
+        # for each_doc in inp_docs:
+        parser_information = parsers_info.get(doc_type)
+        # file_path = os.path.join(doc_folder, each_doc)
+        # call parser api
+        if parser_information:
 
-        for each_doc in inp_docs:
-
-            parser_information = parsers_info.get(doc_type)
-            # file_path = os.path.join(doc_folder, each_doc)
-            print("file", each_doc)
-            # call parser api
-            if parser_information:
-                # print('parser available')
-                if doc_type in ["unemployment_form", "claim_form"]:
-                    form_parser_extraction(parser_information, gcs_doc_path, doc_type, 300)
-                else:
-                    specialized_parser_extraction(parser_information, gcs_doc_path, doc_type)
+            parser_name = parser_information["parser_name"]
+            # print('parser available')
+            if parser_name == "FormParser":
+                form_parser_extraction(parser_information, gcs_doc_path, doc_type, 300)
             else:
-                # send to HITL Process
-                print('parser not available for this document')
+                specialized_parser_extraction(parser_information, gcs_doc_path, doc_type)
+        else:
+            # send to HITL Process
+            print('parser not available for this document')
 
-            exit()
+        # exit()
