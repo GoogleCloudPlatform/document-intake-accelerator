@@ -1,6 +1,6 @@
 """ Upload and process task api endpoints """
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, UploadFile, File
 from typing import Optional, List
 from schemas.input_json import InputJson
 
@@ -25,7 +25,6 @@ async def upload_file(
   for file in files:
     print(file.filename)
   return SUCCESS_RESPONSE
-
 
 @router.post("/upload_json")
 async def upload_data_json(input: InputJson):
