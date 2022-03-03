@@ -11,7 +11,6 @@ from common.testing.firestore_emulator import firestore_emulator, clean_firestor
 # assigning url
 api_url = "http://localhost:8080/classification_service/v1/classification/classification_api"
 
-
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
 SUCCESS_RESPONSE = {"status": "Success"}
@@ -22,9 +21,12 @@ def test_classification_api(client_with_emulator):
   response = client_with_emulator.post(
       f"{api_url}",
       json={
-          "case_id": "123A",
-          "uid": "232a",
-          "gcs_url": "http://storage.googleapis.com/document-upload-test/123A/232a/file_name",
+          "case_id":
+              "123A",
+          "uid":
+              "232a",
+          "gcs_url":
+              "http://storage.googleapis.com/document-upload-test/123A/232a/file_name",
       })
   print(response)
   assert response.status_code == 200, "Status 200"

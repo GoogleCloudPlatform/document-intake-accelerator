@@ -22,4 +22,3 @@ COLLECTION = os.getenv("COLLECTION")
 API_BASE_URL = os.getenv("API_BASE_URL")
 
 SERVICE_NAME = os.getenv("SERVICE_NAME")
-

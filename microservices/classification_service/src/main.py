@@ -8,14 +8,16 @@ import config
 from common.utils.logging_handler import Logger
 from concurrent.futures import ThreadPoolExecutor
 from fastapi import FastAPI, Request
-from routes import  classification
+from routes import classification
 
 app = FastAPI(title="Classification Service API")
+
 
 @app.on_event("startup")
 def set_default_executor():
   loop = asyncio.get_running_loop()
   loop.set_default_executor(ThreadPoolExecutor(max_workers=1000))
+
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
@@ -40,7 +42,6 @@ api = FastAPI(title="Classification Service API", version="latest")
 api.include_router(classification.router)
 
 app.mount("/classification_service/v1", api)
-
 
 if __name__ == "__main__":
   uvicorn.run(
