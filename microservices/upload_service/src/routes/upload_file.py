@@ -27,7 +27,7 @@ async def upload_file(
   return SUCCESS_RESPONSE
 
 @router.post("/upload_json")
-async def upload_data_json(input_json: InputJson):
+async def upload_data_json(input : InputJson):
   """Uploads input  to the GCS bucket and Save the record in the database
 
   Args:
@@ -38,7 +38,7 @@ async def upload_data_json(input_json: InputJson):
     422 : If file other than pdf is uploaded by user """
 
   print("Inside Json input")
-  print(input_json)
+  print(input)
   return {"status": "Success", "input_data": input}
 
 
