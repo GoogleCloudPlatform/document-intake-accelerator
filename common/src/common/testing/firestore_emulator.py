@@ -3,7 +3,6 @@ Firestore emulator fixture for re-use in testing
 """
 
 import os
-import signal
 import subprocess
 import time
 
@@ -23,7 +22,7 @@ def firestore_emulator():
   emulator = subprocess.Popen(
       "firebase emulators:start --only firestore --project fake-project",
       shell=True,
-      preexec_fn=os.setsid)
+  )
   time.sleep(15)
 
   os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
@@ -33,7 +32,7 @@ def firestore_emulator():
   # yield so emulator isn't recreated each test
   yield emulator
 
-  os.killpg(os.getpgid(emulator.pid), signal.SIGTERM)
+  # os.killpg(os.getpgid(emulator.pid), signal.SIGTERM) #commenting this line
   # delete debug files
   # some get deleted, not all
 
