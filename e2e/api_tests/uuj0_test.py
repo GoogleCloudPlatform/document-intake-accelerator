@@ -27,3 +27,8 @@ def test_upload_api_ping():
   base_url = get_baseurl("upload-service")
   res = requests.get(base_url + "/ping")
   assert res.status_code == 200
+
+def test_upload_api_ping():
+  base_url = get_baseurl("classification-service")
+  res = requests.get(base_url + "/ping")
+  assert res.status_code == 200

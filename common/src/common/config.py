@@ -11,4 +11,6 @@ if PROJECT_ID != "":
 
 DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
 
+NEO4J_URI = "bolt://neo4j-neo4j:7687"
+
 BUCKET_NAME ="document-upload-test"
