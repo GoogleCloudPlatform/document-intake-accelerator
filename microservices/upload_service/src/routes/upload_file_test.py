@@ -1,5 +1,5 @@
 """
-  Tests for Claim endpoints
+  Tests for Upload endpoints
 """
 import os
 # disabling pylint rules that conflict with pytest fixtures
