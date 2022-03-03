@@ -25,15 +25,14 @@ def test_upload_file_json(client_with_emulator):
     response = client_with_emulator.post(
         f"{api_url}upload_file",
         json={
-  "case_id": "123A",
-  "first_name": "Jon",
-  "middle_name": "Max",
-  "last_name": "Doe",
-  "employer_name": "Quantiphi",
-  "city": "New York",
-  "state": "Callifornia",
-  "dob": "7 Feb 1997"
-  })
+            "case_id": "123A",
+            "first_name": "Jon",
+            "middle_name": "Max",
+            "last_name": "Doe",
+            "employer_name": "Quantiphi",
+            "city": "New York",
+            "state": "Callifornia",
+            "dob": "7 Feb 1997"
+        })
     print(response)
   assert response.status_code == 200, "Status 200"
-
