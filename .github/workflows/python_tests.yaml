@@ -25,7 +25,7 @@ jobs:
     - name: Install gcloud
       uses: google-github-actions/setup-gcloud@master
       with:
-        project_id: aitutor-dev
+        project_id: claims-processing-dev
         service_account_key: ${{ secrets.FIREBASE_EMULATOR_SA_KEY }}
         export_default_credentials: true
 
