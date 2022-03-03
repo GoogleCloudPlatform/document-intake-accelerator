@@ -61,8 +61,8 @@ jobs:
       matrix:
         python-version: [3.7]
         target-folder: [
-          common
-#          microservices/sample_service
+          common,
+#          microservices/sample_service,
            microservices/upload_service
         ]
     steps:
