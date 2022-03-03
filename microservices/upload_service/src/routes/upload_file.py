@@ -18,41 +18,43 @@ FAILED_RESPONSE = {"status": "Failed"}
 async def upload_file(
     files: List[UploadFile] = File(...),case_id: Optional[str] = None):
 
-    """Uploads files to the GCS bucket and Save the record in the database
+  """Uploads files to the GCS bucket and Save the record in the database
 
-    Args:
-        case_id (str): Case id of the files it's optionl ,
-        list of files : to get the list of documents from user
-    Returns:
-        200 : PDF files are successfully uploaded
-        422 : If file other than pdf is uploaded by user """
-    print(case_id)
-    return SUCCESS_RESPONSE
+  Args:
+    case_id (str): Case id of the files it's optionl ,
+    list of files : to get the list of documents from user
+  Returns:
+    200 : PDF files are successfully uploaded
+    422 : If file other than pdf is uploaded by user """
+  print(case_id)
+  for file in files :
+    print(file.filename)
+  return SUCCESS_RESPONSE
 
 
 
 @router.post("/upload_json")
 async def upload_data_json(input : InputJson):
 
-    """Uploads input  to the GCS bucket and Save the record in the database
+  """Uploads input  to the GCS bucket and Save the record in the database
 
-    Args:
-        case_id (str): Case id of the files it's optionl ,
-         : to get the list of documents from user
-    Returns:
-        200 : PDF files are successfully uploaded
-        422 : If file other than pdf is uploaded by user """
+  Args:
+    case_id (str): Case id of the files it's optionl ,
+     : to get the list of documents from user
+  Returns:
+    200 : PDF files are successfully uploaded
+    422 : If file other than pdf is uploaded by user """
 
 
-    print("Inside Json input")
-    print(input)
-    return {"status": "Success", "input_data": input}
+  print("Inside Json input")
+  print(input)
+  return {"status": "Success", "input_data": input}
 
 
 @router.post("/process_task")
 async def process_task(case_id : str , uid : str , gcs_url : str):
 
-    """Process the  input  he record in the database
+  """Process the  input  he record in the database
 
     Args:
         case_id (str): Case id of the file ,
@@ -61,15 +63,15 @@ async def process_task(case_id : str , uid : str , gcs_url : str):
     Returns:
         200 : PDF files are successfully processed
         500  : HTTPException: 500 Internal Server Error if something fails
- """
-    print(gcs_url)
-    return {"status": "sucess" , "message":f"File with case_id {case_id} , uid {uid} successfully processed"}
+  """
+  print(gcs_url)
+  return {"status": "sucess" , "message":f"File with case_id {case_id} , uid {uid} successfully processed"}
 
 
 @router.post("/process_json")
 async def process_json(case_id : str , uid : str , gcs_url : str):
 
-    """Process the  input  he record in the database
+  """Process the  input  he record in the database
 
     Args:
         case_id (str): Case id of the file ,
@@ -79,5 +81,5 @@ async def process_json(case_id : str , uid : str , gcs_url : str):
         200 : PDF files are successfully processed
         500  : HTTPException: 500 Internal Server Error if something fails
  """
-    print(gcs_url)
-    return {"status": "sucess" , "message":f"File with case_id {case_id} , uid {uid} successfully processed"}
+  print(gcs_url)
+  return {"status": "sucess" , "message":f"File with case_id {case_id} , uid {uid} successfully processed"}

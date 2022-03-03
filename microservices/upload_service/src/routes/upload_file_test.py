@@ -19,13 +19,21 @@ TESTDATA_FILENAME1 = os.path.join(
     os.path.dirname(__file__), "..", "testing", "Arkansas-form-1.pdf")
 
 
-def test_upload_file_pdf_positive(client_with_emulator):
+def test_upload_file_json(client_with_emulator):
 
   with open(TESTDATA_FILENAME1, "rb") as test_file:
     response = client_with_emulator.post(
         f"{api_url}upload_file",
-        json={"case_id": "2321"},
-        files={"file": test_file})
+        json={
+  "case_id": "123A",
+  "first_name": "Jon",
+  "middle_name": "Max",
+  "last_name": "Doe",
+  "employer_name": "Quantiphi",
+  "city": "New York",
+  "state": "Callifornia",
+  "dob": "7 Feb 1997"
+  })
     print(response)
   assert response.status_code == 200, "Status 200"
 
