@@ -12,11 +12,12 @@ FAILED_RESPONSE = {"status": "Failed"}
 
 @router.post("/upload_files")
 async def upload_file(
-    files: List[UploadFile] = File(...), case_id: Optional[str] = None):
+    files: List[UploadFile] = File(...),case_id: Optional[str] = None):
   """Uploads files to the GCS bucket and Save the record in the database
 
   Args:
     case_id (str): Case id of the files it's optionl ,
+    state (str) : state for which the application will be used
     list of files : to get the list of documents from user
   Returns:
     200 : PDF files are successfully uploaded
