@@ -21,3 +21,4 @@ def test_non_exist_endpoint():
   res = requests.get(base_url + "/sample-service/not-exist")
   print(base_url)
   assert res.status_code == 404
+
