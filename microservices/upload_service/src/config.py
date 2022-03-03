@@ -23,4 +23,3 @@ API_BASE_URL = os.getenv("API_BASE_URL")
 
 SERVICE_NAME = os.getenv("SERVICE_NAME")
 
-REDIS_HOST = os.getenv("REDIS_HOST")
