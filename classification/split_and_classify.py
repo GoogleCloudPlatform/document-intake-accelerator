@@ -51,7 +51,6 @@ class DocClassifier:
             output = {
                 'client_id': self.client_id,
                 'u_id': self.uid,
-                'PDF_path': self.pdf_path,
                 'predicted_class': predictions['displayNames'][0],
                 'model_conf': predictions['confidences'][0],
                 'model_endpoint_id': predictions['ids'][0]
@@ -59,18 +58,20 @@ class DocClassifier:
 
             # remove the image from local after prediction as it is of no use further
             os.remove(img_path)
-
+            os.remove(self.pdf_path)
             return json.dumps(output)
             
         except Exception as e:
             if os.path.exists(img_path):
                 os.remove(img_path)
+            if os.path.exists(self.pdf_path):
+                os.remove(self.pdf_path)
             print(e)
             return None
 
 if __name__ == "__main__":
-    pdf = 'gs://claim-processing-classification-dataset/Arizona_claim22.pdf'
+    pdf_file = 'gs://claim-processing-classification-dataset/Arizona_claim22.pdf'
     out = '/Users/sumitvaise/DOCAI/claims-processing/classification/data/images'
-
-    clf = DocClassifier(0,0,pdf, out_folder=out)
+    client_id, u_id = 0, 0
+    clf = DocClassifier(client_id, u_id, pdf_file, out_folder=out)
     print(clf.execute_job(page_num=0))
