@@ -22,3 +22,8 @@ def test_non_exist_endpoint():
   print(base_url)
   assert res.status_code == 404
 
+
+def test_upload_api_ping():
+  base_url = get_baseurl("upload-service")
+  res = requests.get(base_url + "/ping")
+  assert res.status_code == 200
