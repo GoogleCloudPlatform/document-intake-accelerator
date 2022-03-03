@@ -39,7 +39,7 @@ async def upload_data_json(input_json : InputJson):
 
   print("Inside Json input")
   print(input_json)
-  return {"status": "Success", "input_data": input}
+  return {"status": "Success", "input_data": input_json}
 
 
 @router.post("/process_task")
