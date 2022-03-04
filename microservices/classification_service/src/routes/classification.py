@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter
 
-from fastapi.responses import HTMLResponse
 # disabling for linting to pass
 # pylint: disable = broad-except
 
@@ -11,7 +10,7 @@ SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
 
 
-@router.post('/classification_api')
+@router.post("/classification_api")
 async def classifiction(case_id: str, uid: str, gcs_url: str):
   """classifies the  input and updates the active status of document in
         the database
@@ -23,7 +22,7 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
           200 : PDF files are successfully classified and database updated
           500  : HTTPException: 500 Internal Server Error if something fails
     """
-
+  print(gcs_url)
   return {
       "status":
           "Success",
