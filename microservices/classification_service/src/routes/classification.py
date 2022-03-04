@@ -23,7 +23,7 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
           200 : PDF files are successfully classified and database updated
           500  : HTTPException: 500 Internal Server Error if something fails
     """
-  print(gcs_url)
+
   return {
       "status":
           "Success",

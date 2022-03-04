@@ -13,13 +13,13 @@ class DocumentstatusModel(BaseModel):
   url: Optional[str] = None
   type_of_doc: Optional[str] = None
   class_of_doc: Optional[str] = None
-  State: Optional[str] = None
+  state: Optional[str] = None
   system_status: Optional[list] = None
-  upload_time: Optional[str] = None
+  upload_time: Optional[datetime] = None
   status_timestamp: Optional[list] = None
   active: Optional[str] = None
   hitl_status: Optional[str] = None
-  hitl_update_time = Optional[list] = None
+  hitl_update_time = Optional[list] = []
 
   class Config():
     orm_mode = True
