@@ -19,7 +19,7 @@ class DocumentstatusModel(BaseModel):
   status_timestamp: Optional[list] = None
   active: Optional[str] = None
   hitl_status: Optional[str] = None
-  hitl_update_time = Optional[list] = []
+  hitl_update_time : Optional[list] = None
 
   class Config():
     orm_mode = True
@@ -32,9 +32,8 @@ class DocumentstatusModel(BaseModel):
             "state": "callifornia",
             "system_status": ["classified", "uploaded", "extracted"],
             "upload_time": "17 feb 2022",
-            "status_timestamp": ["17 feb 2022 ,1 pm", "17"],
+            "status_timestamp": ["17 feb 2022 ,1 pm", "17 feb 2022, 2pm"],
             "active": "active",
             "hitl_status": "pending_review",
-            "status_timestamp": ["17 feb 2022 ,1 pm", "17"],
         }
     }

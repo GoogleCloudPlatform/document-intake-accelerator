@@ -27,6 +27,6 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
       "status":
           "Success",
       "message":
-          f'document with case_id {case_id} ,uid_id {uid} '
-          f'successfully classified'
+          f"document with case_id {case_id} ,uid_id {uid} "
+          f"successfully classified"
   }
