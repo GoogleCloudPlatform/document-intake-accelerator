@@ -9,7 +9,7 @@ SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
 
 
-@router.post('/validation_api')
+@router.post("/validation_api")
 async def validation(case_id: str, uid: str, doc_class: str):
   """ validates the document with case id , uid ,
         Args:
