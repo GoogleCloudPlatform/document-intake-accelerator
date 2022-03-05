@@ -6,3 +6,4 @@ data:
   sample-service.PORT: "8888"
   upload-service.PORT: "8889"
   classification-service.PORT: "8890"
+  validation-service.PORT: "8891"
