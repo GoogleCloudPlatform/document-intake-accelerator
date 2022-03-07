@@ -1,56 +1,116 @@
 import os
 import re
 import json
+import pandas as pd
 from google.cloud import storage
 
 
-# pattern need to read from config file - WIP
 
-def pattern_based_entities(parser_data):
+def pattern_based_entities(parser_data, pattern):
 
     text = parser_data["text"]
 
-    pattern = re.compile(r"SEX.*?(?<!\w)(F|M)(?!\w)", flags=re.DOTALL)
+    print("pattern", r"{}".format(pattern))
+    pattern = re.compile(r"{}".format(pattern), flags=re.DOTALL)
 
     matched_text = re.search(pattern, text)
 
     if matched_text:
         # print(matched_text)
-        sex = matched_text.group(1)
+        op = matched_text.group(1)
     else:
-        sex = "T"
-    return sex
+        op = None
+    return op
 
 
-def default_entities_extraction(entity_dict, parser_entities, default_entities):
+def default_entities_extraction(parser_entities, default_entities):
 
+
+    parser_entities_dict = {}
     for each_entity in parser_entities:
+
         key, val, confidence = each_entity.get("type", ""), each_entity.get("mentionText", ""), round(each_entity.get("confidence", 0), 2)
-        if key in default_entities:
-            entity_dict[key] = {"text": val, "confidence": confidence}
+
+        parser_entities_dict[key] = [val,confidence]
+        """
+        if key in default_entities.keys():
+            entity_dict[key] = {"entity": key, "value": val,
+                                 "confidence": confidence,
+                                 "manual_extraction": False}
+        """
+    entity_dict = {}
+    for key in default_entities.keys():
+        if key in parser_entities_dict.keys():
+            entity_dict[default_entities[key][0]] = {"entity": default_entities[key][0], "value": parser_entities_dict[key][0],
+                                 "confidence": parser_entities_dict[key][1],
+                                 "manual_extraction": False}
+        else:
+            entity_dict[default_entities[key][0]] = {"entity": default_entities[key][0], "value": None,
+                                "confidence": None,
+                                "manual_extraction": False}
 
     return entity_dict
 
 # Generic function to create name from given name and first name
-def name_entity_creation(entity_dict):
+def name_entity_creation(entity_dict, name_list):
 
-    name_text = (entity_dict["Given Names"]["text"] + " " + entity_dict["Family Name"]["text"]).strip()
+    name = ""
+    confidence = 0
+    for each_name in name_list:
+        parser_extracted_name = entity_dict[each_name]["value"]
+        if parser_extracted_name:
+            name += parser_extracted_name
+            confidence += entity_dict[each_name]["confidence"]
+
+    if name.strip():
+        name = name.strip()
+        confidence = round(confidence/len(name_list), 2)
+    else:
+        name = None
+        confidence = None
+
+    name_dict = {"entity": "Name", "value": name,
+                     "confidence": confidence,
+                     "manual_extraction": False}
+
+    """
+    name_text = (entity_dict["Given Names"]["value"] + " " + entity_dict["Family Name"]["value"]).strip()
     name_confidence = round((entity_dict["Given Names"]["confidence"] + entity_dict["Family Name"]["confidence"]) / 2,
                             2)
     name_dict = {"text": name_text, "confience": name_confidence}
+    name_dict = {"entity": each_entity, "value": name_text,
+                 "confidence": None,
+                 "manual_extraction": False}
+    """
 
     return name_dict
 
 
+
+# dl specific derived function
 def dl_derived_entities_extraction(entity_dict, parser_data, derived_entities):
 
-    name_dict = name_entity_creation(entity_dict)
+    """
+    name_list = derived_entities["Name"]["rule"]
+
+    name_dict = name_entity_creation(entity_dict, name_list)
 
     entity_dict["Name"] = name_dict
 
-    sex = pattern_based_entities(parser_data)
+    sex = pattern_based_entities(parser_data, DL_SEX_PATTERN)
 
-    entity_dict["Sex"] = {"text": sex, "confidence": 1}
+    entity_dict["Sex"] = {"entity": "Sex", "value": sex,
+                     "confidence": None,
+                     "manual_extraction": True}
+    """
+
+    for key, val in derived_entities.items():
+        pattern = val["rule"]
+        pattern_op = pattern_based_entities(parser_data, pattern)
+
+        entity_dict[key] = {"entity": key, "value": pattern_op,
+                              "confidence": None,
+                              "manual_extraction": True}
 
     return entity_dict
 
@@ -59,25 +119,102 @@ def entities_extraction(parser_data, required_entities, doc_type):
     # Read the entities from the processor
 
     parser_entities = parser_data["entities"]
-
     default_entities = required_entities["default_entities"]
     derived_entities = required_entities.get("derived_entities")
 
+    """
     temp_dict = {"text": "", "confidence": 0}
-
     entity_dict = {each_entity: temp_dict for each_entity in default_entities}
-
     default_entities_extraction(entity_dict, parser_entities, default_entities)
+    """
 
-    # only for DL, make it add for new parsers
+    """
+    # create response structure for required entities
+    entity_dict = {}
+
+    for each_entity in default_entities.keys():
+        temp_dict = {"entity": each_entity, "value": None,
+                     "confidence": None,
+                     "manual_extraction": False}
+
+        entity_dict.update({each_entity: temp_dict})
+    """
+
+    entity_dict = default_entities_extraction(parser_entities, default_entities)
+
     if derived_entities:
+        """
         for k in derived_entities.keys():
+            temp_dict = {"entity": k, "value": None,
+                         "confidence": None,
+                         "manual_extraction": False}
             entity_dict.update({k: temp_dict})
+        """
 
-        if doc_type == "driver_license":
-            dl_derived_entities_extraction(entity_dict, parser_data, derived_entities)
+        # this function can be used for all docs, if derived entities are extracted by using regex pattern
+        dl_derived_entities_extraction(entity_dict, parser_data, derived_entities)
 
     return entity_dict
+
+
+def form_parser_entities_mapping(form_parser_entity_list, mapping_dict):
+    # A --> B
+
+    default_entities = mapping_dict["default_entities"]
+
+    df = pd.DataFrame(form_parser_entity_list)
+
+    required_entities_list = []
+
+    for each_ocr_key, each_ocr_val in default_entities.items():
+
+        idx_list = df.index[df['key'] == each_ocr_key].tolist()
+
+        """
+        if idx_list:
+            for idx, each_val in enumerate(each_ocr_val):
+                try:
+                    temp_dict = {"entity": each_val, "value": df['value'][idx_list[idx]],
+                                 "confidence": df['value_confidence'][idx_list[idx]],
+                                 "manual_extraction": False}
+                    required_entities_list.append(temp_dict)
+                except Exception as e:
+                    print('Key not found in parser output')
+        else:
+            # filling null value if parser didn't extract
+            for each_val in each_ocr_val:
+                temp_dict = {"entity": each_val, "value": None,
+                             "confidence": None,
+                             "manual_extraction": False}
+                required_entities_list.append(temp_dict)
+        """
+
+
+        for idx, each_val in enumerate(each_ocr_val):
+
+            if idx_list:
+                try:
+                    temp_dict = {"entity": each_val, "value": df['value'][idx_list[idx]],
+                                 "confidence": df['value_confidence'][idx_list[idx]],
+                                 "manual_extraction": False}
+                except Exception as e:
+                    print('Key not found in parser output')
+                    temp_dict = {"entity": each_val, "value": None,
+                                 "confidence": None,
+                                 "manual_extraction": False}
+
+                required_entities_list.append(temp_dict)
+            else:
+                # filling null value if parser didn't extract
+
+                temp_dict = {"entity": each_val, "value": None,
+                             "confidence": None,
+                             "manual_extraction": False}
+                required_entities_list.append(temp_dict)
+
+
+    return required_entities_list
+
 
 
 def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None, output_filename=None) -> str:
