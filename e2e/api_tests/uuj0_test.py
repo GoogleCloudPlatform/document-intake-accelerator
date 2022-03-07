@@ -33,6 +33,11 @@ def test_classification_api_ping():
   res = requests.get(base_url + "/ping")
   assert res.status_code == 200
 
+def test_extraction_api_ping():
+  base_url = get_baseurl("extraction-service")
+  res = requests.get(base_url + "/ping")
+  assert res.status_code == 200
+
 def test_validation_api_ping():
   base_url = get_baseurl("validation-service")
   res = requests.get(base_url + "/ping")
