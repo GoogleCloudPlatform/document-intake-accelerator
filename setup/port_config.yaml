@@ -7,3 +7,4 @@ data:
   upload-service.PORT: "8889"
   classification-service.PORT: "8890"
   validation-service.PORT: "8891"
+  extraction-service.PORT: "8892"
