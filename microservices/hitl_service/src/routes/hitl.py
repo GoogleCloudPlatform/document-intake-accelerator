@@ -8,7 +8,7 @@ SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
 
 
-@router.get('/report_data')
+@router.get("/report_data")
 async def report_data():
   """ reports all data to user
             the database
