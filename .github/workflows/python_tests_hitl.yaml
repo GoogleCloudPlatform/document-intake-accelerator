@@ -1,11 +1,13 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
-name: Unit test & lint
+name: Unit test & lint for HITL Service
 on:
-  push:
+  pull_request:
     branches:
       - master
+    paths:
+      - 'microservices/hitl_service/src/**.py'
+      - 'common/src/**.py'
   workflow_dispatch:
 jobs:
   unit-test:
@@ -15,13 +17,7 @@ jobs:
       matrix:
         python-version: [3.7]
         target-folder: [
-          common,
-#          microservices/sample_service ,
-           microservices/upload_service,
-           microservices/classification_service,
-           microservices/validation_service,
-           microservices/extraction_service,
-           microservices/hitl_service,
+          microservices/hitl_service,
         ]
     steps:
     - uses: actions/checkout@v2
@@ -36,6 +32,10 @@ jobs:
     - name: Install Firebase CLI
       run: |
         curl -sL https://firebase.tools | bash
+
+    - name: Download Firestore emulator
+      run: |
+        firebase setup:emulators:firestore
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
@@ -65,13 +65,7 @@ jobs:
       matrix:
         python-version: [3.7]
         target-folder: [
-          common,
-#          microservices/sample_service,
-           microservices/upload_service,
-           microservices/classification_service,
-           microservices/validation_service,
-           microservices/extraction_service,
-           microservices/hitl_service
+          microservices/hitl_service,
         ]
     steps:
     - uses: actions/checkout@v2
@@ -89,5 +83,5 @@ jobs:
     - name: Lint with pylint
       run: |
         BASE_DIR=$(pwd)
-        cd ${{ matrix.target-folder }}
+        cd ${{ matrix.target-folder }}/src
         python -m pylint $(git ls-files '*.py') --rcfile=$BASE_DIR/.pylintrc
