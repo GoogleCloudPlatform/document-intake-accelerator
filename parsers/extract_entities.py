@@ -5,18 +5,20 @@ import proto
 import random
 from google.cloud import documentai_v1 as documentai
 from google.cloud import storage
-from utils_functions import entities_extraction, download_pdf_gcs, extract_form_fields, del_gcs_folder, form_parser_entities_mapping
+from utils_functions import entities_extraction, download_pdf_gcs, extract_form_fields, del_gcs_folder, \
+    form_parser_entities_mapping, extraction_accuracy_calc
 from config import *
+
 
 def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: str):
     """
     Parameters
     ----------
-    parser_details: it has parser info like id, name, loc, and etc
-    gcs_doc_path:
-    doc_type: doc label
+    parser_details: It has parser info like parser id, name, location, and etc
+    gcs_doc_path: Document gcs path
+    doc_type: Document type
 
-    Returns: Extracted json response coming from Parsers
+    Returns: Specialized parser response - list of dicts having entity, value, confidence and manual_extraction information.
     -------
     """
 
@@ -40,7 +42,6 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
     if location == "eu":
         opts = {"api_endpoint": "eu-documentai.googleapis.com"}
 
-
     client = documentai.DocumentProcessorServiceClient(client_options=opts)
 
     name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
@@ -50,13 +51,6 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
     )
 
     document = {"content": blob.download_as_bytes(), "mime_type": "application/pdf"}
-    """
-    # Read the file into memory
-    with open(doc_path, "rb") as image:
-        image_content = image.read()
-
-    document = {"content": image_content, "mime_type": "application/pdf"}
-    """
 
     # Configure the process request
     request = {"name": name, "raw_document": document}
@@ -69,6 +63,7 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
     json_string = proto.Message.to_json(parser_doc_data)
     data = json.loads(json_string)
 
+    # remove unnecessary entities from parser
     for each_attr in NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE:
         if "." in each_attr:
             parent_attr, child_attr = each_attr.split(".")
@@ -99,10 +94,21 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
 
     return specialized_parser_entity_list
 
-    # exit()
 
 def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: str, state: str, timeout: int):
+    """
+    Parameters
+    ----------
+    parser_details: It has parser info like parser id, name, location, and etc
+    gcs_doc_path: Document gcs path
+    doc_type: Document Type
+    state: State name
+    timeout: Max time given for extraction entities using async form parser API
 
+    Returns: Form parser response - list of dicts having entity, value, confidence and manual_extraction information.
+    -------
+
+    """
 
     location = parser_details["location"]
     processor_id = parser_details["processor_id"]
@@ -120,23 +126,19 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
     client = documentai.DocumentProcessorServiceClient(client_options=opts)
 
     # create a temp folder to store parser op, delete folder once processing done
-    # call create gcs bucket function to create bucket, folder will be created automatically
+    # call create gcs bucket function to create bucket, folder will be created automatically not the bucket
     gcs_output_uri = GCS_OP_URI
     gcs_output_uri_prefix = FORM_PARSER_OP_TEMP_FOLDER
 
-
     destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
-    # print(destination_uri)
 
     gcs_documents = documentai.GcsDocuments(
         documents=[{"gcs_uri": gcs_doc_path, "mime_type": "application/pdf"}]
     )
 
-    # 'mime_type' can be 'application/pdf', 'image/tiff',
-    # and 'image/gif', or 'application/json'
     input_config = documentai.BatchDocumentsInputConfig(gcs_documents=gcs_documents)
 
-    # Where to write results
+    # Temp op folder location
     output_config = documentai.DocumentOutputConfig(
         gcs_output_config={"gcs_uri": destination_uri}
     )
@@ -167,36 +169,36 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
 
     mapping_dict = MAPPING_DICT[state]
 
-    # saving form parser json
+    form_parser_text = ""
+    # saving form parser json, this can be removed from pipeline
     parser_json_folder = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/async-parser-json/without-noisy"
     parser_json_folder = os.path.join(parser_json_folder, gcs_doc_path.split("/")[-1][:-4])
+
     if not os.path.exists(parser_json_folder):
         os.mkdir(parser_json_folder)
 
     # browse through output jsons
     for i, blob in enumerate(blob_list):
-        # If JSON file, download the contents of this blob as a bytes object.
-        if ".json" in blob.name:
 
-            print('json file name', blob.name)
+        # If JSON file, download the contents of this blob as a bytes object.
+
+        if ".json" in blob.name:
 
             blob_as_bytes = blob.download_as_bytes()
 
-            # saving the parser response to the folder, remove while integration
+            # saving the parser response to the folder, remove this while integration
             parser_json_fname = os.path.join(parser_json_folder, 'res_{}.json'.format(i))
             with open(parser_json_fname, "wb") as file_obj:
                 blob.download_to_file(file_obj)
 
             document = documentai.types.Document.from_json(blob_as_bytes)
-            print(f"Fetched file {i + 1}")
+            # print(f"Fetched file {i + 1}")
 
-            # For a full list of Document object attributes, please reference this page:
-            # https://cloud.google.com/document-ai/docs/reference/rpc/google.cloud.documentai.v1beta3#document
+            form_parser_text += document.text
 
             # Read the text recognition output from the processor
             for page in document.pages:
                 for form_field in page.form_fields:
-
                     field_name, field_name_confidence = extract_form_fields(form_field.field_name, document)
                     field_value, field_value_confidence = extract_form_fields(form_field.field_value, document)
 
@@ -208,33 +210,44 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
 
             print("Extraction completed")
 
-            # Form parser mapping ocr --> desired names cleaning
-            form_parser_entities_list = form_parser_entities_mapping(extracted_entity_list, mapping_dict)
-            # stadardization of keys script should call here
-
         else:
             print(f"Skipping non-supported file type {blob.name}")
+
+    # Extract desired entites from form parser
+    form_parser_entities_list = form_parser_entities_mapping(extracted_entity_list, mapping_dict, form_parser_text)
 
     # delete temp folder
     del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
 
-    # save extracted entities json
-
+    # Save extracted entities json, can be removed from pipeline
     with open(
             "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/async-parser-json/{}.json".format(
-                    "Arizona2-latest"), "w") as outfile:
+                "Arizona2-latest"), "w") as outfile:
         json.dump(extracted_entity_list, outfile, indent=4)
 
-    # Extract desired entities only
-
+    # Save extract desired entities only
     with open(
             "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/extracted-entities/without-noisy/{}.json".format(
-                    "Arizona2-latest-desired"), "w") as outfile:
+                "Arizona2-latest-desired"), "w") as outfile:
         json.dump(form_parser_entities_list, outfile, indent=4)
 
     return form_parser_entities_list
 
-def extract_entities(gcs_doc_path, doc_type, state):
+
+def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
+
+    """
+    Parameters
+    ----------
+    gcs_doc_path: Document gcs path
+    doc_type: Type of documents. Ex: unemployment_form, driver_license, and etc
+    state: state
+
+    Returns
+    -------
+        List of dicts having entity, value, confidence and manual_extraction information.
+        Extraction accuracy
+    """
 
     parser_config_json = "parser_config.json"
 
@@ -251,17 +264,19 @@ def extract_entities(gcs_doc_path, doc_type, state):
                 desired_entities_list = form_parser_extraction(parser_information, gcs_doc_path, doc_type, state, 300)
             else:
                 desired_entities_list = specialized_parser_extraction(parser_information, gcs_doc_path, doc_type)
+
+            # extraction accuracy calculation
+            extraction_accuracy = extraction_accuracy_calc(desired_entities_list)
         else:
             # Parser not available
             print('parser not available for this document')
 
         # exit()
 
-    return desired_entities_list
+    return desired_entities_list, extraction_accuracy
+
 
 if __name__ == "__main__":
-
-
     parser_op = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/async-parser-json"
 
     extracted_entities = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/extracted-entities/without-noisy"
@@ -274,10 +289,10 @@ if __name__ == "__main__":
     # API Integration will start from here
 
     # Extract API Provides label and document
-    doc_type = "unemployment_form"
+    doc_type = "driver_license"
     state = "arizona"
-    gcs_doc_path = "gs://async_form_parser/input/Arizona2-latest.pdf"
-    # gcs_doc_path = "gs://async_form_parser/input/arizona-driver-form-13.pdf"
+    # gcs_doc_path = "gs://async_form_parser/input/Arizona2-latest.pdf"
+    gcs_doc_path = "gs://async_form_parser/input/arizona-driver-form-13.pdf"
 
     extract_entities(gcs_doc_path, doc_type, state)
 
