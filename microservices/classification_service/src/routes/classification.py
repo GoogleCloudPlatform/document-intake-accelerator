@@ -1,5 +1,6 @@
 """ classification endpoints """
 
+from pydoc import doc
 from fastapi import APIRouter
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from google.cloud import storage
@@ -34,6 +35,10 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
     raise HTTPException(status_code=400,detail={"status":"Failed", "message":"Parameters Missing"})
   if not gcs_url.endswith(".pdf") or not gcs_url.startswith("gs://"):
     raise HTTPException(status_code=400,detail={"status":"Failed", "message":"GCS pdf path is incorrect"})
+
+  if case_id != gcs_url.split('/')[3] or uid != gcs_url.split('/')[4]:
+    raise HTTPException(status_code=400,detail={"status":"Failed", "message":"Parameters Mismatched"})
+
   try:
     doc_prediction_result = predict_doc_type(case_id,uid,gcs_url)
   except Exception as e:
@@ -50,6 +55,9 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
   print(doc_prediction_result)
   if doc_prediction_result:
     print(predict_doc_type)
+    if doc_prediction_result["predicted_class"] == "Negative":
+      FAILED_RESPONSE["message"] = "Invalid Document"
+      return {"detail" : FAILED_RESPONSE}
     doc_type = ""
     if doc_prediction_result["predicted_class"] == "UE":
       doc_type = "AF"

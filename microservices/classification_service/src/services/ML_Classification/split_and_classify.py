@@ -48,7 +48,12 @@ class DocClassifier:
             img_path = self.splitter.split_save2img(page_num=page_num, save=True) # contains output image path
             print(img_path)
             predictions = self.classifier.endpoint_image_classification(endpoint_id='4679565468279767040',  filename=img_path)
-            print(predictions)
+
+            # If confidence is greater than the threshold then its a valid doc
+            if predictions['confidences'][0] <= 0.999:
+                predictions['displayNames'][0] = "Negative"
+            
+
             output = {
                 'case_id': self.case_id,
                 'u_id': self.uid,
