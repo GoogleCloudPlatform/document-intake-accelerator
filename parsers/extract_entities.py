@@ -6,7 +6,7 @@ import random
 from google.cloud import documentai_v1 as documentai
 from google.cloud import storage
 from utils_functions import entities_extraction, download_pdf_gcs, extract_form_fields, del_gcs_folder, \
-    form_parser_entities_mapping, extraction_accuracy_calc
+    form_parser_entities_mapping, extraction_accuracy_calc, clean_form_parser_keys
 from config import *
 
 
@@ -75,19 +75,18 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
 
     # this can be removed while integration
     # save parser op output
-    with open("{}.json".format(os.path.join(parser_op, gcs_doc_path.split('/')[-1])), "w") as outfile:
+    with open("{}.json".format(os.path.join(parser_op, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
         json.dump(data, outfile)
 
     # extract dl entities
     extracted_entity_dict = entities_extraction(data, required_entities, doc_type)
 
     # Create a list of entities dicts
-
     specialized_parser_entity_list = [v for k, v in extracted_entity_dict.items()]
 
     # this can be removed while integration
     # save extracted entities json
-    with open("{}.json".format(os.path.join(extracted_entities, gcs_doc_path.split('/')[-1])), "w") as outfile:
+    with open("{}.json".format(os.path.join(extracted_entities, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
         json.dump(specialized_parser_entity_list, outfile, indent=4)
 
     print("process completed")
@@ -170,9 +169,9 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
     mapping_dict = MAPPING_DICT[state]
 
     form_parser_text = ""
+
     # saving form parser json, this can be removed from pipeline
-    parser_json_folder = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/async-parser-json/without-noisy"
-    parser_json_folder = os.path.join(parser_json_folder, gcs_doc_path.split("/")[-1][:-4])
+    parser_json_folder = os.path.join(form_parser_raw_json_folder, gcs_doc_path.split("/")[-1][:-4])
 
     if not os.path.exists(parser_json_folder):
         os.mkdir(parser_json_folder)
@@ -202,6 +201,9 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
                     field_name, field_name_confidence = extract_form_fields(form_field.field_name, document)
                     field_value, field_value_confidence = extract_form_fields(form_field.field_value, document)
 
+                    # noise removal from keys
+                    field_name = clean_form_parser_keys(field_name)
+
                     temp_dict = {"key": field_name, "value": field_value,
                                  "key_confidence": round(field_name_confidence, 2),
                                  "value_confidence": round(field_value_confidence, 2)}
@@ -219,16 +221,13 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
     # delete temp folder
     del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
 
+
     # Save extracted entities json, can be removed from pipeline
-    with open(
-            "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/async-parser-json/{}.json".format(
-                "Arizona2-latest"), "w") as outfile:
+    with open("{}.json".format(os.path.join(parser_op, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
         json.dump(extracted_entity_list, outfile, indent=4)
 
     # Save extract desired entities only
-    with open(
-            "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/extracted-entities/without-noisy/{}.json".format(
-                "Arizona2-latest-desired"), "w") as outfile:
+    with open("{}.json".format(os.path.join(extracted_entities, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
         json.dump(form_parser_entities_list, outfile, indent=4)
 
     return form_parser_entities_list
@@ -277,9 +276,13 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
 
 
 if __name__ == "__main__":
-    parser_op = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/async-parser-json"
 
     extracted_entities = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/extracted-entities/without-noisy"
+
+    parser_op = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/async-parser-json/without-noisy"
+
+    form_parser_raw_json_folder = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/raw-json/without-noisy"
+
 
     gcs_doc_path = "gs://async_form_parser/input/arizona-driver-form-13.pdf"
 

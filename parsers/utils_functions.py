@@ -151,8 +151,8 @@ def entities_extraction(parser_data, required_entities, doc_type):
 
 
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_parser_text):
-    """
 
+    """
     Parameters
     ----------
     form_parser_entity_list: Extracted form parser entities before mapping
@@ -163,9 +163,9 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
 
     """
 
-    default_entities = mapping_dict["default_entities"]
+    default_entities = mapping_dict.get("default_entities")
 
-    derived_entities = mapping_dict["derived_entities"]
+    derived_entities = mapping_dict.get("derived_entities")
 
     df = pd.DataFrame(form_parser_entity_list)
 
@@ -237,6 +237,23 @@ def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None, outp
 
     return blob
 
+def clean_form_parser_keys(text):
+
+    """
+
+    Parameters
+    ----------
+    text: original text before noise removal - removed spaces, newlines
+
+    Returns: text after noise removal
+    -------
+
+    """
+
+    text = text.strip()
+    text = text.replace("\n", ' ')
+
+    return text
 
 # to get gcs folder
 def del_gcs_folder(bucket, folder):
