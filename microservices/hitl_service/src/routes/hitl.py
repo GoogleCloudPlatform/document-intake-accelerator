@@ -50,14 +50,14 @@ async def report_data():
           }, {
               "stage": "classification",
               "status": "success",
-              "timestamp": '2022-03-09 05:38:44.748676'
+              "timestamp": "2022-03-09 05:38:44.748676"
           }, {
               "stage": "extraction",
               "status": "success",
-              "timestamp": '2022-04-09 05:38:44.748676'
+              "timestamp": "2022-04-09 05:38:44.748676"
           }],
           "uploaded_time":
-              '2022-03-09 05:38:44.748676',
+              "2022-03-09 05:38:44.748676",
           "active":
               "active",
           "validation_score":
@@ -70,7 +70,7 @@ async def report_data():
               "stage": "pending",
               "timestamp": "2022-03-02 05:38:44.748676",
               "user": "Max",
-              "comment": "It's pending review"
+              "comment": "Its pending review"
           }, {
               "stage": "reject",
               "timestamp": "2022-03-01 05:38:44.748676",
@@ -118,14 +118,14 @@ async def report_data():
           }, {
               "stage": "classification",
               "status": "success",
-              "timestamp": '2022-03-09 05:38:44.748676'
+              "timestamp": "2022-03-09 05:38:44.748676"
           }, {
               "stage": "extraction",
               "status": "success",
-              "timestamp": '2022-04-09 05:38:44.748676'
+              "timestamp": "2022-04-09 05:38:44.748676"
           }],
           "uploaded_time":
-              '2022-03-09 05:38:44.748676',
+              "2022-03-09 05:38:44.748676",
           "active":
               "active",
           "validation_score":
@@ -138,7 +138,7 @@ async def report_data():
               "stage": "pending",
               "timestamp": "2022-03-02 05:38:44.748676",
               "user": "Max",
-              "comment": "It's pending review"
+              "comment": "Its pending review"
           }, {
               "stage": "reject",
               "timestamp": "2022-03-01 05:38:44.748676",
@@ -186,14 +186,14 @@ async def report_data():
           }, {
               "stage": "classification",
               "status": "success",
-              "timestamp": '2022-03-09 05:38:44.748676'
+              "timestamp": "2022-03-09 05:38:44.748676"
           }, {
               "stage": "extraction",
               "status": "success",
-              "timestamp": '2022-04-09 05:38:44.748676'
+              "timestamp": "2022-04-09 05:38:44.748676"
           }],
           "uploaded_time":
-              '2022-03-09 05:38:44.748676',
+              "2022-03-09 05:38:44.748676",
           "active":
               "active",
           "validation_score":
@@ -206,7 +206,7 @@ async def report_data():
               "stage": "pending",
               "timestamp": "2022-03-02 05:38:44.748676",
               "user": "Max",
-              "comment": "It's pending review"
+              "comment": "Its pending review"
           }, {
               "stage": "pending",
               "timestamp": "2022-03-01 05:38:44.748676",
