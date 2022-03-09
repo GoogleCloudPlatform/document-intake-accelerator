@@ -33,6 +33,10 @@ requires:
   configs: [validation-service]
   activeProfiles:  *dev_and_custom_backends
 
+- path: ./microservices/hitl_service
+  configs: [hitl-service]
+  activeProfiles:  *dev_and_custom_backends
+
 profiles:
 - name: custom
 - name: dev
