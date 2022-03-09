@@ -26,7 +26,7 @@ class Document(BaseModel):
   extraction_score = NumberField()
   validation_score = NumberField()
   matching_score = NumberField()
-  auto_approval = NumberField()
+  auto_approval = TextField()
 
   class Meta:
     ignore_none_field = False
