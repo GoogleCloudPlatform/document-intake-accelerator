@@ -18,12 +18,11 @@ async def report_data():
 
   data = [
       {
-          "case_id":
-              "123",
-          "uid":
-              "d018f778-8f29-11ec-9081-f2a4dc7e55e0",
+          "case_id": "123",
+          "uid": "d018f778-8f29-11ec-9081-f2a4dc7e55e0",
           "url":
-              "http://http://storage.googleapis.com/document-upload-test/123/d018f778-8f29-11ec-9081-f2a4dc7e55e0/arkans.pdf",
+              "http://http://storage.googleapis.com/document-upload-test/123/d018f778-8f29-11ec"
+              "-9081-f2a4dc7e55e0/arkans.pdf",
           "entities": [{
               "entity": "name",
               "raw-value": "Jon",
@@ -37,12 +36,9 @@ async def report_data():
               "extraction": 0.9,
               "matching": 0.5
           }],
-          "document_type":
-              "application",
-          "document_class":
-              "unemployment",
-          "context":
-              "Arizona",
+          "document_type": "application",
+          "document_class": "unemployment",
+          "context": "Arizona",
           "system_status": [{
               "stage": "uploaded",
               "status": "success",
@@ -56,16 +52,11 @@ async def report_data():
               "status": "success",
               "timestamp": "2022-04-09 05:38:44.748676"
           }],
-          "uploaded_time":
-              "2022-03-09 05:38:44.748676",
-          "active":
-              "active",
-          "validation_score":
-              0.9,
-          "matching_score":
-              0.7,
-          "extraction_score":
-              0.8,
+          "uploaded_time": "2022-03-09 05:38:44.748676",
+          "active": "active",
+          "validation_score": 0.9,
+          "matching_score": 0.7,
+          "extraction_score": 0.8,
           "hitl_status": [{
               "stage": "pending",
               "timestamp": "2022-03-02 05:38:44.748676",
@@ -82,16 +73,13 @@ async def report_data():
               "user": "William",
               "comment": " The document is accepted"
           }],
-          "auto_approval":
-              "yes"
+          "auto_approval": "yes"
       },
       {
-          "case_id":
-              "346",
-          "uid":
-              "d018f778-11ec-9081-f2a4dc7e55e0",
-          "url":
-              "http://http://storage.googleapis.com/document-upload-test/346/d018f778-11ec-9081-f2a4dc7e55e0/arizona.pdf",
+          "case_id": "346",
+          "uid": "d018f778-11ec-9081-f2a4dc7e55e0",
+          "url": "http://http://storage.googleapis.com/document-upload-test"
+                 "/346/d018f778-11ec-9081-f2a4dc7e55e0/arizona.pdf",
           "entities": [{
               "entity": "name",
               "raw-value": "Jon",
@@ -105,12 +93,9 @@ async def report_data():
               "extraction": 0.9,
               "matching": 0.5
           }],
-          "document_type":
-              "supporting_document",
-          "document_class":
-              "driving_licence",
-          "context":
-              "Arizona",
+          "document_type": "supporting_document",
+          "document_class": "driving_licence",
+          "context": "Arizona",
           "system_status": [{
               "stage": "uploaded",
               "status": "success",
@@ -124,16 +109,11 @@ async def report_data():
               "status": "success",
               "timestamp": "2022-04-09 05:38:44.748676"
           }],
-          "uploaded_time":
-              "2022-03-09 05:38:44.748676",
-          "active":
-              "active",
-          "validation_score":
-              0.9,
-          "matching_score":
-              0.7,
-          "extraction_score":
-              0.8,
+          "uploaded_time": "2022-03-09 05:38:44.748676",
+          "active": "active",
+          "validation_score": 0.9,
+          "matching_score": 0.7,
+          "extraction_score": 0.8,
           "hitl_status": [{
               "stage": "pending",
               "timestamp": "2022-03-02 05:38:44.748676",
@@ -150,16 +130,14 @@ async def report_data():
               "user": "William",
               "comment": " The document is accepted"
           }],
-          "auto_approval":
-              "no"
+          "auto_approval": "no"
       },
       {
-          "case_id":
-              "89989990",
-          "uid":
-              "d018f778-11ecf2a4dc7e55e0",
+          "case_id": "89989990",
+          "uid": "d018f778-11ecf2a4dc7e55e0",
           "url":
-              "http://http://storage.googleapis.com/document-upload-test/89989990/d018f778-11ecf2a4dc7e55e0/california.pdf",
+              "http://http://storage.googleapis.com/document-upload-test/89989990/"
+              "d018f778-11ecf2a4dc7e55e0/california.pdf",
           "entities": [{
               "entity": "name",
               "raw-value": "James",
@@ -173,12 +151,9 @@ async def report_data():
               "extraction": 0.9,
               "matching": 0.5
           }],
-          "document_type":
-              "supporting_document",
-          "document_class":
-              "driving_licence",
-          "context":
-              "Arizona",
+          "document_type": "supporting_document",
+          "document_class": "driving_licence",
+          "context": "Arizona",
           "system_status": [{
               "stage": "uploaded",
               "status": "success",
@@ -192,16 +167,11 @@ async def report_data():
               "status": "success",
               "timestamp": "2022-04-09 05:38:44.748676"
           }],
-          "uploaded_time":
-              "2022-03-09 05:38:44.748676",
-          "active":
-              "active",
-          "validation_score":
-              0.9,
-          "matching_score":
-              0.7,
-          "extraction_score":
-              0.8,
+          "uploaded_time": "2022-03-09 05:38:44.748676",
+          "active": "active",
+          "validation_score": 0.9,
+          "matching_score": 0.7,
+          "extraction_score": 0.8,
           "hitl_status": [{
               "stage": "pending",
               "timestamp": "2022-03-02 05:38:44.748676",
@@ -218,8 +188,7 @@ async def report_data():
               "user": "William",
               "comment": " The document is accepted"
           }],
-          "auto_approval":
-              "no"
+          "auto_approval": "no"
       },
   ]
   return {"status": "Success", "data": data}
