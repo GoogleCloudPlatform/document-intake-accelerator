@@ -21,8 +21,8 @@ async def report_data():
           "case_id": "123",
           "uid": "d018f778-8f29-11ec-9081-f2a4dc7e55e0",
           "url":
-              "http://http://storage.googleapis.com/document-upload-test/123/d018f778-8f29-11ec"
-              "-9081-f2a4dc7e55e0/arkans.pdf",
+              "http://http://storage.googleapis.com/document-upload-test/"
+              "123/d018f778-8f29-11ec-9081-f2a4dc7e55e0/arkans.pdf",
           "entities": [{
               "entity": "name",
               "raw-value": "Jon",
@@ -136,8 +136,8 @@ async def report_data():
           "case_id": "89989990",
           "uid": "d018f778-11ecf2a4dc7e55e0",
           "url":
-              "http://http://storage.googleapis.com/document-upload-test/89989990/"
-              "d018f778-11ecf2a4dc7e55e0/california.pdf",
+              "http://http://storage.googleapis.com/document-upload-test"
+              "/89989990/d018f778-11ecf2a4dc7e55e0/california.pdf",
           "entities": [{
               "entity": "name",
               "raw-value": "James",
