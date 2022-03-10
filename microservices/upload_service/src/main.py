@@ -7,9 +7,9 @@ import time
 import config
 from common.utils.logging_handler import Logger
 from concurrent.futures import ThreadPoolExecutor
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Request
 from routes import upload_file
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Upload Service API")
 origins = [
