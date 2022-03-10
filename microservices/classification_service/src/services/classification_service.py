@@ -18,5 +18,6 @@ def predict_doc_type(case_id:str , uid:str ,gcs_url : str):
     classifier  = DocClassifier(case_id,uid,gcs_url,outfolder)
     
     doc_type = json.loads(classifier.execute_job())
+    os.rmdir(outfolder)
     print(doc_type)
     return doc_type
