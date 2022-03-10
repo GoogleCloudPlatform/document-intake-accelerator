@@ -17,7 +17,8 @@ SUCCESS_RESPONSE = {"status": "Success"}
 def test_create_document_positive(client_with_emulator):
 
   response = client_with_emulator.post(
-      f"{api_url}create_document?case_id=345&filename=arkansaa.pdf&context=arizona",
+      f"{api_url}create_document?case_id=345&filename="
+      f"arkansaa.pdf&context=arizona",
   )
   print(response)
   assert response.status_code == 200

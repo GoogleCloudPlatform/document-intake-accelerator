@@ -2,7 +2,7 @@
 import datetime
 
 from fastapi import APIRouter
-
+from common.config import BUCKET_NAME
 from common.models import Document
 from typing import Optional, List
 
@@ -12,7 +12,6 @@ from typing import Optional, List
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
-from common.config import BUCKET_NAME
 
 
 @router.post("/create_document")
@@ -46,10 +45,16 @@ async def update_classification_status(
     document_class: Optional[str] = None,
     document_type: Optional[str] = None,
 ):
-  """takes case_id , uid , document_class ,document_type ,status of classification service as input
-        updates the document class ,document_type ,status in database
-        checks if the document with same case_id ,uid, document_class ,document_type already exists in database
-        if it exists mark previous as inactive  and current as active in database
+  """takes case_id , uid , document_class ,document_type ,status of
+
+        classification service as input
+        updates the document class ,document_type
+        ,status in database
+        checks if the document with same case_id ,uid,
+        document_class
+        ,document_type already exists in database
+        if it exists mark previous as inactive  and
+        current as active in database
 
      Args:
        case_id (str): Case id of the files
@@ -58,9 +63,10 @@ async def update_classification_status(
                 Example - Arizona , Callifornia etc
      Returns:
        200 : PDF files are successfully saved in db"""
-  print(document_type)
+  print(document_type + case_id + uid)
   print(document_class)
   print(status)
+
   return SUCCESS_RESPONSE
 
 
@@ -68,10 +74,11 @@ async def update_classification_status(
 async def update_extraction_status(case_id: str,
                                    uid: str,
                                    status: str,
-                                   entity: Optional[List[dict]] = None,
-                                   extraction_score: Optional[float] = None):
-  """takes case_id , uid , extraction_score ,document_type ,status of classification service as input
-            updates the document class ,document_type ,status in database
+                              entity: Optional[List[dict]] = None,
+                              extraction_score: Optional[float] = None):
+  """takes case_id , uid , extraction_score ,document_type ,status
+    of classification service as input
+    updates the document class ,document_type ,status in database
 
          Args:
            case_id (str): Case id of the files
@@ -91,10 +98,10 @@ async def update_extraction_status(case_id: str,
 
 @router.post("/update_validation_status")
 async def update_validation_status(case_id: str,
-                                   uid: str,
-                                   status: str,
-                                   validation_score: Optional[float] = None):
-  """takes case_id , uid , validation status of validation service as input and updates in database
+    uid: str, status: str,
+    validation_score: Optional[float] = None):
+  """takes case_id , uid , validation status of validation
+  service as input and updates in database
 
          Args:
            case_id (str): Case id of the files
@@ -112,9 +119,10 @@ async def update_validation_status(case_id: str,
 async def update_matching_status(case_id: str,
                                  uid: str,
                                  status: str,
-                                 entity: Optional[List[dict]] = None,
+                              entity: Optional[List[dict]] = None,
                                  matching_score: Optional[float] = None):
-  """takes case_id , uid , entity, status  of matching service as input and updates in database
+  """takes case_id , uid , entity,
+  status  of matching service as input and updates in database
 
              Args:
                case_id (str): Case id of the files
@@ -130,16 +138,17 @@ async def update_matching_status(case_id: str,
 
 
 @router.post("/create_documet_json_input")
-async def update_matching_status(case_id: str, uid: str, entity: List[dict]):
-  """takes case_id , uid , entity, status  of matching service as input and updates in database
+async def create_documet_json_input(case_id: str, uid: str, entity: List[dict]):
+  """takes case_id , uid , entity, status  of matching
+   service as input and updates in database
 
-             Args:
-               case_id (str): Case id of the files
-               uid (str): uid for document
-               matching_score:  matching score return
-               status : status of validation service
-             Returns:
-               200 : Database updated successfully """
+ Args:
+   case_id (str): Case id of the files
+   uid (str): uid for document
+   matching_score:  matching score return
+   status : status of validation service
+ Returns:
+   200 : Database updated successfully """
   print(case_id, uid)
   print(entity)
 

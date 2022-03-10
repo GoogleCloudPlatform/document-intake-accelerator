@@ -40,3 +40,4 @@ class Document(BaseModel):
         Document: Document Object
     """
     return Document.collection.filter("uid", "==", uuid).get()
+

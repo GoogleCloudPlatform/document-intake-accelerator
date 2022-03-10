@@ -5,7 +5,7 @@ from typing import Optional, List
 from schemas.input_json import InputJson
 
 # pylint: disable = broad-except
-router = APIRouter(prefix="/upload")
+router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
 
@@ -23,7 +23,9 @@ async def upload_file(context: str,
   Returns:
     200 : PDF files are successfully uploaded
     422 : If file other than pdf is uploaded by user """
-
+  for file in files:
+    print(file.filename)
+  print(context+case_id)
   return SUCCESS_RESPONSE
 
 
