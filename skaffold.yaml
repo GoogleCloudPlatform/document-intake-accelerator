@@ -36,6 +36,10 @@ requires:
 - path: ./microservices/hitl_service
   configs: [hitl-service]
   activeProfiles:  *dev_and_custom_backends
+#
+- path: ./microservices/document_status_service
+  configs: [document-status-service]
+  activeProfiles:  *dev_and_custom_backends
 
 profiles:
 - name: custom
