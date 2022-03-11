@@ -1,6 +1,10 @@
 from google.cloud import storage
 import os
+import math
+import re
+from collections import Counter
 
+WORD = re.compile(r"\w+")
 
 def download_file_gcs(bucket_name=None, gcs_uri=None, file_to_download=None, output_filename=None):
     """Function takes a path of an object/file stored in GCS bucket and downloads
@@ -34,6 +38,26 @@ def download_file_gcs(bucket_name=None, gcs_uri=None, file_to_download=None, out
     return output_filename
 
 
+def get_cosine(str1, str2):
+    vec1 = text_to_vector(str1)
+    vec2 = text_to_vector(str2)
+    intersection = set(vec1.keys()) & set(vec2.keys())
+    numerator = sum([vec1[x] * vec2[x] for x in intersection])
+
+    sum1 = sum([vec1[x] ** 2 for x in list(vec1.keys())])
+    sum2 = sum([vec2[x] ** 2 for x in list(vec2.keys())])
+    denominator = math.sqrt(sum1) * math.sqrt(sum2)
+
+    if not denominator:
+        return 0.0
+    else:
+        return float(numerator) / denominator
+
+
+def text_to_vector(text):
+    words = WORD.findall(text)
+    return Counter(words)
+
 if __name__ == '__main__':
     client_id=1
     u_id = 2
@@ -46,8 +70,16 @@ if __name__ == '__main__':
     # )
 
     #Example 2:  Extraction of pdf file using bucket name and file path in the same bucket
-    download_file_gcs(
-        bucket_name='claim-processing-classification-dataset',
-        file_to_download='Arizona_claim22.pdf',
-        output_filename=output_filename
-    )
+    # download_file_gcs(
+    #     bucket_name='claim-processing-classification-dataset',
+    #     file_to_download='Arizona_claim22.pdf',
+    #     output_filename=output_filename
+    # )
+
+    # Example 3 for cosine matching
+    text1 = "This is a foo bar sentence ."
+    text2 = "This sentence is similar to a foo bar sentence ."
+
+    cosine = get_cosine(text1, text2)
+
+    print("Cosine:", cosine)
