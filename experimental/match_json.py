@@ -31,8 +31,19 @@ def download_and_load_file(file_path: str) -> json:
     return json.load(open(temp_file, 'r'))
 
 
-def compare_dates(date1, date2, date1_format, date2_format):
+def compare_dates(date1:str, date2:str, date1_format:str, date2_format:str):
+    """Dates are compared after converting them to a specific format
+    For this each dates format should be provided.
 
+    Args:
+        date1 (str): date 1 in str format
+        date2 (str): date 2 in str format
+        date1_format (str):  date format in str format Ex. 'yyyy/mm/dd' or 'yyyy-mm-dd'
+        date2_format (str): date format in str format Ex. 'yyyy/mm/dd' or 'yyyy-mm-dd'
+
+    Returns:
+        _type_: _description_
+    """
     try:
         # expecting certain special characters in the date
         date1 = re.sub("[^0-9/\- ]", "",date1)
@@ -93,8 +104,6 @@ def compare_strings(str1, str2):
 
 def compare_json(application_form_path: str, supporting_doc_path:str, support_doc_type:str):
     """Function takes two JSON files, 1. application form JSON and 2. supporting doc JSON file
-
-
     Args:
         application_form_path (str): JSON file path (GCS/local). For GCS path, a file's gcs uri is required
         supporting_doc_path (str): JSON file path (GCS/local)
@@ -137,7 +146,7 @@ def compare_json(application_form_path: str, supporting_doc_path:str, support_do
                 if support_val[-1] in ['\n', " "]:
                     support_val = support_val[:-1]
 
-                # match dates
+                # 1. check for dates. date related keys contains value in tuple format
                 if isinstance(support_doc_dict[u_key], tuple): # a key signifies a date
                     matched.append(
                         compare_dates(
@@ -146,18 +155,18 @@ def compare_json(application_form_path: str, supporting_doc_path:str, support_do
                            )*support_doc_dict[u_key][0] # date format for application doc and supporting doc
                     )
                 
-                # match values with only integers
+                # 2. match values with only integers
                 elif support_val.isdigit() and  app_val.isdigit():
                     matched.append(
                         compare_strings(support_val, app_val)*support_doc_dict[u_key]
                         )
 
-                # match values with only characters
+                # 3. match values with only characters
                 else:
                     
                     # check if its a sentence or a single word
+                    # if a sentence apply fuzzy logic
 
-                    # if a sentence apply sort_ratio algo/cosine
                     if len(support_val.split()) >1 or len(app_val.split()) > 1:
 
                         # apply fuzzy logic
@@ -168,7 +177,7 @@ def compare_json(application_form_path: str, supporting_doc_path:str, support_do
             else:
                 not_found.append(u_key)
 
-        print("Matching Score: {0}%".format(sum(matched)/len(matched)*100))
+        return (sum(matched)/len(matched)*100, not_found)        
     except Exception as e:
         print(e)
         return None
