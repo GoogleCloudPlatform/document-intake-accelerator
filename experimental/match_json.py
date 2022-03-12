@@ -170,14 +170,19 @@ def compare_json(application_form_path: str, supporting_doc_path:str, support_do
                     if len(support_val.split()) >1 or len(app_val.split()) > 1:
 
                         # apply fuzzy logic
-                        matched.append(float(fuzz.token_sort_ration(support_val, app_val))*support_doc_dict[u_key])
+                        score = float(fuzz.token_sort_ration(support_val, app_val))*support_doc_dict[u_key]
+                        final_score = 1.0 if score>80 else 0.0
+                        matched.append(final_score)
                     
                     else: # just do string to string comparison
                         matched.append(compare_strings(support_val, app_val))
             else:
                 not_found.append(u_key)
 
-        return (sum(matched)/len(matched)*100, not_found)        
+        return (
+            "Matching Score {}".format(sum(matched)/len(matched)*100),
+             not_found
+             )        
     except Exception as e:
         print(e)
         return None
