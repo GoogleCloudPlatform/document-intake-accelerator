@@ -1,7 +1,15 @@
 """ hitl endpoints """
-from fastapi import APIRouter
+import json
+from sys import prefix
+from fastapi import APIRouter,HTTPException,Response
+from fastapi.responses import FileResponse
+from typing import Optional
+from common.models import Document
 # disabling for linting to pass
 # pylint: disable = broad-except
+import datetime
+from google.cloud import storage
+import os
 
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
@@ -15,178 +23,129 @@ async def report_data():
           Returns:
               200 : fetches all the data from database
     """
+  doc_list = []
+  try:
+    docs = Document.collection.filter("active","==","active").fetch()
+  except Exception as e:
+    print(e)
+    raise HTTPException(status_code=500,detail="Error in fetching documents")
+  for d in docs:
+    doc_list.append(d.to_dict())
+  response = {"status":"Success"}
+  response["data"] = doc_list
+  return response
 
-  data = [
-      {
-          "case_id": "123",
-          "uid": "d018f778-8f29-11ec-9081-f2a4dc7e55e0",
-          "url": "http://http://storage.googleapis.com/document-upload-test/"
-                 "123/d018f778-8f29-11ec-9081-f2a4dc7e55e0/arkans.pdf",
-          "entities": [{
-              "entity": "name",
-              "raw-value": "Jon",
-              "corrected_value": "Jonathan",
-              "extraction": 0.9,
-              "matching": 0.1
-          }, {
-              "entity": "last-name",
-              "raw-value": "Doe",
-              "corrected_value": "Doon",
-              "extraction": 0.9,
-              "matching": 0.5
-          }],
-          "document_type": "application",
-          "document_class": "unemployment",
-          "context": "Arizona",
-          "system_status": [{
-              "stage": "uploaded",
-              "status": "success",
-              "timestamp": "2022-03-02 05:38:44.748676"
-          }, {
-              "stage": "classification",
-              "status": "success",
-              "timestamp": "2022-03-09 05:38:44.748676"
-          }, {
-              "stage": "extraction",
-              "status": "success",
-              "timestamp": "2022-04-09 05:38:44.748676"
-          }],
-          "uploaded_time": "2022-03-09 05:38:44.748676",
-          "active": "active",
-          "validation_score": 0.9,
-          "matching_score": 0.7,
-          "extraction_score": 0.8,
-          "hitl_status": [{
-              "stage": "pending",
-              "timestamp": "2022-03-02 05:38:44.748676",
-              "user": "Max",
-              "comment": "Its pending review"
-          }, {
-              "stage": "reject",
-              "timestamp": "2022-03-01 05:38:44.748676",
-              "user": "William",
-              "comment": " The document is rejected"
-          }, {
-              "stage": "approved",
-              "timestamp": "2022-04-01 06:38:44.748676",
-              "user": "William",
-              "comment": " The document is accepted"
-          }],
-          "auto_approval": "yes"
-      },
-      {
-          "case_id": "346",
-          "uid": "d018f778-11ec-9081-f2a4dc7e55e0",
-          "url": "http://http://storage.googleapis.com/document-upload-test"
-                 "/346/d018f778-11ec-9081-f2a4dc7e55e0/arizona.pdf",
-          "entities": [{
-              "entity": "name",
-              "raw-value": "Jon",
-              "corrected_value": "Jonathan",
-              "extraction": 0.9,
-              "matching": 0.1
-          }, {
-              "entity": "last-name",
-              "raw-value": "Doe",
-              "corrected_value": "Doon",
-              "extraction": 0.9,
-              "matching": 0.5
-          }],
-          "document_type": "supporting_document",
-          "document_class": "driving_licence",
-          "context": "Arizona",
-          "system_status": [{
-              "stage": "uploaded",
-              "status": "success",
-              "timestamp": "2022-03-02 05:38:44.748676"
-          }, {
-              "stage": "classification",
-              "status": "success",
-              "timestamp": "2022-03-09 05:38:44.748676"
-          }, {
-              "stage": "extraction",
-              "status": "success",
-              "timestamp": "2022-04-09 05:38:44.748676"
-          }],
-          "uploaded_time": "2022-03-09 05:38:44.748676",
-          "active": "active",
-          "validation_score": 0.9,
-          "matching_score": 0.7,
-          "extraction_score": 0.8,
-          "hitl_status": [{
-              "stage": "pending",
-              "timestamp": "2022-03-02 05:38:44.748676",
-              "user": "Max",
-              "comment": "Its pending review"
-          }, {
-              "stage": "reject",
-              "timestamp": "2022-03-01 05:38:44.748676",
-              "user": "William",
-              "comment": " The document is rejected"
-          }, {
-              "stage": "approved",
-              "timestamp": "2022-04-01 06:38:44.748676",
-              "user": "William",
-              "comment": " The document is accepted"
-          }],
-          "auto_approval": "no"
-      },
-      {
-          "case_id": "89989990",
-          "uid": "d018f778-11ecf2a4dc7e55e0",
-          "url": "http://http://storage.googleapis.com/document-upload-test"
-                 "/89989990/d018f778-11ecf2a4dc7e55e0/california.pdf",
-          "entities": [{
-              "entity": "name",
-              "raw-value": "James",
-              "corrected_value": "Jamee",
-              "extraction": 0.9,
-              "matching": 0.1
-          }, {
-              "entity": "last-name",
-              "raw-value": "Doe",
-              "corrected_value": "Doon",
-              "extraction": 0.9,
-              "matching": 0.5
-          }],
-          "document_type": "supporting_document",
-          "document_class": "driving_licence",
-          "context": "Arizona",
-          "system_status": [{
-              "stage": "uploaded",
-              "status": "success",
-              "timestamp": "2022-03-02 05:38:44.748676"
-          }, {
-              "stage": "classification",
-              "status": "success",
-              "timestamp": "2022-03-09 05:38:44.748676"
-          }, {
-              "stage": "extraction",
-              "status": "success",
-              "timestamp": "2022-04-09 05:38:44.748676"
-          }],
-          "uploaded_time": "2022-03-09 05:38:44.748676",
-          "active": "active",
-          "validation_score": 0.9,
-          "matching_score": 0.7,
-          "extraction_score": 0.8,
-          "hitl_status": [{
-              "stage": "pending",
-              "timestamp": "2022-03-02 05:38:44.748676",
-              "user": "Max",
-              "comment": "Its pending review"
-          }, {
-              "stage": "pending",
-              "timestamp": "2022-03-01 05:38:44.748676",
-              "user": "William",
-              "comment": " The document is pending"
-          }, {
-              "stage": "approved",
-              "timestamp": "2022-04-01 06:38:44.748676",
-              "user": "William",
-              "comment": " The document is accepted"
-          }],
-          "auto_approval": "no"
-      },
-  ]
-  return {"status": "Success", "data": data}
+@router.post("/get_document")
+async def get_document( uid:str):
+  """ Returns a single document to user using uid from the database
+        Args : uid - Unique ID for every document
+        Returns:
+          200 : Fetches a single document from database
+    """
+  try:
+    doc = Document.find_by_uid(uid)
+    if not doc or not doc.to_dict()["active"] == "active":
+      response = {"status" : "Failed"}
+      response["detail"] = "No Document found with the given uid"
+      return response
+  except Exception as e:
+    print(e)
+    raise HTTPException(status_code=500,detail="Error in fetching documents")
+  response = {"status":"Success"}
+  response["data"] = doc
+  return response
+
+@router.post("/get_queue")
+async def get_queue(hitl_status:str):
+  """
+  Fetches a queue of all documents with the same hitl status(accepted,rejected or pending) from firestore
+
+  Args: hitl_queue - status of the required queue
+
+  Returns: 
+    200 : Fetches a list of documents with the same hitl_status from Firestore
+
+    500 : If there is any error during fetching from firestore
+  """
+  
+  if hitl_status.lower() not in ["accepted","rejected","pending"]:
+    raise HTTPException(status_code=400,detail="Invalid Parameter")
+  try:
+    docs = list(Document.collection.filter("active","==","active").fetch())
+  except Exception as e:
+    print(e)
+    raise HTTPException(status_code=500,detail="Error during fetching from Firestore")
+  result_queue = []
+  for d in docs:
+    status_class = ""
+    doc_dict = d.to_dict()
+    hitl_trail = doc_dict["hitl_status"]
+    if hitl_trail:
+      status_class = hitl_trail[-1]["status"].lower()
+    if status_class == hitl_status.lower():
+      result_queue.append(doc_dict)
+  response = { "status":"Success" }
+  response["data"] = result_queue
+  return response
+
+@router.post("/update_entity")
+async def update_entity(uid:str, updated_doc:dict):
+  """
+    Updates the entity values
+
+    Args : uid - unique id,updated_doc - document with updated values in entities field
+
+    Returns 200 : Updation was successful
+
+    Returns 500 : If something fails
+
+  """
+  print(updated_doc)
+  #updated_doc = json.loads(updated_doc)
+  print(updated_doc)
+  try:
+    doc = Document.find_by_uid(uid)
+    if not doc or not doc.to_dict()["active"] == "active":
+      response = {"status" : "Failed"}
+      response["detail"] = "No Document found with the given uid"
+      return response
+    doc.entities = updated_doc["entities"]
+    doc.update()
+    return {"status":"Success"}
+  except Exception as e:
+    print(e)
+    raise HTTPException(status_code=500,detail="Failed to update entity")
+
+@router.post("/update_hitl_status")
+async def update_hitl_status(uid:str, status:str,user:str,comment:Optional[str]="" ):
+  """
+    Updates the HITL status
+
+    Args : uid - unique id,status - hitl status, user-username, comment - notes or comments by user
+
+    Returns 200 : Updation was successful
+    
+    Returns 500 : If something fails
+
+  """
+
+  timestamp = str(datetime.datetime.utcnow())
+  print(timestamp)
+  hitl_status = {"timestamp":timestamp, "status":status, "user":user, "comment":comment}
+  try:
+    doc = Document.find_by_uid(uid)
+    if not doc or not doc.to_dict()["active"] == "active":
+      response = {"status" : "Failed"}
+      response["detail"] = "No Document found with the given uid"
+      return response
+    if doc:
+      print(doc.to_dict())
+      existing_hitl = doc.to_dict()["hitl_status"] if doc.to_dict()["hitl_status"] is not None else []
+      print(existing_hitl)
+      existing_hitl.append(hitl_status)
+      doc.hitl_status = existing_hitl
+      doc.update()
+    return {"status":"Success"}
+  except Exception as e:
+    print(e)
+    raise HTTPException(status_code=500,detail="Failed to update hitl status")
