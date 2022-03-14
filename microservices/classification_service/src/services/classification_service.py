@@ -1,4 +1,4 @@
-from services.ML_Classification.split_and_classify import DocClassifier
+from utils.split_and_classify import DocClassifier
 import os
 import json
 
