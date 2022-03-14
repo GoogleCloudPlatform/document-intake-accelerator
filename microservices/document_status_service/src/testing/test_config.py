@@ -1,0 +1,1 @@
+"""Static Values for Testing"""

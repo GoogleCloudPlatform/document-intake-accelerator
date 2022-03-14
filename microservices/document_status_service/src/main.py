@@ -1,5 +1,5 @@
 """
-  Upload Service Microservice
+  Document Service Microservice
 """
 import uvicorn
 import asyncio
@@ -7,21 +7,10 @@ import time
 import config
 from common.utils.logging_handler import Logger
 from concurrent.futures import ThreadPoolExecutor
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Request
-from routes import upload_file
+from routes import document_status
 
-app = FastAPI(title="Upload Service API")
-origins = [
-    "*",
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = FastAPI(title="Document Service API")
 
 
 @app.on_event("startup")
@@ -48,11 +37,11 @@ def health_check():
   return True
 
 
-api = FastAPI(title="Upload Service API", version="latest")
+api = FastAPI(title="Document Service API", version="latest")
 
-api.include_router(upload_file.router)
+api.include_router(document_status.router)
 
-app.mount("/upload_service/v1", api)
+app.mount("/document_status_service/v1", api)
 
 if __name__ == "__main__":
   uvicorn.run(

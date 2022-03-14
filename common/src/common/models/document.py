@@ -19,7 +19,6 @@ class Document(BaseModel):
   context = TextField()
   system_status = ListField()
   hitl_status = ListField()
-  upload_time = DateTime()
   active = TextField()
   upload_timestamp = DateTime()
   entities = ListField()
@@ -31,3 +30,14 @@ class Document(BaseModel):
   class Meta:
     ignore_none_field = False
     collection_name = DATABASE_PREFIX+ "document"
+
+  @classmethod
+  def find_by_uid(cls, uuid):
+    """Find the document  using  uid
+    Args:
+        uuid (string):  UID
+    Returns:
+        Document: Document Object
+    """
+    return Document.collection.filter("uid", "==", uuid).get()
+

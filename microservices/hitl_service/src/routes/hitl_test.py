@@ -15,10 +15,47 @@ os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
 SUCCESS_RESPONSE = {"status": "Success"}
 
 
-def test_classification_api(client_with_emulator):
+def test_report_data_api(client_with_emulator):
   """Test case to check the hitl endpoint"""
 
   response = client_with_emulator.get(f"{api_url}report_data")
-  print(api_url)
-  print(response)
-  assert response.status_code == 200, "Status 200"
+  assert response.status_code == 200
+
+
+def test_get_document_api(client_with_emulator):
+  """Test case to check the hitl endpoint"""
+
+  response = client_with_emulator.post(f"{api_url}get_document?uid=u123")
+  assert response.status_code == 200
+
+
+def test_get_queue_api(client_with_emulator):
+  """Test case to check the hitl endpoint"""
+
+  response = client_with_emulator.post(
+      f"{api_url}get_queue?hitl_status=accepted")
+  assert response.status_code == 200
+
+
+def test_update_hitl_status_api(client_with_emulator):
+  """Test case to check the hitl endpoint"""
+
+  response = client_with_emulator.post(
+      f"{api_url}update_hitl_status?uid=u123&status=accepted&user=Jon&comment="
+  )
+  assert response.status_code == 200
+
+
+def test_update_entity_api(client_with_emulator):
+  """Test case to check the hitl endpoint"""
+
+  data = {
+      "entities": [{
+          "key": "first_name",
+          "raw-value": "Mo",
+          "corrected-value": "Mohit"
+      }]
+  }
+  response = client_with_emulator.post(
+      f"{api_url}update_entity?uid=u123", json=data)
+  assert response.status_code == 200
