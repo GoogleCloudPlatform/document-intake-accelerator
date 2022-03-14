@@ -41,7 +41,7 @@ def test_update_hitl_status_api(client_with_emulator):
   """Test case to check the hitl endpoint"""
 
   response = client_with_emulator.post(
-      f"{api_url}update_hitl_status?uid=u123&status=accepted&user=Mohit&comment="
+      f"{api_url}update_hitl_status?uid=u123&status=accepted&user=Jon&comment="
   )
   assert response.status_code == 200
 
