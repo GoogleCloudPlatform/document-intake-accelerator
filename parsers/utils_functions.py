@@ -250,8 +250,12 @@ def clean_form_parser_keys(text):
 
     """
 
-    text = text.strip()
-    text = text.replace("\n", ' ')
+    # removing special characters from beginning and end of a string
+    if len(text):
+        text = text.strip()
+        text = text.replace("\n", ' ')
+        text = re.sub(r"^\W+", "", text)
+        text = re.sub(r"\W+$", "", text)
 
     return text
 

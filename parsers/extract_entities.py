@@ -33,8 +33,6 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
 
     # required_entities = parser_details["required_entities"]
 
-    required_entities = MAPPING_DICT[doc_type]
-
     project_id = PROJECT_NAME
 
     opts = {}
@@ -77,6 +75,8 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
     # save parser op output
     with open("{}.json".format(os.path.join(parser_op, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
         json.dump(data, outfile)
+
+    required_entities = MAPPING_DICT[doc_type]
 
     # extract dl entities
     extracted_entity_dict = entities_extraction(data, required_entities, doc_type)
@@ -166,8 +166,6 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
 
     extracted_entity_list = []
 
-    mapping_dict = MAPPING_DICT[state]
-
     form_parser_text = ""
 
     # saving form parser json, this can be removed from pipeline
@@ -215,16 +213,18 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
         else:
             print(f"Skipping non-supported file type {blob.name}")
 
-    # Extract desired entites from form parser
-    form_parser_entities_list = form_parser_entities_mapping(extracted_entity_list, mapping_dict, form_parser_text)
 
     # delete temp folder
     del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
 
-
     # Save extracted entities json, can be removed from pipeline
     with open("{}.json".format(os.path.join(parser_op, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
         json.dump(extracted_entity_list, outfile, indent=4)
+
+    mapping_dict = MAPPING_DICT[state]
+
+    # Extract desired entites from form parser
+    form_parser_entities_list = form_parser_entities_mapping(extracted_entity_list, mapping_dict, form_parser_text)
 
     # Save extract desired entities only
     with open("{}.json".format(os.path.join(extracted_entities, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
@@ -277,12 +277,11 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
 
 if __name__ == "__main__":
 
-    extracted_entities = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/extracted-entities/without-noisy"
+    extracted_entities = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arakansas/extracted-entities/without-noisy"
 
-    parser_op = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/async-parser-json/without-noisy"
+    parser_op = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arakansas/async-parser-json/without-noisy"
 
-    form_parser_raw_json_folder = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arizona/raw-json/without-noisy"
-
+    form_parser_raw_json_folder = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arakansas/raw-json/without-noisy"
 
     gcs_doc_path = "gs://async_form_parser/input/arizona-driver-form-13.pdf"
 
@@ -292,10 +291,10 @@ if __name__ == "__main__":
     # API Integration will start from here
 
     # Extract API Provides label and document
-    doc_type = "driver_license"
-    state = "arizona"
+    doc_type = "unemployment_form"
+    state = "arakansas"
     # gcs_doc_path = "gs://async_form_parser/input/Arizona2-latest.pdf"
-    gcs_doc_path = "gs://async_form_parser/input/arizona-driver-form-13.pdf"
+    gcs_doc_path = "gs://async_form_parser/input/Arkansas3.pdf"
 
     extract_entities(gcs_doc_path, doc_type, state)
 
