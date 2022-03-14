@@ -1,15 +1,10 @@
 """ hitl endpoints """
-import json
-from sys import prefix
-from fastapi import APIRouter,HTTPException,Response
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, HTTPException
 from typing import Optional
 from common.models import Document
 # disabling for linting to pass
 # pylint: disable = broad-except
 import datetime
-from google.cloud import storage
-import os
 
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
@@ -25,18 +20,20 @@ async def report_data():
     """
   doc_list = []
   try:
-    docs = Document.collection.filter("active","==","active").fetch()
+    docs = Document.collection.filter("active", "==", "active").fetch()
   except Exception as e:
     print(e)
-    raise HTTPException(status_code=500,detail="Error in fetching documents")
+    raise HTTPException(
+        status_code=500, detail="Error in fetching documents") from e
   for d in docs:
     doc_list.append(d.to_dict())
-  response = {"status":"Success"}
+  response = {"status": "Success"}
   response["data"] = doc_list
   return response
 
+
 @router.post("/get_document")
-async def get_document( uid:str):
+async def get_document(uid: str):
   """ Returns a single document to user using uid from the database
         Args : uid - Unique ID for every document
         Returns:
@@ -45,18 +42,20 @@ async def get_document( uid:str):
   try:
     doc = Document.find_by_uid(uid)
     if not doc or not doc.to_dict()["active"] == "active":
-      response = {"status" : "Failed"}
+      response = {"status": "Failed"}
       response["detail"] = "No Document found with the given uid"
       return response
   except Exception as e:
     print(e)
-    raise HTTPException(status_code=500,detail="Error in fetching documents")
-  response = {"status":"Success"}
+    raise HTTPException(
+        status_code=500, detail="Error in fetching documents") from e
+  response = {"status": "Success"}
   response["data"] = doc
   return response
 
+
 @router.post("/get_queue")
-async def get_queue(hitl_status:str):
+async def get_queue(hitl_status: str):
   """
   Fetches a queue of all documents with the same hitl status(accepted,rejected or pending) from firestore
 
@@ -67,14 +66,15 @@ async def get_queue(hitl_status:str):
 
     500 : If there is any error during fetching from firestore
   """
-  
-  if hitl_status.lower() not in ["accepted","rejected","pending"]:
-    raise HTTPException(status_code=400,detail="Invalid Parameter")
+
+  if hitl_status.lower() not in ["accepted", "rejected", "pending"]:
+    raise HTTPException(status_code=400, detail="Invalid Parameter")
   try:
-    docs = list(Document.collection.filter("active","==","active").fetch())
+    docs = list(Document.collection.filter("active", "==", "active").fetch())
   except Exception as e:
     print(e)
-    raise HTTPException(status_code=500,detail="Error during fetching from Firestore")
+    raise HTTPException(
+        status_code=500, detail="Error during fetching from Firestore") from e
   result_queue = []
   for d in docs:
     status_class = ""
@@ -84,12 +84,13 @@ async def get_queue(hitl_status:str):
       status_class = hitl_trail[-1]["status"].lower()
     if status_class == hitl_status.lower():
       result_queue.append(doc_dict)
-  response = { "status":"Success" }
+  response = {"status": "Success"}
   response["data"] = result_queue
   return response
 
+
 @router.post("/update_entity")
-async def update_entity(uid:str, updated_doc:dict):
+async def update_entity(uid: str, updated_doc: dict):
   """
     Updates the entity values
 
@@ -100,24 +101,26 @@ async def update_entity(uid:str, updated_doc:dict):
     Returns 500 : If something fails
 
   """
-  print(updated_doc)
-  #updated_doc = json.loads(updated_doc)
-  print(updated_doc)
   try:
     doc = Document.find_by_uid(uid)
     if not doc or not doc.to_dict()["active"] == "active":
-      response = {"status" : "Failed"}
+      response = {"status": "Failed"}
       response["detail"] = "No Document found with the given uid"
       return response
     doc.entities = updated_doc["entities"]
     doc.update()
-    return {"status":"Success"}
+    return {"status": "Success"}
   except Exception as e:
     print(e)
-    raise HTTPException(status_code=500,detail="Failed to update entity")
+    raise HTTPException(
+        status_code=500, detail="Failed to update entity") from e
+
 
 @router.post("/update_hitl_status")
-async def update_hitl_status(uid:str, status:str,user:str,comment:Optional[str]="" ):
+async def update_hitl_status(uid: str,
+                             status: str,
+                             user: str,
+                             comment: Optional[str] = ""):
   """
     Updates the HITL status
 
@@ -130,22 +133,27 @@ async def update_hitl_status(uid:str, status:str,user:str,comment:Optional[str]=
   """
 
   timestamp = str(datetime.datetime.utcnow())
-  print(timestamp)
-  hitl_status = {"timestamp":timestamp, "status":status, "user":user, "comment":comment}
+  hitl_status = {
+      "timestamp": timestamp,
+      "status": status,
+      "user": user,
+      "comment": comment
+  }
   try:
     doc = Document.find_by_uid(uid)
     if not doc or not doc.to_dict()["active"] == "active":
-      response = {"status" : "Failed"}
+      response = {"status": "Failed"}
       response["detail"] = "No Document found with the given uid"
       return response
     if doc:
-      print(doc.to_dict())
-      existing_hitl = doc.to_dict()["hitl_status"] if doc.to_dict()["hitl_status"] is not None else []
+      existing_hitl = doc.to_dict()["hitl_status"] if doc.to_dict(
+      )["hitl_status"] is not None else []
       print(existing_hitl)
       existing_hitl.append(hitl_status)
       doc.hitl_status = existing_hitl
       doc.update()
-    return {"status":"Success"}
+    return {"status": "Success"}
   except Exception as e:
     print(e)
-    raise HTTPException(status_code=500,detail="Failed to update hitl status")
+    raise HTTPException(
+        status_code=500, detail="Failed to update hitl status") from e
