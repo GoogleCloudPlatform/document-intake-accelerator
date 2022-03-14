@@ -8,7 +8,6 @@ from utils import *
 import datetime
 import re
 
-
 """This script will help in matching two JSON files. JSON files can be loaded from
 GCP or from local. An application form is approved if its values matches with at least these standard fields
 values as referenced in
@@ -49,43 +48,43 @@ def compare_dates(date1:str, date2:str, date1_format:str, date2_format:str):
         date1 = re.sub("[^0-9/\- ]", "",date1)
         date2 = re.sub("[^0-9/\- ]", "", date2)
 
-        # finding the seperator / \ -
-        delimiter1 = [c for c in date1_format if not c.isalpha()][0]
-        delimiter2 = [c for c in date2_format if not c.isalpha()][0]
+        # # finding the seperator / \ -
+        # delimiter1 = [c for c in date1_format if not c.isalpha()][0]
+        # delimiter2 = [c for c in date2_format if not c.isalpha()][0]
 
-        # 
-        d1_format = date1_format.split(delimiter1)
-        d2_format = date2_format.split(delimiter2)
+        # # 
+        # d1_format = date1_format.split(delimiter1)
+        # d2_format = date2_format.split(delimiter2)
 
-        # change 'y' --> 'Y'
-        f1 = []
-        for i in d1_format:
-            if i[0] == 'y':
-                f1.append(i[0].upper())
-            else:
-                f1.append(i[0])
+        # # change 'y' --> 'Y'
+        # f1 = []
+        # for i in d1_format:
+        #     if i[0] == 'y':
+        #         f1.append(i[0].upper())
+        #     else:
+        #         f1.append(i[0])
 
         
-        f2 = []
-        for i in d2_format:
-            if i[0] == 'y':
-                f2.append(i[0].upper())
-            else:
-                f2.append(i[0])
+        # f2 = []
+        # for i in d2_format:
+        #     if i[0] == 'y':
+        #         f2.append(i[0].upper())
+        #     else:
+        #         f2.append(i[0])
 
         # # remove invalid characters from the date
         # clean_date1 = re.sub("[^0-9]", "", date1)
         # clean_date2 = re.sub("[^0-9]", "", date2)
 
         # create the format in which datetime module expects a string to be.
-        d1_format = '%' + f1[0] + delimiter1 + '%' + f1[1] + delimiter1 + '%' + f1[2]
+        # d1_format = '%' + f1[0] + delimiter1 + '%' + f1[1] + delimiter1 + '%' + f1[2]
 
-        d2_format = '%' + f2[0] + delimiter2 + '%' + f2[1] + delimiter2 + '%' + f2[2]
+        # d2_format = '%' + f2[0] + delimiter2 + '%' + f2[1] + delimiter2 + '%' + f2[2]
 
         # convert dates to similar format
-        modified_date1 = datetime.datetime.strptime(date1, d1_format).strftime(d2_format)
+        modified_date1 = datetime.datetime.strptime(date1, date1_format).strftime(date2_format)
 
-        modified_date2 = datetime.datetime.strptime(date2, d2_format).strftime(d2_format)
+        modified_date2 = datetime.datetime.strptime(date2, date2_format).strftime(date2_format)
 
         #compare
         if modified_date1 == modified_date2:
@@ -95,12 +94,7 @@ def compare_dates(date1:str, date2:str, date1_format:str, date2_format:str):
     
     except Exception as e:
         return 0.0
-
-def compare_strings(str1, str2):
-    if str1 is str2:
-        return 1.0
-    else:
-        return 0.0
+   
 
 def compare_json(application_form_path: str, supporting_doc_path:str, support_doc_type:str):
     """Function takes two JSON files, 1. application form JSON and 2. supporting doc JSON file
@@ -130,6 +124,7 @@ def compare_json(application_form_path: str, supporting_doc_path:str, support_do
 
         matched = []
         not_found = []
+        
 
         for u_key in support_doc_dict.keys():
 
@@ -158,29 +153,27 @@ def compare_json(application_form_path: str, supporting_doc_path:str, support_do
                 # 2. match values with only integers
                 elif support_val.isdigit() and  app_val.isdigit():
                     matched.append(
-                        compare_strings(support_val, app_val)*support_doc_dict[u_key]
-                        )
+                        (1.0 if support_val==app_val else 0.0)*support_doc_dict[u_key])
 
                 # 3. match values with only characters
                 else:
                     
                     # check if its a sentence or a single word
                     # if a sentence apply fuzzy logic
-
                     if len(support_val.split()) >1 or len(app_val.split()) > 1:
 
-                        # apply fuzzy logic
-                        score = float(fuzz.token_sort_ration(support_val, app_val))*support_doc_dict[u_key]
-                        final_score = 1.0 if score>80 else 0.0
-                        matched.append(final_score)
+                        # apply fuzzy logic --> score x wts
+                        score = float(fuzz.token_sort_ration(support_val, app_val)/100)*support_doc_dict[u_key]
+                        
+                        matched.append(score)
                     
-                    else: # just do string to string comparison
-                        matched.append(compare_strings(support_val, app_val))
+                    # else: # just do string to string comparison
+                    #     matched.append(compare_strings(support_val, app_val))
             else:
                 not_found.append(u_key)
 
         return (
-            "Matching Score {}".format(sum(matched)/len(matched)*100),
+            "Matching Score {}".format(sum(matched)),
              not_found
              )        
     except Exception as e:
