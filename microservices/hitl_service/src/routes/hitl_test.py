@@ -2,7 +2,6 @@
   Tests for hitl endpoints
 """
 import os
-from unittest.mock import patch
 # disabling pylint rules that conflict with pytest fixtures
 # pylint: disable=unused-argument,redefined-outer-name,unused-import
 from testing.fastapi_fixtures import client_with_emulator

@@ -57,16 +57,13 @@ async def get_document(uid: str):
 @router.post("/get_queue")
 async def get_queue(hitl_status: str):
   """
-  Fetches a queue of all documents with the same hitl status(accepted,rejected or pending) from firestore
-
+  Fetches a queue of all documents with the same hitl status
+  (accepted,rejected or pending) from firestore
   Args: hitl_queue - status of the required queue
-
-  Returns: 
+  Returns:
     200 : Fetches a list of documents with the same hitl_status from Firestore
-
     500 : If there is any error during fetching from firestore
   """
-
   if hitl_status.lower() not in ["accepted", "rejected", "pending"]:
     raise HTTPException(status_code=400, detail="Invalid Parameter")
   try:
@@ -93,13 +90,10 @@ async def get_queue(hitl_status: str):
 async def update_entity(uid: str, updated_doc: dict):
   """
     Updates the entity values
-
-    Args : uid - unique id,updated_doc - document with updated values in entities field
-
+    Args : uid - unique id,
+    updated_doc - document with updated values in entities field
     Returns 200 : Updation was successful
-
     Returns 500 : If something fails
-
   """
   try:
     doc = Document.find_by_uid(uid)
@@ -123,15 +117,11 @@ async def update_hitl_status(uid: str,
                              comment: Optional[str] = ""):
   """
     Updates the HITL status
-
-    Args : uid - unique id,status - hitl status, user-username, comment - notes or comments by user
-
+    Args : uid - unique id,status - hitl status,
+    user-username, comment - notes or comments by user
     Returns 200 : Updation was successful
-    
     Returns 500 : If something fails
-
   """
-
   timestamp = str(datetime.datetime.utcnow())
   hitl_status = {
       "timestamp": timestamp,
