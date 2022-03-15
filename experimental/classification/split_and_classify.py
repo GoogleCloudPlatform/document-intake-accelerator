@@ -10,7 +10,7 @@ import os
 import sys
 from os.path import basename
 import warnings
-warnings.filterwarnings("ignore")
+warnings.filterwarnings('ignore')
 
 
 class DocClassifier:
@@ -70,7 +70,7 @@ class DocClassifier:
     # If confidence is greater than the threshold then its a valid doc
     predicted_class = predictions['displayNames'][0]
     if predictions['confidences'][0] < self.conf:
-      predicted_class = "Negative"
+      predicted_class = 'Negative'
 
 
     output = {
