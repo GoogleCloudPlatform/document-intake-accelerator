@@ -1,2 +1,0 @@
-pandas==1.2.4
-fuzzywuzzy==0.18.0
