@@ -41,6 +41,9 @@ requires:
   configs: [document-status-service]
   activeProfiles:  *dev_and_custom_backends
 
+- path: ./microservices/matching_service
+  configs: [matching-service]
+  activeProfiles:  *dev_and_custom_backends
 profiles:
 - name: custom
 - name: dev

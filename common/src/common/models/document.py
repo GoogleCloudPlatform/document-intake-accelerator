@@ -20,7 +20,7 @@ class Document(BaseModel):
   system_status = ListField()
   hitl_status = ListField()
   active = TextField()
-  upload_timestamp = DateTime()
+  upload_timestamp = TextField()
   entities = ListField()
   extraction_score = NumberField()
   validation_score = NumberField()

@@ -25,7 +25,7 @@ async def upload_file(context: str,
     422 : If file other than pdf is uploaded by user """
   for file in files:
     print(file.filename)
-  print(context+case_id)
+  print(context + case_id)
   return SUCCESS_RESPONSE
 
 
