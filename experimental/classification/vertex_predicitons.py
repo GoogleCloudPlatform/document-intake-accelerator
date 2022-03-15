@@ -72,12 +72,3 @@ class VertexPredictions:
         upload_file_path = os.path.join(folder, file_name) if folder else file_name
         blob = bucket.blob(upload_file_path)
         blob.upload_from_filename(upload_file_path)
-
-if __name__ =="__main__":
-    vertex_predictor = VertexPredictions(project_id='claims-processing-dev')
-
-    img_path = "/Users/sumitvaise//Downloads/DocAI/Dataset/Final/04_02_2022_11_16_28_Arkansas9_0.png"
-    predictions = vertex_predictor.endpoint_image_classification(endpoint_id='7305902922850631680',  filename=img_path)
-    print(type(predictions))
-
-

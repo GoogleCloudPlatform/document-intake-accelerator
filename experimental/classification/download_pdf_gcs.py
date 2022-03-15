@@ -29,22 +29,3 @@ def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None, outp
 
     with open(output_filename, "wb") as file_obj:
         blob.download_to_file(file_obj)
-        
-
-if __name__ == '__main__':
-    client_id=1
-    u_id = 2
-    output_filename = str(client_id)+ '_' + str(u_id) +'_claim.pdf'
-
-    #Example1:  Extraction of pdf file using GCS URI
-    # download_pdf_gcs(
-    #     gcs_uri='gs://claim-processing-classification-dataset/Arizona_claim22.pdf',
-    #     output_filename=output_filename
-    # )
-
-    #Example 2:  Extraction of pdf file using bucket name and file path in the same bucket
-    download_pdf_gcs(
-        bucket_name='claim-processing-classification-dataset',
-        file_to_download='Arizona_claim22.pdf',
-        output_filename=output_filename
-    )

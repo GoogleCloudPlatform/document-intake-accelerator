@@ -1,8 +1,9 @@
 from logging import warning
-from pdf_splitter import *
-from vertex_predicitons import *
+from services.ML_Classification.pdf_splitter import *
+from services.ML_Classification.vertex_predicitons import *
+from services.ML_Classification.download_pdf_gcs import *
+from services.ML_Classification.classification_config import conf_thresh, project_id, endpoint_id
 import json
-from utils import *
 import os
 from os.path import basename
 import warnings
@@ -21,37 +22,46 @@ class DocClassifier:
         in other modules if needed and other attributes in the JSON format.
     """
 
-    def __init__(self, client_id, uid, pdf_uri, out_folder, projectid='claims-processing-dev') -> None:
+    def __init__(self, case_id, uid, pdf_uri, out_folder) -> None:
         if not pdf_uri.endswith('pdf'):
             print("Invalid input file. Require PDF file")
             exit(-1)
         
-        self.client_id = client_id
+        self.case_id = case_id
         self.uid = uid
+        self.conf = conf_thresh
+        self.endpoint_id = endpoint_id
 
-        self.pdf_path = f'{client_id}_{uid}_' + basename(pdf_uri)
-
+        self.pdf_path = f'{out_folder}\\{case_id}_{uid}_' + basename(pdf_uri)
+        print("PDF at "+self.pdf_path)
         print("Downloading PDF from GCS ")
         print("PDF URI: ", pdf_uri)
+        
         download_pdf_gcs(
         gcs_uri=pdf_uri,
         output_filename=self.pdf_path
     )
         self.doc_path = self.pdf_path
         self.splitter = PDFManager(pdf_file=self.pdf_path, out_path=out_folder)
-        self.classifier = VertexPredictions(project_id=projectid)
+        self.classifier = VertexPredictions(project_id=project_id)
         
     def execute_job(self, page_num=0):
         
         try:
             img_path = self.splitter.split_save2img(page_num=page_num, save=True) # contains output image path
-            predictions = self.classifier.endpoint_image_classification(endpoint_id='4679565468279767040',  filename=img_path)
+            print(img_path)
+            predictions = self.classifier.endpoint_image_classification(endpoint_id=self.endpoint_id, filename=img_path)
+
+            # If confidence is greater than the threshold then its a valid doc
+            predicted_class = predictions['displayNames'][0]
+            if predictions['confidences'][0] < self.conf:
+                predicted_class = "Negative"
             
 
             output = {
-                'client_id': self.client_id,
+                'case_id': self.case_id,
                 'u_id': self.uid,
-                'predicted_class': predictions['displayNames'][0],
+                'predicted_class': predicted_class,
                 'model_conf': predictions['confidences'][0],
                 'model_endpoint_id': predictions['ids'][0]
             }
@@ -59,9 +69,11 @@ class DocClassifier:
             # remove the image from local after prediction as it is of no use further
             os.remove(img_path)
             os.remove(self.pdf_path)
+            
             return json.dumps(output)
             
         except Exception as e:
+            print(e)
             if os.path.exists(img_path):
                 os.remove(img_path)
             if os.path.exists(self.pdf_path):
@@ -69,9 +81,3 @@ class DocClassifier:
             print(e)
             return None
 
-if __name__ == "__main__":
-    pdf_file = 'gs://claim-processing-classification-dataset/Arizona_claim22.pdf'
-    out = '/Users/sumitvaise/DOCAI/claims-processing/classification/data/images'
-    client_id, u_id = 0, 0
-    clf = DocClassifier(client_id, u_id, pdf_file, out_folder=out)
-    print(clf.execute_job(page_num=0))

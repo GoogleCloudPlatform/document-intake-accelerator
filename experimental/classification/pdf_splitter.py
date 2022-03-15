@@ -101,36 +101,3 @@ def get_parser():
         help="Type of conversion need on pages of a pdf file")
 
     return parser
-
-if __name__ == "__main__":
-    
-    parser = get_parser()
-    args = parser.parse_args()
-
-    ## Comment/delete later these 4 lines below
-    path = "/Users/sumitvaise/Downloads/DocAI/Dataset/pdf_forms/ClaimForms"
-    outpath = "/Users/sumitvaise/Downloads/DocAI/Dataset/Form_wise_images/Claim"
-
-   # args['inp_pdf_path'], args['output'] = path, outpath
-
-
-    #########
-    # pdf_manager = PDFManager(args['inp_pdf_path'], args['output'])
-    
-
-    files = os.listdir(path)
-
-    for i_file in files:
-        file_path = os.path.join(path, i_file)
-        if 'Arizona' in file_path:
-            pdf_manager = PDFManager(file_path, outpath)
-
-            # extract any random page in image format of a pdf file
-            page_num=0 # front page
-            pdf_manager.split_save2img(page_num=0, save=True)
-
-    # if args['split_into'] is 'images':
-    #     pdf_manager.split_all_save2img()
-    # else:
-    #     pdf_manager.split_and_save2pdf()
-    
