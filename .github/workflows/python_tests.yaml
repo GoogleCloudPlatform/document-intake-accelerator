@@ -18,7 +18,10 @@ jobs:
           common,
 #          microservices/sample_service ,
            microservices/upload_service,
-           microservices/classification_service
+           microservices/classification_service,
+           microservices/validation_service,
+           microservices/extraction_service,
+           microservices/hitl_service,
         ]
     steps:
     - uses: actions/checkout@v2
@@ -65,7 +68,10 @@ jobs:
           common,
 #          microservices/sample_service,
            microservices/upload_service,
-           microservices/classification_service
+           microservices/classification_service,
+           microservices/validation_service,
+           microservices/extraction_service,
+           microservices/hitl_service
         ]
     steps:
     - uses: actions/checkout@v2

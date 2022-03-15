@@ -9,7 +9,7 @@ from common.testing.firestore_emulator import firestore_emulator, clean_firestor
 # from .config_test import  TESTDATA_FILENAME1 ,TESTDATA_FILENAME2
 
 # assigning url
-api_url = "http://localhost:8080/upload_service/v1/upload/"
+api_url = "http://localhost:8080/upload_service/v1/"
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
 SUCCESS_RESPONSE = {"status": "Success"}

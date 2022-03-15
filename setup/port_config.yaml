@@ -6,3 +6,7 @@ data:
   sample-service.PORT: "8888"
   upload-service.PORT: "8889"
   classification-service.PORT: "8890"
+  validation-service.PORT: "8891"
+  extraction-service.PORT: "8892"
+  hitl-service.PORT: "8893"
+  document-status-service.PORT: "8894"

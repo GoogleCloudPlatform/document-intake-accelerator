@@ -25,6 +25,22 @@ requires:
   configs: [classification-service]
   activeProfiles:  *dev_and_custom_backends
 
+- path: ./microservices/extraction_service
+  configs: [ extraction-service ]
+  activeProfiles: *dev_and_custom_backends
+
+- path: ./microservices/validation_service
+  configs: [validation-service]
+  activeProfiles:  *dev_and_custom_backends
+
+- path: ./microservices/hitl_service
+  configs: [hitl-service]
+  activeProfiles:  *dev_and_custom_backends
+#
+- path: ./microservices/document_status_service
+  configs: [document-status-service]
+  activeProfiles:  *dev_and_custom_backends
+
 profiles:
 - name: custom
 - name: dev

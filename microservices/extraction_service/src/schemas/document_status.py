@@ -19,7 +19,7 @@ class DocumentstatusModel(BaseModel):
   status_timestamp: Optional[list] = None
   active: Optional[str] = None
   hitl_status: Optional[str] = None
-  hitl_update_time : Optional[list] = None
+  hitl_update_time: Optional[list] = None
 
   class Config():
     orm_mode = True
