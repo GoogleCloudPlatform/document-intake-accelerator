@@ -27,13 +27,13 @@ Acceptable format for DATES by Example
 """
 
 MATCHING_USER_KEYS_SUPPORTING_DOC = {
-    "drivers_license": {
+    'drivers_license': {
         'name': 0.16, 'dob': (0.16, '%y/%m/%d'), 'sex': 0.16, 'dl_no': 0.16,
         'last_name': 0.16, 'first_name': 0.16},
 
-    "utility_bill": {
+    'utility_bill': {
         'name': 0.50, 'address': 0.50},
-    "pay_stub": {
+    'pay_stub': {
         'employee_name': 0.14, 'ytd': 0.14, 'rate': 0.14, 'hours': 0.14,
         'pay_period_from': (0.14, '%y/%m/%d'),
         'pay_period_to': (0.14, '%y/%m/%d'), 'ssn': 0.14},

@@ -30,7 +30,10 @@ def download_and_load_file(file_path: str) -> json:
     temp_file = file_path
   else:
     return None
-  return json.load(open(temp_file, 'r'))
+
+  data = json.load(open(temp_file, 'r', encoding='utf-8'))
+  del temp_file
+  return data
 
 
 def compare_dates(date1: str, date2: str, date1_format: str, date2_format: str):
@@ -47,8 +50,8 @@ def compare_dates(date1: str, date2: str, date1_format: str, date2_format: str):
       _type_: _description_
   """
   # expecting certain special characters in the date
-  date1 = re.sub("[^0-9/- ]", "", date1)
-  date2 = re.sub("[^0-9/- ]", "", date2)
+  date1 = re.sub('[^0-9/- ]', '', date1)
+  date2 = re.sub('[^0-9/- ]', '', date2)
 
   # # finding the seperator / \ -
   # delimiter1 = [c for c in date1_format if not c.isalpha()][0]
@@ -174,6 +177,6 @@ def compare_json(application_form_path: str, supporting_doc_path: str,
       not_found.append(u_key)
 
   return (
-      'Matching Score {}'.format(sum(matched)),
+      f'Matching Score: {sum(matched)}',
       not_found)
 

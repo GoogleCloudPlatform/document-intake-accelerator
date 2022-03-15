@@ -13,7 +13,8 @@ def download_file_gcs(bucket_name=None, gcs_uri=None,
       gcs_uri (str): GCS object/file path
       output_filename (str): desired filename
       file_to_download (str): gcs file path excluding bucket name.
-          Ex: if file is stored in X bucket under the folder Y with filename ABC.txt
+          Ex: if file is stored in X bucket under the folder Y with filename
+          ABC.txt
           then file_to_download = Y/ABC.txt
   Return:
   """
@@ -30,7 +31,7 @@ def download_file_gcs(bucket_name=None, gcs_uri=None,
 
   if output_filename is None:
     output_filename = file_to_download
-  with open(output_filename, "wb") as file_obj:
+  with open(output_filename, 'wb') as file_obj:
     blob.download_to_file(file_obj)
 
   return output_filename
