@@ -31,20 +31,24 @@ def download_and_load_file(file_path: str) -> json:
   else:
     return None
 
-  data = json.load(open(temp_file, 'r', encoding='utf-8'))
+  with open(temp_file, 'r', encoding='utf-8') as tfile:
+    data = json.load(tfile)
   del temp_file
   return data
 
 
-def compare_dates(date1: str, date2: str, date1_format: str, date2_format: str):
+def compare_dates(date1: str, date2: str,
+                  date1_format: str, date2_format: str):
   """Dates are compared after converting them to a specific format
   For this each dates format should be provided.
 
   Args:
       date1 (str): date 1 in str format
       date2 (str): date 2 in str format
-      date1_format (str):  date format in str format Ex. 'yyyy/mm/dd' or 'yyyy-mm-dd'
-      date2_format (str): date format in str format Ex. 'yyyy/mm/dd' or 'yyyy-mm-dd'
+      date1_format (str):  date format in str format
+       Ex. 'yyyy/mm/dd' or 'yyyy-mm-dd'
+      date2_format (str): date format in str format
+      Ex. 'yyyy/mm/dd' or 'yyyy-mm-dd'
 
   Returns:
       _type_: _description_
