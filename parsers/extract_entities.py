@@ -294,7 +294,7 @@ if __name__ == "__main__":
     doc_type = "unemployment_form"
     state = "arakansas"
     # gcs_doc_path = "gs://async_form_parser/input/Arizona2-latest.pdf"
-    gcs_doc_path = "gs://async_form_parser/input/Arkansas3.pdf"
+    gcs_doc_path = "gs://async_form_parser/input/Arkansas5.pdf"
 
     extract_entities(gcs_doc_path, doc_type, state)
 

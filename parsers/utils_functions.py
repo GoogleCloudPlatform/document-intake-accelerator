@@ -255,7 +255,10 @@ def clean_form_parser_keys(text):
         text = text.strip()
         text = text.replace("\n", ' ')
         text = re.sub(r"^\W+", "", text)
+        last_word = text[-1]
         text = re.sub(r"\W+$", "", text)
+        if last_word in [")", "]"]:
+            text += last_word
 
     return text
 
