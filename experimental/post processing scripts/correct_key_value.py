@@ -6,8 +6,8 @@ The configuration file for the script is post_processing_config.py
 import re
 import datetime 
 from datetime import datetime
-from post_processing_config import str_to_num_dict, num_to_str_dict, clean_value_dict, lower_to_upper_list \
-                                   upper_to_lower_list, clean_space_list, date_format_dict, convert_to_string, \                                                convert_to_number
+from post_processing_config import str_to_num_dict, num_to_str_dict, clean_value_dict, lower_to_upper_list
+                                   upper_to_lower_list, clean_space_list, date_format_dict, convert_to_string                                               convert_to_number
 from change_json_format import get_json_format
 
 
@@ -44,8 +44,8 @@ def string_to_number(value):
             if i==k:
                 #check if input is in lower case
                 if i.islower():
-                #correct the value
-                string[index]=v.lower()
+                    #correct the value
+                    string[index]=v.lower()
                 else:
                     #check if input is in upper case
                     #correct the value
@@ -163,8 +163,13 @@ def correction_script(corrected_dict,template):
                 if k==key: 
                     #get the noise from the template for that key
                     noise=clean_value_dict.get(key)
-                    #call clean_value function
-                    corrected_value=clean_value(v,noise)
+                    #copy input value
+                    input_value=v
+                    #iterate through all noise value
+                    for index,i in enumerate(value):
+                        #call clean_value function
+                        corrected_value=clean_value(input_value,i)
+                        input_value=corrected_value
                     #modify the input dictionary to the corrected value
                     corrected_dict[k]=corrected_value
         
