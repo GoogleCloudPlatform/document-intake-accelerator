@@ -1,8 +1,12 @@
 """ Upload and process task api endpoints """
 
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from typing import Optional, List
-from schemas.input_json import InputJson
+from schemas.input_data import InputData
+import uuid
+import requests
+from common.utils.logging_handler import Logger
+import utils.upload_file_gcs_bucket as ug
 
 # pylint: disable = broad-except
 router = APIRouter()
@@ -30,19 +34,40 @@ async def upload_file(context: str,
 
 
 @router.post("/upload_json")
-async def upload_data_json(input_json: InputJson):
+async def upload_data_json(input_data: InputData):
   """Uploads input  to the GCS bucket and Save the record in the database
+    Args:
+       input_data: input data schema for JSON
+    Returns:
+       200 : data successfully saved in system
+       422 : incorrect data passed
+       500 : if something fails
+     """
 
-  Args:
-    case_id (str): Case id of the files it's optionl ,
-     : to get the list of documents from user
-  Returns:
-    200 : PDF files are successfully uploaded
-    422 : If file other than pdf is uploaded by user """
-
-  print("Inside Json input")
-  print(input_json)
-  return {"status": "Success", "input_data": input_json}
+  try:
+    input_data = dict(input_data)
+    entity = []
+    document_class = input_data.pop("document_class")
+    document_type = input_data.pop("document_type")
+    context = input_data.pop("context")
+    case_id = input_data.pop("case_id")
+    """If case-id is none generate a new case_id"""
+    if case_id is None:
+      case_id = str(uuid.uuid1())
+    """Converting Json to required format """
+    for key, value in input_data.items():
+      entity.append({"entity": key, "value": value, "extraction_confidence": 1})
+    print("This is case id")
+    print(entity)
+    uid = create_document_from_data(case_id, document_type, document_class,
+                                    context, entity)
+    print("after create document")
+    status = ug.upload_json_file(case_id, uid, str(entity))
+    print("after status")
+    return {"status": status, "input_data": input_data, "case_id": case_id}
+  except Exception as e:
+    Logger.error(e)
+    raise HTTPException(status_code=500, detail="Error in uploading document")
 
 
 @router.post("/process_task")
@@ -64,3 +89,17 @@ async def process_task(case_id: str, uid: str, gcs_url: str):
       "message":
           f"File with case_id {case_id} , uid {uid} successfully processed"
   }
+
+
+def create_document_from_data(case_id, document_type, document_class, context,
+                              entity):
+  req_url = "http://document-status-service/document_status_service/v1/create_documet_json_input"
+  response = requests.post(
+      f"{req_url}?case_id={case_id}&document_class={document_class}&document_type={document_type}&context={context}",
+      json=entity)
+  print(response)
+  print(response.json())
+  response = response.json()
+  uid = response["uid"]
+  print(uid)
+  return uid
