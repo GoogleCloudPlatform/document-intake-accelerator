@@ -43,7 +43,8 @@ def test_create_document_negative(client_with_emulator):
 def test_extracion_status_update(client_with_emulator):
   uid = create_document(client_with_emulator, "test-01")
   response = client_with_emulator.post(
-      f"{api_url}update_extraction_status?case_id=test-01&uid={uid}&status=success&extraction_score=0.9",
+      f"{api_url}update_extraction_status?case_id=test-01&"
+      f"uid={uid}&status=success&extraction_score=0.9",
       json=[{
           "key": "name",
           "raw-value": "Max"
@@ -58,7 +59,8 @@ def test_extracion_status_update(client_with_emulator):
 def test_validation_status_update(client_with_emulator):
   uid = create_document(client_with_emulator, "test-01")
   response = client_with_emulator.post(
-      f"{api_url}update_validation_status?case_id=test-01&uid={uid}&status=success&validation_score=9"
+      f"{api_url}update_validation_status?case_id=test-01&"
+      f"uid={uid}&status=success&validation_score=9"
   )
   print(response)
   assert response.status_code == 200
@@ -67,7 +69,8 @@ def test_validation_status_update(client_with_emulator):
 def test_matching_status_update(client_with_emulator):
   uid = create_document(client_with_emulator, "test-01")
   response = client_with_emulator.post(
-      f"{api_url}update_matching_status?case_id=test-01&uid={uid}&status=success&matching_score=0.9",
+      f"{api_url}update_matching_status?case_id=test-01"
+      f"&uid={uid}&status=success&matching_score=0.9",
       json=[{
           "key": "name",
           "raw-value": "Max",
@@ -86,16 +89,17 @@ def test_matching_status_update(client_with_emulator):
 def test_auto_approved_status_update(client_with_emulator):
   uid = create_document(client_with_emulator, "test-01")
   response = client_with_emulator.post(
-      f"{api_url}update_autoapproved_status?case_id=test-01&uid={uid}&status=success&autoapproved_status=accepted&is_autoapproved=yes"
+      f"{api_url}update_autoapproved_status?case_id=test-01&uid={uid}"
+      f"&status=success&autoapproved_status=accepted&"
+      f"is_autoapproved=yes"
   )
-  print(response)
   assert response.status_code == 200
 
 
 def test_create_documet_json_input(client_with_emulator):
-  uid = create_document(client_with_emulator, "test-01")
   response = client_with_emulator.post(
-      f"{api_url}create_documet_json_input?case_id=1236&document_class=unemployment&document_type=application&context=arizona",
+      f"{api_url}create_documet_json_input?case_id=1236&document_class="
+      f"unemployment&document_type=application&context=arizona",
       json=[{
           "entity": "name",
           "value": "Max",

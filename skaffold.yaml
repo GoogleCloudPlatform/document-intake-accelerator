@@ -39,10 +39,10 @@ requires:
 - path: ./microservices/document_status_service
   configs: [document-status-service]
   activeProfiles:  *dev_and_custom_backends
-#
-#- path: ./microservices/matching_service
-#  configs: [matching-service]
-#  activeProfiles:  *dev_and_custom_backends
+
+- path: ./microservices/matching_service
+  configs: [matching-service]
+  activeProfiles:  *dev_and_custom_backends
 
 profiles:
 - name: custom

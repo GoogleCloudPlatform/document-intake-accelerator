@@ -86,7 +86,7 @@ async def update_classification_status(
     if document is None:
       raise HTTPException(status_code=404, detail="document not found")
     if status == "success":
-      """update  the document type and document class"""
+      #update  the document type and document class
       document.document_class = document_class
       document.document_type = document_type
       system_status = {
@@ -96,9 +96,9 @@ async def update_classification_status(
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-      """ Check if document with same case_id , document type and
-       document class already exists 
-      in db if yes mark the old documents as inactive """
+      #Check if document with same case_id , document type and
+       #document class already exists
+      #in db if yes mark the old documents as inactive
       documents = Document.collection.filter(case_id=case_id).filter(
           document_type=document_type).filter(
               document_class=document_class).fetch()
@@ -121,7 +121,8 @@ async def update_classification_status(
     return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
     Logger.error(
-        f"Error in updating classification status for case_id {case_id} and uid {uid}"
+        f"Error in updating classification status for "
+        f"case_id {case_id} and uid {uid}"
     )
     Logger.error(e)
     raise HTTPException(
@@ -223,7 +224,8 @@ async def update_validation_status(case_id: str,
       return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
     Logger.error(
-        f"Error in updating validation status for case_id {case_id} and uid {uid}"
+        f"Error in updating validation status"
+        f" for case_id {case_id} and uid {uid}"
     )
     Logger.error(e)
     raise HTTPException(
@@ -254,7 +256,7 @@ async def update_matching_status(case_id: str,
     document = Document.find_by_uid(uid)
     if document is None:
       raise HTTPException(status_code=404, detail="document not found")
-      if status == "success":
+    if status == "success":
         system_status = {
             "stage": "matching",
             "status": "success",
@@ -266,14 +268,14 @@ async def update_matching_status(case_id: str,
         document.entities = entity
         document.save()
 
-      else:
-        system_status = {
-            "stage": "matching",
-            "status": "fail",
-            "timestamp": str(datetime.datetime.utcnow())
-        }
-        document.system_status = fireo.ListUnion([system_status])
-        document.update()
+    else:
+      system_status = {
+        "stage": "matching",
+        "status": "fail",
+        "timestamp": str(datetime.datetime.utcnow())
+      }
+      document.system_status = fireo.ListUnion([system_status])
+      document.update()
       return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
     Logger.error(
