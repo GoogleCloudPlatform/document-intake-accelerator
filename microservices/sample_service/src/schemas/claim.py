@@ -77,7 +77,7 @@ class ClaimModel(BaseModel):
           },
           "EWA_DocType_10" : {
             "_created_on" : "2021-06-16",
-            "_uri" : "gs://bv-erap-tf/sample-ip_docs/marriage_regis.pdf",
+            "_uri" : "gs://bv-erap-tf/sample-documents/marriage_regis.pdf",
             "date_of_marriage" : "2021-06-15",
             "document_type" : "marriage_certificate",
             "person1" : {

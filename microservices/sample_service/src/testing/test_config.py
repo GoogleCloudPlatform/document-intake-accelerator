@@ -27,7 +27,7 @@ TEST_INPUT_CLAIM = {
   "register_ip_address" : "127.0.0.1",
   "document_details" : {
     "EWA_DocType_1": {
-      "_uri": "gs://bv-erap-tf/sample-ip_docs/nycdlfull.pdf",
+      "_uri": "gs://bv-erap-tf/sample-documents/nycdlfull.pdf",
       "_created_on": "2012-04-23T18:25:43.511Z",
       "document_quality_score": 0.72,
       "id_number_back": "OCT335WQ11",
@@ -42,7 +42,7 @@ TEST_INPUT_CLAIM = {
       "entity_extraction_score": 1.0
     },
     "EWA_DocType_2": {
-      "_uri": "gs://bv-erap-tf/sample-ip_docs/Samplepassport.pdf",
+      "_uri": "gs://bv-erap-tf/sample-documents/Samplepassport.pdf",
       "_created_on": "2021-06-16",
       "document_quality_score": 0.03,
       "date_of_birth": "2021-06-16",
@@ -73,7 +73,7 @@ TEST_INPUT_CLAIM = {
       "ewa_document_type_id" : "9"
     },
     "EWA_DocType_4": {
-      "_uri": "gs://bv-erap-tf/sample-ip_docs/sample-fp-1.pdf",
+      "_uri": "gs://bv-erap-tf/sample-documents/sample-fp-1.pdf",
       "_created_on": "2021-06-16",
       "document_quality_score": 0.0,
       "name": "VCHENKO, DARYNA",
@@ -85,7 +85,7 @@ TEST_INPUT_CLAIM = {
       "entity_extraction_score": 1.0
     },
     "EWA_DocType_5": {
-      "_uri": "gs://bv-erap-tf/sample-ip_docs/sample-fp-1.pdf",
+      "_uri": "gs://bv-erap-tf/sample-documents/sample-fp-1.pdf",
       "_created_on": "2021-06-16",
       "document_quality_score": 0.0,
       "name": "VCHENKO, DARYNA",
@@ -96,7 +96,7 @@ TEST_INPUT_CLAIM = {
       "entity_extraction_score": 1.0
     },
     "EWA_DocType_15": {
-      "_uri": "gs://bv-erap-tf/sample-ip_docs/sample-recid-2.pdf",
+      "_uri": "gs://bv-erap-tf/sample-documents/sample-recid-2.pdf",
       "_created_on": "2021-06-16",
       "document_quality_score": 0.83,
       "id_number": "484782",
@@ -105,7 +105,7 @@ TEST_INPUT_CLAIM = {
     },
     "EWA_DocType_13" : {
       "_created_on" : "2021-06-16",
-      "_uri" : "gs://bv-erap-tf/sample-ip_docs/marriage_regis.pdf",
+      "_uri" : "gs://bv-erap-tf/sample-documents/marriage_regis.pdf",
       "date_of_marriage" : "2021-06-15",
       "document_type" : "marriage_certificate",
       "person1" : {
@@ -134,7 +134,7 @@ TEST_INPUT_CLAIM = {
       "ewa_document_type_id" : "10"
     },
     "EWA_DocType_14": {
-      "_uri": "/sample-ip_docs/Filled Out NYS OCA -- Judment of Divorce.pdf",
+      "_uri": "/sample-documents/Filled Out NYS OCA -- Judment of Divorce.pdf",
       "_created_on": "2021-06-16",
       "document_quality_score": 0.92,
       "social_security_no": "122345678",
@@ -153,7 +153,7 @@ TEST_INPUT_CLAIM = {
       "entity_extraction_score": 1.0
     },
     "EWA_DocType_16":{
-      "_uri": "gs://bv-erap-tf/sample-ip_docs/sample-transcript-3.pdf",
+      "_uri": "gs://bv-erap-tf/sample-documents/sample-transcript-3.pdf",
       "_created_on": "2021-06-16",
       "document_quality_score": 0.95,
       "name": "Knox, Ozetta M.",
