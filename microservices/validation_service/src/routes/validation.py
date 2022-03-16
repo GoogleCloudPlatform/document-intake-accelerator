@@ -1,7 +1,8 @@
 """ Validation endpoints """
-
+import requests
 from fastapi import APIRouter, HTTPException
 from common.models import Document
+from common.utils.logging_handler import Logger
 from utils.validation import get_values
 # disabling for linting to pass
 # pylint: disable = broad-except
@@ -23,23 +24,31 @@ async def validation(case_id: str, uid: str, doc_class: str):
               500  : HTTPException: 500 Internal Server Error if something fails
         """
     print(doc_class)
-
+    status = "fail"
     doc = Document.find_by_uid(uid)
     if not doc:
         raise HTTPException(status_code=404, detail="uid not found")
     try:
         validation_score = get_values(doc_class, case_id, uid)
-        print(validation_score)
-        doc.validation_score = validation_score
-        # To DO
-        # Call status update api
-        # req = "http://document-status-service/document_status_service/v1/update_validation_status"
-        doc.update()
+        if validation_score:
+            status = "success"
+        # validation_status_update_url = f"http://document-status-service/document_status_service/v1/update_validation_status?case_id={case_id}&uid={uid}&validation_score={validation_score}&status={status}"
+        # response = requests.post(validation_status_update_url)
+        update_validation_status(case_id,uid,validation_score,status)
+        Logger.info(
+            f"Validation Score for cid:{case_id}, uid: {uid} is {validation_score}")
         return {
             "status": "success",
             "score": f"{validation_score}"
         }
-    except Exception as e:
-        print(e)
+    except Exception as error:
+        print(error)
+        Logger.error(error)
         raise HTTPException(
-            status_code=500, detail="Failed to update validation score") from e
+            status_code=500, detail="Failed to update validation score") from error
+
+
+def update_validation_status(case_id, uid, validation_score, status):
+    base_url = "http://document-status-service/document_status_service/v1/update_validation_status"
+    req_url = f"{base_url}?case_id={case_id}&uid={uid}&validation_score={validation_score}&status={status}"
+    requests.post(req_url)
