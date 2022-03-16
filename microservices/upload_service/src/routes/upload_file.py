@@ -52,10 +52,10 @@ async def upload_data_json(input_data: InputData):
     document_type = input_data.pop("document_type")
     context = input_data.pop("context")
     case_id = input_data.pop("case_id")
-    """If case-id is none generate a new case_id"""
+    #If case-id is none generate a new case_id
     if case_id is None:
       case_id = str(uuid.uuid1())
-    """Converting Json to required format """
+    #Converting Json to required format
     for key, value in input_data.items():
       entity.append({"entity": key, "value": value, "extraction_confidence": 1})
     uid = create_document_from_data(case_id, document_type, document_class,
@@ -65,7 +65,8 @@ async def upload_data_json(input_data: InputData):
     return {"status": status, "input_data": input_data, "case_id": case_id}
   except Exception as e:
     Logger.error(e)
-    raise HTTPException(status_code=500, detail="Error in uploading document")
+    raise HTTPException(status_code=500, detail="Error "
+                                    "in uploading document")from e
 
 @router.post("/process_task")
 async def process_task(case_id: str, uid: str, gcs_url: str):

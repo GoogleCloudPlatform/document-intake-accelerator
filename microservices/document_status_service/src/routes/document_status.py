@@ -1,7 +1,5 @@
 """ Document status endpoints """
 import datetime
-from re import error
-
 from fastapi import APIRouter, HTTPException
 from common.config import BUCKET_NAME
 from common.models import Document
@@ -49,9 +47,10 @@ async def create_document(case_id: str, filename: str, context: str):
     return {"status": "Success", "uid": document.uid}
   except Exception as e:
     Logger.error(f"Error in create document for case_id {case_id}")
+    Logger.error(e)
     raise HTTPException(
         status_code=500,
-        detail=f"Error in creating documents for case_id {case_id}")
+        detail=f"Error in creating documents for case_id {case_id}") from e
 
 
 @router.post("/update_classification_status")
@@ -126,7 +125,7 @@ async def update_classification_status(
     )
     Logger.error(e)
     raise HTTPException(
-        status_code=500, detail="Error in updating classification status")
+        status_code=500, detail="Error in updating classification status") from e
 
 
 @router.post("/update_extraction_status")
@@ -174,10 +173,12 @@ async def update_extraction_status(case_id: str,
     return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
     Logger.error(
-        f"Error in updating extraction status case_id {case_id} and uid {uid}")
+        f"Error in updating extraction status case_id {case_id} "
+        f"and uid {uid}")
     Logger.error(e)
     raise HTTPException(
-        status_code=500, detail="Error in updating extraction status")
+        status_code=500, detail="Error in updating"
+                    " extraction status") from e
 
 
 @router.post("/update_validation_status")
@@ -226,7 +227,8 @@ async def update_validation_status(case_id: str,
     )
     Logger.error(e)
     raise HTTPException(
-        status_code=500, detail="Error in updating validation status")
+        status_code=500, detail="Error in updating"
+                        " validation status") from e
 
 
 @router.post("/update_matching_status")
@@ -252,7 +254,6 @@ async def update_matching_status(case_id: str,
     document = Document.find_by_uid(uid)
     if document is None:
       raise HTTPException(status_code=404, detail="document not found")
-    else:
       if status == "success":
         system_status = {
             "stage": "matching",
@@ -276,11 +277,12 @@ async def update_matching_status(case_id: str,
       return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
     Logger.error(
-        f"Error in updating matching status for case_id {case_id} and uid {uid}"
+        f"Error in updating matching status for"
+        f" case_id {case_id} and uid {uid}"
     )
     Logger.error(e)
     raise HTTPException(
-        status_code=500, detail="Error in updating matching status")
+        status_code=500, detail="Error in updating matching status")from e
 
 
 @router.post("/update_autoapproved_status")
@@ -312,7 +314,8 @@ async def update_autoapproved(case_id: str, uid: str, status: str,
       return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
     raise HTTPException(
-        status_code=500, detail="Error in updating the autoapproval status")
+        status_code=500, detail="Error in "
+        "updating the autoapproval status") from e
 
 
 @router.post("/create_documet_json_input")
@@ -346,11 +349,13 @@ async def create_documet_json_input(case_id: str, document_class: str,
     document.context = context
     document.uid = document.save().id
     gcs_base_url = f"http://storage.googleapis.com/{BUCKET_NAME}"
-    document.url = f"{gcs_base_url}/{case_id}/{document.uid}/input_data_{case_id}_{document.uid}.json"
+    document.url = f"{gcs_base_url}/{case_id}/{document.uid}" \
+                f"/input_data_{case_id}_{document.uid}.json"
     document.save()
     return {"status": "success", "uid": document.uid}
   except Exception as e:
-    Logger.error(f"Error in  creating document")
+    Logger.error("Error in  creating document")
     Logger.error(e)
     raise HTTPException(
-        status_code=500, detail="Error in creating the document")
+        status_code=500, detail="Error in"
+            " creating the document") from e
