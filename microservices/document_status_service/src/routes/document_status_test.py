@@ -60,8 +60,7 @@ def test_validation_status_update(client_with_emulator):
   uid = create_document(client_with_emulator, "test-01")
   response = client_with_emulator.post(
       f"{api_url}update_validation_status?case_id=test-01&"
-      f"uid={uid}&status=success&validation_score=9"
-  )
+      f"uid={uid}&status=success&validation_score=9")
   print(response)
   assert response.status_code == 200
 
@@ -91,8 +90,7 @@ def test_auto_approved_status_update(client_with_emulator):
   response = client_with_emulator.post(
       f"{api_url}update_autoapproved_status?case_id=test-01&uid={uid}"
       f"&status=success&autoapproved_status=accepted&"
-      f"is_autoapproved=yes"
-  )
+      f"is_autoapproved=yes")
   assert response.status_code == 200
 
 

@@ -1,12 +1,11 @@
 """ Document status endpoints """
-import datetime
 from fastapi import APIRouter, HTTPException
 from common.config import BUCKET_NAME
 from common.models import Document
 from typing import Optional, List, Dict
 import fireo
 from common.utils.logging_handler import Logger
-
+import datetime
 # disabling for linting to pass
 # pylint: disable = broad-except
 
@@ -97,7 +96,7 @@ async def update_classification_status(
       document.system_status = fireo.ListUnion([system_status])
       document.update()
       #Check if document with same case_id , document type and
-       #document class already exists
+      #document class already exists
       #in db if yes mark the old documents as inactive
       documents = Document.collection.filter(case_id=case_id).filter(
           document_type=document_type).filter(
@@ -120,13 +119,12 @@ async def update_classification_status(
       document.update()
     return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
-    Logger.error(
-        f"Error in updating classification status for "
-        f"case_id {case_id} and uid {uid}"
-    )
+    Logger.error(f"Error in updating classification status for "
+                 f"case_id {case_id} and uid {uid}")
     Logger.error(e)
     raise HTTPException(
-        status_code=500, detail="Error in updating classification status") from e
+        status_code=500,
+        detail="Error in updating classification status") from e
 
 
 @router.post("/update_extraction_status")
@@ -173,13 +171,12 @@ async def update_extraction_status(case_id: str,
       document.update()
     return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
-    Logger.error(
-        f"Error in updating extraction status case_id {case_id} "
-        f"and uid {uid}")
+    Logger.error(f"Error in updating extraction status case_id {case_id} "
+                 f"and uid {uid}")
     Logger.error(e)
     raise HTTPException(
         status_code=500, detail="Error in updating"
-                    " extraction status") from e
+        " extraction status") from e
 
 
 @router.post("/update_validation_status")
@@ -223,14 +220,12 @@ async def update_validation_status(case_id: str,
       document.update()
       return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
-    Logger.error(
-        f"Error in updating validation status"
-        f" for case_id {case_id} and uid {uid}"
-    )
+    Logger.error(f"Error in updating validation status"
+                 f" for case_id {case_id} and uid {uid}")
     Logger.error(e)
     raise HTTPException(
         status_code=500, detail="Error in updating"
-                        " validation status") from e
+        " validation status") from e
 
 
 @router.post("/update_matching_status")
@@ -257,17 +252,16 @@ async def update_matching_status(case_id: str,
     if document is None:
       raise HTTPException(status_code=404, detail="document not found")
     if status == "success":
-        system_status = {
-            "stage": "matching",
-            "status": "success",
-            "timestamp": str(datetime.datetime.utcnow())
-        }
-        document.system_status = fireo.ListUnion([system_status])
-        document.update()
-        document.extraction_score = matching_score
-        document.entities = entity
-        document.save()
-
+      system_status = {
+        "stage": "matching",
+        "status": "success",
+        "timestamp": str(datetime.datetime.utcnow())
+      }
+      document.system_status = fireo.ListUnion([system_status])
+      document.update()
+      document.extraction_score = matching_score
+      document.entities = entity
+      document.save()
     else:
       system_status = {
         "stage": "matching",
@@ -278,13 +272,11 @@ async def update_matching_status(case_id: str,
       document.update()
       return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
-    Logger.error(
-        f"Error in updating matching status for"
-        f" case_id {case_id} and uid {uid}"
-    )
+    Logger.error(f"Error in updating matching status for"
+                 f" case_id {case_id} and uid {uid}")
     Logger.error(e)
     raise HTTPException(
-        status_code=500, detail="Error in updating matching status")from e
+        status_code=500, detail="Error in updating matching status") from e
 
 
 @router.post("/update_autoapproved_status")
@@ -360,4 +352,4 @@ async def create_documet_json_input(case_id: str, document_class: str,
     Logger.error(e)
     raise HTTPException(
         status_code=500, detail="Error in"
-            " creating the document") from e
+        " creating the document") from e
