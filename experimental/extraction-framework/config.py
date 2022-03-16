@@ -61,8 +61,8 @@ MAPPING_DICT = {
             "FIRST DATE WORKED AT YOUR LAST JOB": ["FIRST DATE WORKED AT YOUR LAST JOB"],
             "DATE LAST WORK ENDED": ["DATE LAST WORK ENDED"],
             "What kind of work did you do on your last job": ["What kind of work did you do on your last job?"],
-            "Signature": ["Signature"],
-            "Date": ["Date"]
+            "Date": ["Date"],
+            "Signature": ["Signature"]
         }
     },
    "driver_license": {
