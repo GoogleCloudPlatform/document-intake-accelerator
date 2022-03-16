@@ -1,12 +1,16 @@
 
+# Project name
 PROJECT_NAME = "claims-processing-dev"
 
+# Attributes not required from specialized parser raw json
 NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles", "textChanges", "revisions",
                                                     "pages.image"]
 
+# GCS temp folder to store async form parser output
 GCS_OP_URI = "gs://async_form_parser"
 FORM_PARSER_OP_TEMP_FOLDER = "temp"
 
+# Document and state mapping dict
 MAPPING_DICT = {
    "arizona": {
         "default_entities": {
