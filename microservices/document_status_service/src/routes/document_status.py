@@ -1,10 +1,10 @@
 """ Document status endpoints """
-from fastapi import APIRouter, HTTPException
 from common.config import BUCKET_NAME
 from common.models import Document
-from typing import Optional, List, Dict
-import fireo
 from common.utils.logging_handler import Logger
+import fireo
+from fastapi import APIRouter, HTTPException
+from typing import Optional, List, Dict
 import datetime
 # disabling for linting to pass
 # pylint: disable = broad-except
