@@ -53,3 +53,8 @@ def test_document_status_service_ping():
   res = requests.get(base_url + "/ping")
   assert res.status_code == 200
 
+
+def test_matching_service_ping():
+  base_url = get_baseurl("matching-service")
+  res = requests.get(base_url + "/ping")
+  assert res.status_code == 200
