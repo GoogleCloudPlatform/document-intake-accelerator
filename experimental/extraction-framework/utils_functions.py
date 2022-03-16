@@ -1,3 +1,8 @@
+"""
+This script has all the common and re-usable functions required for extraction framework
+
+"""
+
 import os
 import re
 import json
@@ -7,7 +12,7 @@ from google.cloud import storage
 
 def pattern_based_entities(parser_data, pattern):
     """
-
+    Function return matched text as per pattern
     Parameters
     ----------
     parser_data: text in which pattern is applied
@@ -20,13 +25,12 @@ def pattern_based_entities(parser_data, pattern):
 
     text = parser_data["text"]
 
-    print("pattern", r"{}".format(pattern))
     pattern = re.compile(r"{}".format(pattern), flags=re.DOTALL)
 
+    # match as per pattern
     matched_text = re.search(pattern, text)
 
     if matched_text:
-        # print(matched_text)
         op = matched_text.group(1)
     else:
         op = None
@@ -35,6 +39,7 @@ def pattern_based_entities(parser_data, pattern):
 
 def default_entities_extraction(parser_entities, default_entities):
     """
+    This function extracted default entities
 
     Parameters
     ----------
@@ -46,38 +51,56 @@ def default_entities_extraction(parser_entities, default_entities):
 
     """
 
+
     parser_entities_dict = {}
+
+    # retrieve parser given entities
     for each_entity in parser_entities:
         key, val, confidence = each_entity.get("type", ""), each_entity.get("mentionText", ""), round(
             each_entity.get("confidence", 0), 2)
 
         parser_entities_dict[key] = [val, confidence]
 
+
     entity_dict = {}
+
+    # create default entities
     for key in default_entities.keys():
         if key in parser_entities_dict.keys():
             entity_dict[default_entities[key][0]] = {"entity": default_entities[key][0],
                                                      "value": parser_entities_dict[key][0],
-                                                     "confidence": parser_entities_dict[key][1],
+                                                     "extraction_confidence": parser_entities_dict[key][1],
                                                      "manual_extraction": False}
         else:
             entity_dict[default_entities[key][0]] = {"entity": default_entities[key][0], "value": None,
-                                                     "confidence": None,
+                                                     "extraction_confidence": None,
                                                      "manual_extraction": False}
 
     return entity_dict
 
 
-# Generic function to create name from given name and first name
-# Can be re-used if it helps
 def name_entity_creation(entity_dict, name_list):
+
+    """
+    This function is to create name from Fname and Gname. Can be re-used if it helps
+    Parameters
+    ----------
+    entity_dict: extracted entities dict
+    name_list: list of varibles required to create name
+
+    Returns : derived name entitity dict
+    -------
+
+    """
     name = ""
     confidence = 0
+
+    # loop through all the name variables used for name creation
     for each_name in name_list:
         parser_extracted_name = entity_dict[each_name]["value"]
         if parser_extracted_name:
             name += parser_extracted_name
-            confidence += entity_dict[each_name]["confidence"]
+            confidence += entity_dict[each_name]["extraction_confidence"]
 
     if name.strip():
         name = name.strip()
@@ -87,16 +110,17 @@ def name_entity_creation(entity_dict, name_list):
         confidence = None
 
     name_dict = {"entity": "Name", "value": name,
-                 "confidence": confidence,
+                 "extraction_confidence": confidence,
                  "manual_extraction": False}
 
     return name_dict
 
 
-# derived entities function
-
 def derived_entities_extraction(parser_data, derived_entities):
     """
+
+    This function extract/create derived entities based on config derived entity section
+
     Parameters
     ----------
     parser_data: text in which pattern is applied
@@ -108,12 +132,14 @@ def derived_entities_extraction(parser_data, derived_entities):
     """
 
     derived_entities_extracted_dict = {}
+
+    # loop through derived entities
     for key, val in derived_entities.items():
         pattern = val["rule"]
         pattern_op = pattern_based_entities(parser_data, pattern)
 
         derived_entities_extracted_dict[key] = {"entity": key, "value": pattern_op,
-                                                "confidence": None,
+                                                "extraction_confidence": None,
                                                 "manual_extraction": True}
 
     return derived_entities_extracted_dict
@@ -121,6 +147,8 @@ def derived_entities_extraction(parser_data, derived_entities):
 
 def entities_extraction(parser_data, required_entities, doc_type):
     """
+    This function reads information of default and derived entities
+
     Parameters
     ----------
     parser_data: specialzed parser result
@@ -151,8 +179,9 @@ def entities_extraction(parser_data, required_entities, doc_type):
 
 
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_parser_text):
-
     """
+    Form parser entity mapping function
+
     Parameters
     ----------
     form_parser_entity_list: Extracted form parser entities before mapping
@@ -163,6 +192,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
 
     """
 
+    # extract entities information from config files
     default_entities = mapping_dict.get("default_entities")
 
     derived_entities = mapping_dict.get("derived_entities")
@@ -171,21 +201,24 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
 
     required_entities_list = []
 
+    # loop through one by one deafult entities mentioned in the config file
     for each_ocr_key, each_ocr_val in default_entities.items():
 
         idx_list = df.index[df['key'] == each_ocr_key].tolist()
 
+        # loop for matched records of mapping dictionary
         for idx, each_val in enumerate(each_ocr_val):
 
             if idx_list:
                 try:
+                    # creating response
                     temp_dict = {"entity": each_val, "value": df['value'][idx_list[idx]],
-                                 "confidence": df['value_confidence'][idx_list[idx]],
+                                 "extraction_confidence": df['value_confidence'][idx_list[idx]],
                                  "manual_extraction": False}
                 except Exception as e:
                     print('Key not found in parser output')
                     temp_dict = {"entity": each_val, "value": None,
-                                 "confidence": None,
+                                 "extraction_confidence": None,
                                  "manual_extraction": False}
 
                 required_entities_list.append(temp_dict)
@@ -193,7 +226,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
                 # filling null value if parser didn't extract
 
                 temp_dict = {"entity": each_val, "value": None,
-                             "confidence": None,
+                             "extraction_confidence": None,
                              "manual_extraction": False}
                 required_entities_list.append(temp_dict)
 
@@ -208,8 +241,11 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
 
 
 def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None, output_filename=None) -> str:
-    """Function takes a path of an object/file stored in GCS bucket and downloads
+
+    """
+    Function takes a path of an object/file stored in GCS bucket and downloads
     the file in the current working directory
+
     Args:
         bucket_name (str): bucket name from where file to be downloaded
         gcs_uri (str): GCS object/file path
@@ -220,6 +256,7 @@ def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None, outp
     Return:
         pdf_path (str): pdf file path that is downloaded from the bucket and stored in local
     """
+
     if bucket_name is None:
         bucket_name = gcs_uri.split('/')[2]
 
@@ -231,15 +268,18 @@ def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None, outp
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.blob(file_to_download)
 
+    # save file, if output path provided
     if output_filename:
         with open(output_filename, "wb") as file_obj:
             blob.download_to_file(file_obj)
 
     return blob
 
+
 def clean_form_parser_keys(text):
 
     """
+    Cleaning form parser keys
 
     Parameters
     ----------
@@ -262,9 +302,11 @@ def clean_form_parser_keys(text):
 
     return text
 
-# to get gcs folder
+
 def del_gcs_folder(bucket, folder):
+
     """
+    This function is to delete folder from gcs bucket, this is used to delete temp folder from bucket
 
     Parameters
     ----------
@@ -285,9 +327,12 @@ def del_gcs_folder(bucket, folder):
     print("Delete successful")
 
 
-# Extract shards from the text field
+
 def extract_form_fields(doc_element: dict, document: dict):
+
     """
+
+    # Extract form fields from form parser raw json
 
     Parameters
     ----------
@@ -316,6 +361,8 @@ def extract_form_fields(doc_element: dict, document: dict):
 
 def extraction_accuracy_calc(total_entities_list):
     """
+
+    This function is to calculate document extraction accuracy
     Parameters
     ----------
     total_entities_list: Total extracted list of dict
@@ -325,7 +372,9 @@ def extraction_accuracy_calc(total_entities_list):
 
     """
 
-    entity_accuracy_list = [each_entity.get("confidence") if each_entity.get("confidence") else 0 for each_entity in
+    # get fields extraction accuracy
+    entity_accuracy_list = [each_entity.get("extraction_confidence") if each_entity.get("extraction_confidence") else 0
+                            for each_entity in
                             total_entities_list if not each_entity.get("manual_extraction")]
 
     extraction_accuracy = round(sum(entity_accuracy_list) / len(entity_accuracy_list), 3)
@@ -334,6 +383,8 @@ def extraction_accuracy_calc(total_entities_list):
 
 
 if __name__ == "__main__":
+
+    # these variables are used to run in local environment
 
     parser_json = "utility-docs/parser-json/without-noisy"
     extracted_entities = "utility-docs/extracted-entities/without-noisy"
@@ -372,13 +423,13 @@ if __name__ == "__main__":
         {
             "entity": "Social Security Number",
             "value": None,
-            "confidence": 1,
+            "extraction_confidence": 1,
             "manual_extraction": False
         },
         {
             "entity": "Date",
             "value": None,
-            "confidence": None,
+            "extraction_confidence": None,
             "manual_extraction": False
         }
     ]

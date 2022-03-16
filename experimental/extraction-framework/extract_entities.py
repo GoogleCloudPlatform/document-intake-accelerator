@@ -1,3 +1,9 @@
+"""
+This is the main file for extraction framework, based on doc type specialized parser or
+form parser functions will be called
+
+"""
+
 import json
 import os
 import re
@@ -12,6 +18,10 @@ from config import *
 
 def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: str):
     """
+
+    This is specialized parser extraction main function. It will send request to parser and retrieve response and call
+        default and derived entities functions
+
     Parameters
     ----------
     parser_details: It has parser info like parser id, name, location, and etc
@@ -31,8 +41,6 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
 
     parser_name = parser_details["parser_name"]
 
-    # required_entities = parser_details["required_entities"]
-
     project_id = PROJECT_NAME
 
     opts = {}
@@ -42,6 +50,7 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
 
     client = documentai.DocumentProcessorServiceClient(client_options=opts)
 
+    # parser api end point
     name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
 
     blob = download_pdf_gcs(
@@ -53,6 +62,7 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
     # Configure the process request
     request = {"name": name, "raw_document": document}
 
+    # send request to parser
     result = client.process_document(request=request)
 
     parser_doc_data = result.document
@@ -89,13 +99,16 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
     with open("{}.json".format(os.path.join(extracted_entities, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
         json.dump(specialized_parser_entity_list, outfile, indent=4)
 
-    print("process completed")
-
     return specialized_parser_entity_list
 
 
 def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: str, state: str, timeout: int):
+
     """
+
+    This is form parser extraction main function. It will send request to parser and retrieve response and call
+        default and derived entities functions
+
     Parameters
     ----------
     parser_details: It has parser info like parser id, name, location, and etc
@@ -129,6 +142,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
     gcs_output_uri = GCS_OP_URI
     gcs_output_uri_prefix = FORM_PARSER_OP_TEMP_FOLDER
 
+    # temp folder location
     destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
 
     gcs_documents = documentai.GcsDocuments(
@@ -142,6 +156,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
         gcs_output_config={"gcs_uri": destination_uri}
     )
 
+    # parser api end point
     name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
 
     # request for Doc AI
@@ -213,7 +228,6 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
         else:
             print(f"Skipping non-supported file type {blob.name}")
 
-
     # delete temp folder
     del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
 
@@ -221,6 +235,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
     with open("{}.json".format(os.path.join(parser_op, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
         json.dump(extracted_entity_list, outfile, indent=4)
 
+    # mappping dictionary of document type and state
     mapping_dict = MAPPING_DICT[state]
 
     # Extract desired entites from form parser
@@ -236,6 +251,9 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
 def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
 
     """
+
+    This function calls specialed parser or form parser depends on document type
+
     Parameters
     ----------
     gcs_doc_path: Document gcs path
@@ -250,32 +268,32 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
 
     parser_config_json = "parser_config.json"
 
+    # read parser details from configuration json file
     with open(parser_config_json, 'r') as j:
 
         parsers_info = json.loads(j.read())
-        # for each_doc in inp_docs:
         parser_information = parsers_info.get(doc_type)
 
+        # if parser present then do extraction else update the status
         if parser_information:
             parser_name = parser_information["parser_name"]
-            # print('parser available')
             if parser_name == "FormParser":
                 desired_entities_list = form_parser_extraction(parser_information, gcs_doc_path, doc_type, state, 300)
             else:
                 desired_entities_list = specialized_parser_extraction(parser_information, gcs_doc_path, doc_type)
 
             # extraction accuracy calculation
-            extraction_accuracy = extraction_accuracy_calc(desired_entities_list)
+            document_extraction_confidence = extraction_accuracy_calc(desired_entities_list)
         else:
             # Parser not available
             print('parser not available for this document')
 
-        # exit()
-
-    return desired_entities_list, extraction_accuracy
+    return desired_entities_list, document_extraction_confidence
 
 
 if __name__ == "__main__":
+
+    # These variable are used for local env run. will be removed while integrating with API'S
 
     extracted_entities = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/application-arakansas/extracted-entities/without-noisy"
 
@@ -291,14 +309,14 @@ if __name__ == "__main__":
     # API Integration will start from here
 
     # Extract API Provides label and document
-    doc_type = "unemployment_form"
-    state = "arakansas"
-    # gcs_doc_path = "gs://async_form_parser/input/Arizona2-latest.pdf"
-    gcs_doc_path = "gs://async_form_parser/input/Arkansas5.pdf"
+    doc_type = "driver_license"
+    state = "arizona"
+    gcs_doc_path = "gs://async_form_parser/input/arizona-driver-form-13.pdf"
+    # gcs_doc_path = "gs://async_form_parser/input/Arkansas5.pdf"
 
     extract_entities(gcs_doc_path, doc_type, state)
 
-    # use this code for looping in gcs folder
+    # use this code for looping in gcs folder, for bulk run
 
     """
     gcs_output_uri = "gs://async_form_parser"

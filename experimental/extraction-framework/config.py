@@ -10,7 +10,16 @@ NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles", "textC
 GCS_OP_URI = "gs://async_form_parser"
 FORM_PARSER_OP_TEMP_FOLDER = "temp"
 
-# Document and state mapping dict
+
+"""
+
+This is Document and state mapping dict
+Default entities sections have entities that are coming from parser
+Derived section have information of entities which are not extracted from parser and need to extract them by using pattern
+Create state wise mapping if it form parser, and one doc type mapping if it is specialized parser
+
+"""
+
 MAPPING_DICT = {
    "arizona": {
         "default_entities": {
