@@ -14,6 +14,7 @@ SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
 
 
+
 @router.post("/upload_files")
 async def upload_file(context: str,
                       files: List[UploadFile] = File(...),
@@ -57,18 +58,14 @@ async def upload_data_json(input_data: InputData):
     """Converting Json to required format """
     for key, value in input_data.items():
       entity.append({"entity": key, "value": value, "extraction_confidence": 1})
-    print("This is case id")
-    print(entity)
     uid = create_document_from_data(case_id, document_type, document_class,
                                     context, entity)
-    print("after create document")
+
     status = ug.upload_json_file(case_id, uid, str(entity))
-    print("after status")
     return {"status": status, "input_data": input_data, "case_id": case_id}
   except Exception as e:
     Logger.error(e)
     raise HTTPException(status_code=500, detail="Error in uploading document")
-
 
 @router.post("/process_task")
 async def process_task(case_id: str, uid: str, gcs_url: str):
@@ -93,13 +90,12 @@ async def process_task(case_id: str, uid: str, gcs_url: str):
 
 def create_document_from_data(case_id, document_type, document_class, context,
                               entity):
-  req_url = "http://document-status-service/document_status_service/v1/create_documet_json_input"
+  base_url = "http://document-status-service/document_status_service/v1/"
+  req_url = f"{base_url}create_documet_json_input"
   response = requests.post(
-      f"{req_url}?case_id={case_id}&document_class={document_class}&document_type={document_type}&context={context}",
+      f"{req_url}?case_id={case_id}&document_class={document_class}"
+      f"&document_type={document_type}&context={context}",
       json=entity)
-  print(response)
-  print(response.json())
   response = response.json()
   uid = response["uid"]
-  print(uid)
   return uid
