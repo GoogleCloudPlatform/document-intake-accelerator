@@ -13,9 +13,9 @@ import json
 
 from fuzzywuzzy import fuzz
 import pandas as pd
-from json_matching.matching_config import MATCHING_USER_KEYS_SUPPORTING_DOC
-from json_matching.matching_config import APPLICATION_DOC_DATE_FORMAT
-from json_matching.utils import download_file_gcs
+from matching_config import MATCHING_USER_KEYS_SUPPORTING_DOC
+from matching_config import APPLICATION_DOC_DATE_FORMAT
+from matching_utils import download_file_gcs
 
 
 
@@ -53,56 +53,25 @@ def compare_dates(date1: str, date2: str,
   Returns:
       _type_: _description_
   """
-  # expecting certain special characters in the date
-  date1 = re.sub('[^0-9/- ]', '', date1)
-  date2 = re.sub('[^0-9/- ]', '', date2)
+  try:
+    # expecting certain special characters in the date
+    date1 = re.sub(r'[^0-9/\- ]', '', date1)
+    date2 = re.sub(r'[^0-9/\- ]', '', date2)
 
-  # # finding the seperator / \ -
-  # delimiter1 = [c for c in date1_format if not c.isalpha()][0]
-  # delimiter2 = [c for c in date2_format if not c.isalpha()][0]
+    # convert dates to similar format
+    modified_date1 = datetime.datetime.strptime(
+        date1, date1_format).strftime(date2_format)
 
-  # #
-  # d1_format = date1_format.split(delimiter1)
-  # d2_format = date2_format.split(delimiter2)
+    modified_date2 = datetime.datetime.strptime(
+        date2, date2_format).strftime(date2_format)
 
-  # # change 'y' --> 'Y'
-  # f1 = []
-  # for i in d1_format:
-  #     if i[0] == 'y':
-  #         f1.append(i[0].upper())
-  #     else:
-  #         f1.append(i[0])
-
-
-  # f2 = []
-  # for i in d2_format:
-  #     if i[0] == 'y':
-  #         f2.append(i[0].upper())
-  #     else:
-  #         f2.append(i[0])
-
-  # # remove invalid characters from the date
-  # clean_date1 = re.sub("[^0-9]", "", date1)
-  # clean_date2 = re.sub("[^0-9]", "", date2)
-
-  # create the format in which datetime module expects a string to be.
-  # d1_format = '%' + f1[0] + delimiter1 + '%' + f1[1] + delimiter1
-  #  + '%' + f1[2]
-
-  # d2_format = '%' + f2[0] + delimiter2 + '%' + f2[1] + delimiter2
-  #  + '%' + f2[2]
-
-  # convert dates to similar format
-  modified_date1 = datetime.datetime.strptime(
-      date1, date1_format).strftime(date2_format)
-
-  modified_date2 = datetime.datetime.strptime(
-      date2, date2_format).strftime(date2_format)
-
-  #compare
-  if modified_date1 == modified_date2:
-    return 1.0
-  else:
+    #compare
+    if modified_date1 == modified_date2:
+      return 1.0
+    else:
+      return 0.0
+  except ValueError:
+    print('Invalid date format does not match with the date')
     return 0.0
 
 
@@ -170,17 +139,18 @@ def compare_json(application_form_path: str, supporting_doc_path: str,
 
         # check if its a sentence or a single word
         # if a sentence apply fuzzy logic
-        if len(support_val.split()) > 1 or len(app_val.split()) > 1:
-
+        if len(support_val.split(' ')) > 1 or len(app_val.split(' ')) > 1:
           # apply fuzzy logic --> score x wts
           score = float(fuzz.token_sort_ratio(
               support_val, app_val)/100)*support_doc_dict[u_key]
-
           matched.append(score)
+        else:
+          matched.append(
+            (1.0 if support_val == app_val else 0.0)*support_doc_dict[u_key])
+
     else:
       not_found.append(u_key)
 
   return (
-      f'Matching Score: {sum(matched)}',
-      not_found)
-
+      f'Matching Score: {round(sum(matched),2)}',
+      f'KeysNotFound: {not_found}')
