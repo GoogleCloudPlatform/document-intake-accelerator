@@ -28,7 +28,7 @@ async def create_document(case_id: str, filename: str, context: str):
 
   document = Document()
   document.case_id = case_id
-  document.upload_timestamp = datetime.datetime.utcnow()
+  document.upload_timestamp = str(datetime.datetime.utcnow())
   document.context = context
   document.uid = document.save().id
   gcs_base_url = f"http://storage.googleapis.com/{BUCKET_NAME}"

@@ -3,14 +3,13 @@ Document Status object in the ORM
 """
 import os
 from common.models import BaseModel
-from fireo.fields import TextField, DateTime ,ListField ,NumberField
+from fireo.fields import TextField,ListField ,NumberField
 
 DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
 
 class Document(BaseModel):
-  """Documentstatus ORM class
-  """
+  """Documentstatus ORM class  """
   case_id = TextField()
   uid = TextField()
   url = TextField()
