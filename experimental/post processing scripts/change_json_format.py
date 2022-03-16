@@ -1,3 +1,4 @@
+''' Script to change json format'''
 import json
 from collections import ChainMap
 '''
@@ -64,13 +65,13 @@ def correct_json_format_for_db(output_dict,input_json):
         input_json: list of dictionary json
     Output:
         input_json: list of dictionary json'''
-    #traverse input json
+    #traverse input dictionary json
     for item in input_json:
-        #traverse the keys in dictionary
+        #traverse the keys in key value mapped dictionary
         for entity in output_dict[0].keys():
-            #if keys are matched
+            #if keys are matched in both 
             if item.get("key")==entity:
-                #reassign input json value to new one
+                #reassign input json value to output dictionary velue
                 item["value"]=output_dict[0][entity]
     #create json
     input_json=json.dumps(input_json)
