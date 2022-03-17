@@ -22,6 +22,8 @@ jobs:
            microservices/validation_service,
            microservices/extraction_service,
            microservices/hitl_service,
+           microservices/matching_service
+
         ]
     steps:
     - uses: actions/checkout@v2
@@ -71,7 +73,8 @@ jobs:
            microservices/classification_service,
            microservices/validation_service,
            microservices/extraction_service,
-           microservices/hitl_service
+           microservices/hitl_service,
+           microservices/matching_service
         ]
     steps:
     - uses: actions/checkout@v2
