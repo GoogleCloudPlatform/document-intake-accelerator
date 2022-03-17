@@ -1,6 +1,12 @@
+'''
+This Script is Used to Calculate the Validation Score
+'''
+
 import json
 from google.cloud import bigquery
 from google.cloud import storage
+from common.config import PATH
+
 bigquery_client = bigquery.Client()
 
 
@@ -34,15 +40,10 @@ def get_values(documentlabel,cid,uid):
     Validation Score
 
   '''
-  #Sample Values
-  # path =" https://storage.cloud.google.com/async_form_parser/Jsons/trial.json"
   path=PATH
   data=read_json(path)
-  # merge_query,documentlabel = get_values()
-  merge_query= " and cid='{}' and uid='{}' ".format(cid,uid)  
+  merge_query= f"and cid ='{cid}' and uid='{uid}'"
   validation_score = get_scoring(data,merge_query,documentlabel)
-  # stats(data,validation_score,documentlabel)
-  
   return validation_score
 
 
@@ -62,8 +63,8 @@ def get_scoring(data,merge_query,documentlabel):
     query = data[documentlabel][i] + merge_query
     # query=i+d
     print(query)
-    Query_Results = bigquery_client.query((query))
-    df = Query_Results.to_dataframe()
+    query_results = bigquery_client.query((query))
+    df = query_results.to_dataframe()
     print(df)
     validation_score = validation_score + len(df)
   validation_score = validation_score/len(data[documentlabel])
