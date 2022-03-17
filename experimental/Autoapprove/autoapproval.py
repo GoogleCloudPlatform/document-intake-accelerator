@@ -1,5 +1,5 @@
 '''
-This code is Used to check the approval status of a document depending on the 3 different scores
+This code is Used to check the auto approval status of a document depending on the 3 different scores
 '''
 
 def read_json(path):
@@ -23,7 +23,7 @@ def read_json(path):
 
 def get_values(validation_score,extraction_score,matching_score):
     '''
-    Used to calculate the approval status of a document depending on the validation, extraction and Matching Score
+    Used to calculate the auto approval status of a document depending on the validation, extraction and Matching Score
     Input:
         validation_score : Validation Score 
         extraction_score : Extraction Score
