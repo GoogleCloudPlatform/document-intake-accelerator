@@ -1,0 +1,30 @@
+{
+	"Accept_1": {
+		"Validation_Score": 0.4,
+		"Matching_Score": 0.6,
+		"Extraction_Score": 0.3
+	},
+
+	"Accept_2": {
+		"Validation_Score": 0.4,
+		"Matching_Score": 0.6,
+		"Extraction_Score": 0.3
+	},
+
+	"Accept_3": {
+    	"Validation_Score": 0.4,
+		"Matching_Score": 0.6,
+		"Extraction_Score": 0.3
+    
+    
+    },
+    
+    "Reject" : {
+        "Validation_Score" : 0.1,
+        "Matching_Score" : 0.2,
+        "Extraction_Score" : 0.3
+        
+    }
+
+
+}
