@@ -23,17 +23,11 @@ async def validation(case_id: str, uid: str, doc_class: str):
       200 : validation score successfully  updated
       500  : HTTPException: 500 Internal Server Error if something fails
     """
-  status = "Failed"
-  doc = Document.collection.filter("uid", "==", uid).filter(
-    "case_id", "==", case_id).get()
-  if not doc:
-    Logger.error("uid or cid not found")
-    update_validation_status(case_id, uid, None,status)
-    raise HTTPException(status_code=404, detail="uid or cid not found")
+  status = "fail"
   try:
     validation_score = get_values(doc_class, case_id, uid)
     if validation_score:
-      status = "Success"
+      status = "success"
     update_validation_status(case_id, uid, validation_score,status)
     Logger.info(
       f"Validation Score for cid:{case_id}, uid: {uid}, doc_class:{doc_class} is {validation_score}")
@@ -58,4 +52,5 @@ def update_validation_status(case_id: str, uid: str, validation_score: float, st
     """
   base_url = "http://document-status-service/document_status_service/v1/update_validation_status"
   req_url = f"{base_url}?case_id={case_id}&uid={uid}&validation_score={validation_score}&status={status}"
-  requests.post(req_url)
+  response=requests.post(req_url)
+  return response
