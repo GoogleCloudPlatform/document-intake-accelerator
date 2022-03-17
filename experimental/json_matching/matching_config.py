@@ -25,18 +25,33 @@ Acceptable format for DATES by Example
 5. 28/Sep/1990       -->  %d/%b/%Y
 6. 28/September/1990 -->  %d/%B/%Y
 """
-
+# Values for the keys are just an example
+SUPPORT_DOC_PATH = ''
+SUPPORT_DOC_TYPE = 'drivers_license'
+# date format for supporting doc follows American Date Format: 'yyyy/mm/dd'.
 MATCHING_USER_KEYS_SUPPORTING_DOC = {
     'drivers_license': {
-        'name': 0.16, 'dob': (0.16, '%y/%m/%d'), 'sex': 0.16, 'dl_no': 0.16,
-        'last_name': 0.16, 'first_name': 0.16},
+        'name': 0.16, 'dob': (0.16, '%y/%m/%d'), 'sex': 0.16, 'dl_no': 0.16},
 
     'utility_bill': {
-        'name': 0.50, 'address': 0.50},
+        'name': 0.50, 'residential_address': 0.50},
+
     'pay_stub': {
         'employee_name': 0.14, 'ytd': 0.14, 'rate': 0.14, 'hours': 0.14,
         'pay_period_from': (0.14, '%y/%m/%d'),
         'pay_period_to': (0.14, '%y/%m/%d'), 'ssn': 0.14},
+
+    'claim': {'employer_info': 0.25, 'work_start_date': (0.25, '%y/%m/%d'),
+              'employer_name': 0.25, 'employer_address': 0.25,
+              'employer_city': 0.25}
 }
 
-APPLICATION_DOC_DATE_FORMAT = '%m/%d/%y'
+# date format for application doc will be state-wise
+APPLICATION_DOC_PATH = ''
+APPLICATION_DOC_TYPE = 'unemployement'
+STATE = 'arizona'
+
+APPLICATION_DOC_DATE_FORMAT = {
+    'unemployement': {'arizona': '%m/%d/%y', 'arkansas': '%m/%d/%y',
+                      'california': '%m/%d/%y', 'illinois': '%m/%d/%y'}
+}
