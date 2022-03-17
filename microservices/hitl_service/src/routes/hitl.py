@@ -1,8 +1,5 @@
 """ hitl endpoints """
-from io import BytesIO
-import os
 from fastapi import APIRouter, HTTPException, Response
-from fastapi.responses import FileResponse, StreamingResponse
 from typing import Optional
 from common.models import Document
 from common.utils.logging_handler import Logger
@@ -26,6 +23,7 @@ async def report_data():
     """
   doc_list = []
   try:
+    #Fetching only active documents
     docs = Document.collection.filter("active", "==", "active").fetch()
     for d in docs:
       doc_list.append(d.to_dict())
@@ -71,7 +69,8 @@ async def get_queue(hitl_status: str):
   (approved,rejected,review or pending) from firestore
   Args: hitl_queue - status of the required queue
   Returns:
-    200 : Fetches a list of documents with the same hitl_status from Firestore
+    200 : Fetches a list of documents with the same status from Firestore
+    400 : If hitl_status is invalid
     500 : If there is any error during fetching from firestore
   """
   if hitl_status.lower() not in ["approved", "rejected", "pending", "review"]:
@@ -86,6 +85,8 @@ async def get_queue(hitl_status: str):
       print(doc_dict)
       hitl_trail = doc_dict["hitl_status"]
       print(doc_dict["is_autoapproved"])
+      #Preference for hitl_status
+      #if hitl_status trail is not present autoapproval status is considered
       if hitl_trail:
         status_class = hitl_trail[-1]["status"].lower()
       else:
@@ -123,6 +124,7 @@ async def update_entity(uid: str, updated_doc: dict):
     doc.entities = updated_doc["entities"]
     doc.update()
     return {"status": "Success"}
+
   except Exception as e:
     print(e)
     Logger.error(e)
@@ -160,13 +162,14 @@ async def update_hitl_status(uid: str,
       response["detail"] = "No Document found with the given uid"
       return response
     if doc:
+      #if hitl_status is empty create a list push the latest status and update doc
       existing_hitl = doc.to_dict()["hitl_status"] if doc.to_dict(
       )["hitl_status"] is not None else []
-      print(existing_hitl)
       existing_hitl.append(hitl_status)
       doc.hitl_status = existing_hitl
       doc.update()
     return {"status": "Success"}
+
   except Exception as e:
     print(e)
     Logger.error(e)
@@ -183,44 +186,35 @@ async def fetch_file(case_id:str, uid:str, download : Optional[bool] = False):
   """
   try:
     storageClient = storage.Client()
-    print(case_id+uid)
+    #listing out all blobs with case_id and uid
     blobs = storageClient.list_blobs(BUCKET_NAME,prefix=case_id+"/"+uid+"/",delimiter="/")
+
     target_blob = None
+    #Selecting the last blob which would be the pdf file
     for blob in blobs:
-      print(blob.name)
       target_blob = blob
+    
+    #If file is not found raise 404
     if target_blob == None:
-      print("This 404 ")
       raise FileNotFoundError
-    #FileResponse(data)
-    print(target_blob.name.split("/")[-1])
+    
     filename = target_blob.name.split("/")[-1]
-    
+    #Downloading the pdf file into a byte string
     return_data = target_blob.download_as_bytes()
-    async def get_bytegen():
-      for d in return_data:
-        yield bytes(d)
-    print(type(return_data))
-    data = bytearray(return_data)
-    def get_gen():
-      for i in data:
-        print(bytes(i))
-        yield bytes(i)
     
-    data_gen = get_gen()
-    d = get_bytegen()
+    #Checking for download flag and setting headers 
     headers = None
     if download :
       headers = {"Content-Disposition":"attachment;filename="+filename}
     else:
       headers = {"Content-Disposition":"inline;filename="+filename}
-    #return StreamingResponse(d,media_type="application/pdf")
     return Response(content = return_data,headers=headers,media_type="application/pdf")
-    #return FileResponse(data,media_type="application/pdf")
+
   except FileNotFoundError as e:
     print(e)
     Logger.error(e)
     raise HTTPException(status_code=404,detail="Requested file not found") from e
+
   except Exception as e:
     #return Response(content=None,media_type="application/pdf")
     print(e)

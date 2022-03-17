@@ -144,10 +144,3 @@ def test_fetch_api_invalid_uid(client_with_emulator):
       f"{api_url}fetch_file?case_id= wwe&uid=CS2EeDc2Gl0OAkdZ4r"
   )
   assert response.status_code == 404
-
-
-#invalid status for queue
-#invalid status for hitl update
-#fetch with download
-#fetch file not found
-#invalid uid for get_document update_entity update_hitl_status
