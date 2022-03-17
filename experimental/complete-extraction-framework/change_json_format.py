@@ -75,6 +75,5 @@ def correct_json_format_for_db(output_dict, input_json):
             if item.get("entity") == entity:
                 # reassign input json value to new one
                 item["value"] = output_dict[0][entity]
-    # create json
-    input_json = json.dumps(input_json)
+   
     return input_json
