@@ -160,7 +160,7 @@ async def update_hitl_status(uid: str,
       response["detail"] = "No Document found with the given uid"
       return response
     if doc:
-      #if hitl_status is empty 
+      #if hitl_status is empty
       # create a list push the latest status and update doc
       existing_hitl = doc.to_dict()["hitl_status"] if doc.to_dict(
       )["hitl_status"] is not None else []
