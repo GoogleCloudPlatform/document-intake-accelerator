@@ -36,7 +36,7 @@ async def report_data():
     Logger.error(e)
     raise HTTPException(
         status_code=500, detail="Error in fetching documents") from e
-  
+
 
 @router.post("/get_document")
 async def get_document(uid: str):
@@ -60,7 +60,7 @@ async def get_document(uid: str):
     Logger.error(e)
     raise HTTPException(
         status_code=500, detail="Error in fetching documents") from e
-  
+
 
 @router.post("/get_queue")
 async def get_queue(hitl_status: str):
@@ -77,14 +77,12 @@ async def get_queue(hitl_status: str):
     raise HTTPException(status_code=400, detail="Invalid Parameter")
   try:
     docs = list(Document.collection.filter("active", "==", "active").fetch())
-    print(docs)
     result_queue = []
     for d in docs:
       status_class = ""
       doc_dict = d.to_dict()
-      print(doc_dict)
       hitl_trail = doc_dict["hitl_status"]
-      print(doc_dict["is_autoapproved"])
+
       #Preference for hitl_status
       #if hitl_status trail is not present autoapproval status is considered
       if hitl_trail:
@@ -94,7 +92,7 @@ async def get_queue(hitl_status: str):
           status_class = doc_dict["auto_approval"].lower()
       if status_class == hitl_status.lower():
         result_queue.append(doc_dict)
-    
+
     response = {"status": "Success"}
     response["data"] = result_queue
     return response
@@ -104,7 +102,7 @@ async def get_queue(hitl_status: str):
     Logger.error(e)
     raise HTTPException(
         status_code=500, detail="Error during fetching from Firestore") from e
-  
+
 
 @router.post("/update_entity")
 async def update_entity(uid: str, updated_doc: dict):
@@ -150,12 +148,12 @@ async def update_hitl_status(uid: str,
     timestamp = str(datetime.datetime.utcnow())
     print(timestamp)
     hitl_status = {
-      "timestamp": timestamp,
-      "status": status.lower(),
-      "user": user,
-      "comment": comment
+        "timestamp": timestamp,
+        "status": status.lower(),
+        "user": user,
+        "comment": comment
     }
-  
+
     doc = Document.find_by_uid(uid)
     if not doc or not doc.to_dict()["active"] == "active":
       response = {"status": "Failed"}
@@ -176,8 +174,9 @@ async def update_hitl_status(uid: str,
     raise HTTPException(
         status_code=500, detail="Failed to update hitl status") from e
 
+
 @router.get("/fetch_file")
-async def fetch_file(case_id:str, uid:str, download : Optional[bool] = False):
+async def fetch_file(case_id: str, uid: str, download: Optional[bool] = False):
   """
   Fetches and returns the file from GCS bucket
   Args : case_id : str, uid : str
@@ -187,36 +186,42 @@ async def fetch_file(case_id:str, uid:str, download : Optional[bool] = False):
   try:
     storageClient = storage.Client()
     #listing out all blobs with case_id and uid
-    blobs = storageClient.list_blobs(BUCKET_NAME,prefix=case_id+"/"+uid+"/",delimiter="/")
+    blobs = storageClient.list_blobs(
+        BUCKET_NAME, prefix=case_id + "/" + uid + "/", delimiter="/")
 
     target_blob = None
     #Selecting the last blob which would be the pdf file
     for blob in blobs:
       target_blob = blob
-    
+
     #If file is not found raise 404
     if target_blob == None:
       raise FileNotFoundError
-    
+
     filename = target_blob.name.split("/")[-1]
     #Downloading the pdf file into a byte string
     return_data = target_blob.download_as_bytes()
-    
-    #Checking for download flag and setting headers 
+
+    #Checking for download flag and setting headers
     headers = None
-    if download :
-      headers = {"Content-Disposition":"attachment;filename="+filename}
+    if download:
+      headers = {"Content-Disposition": "attachment;filename=" + filename}
     else:
-      headers = {"Content-Disposition":"inline;filename="+filename}
-    return Response(content = return_data,headers=headers,media_type="application/pdf")
+      headers = {"Content-Disposition": "inline;filename=" + filename}
+    return Response(
+        content=return_data, headers=headers, media_type="application/pdf")
 
   except FileNotFoundError as e:
     print(e)
     Logger.error(e)
-    raise HTTPException(status_code=404,detail="Requested file not found") from e
+    raise HTTPException(
+        status_code=404, detail="Requested file not found") from e
 
   except Exception as e:
     #return Response(content=None,media_type="application/pdf")
     print(e)
-    Logger.error(e)    
-    raise HTTPException(status_code=500,detail="Couldn't fetch the requested file.Try checking if the case_id and uid are correct") from e
+    Logger.error(e)
+    raise HTTPException(
+        status_code=500,
+        detail="Couldn't fetch the requested file.Try checking if the case_id and uid are correct"
+    ) from e
