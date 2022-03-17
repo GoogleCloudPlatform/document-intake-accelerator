@@ -23,7 +23,7 @@ async def validation(case_id: str, uid: str, doc_class: str):
       200 : validation score successfully  updated
       500  : HTTPException: 500 Internal Server Error if something fails
     """
-  status = "fail"
+  status = "Failed"
   doc = Document.collection.filter("uid", "==", uid).filter(
     "case_id", "==", case_id).get()
   if not doc:
@@ -33,12 +33,12 @@ async def validation(case_id: str, uid: str, doc_class: str):
   try:
     validation_score = get_values(doc_class, case_id, uid)
     if validation_score:
-      status = "success"
+      status = "Success"
     update_validation_status(case_id, uid, validation_score,status)
     Logger.info(
       f"Validation Score for cid:{case_id}, uid: {uid}, doc_class:{doc_class} is {validation_score}")
     return {
-      "status": "success",
+      "status": status,
       "score": f"{validation_score}"
     }
   except Exception as error:
