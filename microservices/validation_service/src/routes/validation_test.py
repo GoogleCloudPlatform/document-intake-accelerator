@@ -26,7 +26,6 @@ def test_validation_api(client_with_emulator):
   doc.save()
   url = f"{API_URL}validation_api?case_id=5-ui&uid=aSCh3o6BxjPEqjMAQhtC&" \
     "doc_class=driving_license"
-  
   with mock.patch("routes.validation.update_validation_status"):
     response = client_with_emulator.post(url)
   assert response.status_code == 200, "Status 200"
