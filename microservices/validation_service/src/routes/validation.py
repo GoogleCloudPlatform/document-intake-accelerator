@@ -1,7 +1,6 @@
 """ Validation endpoints """
 import requests
 from fastapi import APIRouter, HTTPException
-from common.models import Document
 from common.utils.logging_handler import Logger
 from utils.validation import get_values
 # disabling for linting to pass
