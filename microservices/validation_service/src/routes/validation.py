@@ -39,7 +39,7 @@ async def validation(case_id: str, uid: str, doc_class: str):
     Logger.error(error)
     update_validation_status(case_id, uid, None, status)
     raise HTTPException(
-      status_code=500, detail="Failed to update the validation score") from error
+      status_code=500, detail="Failed to update validation score")from error
 
 
 def update_validation_status(case_id: str, uid: str,
