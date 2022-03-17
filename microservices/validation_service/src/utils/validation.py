@@ -1,7 +1,7 @@
 import json
 from google.cloud import bigquery
 from google.cloud import storage
-from common.config import PATH
+from common.config import PATH
 
 bigquery_client = bigquery.Client()
 
