@@ -2,8 +2,8 @@
 This script is used for Updating the Validation Rules
 '''
 
-import argparse
 # Create the parser
+import argparse
 from sys import argv
 import os
 import json
