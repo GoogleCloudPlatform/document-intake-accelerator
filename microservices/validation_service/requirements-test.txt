@@ -2,3 +2,4 @@ pytest
 mock
 faker
 backports-unittest-mock
+pyarrow
