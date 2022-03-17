@@ -11,7 +11,7 @@ from copy import deepcopy
 from six import string_types
 from jinjasql import JinjaSql
 from google.cloud import storage
-import logging
+from commmon.utils.logging_handler import Logger
 
 def parsers():
   '''
@@ -24,6 +24,7 @@ def parsers():
   # Add an argument
   template_choices = ['Template1', 'Template2','Template3','Template4',
   'Template5','Template6']
+
   parser.add_argument('--template',type=str,
     choices=template_choices,
     help = "Select One of the available Templates")
@@ -81,7 +82,13 @@ def parsers():
 
 
 def read_json(path):
-  """Function to read a json file directly from gcs"""
+  """Function to read a json file directly from gcs
+        Input: 
+            path: gcs path of the json to be loaded
+        Output:
+            data_dict : dict consisting of the json output
+
+  """
   bucket_name = path.split("/", 3)[2]
   file_path = path.split("/", 3)[3]
   client = storage.Client()
@@ -101,7 +108,6 @@ def get_params(args):
     params : Dictionary conisting of the necessary fields to plug into the SQL Query
   '''
   if args.delete:
-    print("Hello")
     datak[args.doc_type].pop(args.ruleid)
 
   elif args.template == 'Template1':
@@ -131,7 +137,7 @@ def get_params(args):
 
 def check_float(potential_float):
   '''
-  Check if the value passed to the
+  Check if the value passed to the function is a float or not
   '''
   try:
     float(potential_float)
@@ -153,16 +159,13 @@ def get_sql_from_template(query, bind_params):
   if not bind_params:
     return query
   params = deepcopy(bind_params)
-
+  # Used for iterating on the key value dictionary
   for key, val in params.items():
-    # print(key,val)
     if "doc_type" in key or ("key" not in key and not check_float(val)):
       if "BQ_Table" in key:
         continue
       if "dim" in key:
         continue
-      # print("hah")
-      print(key,val)
       params[key] = quote_sql_string(val)
   return query % params
 
@@ -173,7 +176,6 @@ def quote_sql_string(value):
   and returns the string enclosed in single quotes.
   '''
   if isinstance(value, string_types):
-    # print(value)
     if value in ['>','<','==','!=','=']:
       return value
     new_value = str(value)
@@ -195,8 +197,6 @@ def prep_sql(template,params):
   '''
   j = JinjaSql(param_style='pyformat')
   query, bind_params = j.prepare_query(template, params)
-  # print(query % bind_params)
-  # print(get_sql_from_template(query, bind_params))
   jinn = get_sql_from_template(query, bind_params)
   return jinn
 
@@ -204,6 +204,10 @@ def prep_sql(template,params):
 def get_var(var):
   '''
   Used to Generate the Rule id for a new rule
+  Input:
+        var : Last Rule number of the currently existing rule list
+  Output:
+        rule_no : New Rule Number
   '''
   var = int(var.split('_')[1])
   rule_no = "Rule_" + str(var+1)
@@ -225,9 +229,7 @@ def update_json(jinn,args):
     try:
       get_list = list(data[args.doc_type].keys())
     except KeyError as e:
-      print(e)
       data[args.doc_type]={rule_no : jinn}
-      print(data)
       return data
 
     var=get_list[-1]
@@ -239,18 +241,16 @@ def update_json(jinn,args):
       data[args.doc_type][rule_no] = jinn
     return data
 
-def load_json(filename):
-  '''
-  Given the file path, the json is loaded a dict variable and returned
-  '''
-  file=open(filename)
-  data= json.load(file)
-  return data
 
 
 def load_template(data,args):
   '''
   As per the user input, the appropriate jinja template is loaded from the template file
+  Input:
+        data: dict consisting of the jinja templates
+        args : Command Line input taken from the user
+  Ouput:
+        template : The Template selected as per the user input
   '''
   template = data[args.template]
   return template
@@ -258,6 +258,8 @@ def load_template(data,args):
 def dump_updated_json(data):
   '''
   Update the newly created rules json
+  Input:
+        data: Dict with the updated rules included
   '''
   json.dump(data, open("rules.json","w"))
 
@@ -274,16 +276,15 @@ def upload_bucket():
 
 def main():
   '''
-  Main Function Used to control the code flows
+  Main Function Used to control the code flow
   '''
   args=parsers()
-  # data = load_json('temp1.json')
   data = read_json("gs://async_form_parser/Jsons/temp1.json")
   if args.view:
     data = read_json("gs://async_form_parser/Jsons/rules.json")
-    print(len(args.doc_type))
+    #Iterating on the rules to print one by one
     for i in data[args.doc_type]:
-      print(i,':',data[args.doc_type][i])
+      Logger.info(f"{i} : {data[args.doc_type][i]}")
     return
 
 
@@ -299,7 +300,7 @@ def main():
   try:
     jinn = prep_sql(template,params)
   except TypeError as e:
-    print("Incorrect Input Format")
+    Logger.info(f"Incorrect Input Format")
     return
   data = update_json(jinn,args)
   dump_updated_json(data)

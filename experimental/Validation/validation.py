@@ -61,11 +61,8 @@ def get_scoring(data,merge_query,documentlabel):
   validation_score = 0
   for i in data[documentlabel]:
     query = data[documentlabel][i] + merge_query
-    # query=i+d
-    print(query)
     query_results = bigquery_client.query((query))
     df = query_results.to_dataframe()
-    print(df)
     validation_score = validation_score + len(df)
   validation_score = validation_score/len(data[documentlabel])
   return validation_score/len(data[documentlabel])
