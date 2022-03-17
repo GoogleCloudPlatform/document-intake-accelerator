@@ -4,25 +4,25 @@ from collections import ChainMap
 '''
 Input json format
 json=[{
-        "key": "name",
+        "entity": "name",
         "value": "Kathr1n    marie",
         "key_confidence": 1.0,
         "value_confidence": 1.0
     },
     {
-        "key": "dob",
+        "entity": "dob",
         "value": "2022-jan-09\n",
         "key_confidence": 1.0,
         "value_confidence": 1.0
     },
     {
-        "key": "phone_no",
+        "entity": "phone_no",
         "value": "123A",
         "key_confidence": 1.0,
         "value_confidence": 1.0
     },
     {
-        "key": "address",
+        "entity": "address",
         "value": "XYZ",
         "key_confidence": 1.0,
         "value_confidence": 1.0
