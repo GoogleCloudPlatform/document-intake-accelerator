@@ -32,8 +32,9 @@ str_to_num_dict={'B':'8','O':'0','I':'1','A':'4','S':'5'}
 #dictionary to clean extracted values.
 #eg: if input_dict={'dob':'2021-12-04\n'} then we have noise='\n'
 #So we pass clean_value_dict={'dob':'\n'}
-#In case dob key has different noise for different document create clean_value_dict={'dob':['\n','']}
-clean_value_dict={'dob':'\n'} 
+#In case dob key has different noise for different document create clean_value_dict={'dob':['noise1','noise2']}
+
+clean_value_dict={'dob':['\n','IM']} 
 
 #list for extracted values to be in upper case.
 #The list items are the key names.
