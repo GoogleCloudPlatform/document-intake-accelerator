@@ -3,11 +3,11 @@ from fastapi import APIRouter, HTTPException, Response
 from typing import Optional
 from common.models import Document
 from common.utils.logging_handler import Logger
+from common.config import BUCKET_NAME
 # disabling for linting to pass
 # pylint: disable = broad-except
 import datetime
 from google.cloud import storage
-from common.config import BUCKET_NAME
 
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
@@ -160,7 +160,8 @@ async def update_hitl_status(uid: str,
       response["detail"] = "No Document found with the given uid"
       return response
     if doc:
-      #if hitl_status is empty create a list push the latest status and update doc
+      #if hitl_status is empty 
+      # create a list push the latest status and update doc
       existing_hitl = doc.to_dict()["hitl_status"] if doc.to_dict(
       )["hitl_status"] is not None else []
       existing_hitl.append(hitl_status)
@@ -184,9 +185,9 @@ async def fetch_file(case_id: str, uid: str, download: Optional[bool] = False):
   Returns 500: If something fails
   """
   try:
-    storageClient = storage.Client()
+    storage_client = storage.Client()
     #listing out all blobs with case_id and uid
-    blobs = storageClient.list_blobs(
+    blobs = storage_client.list_blobs(
         BUCKET_NAME, prefix=case_id + "/" + uid + "/", delimiter="/")
 
     target_blob = None
@@ -195,7 +196,7 @@ async def fetch_file(case_id: str, uid: str, download: Optional[bool] = False):
       target_blob = blob
 
     #If file is not found raise 404
-    if target_blob == None:
+    if target_blob is None:
       raise FileNotFoundError
 
     filename = target_blob.name.split("/")[-1]
@@ -223,5 +224,6 @@ async def fetch_file(case_id: str, uid: str, download: Optional[bool] = False):
     Logger.error(e)
     raise HTTPException(
         status_code=500,
-        detail="Couldn't fetch the requested file.Try checking if the case_id and uid are correct"
+        detail="Couldn't fetch the requested file.\
+          Try checking if the case_id and uid are correct"
     ) from e
