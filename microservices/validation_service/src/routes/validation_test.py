@@ -31,7 +31,7 @@ def test_validation_api(client_with_emulator):
 
 def test_validation_api_invalid_doc_class(client_with_emulator):
   """Test case to check the validation endpoint
-  when invalid document class provided"""
+  when invalid document class is provided"""
   doc = Document()
   doc.case_id = "5-ui"
   doc.uid = "aSCh3o6BxjPEqjMAQhtC"
