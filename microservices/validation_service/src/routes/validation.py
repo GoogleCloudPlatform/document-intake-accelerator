@@ -52,7 +52,7 @@ def update_validation_status(case_id: str, uid: str,
      status (str): status success/failure depending on the validation_score
     """
   base_url = "http://document-status-service/document_status_service/v1/update_validation_status"
-  req_url = f"{base_url}?case_id={case_id}&uid={uid}"
+  req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
   f"&validation_score={validation_score}&status={status}"
   response = requests.post(req_url)
   return response
