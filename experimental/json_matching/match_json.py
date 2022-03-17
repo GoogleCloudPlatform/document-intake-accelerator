@@ -1,7 +1,7 @@
 """This script will help in matching two JSON files. JSON files
 can be loaded from GCP or from local. An application form is approved
 if its values matches with at least these standard fields
-values as referenced in
+values as referenced below
 https://docs.google.com/spreadsheets/d/1WB_fSH-nrsknoJyP0qvPmAt6y
 -ZQKxzXPZzAp62QQrQ/edit?resourcekey=0-Z5uzfFoLMCM3OQd27wZ_Yw#gid=810561467
 """
