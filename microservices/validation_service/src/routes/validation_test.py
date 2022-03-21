@@ -42,6 +42,7 @@ def test_validation_api_invalid_doc_class(client_with_emulator):
   doc.save()
   url = f"{API_URL}validation_api?case_id=5-ui&uid=aSCh3o6BxjPEqjMAQhtC&"\
     "doc_class=invalid_class"
-  with mock.patch("routes.validation.Logger"):
-    response = client_with_emulator.post(url)
+  with mock.patch("routes.validation.update_validation_status"):
+    with mock.patch("routes.validation.Logger"):
+      response = client_with_emulator.post(url)
   assert response.status_code == 500, "Status 500"
