@@ -45,8 +45,6 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
     print(e)
 
     #DocumentStatus api call
-    FAILED_RESPONSE["case_id"] = case_id
-    FAILED_RESPONSE["uid"] = uid
     requests.post(f"http://document-status-service/document_service/v1/update_classification_status?case_id={case_id}&uid={uid}&status=failed")
     
     FAILED_RESPONSE["message"] = "Classification Failed"
@@ -78,8 +76,6 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
   else:
 
     #DocumentStatus api call
-    #FAILED_RESPONSE["case_id"] = case_id
-    #FAILED_RESPONSE["uid"] = uid
     requests.post(f"http://document-status-service/document_service/v1/update_classification_status?case_id={case_id}&uid={uid}&status=failed")
     
     FAILED_RESPONSE["message"] = "Classification Failed"
