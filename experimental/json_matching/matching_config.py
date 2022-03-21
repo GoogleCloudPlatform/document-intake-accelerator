@@ -26,7 +26,6 @@ Acceptable format for DATES by Example
 6. 28/September/1990 -->  %d/%B/%Y
 """
 # Values for the keys are just an example
-SUPPORT_DOC_PATH = ''
 SUPPORT_DOC_TYPE = 'drivers_license'
 # date format for supporting doc follows American Date Format: 'yyyy/mm/dd'.
 MATCHING_USER_KEYS_SUPPORTING_DOC = {
@@ -47,7 +46,6 @@ MATCHING_USER_KEYS_SUPPORTING_DOC = {
 }
 
 # date format for application doc will be state-wise
-APPLICATION_DOC_PATH = ''
 APPLICATION_DOC_TYPE = 'unemployement'
 STATE = 'arizona'
 

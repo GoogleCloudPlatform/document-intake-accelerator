@@ -7,21 +7,18 @@ https://docs.google.com/spreadsheets/d/1WB_fSH-nrsknoJyP0qvPmAt6y
 """
 
 import datetime
-import re
 import os
 import json
 
 from fuzzywuzzy import fuzz
 import pandas as pd
 from matching_config import MATCHING_USER_KEYS_SUPPORTING_DOC
-from matching_config import APPLICATION_DOC_PATH
 from matching_config import APPLICATION_DOC_TYPE
-from matching_config import SUPPORT_DOC_PATH, STATE
+from matching_config import STATE
 from matching_config import SUPPORT_DOC_TYPE
 from matching_config import APPLICATION_DOC_DATE_FORMAT
 from matching_utils import download_file_gcs
 from common.src.common.utils.logging_handler import Logger
-
 
 
 def download_and_load_file(file_path: str) -> json:
@@ -60,8 +57,8 @@ def compare_dates(date1: str, date2: str,
   """
   try:
     # expecting certain special characters in the date
-    date1 = re.sub(r'[^0-9/\- ]', '', date1)
-    date2 = re.sub(r'[^0-9/\- ]', '', date2)
+    # date1 = re.sub(r'[^0-9/\- ]', '', date1)
+    # date2 = re.sub(r'[^0-9/\- ]', '', date2)
 
     # convert dates to similar format
     modified_date1 = datetime.datetime.strptime(
@@ -76,21 +73,19 @@ def compare_dates(date1: str, date2: str,
     else:
       return 0.0
   except ValueError:
-    Logger.error('Invalid date format does not match with the date')
+    Logger.error(
+      'Invalid date format does not match with the date provided.')
     return 0.0
 
 
-def compare_json():
+def compare_json(application_json_obj, supporting_json_obj):
   """Function takes two JSON files, 1. application form JSON and 2.
    supporting doc JSON file
   Args:
-  Returns: dict with matching score and a list of keys that are not
-  found in the application doc.
+  Returns: json object with a dictionary expressing the matching score.
   """
   try:
-    # Load the JSONs
-    app_json = download_and_load_file(APPLICATION_DOC_PATH)
-    support_json = download_and_load_file(SUPPORT_DOC_PATH)
+    # Get the doc type for application doc and supporting doc
     support_doc_type = SUPPORT_DOC_TYPE.lower()
     app_doc_type = APPLICATION_DOC_TYPE.lower()
     state = STATE.lower()
@@ -98,10 +93,10 @@ def compare_json():
     # Both JSON should be available for comparison
 
     # run the comparison for = total keys in the supporting docs
-    app_df = pd.DataFrame(app_json)
+    app_df = pd.DataFrame(application_json_obj)
     app_keys = list(app_df['key'])
 
-    support_df = pd.DataFrame(support_json)
+    support_df = pd.DataFrame(supporting_json_obj)
     support_keys = list(support_df['key'])
 
     if support_doc_type not in MATCHING_USER_KEYS_SUPPORTING_DOC:
@@ -158,10 +153,12 @@ def compare_json():
       else:
         not_found.append(u_key)
 
-    return (
-        f'Matching Score: {round(sum(matched),2)}',
-        f'KeysNotFound: {not_found}')
+    supporting_json_obj.append({'Matching Score': round(sum(matched),2)})
+
+    return (json.dumps(supporting_json_obj),
+     f'Matching Score: {round(sum(matched),2)}',
+     f'KeysNotFound: {not_found}')
+
   except Exception as e:
     Logger.error(e)
     return None
-
