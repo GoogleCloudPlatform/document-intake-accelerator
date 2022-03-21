@@ -45,9 +45,9 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
     print(e)
 
     #DocumentStatus api call
-    #FAILED_RESPONSE["case_id"] = case_id
-    #FAILED_RESPONSE["uid"] = uid
-    #requests.post("http://document-status-service/document_service/v1/update_classification_status",data=FAILED_RESPONSE)
+    FAILED_RESPONSE["case_id"] = case_id
+    FAILED_RESPONSE["uid"] = uid
+    requests.post(f"http://document-status-service/document_service/v1/update_classification_status?case_id={case_id}&uid={uid}&status=failed")
     
     FAILED_RESPONSE["message"] = "Classification Failed"
     raise HTTPException(status_code=500, detail=FAILED_RESPONSE)
@@ -57,6 +57,9 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
     print(predict_doc_type)
     if doc_prediction_result["predicted_class"] == "Negative":
       FAILED_RESPONSE["message"] = "Invalid Document"
+    
+      requests.post(f"http://document-status-service/document_service/v1/update_classification_status?case_id={case_id}&uid={uid}&status=failed")
+    
       return {"detail" : FAILED_RESPONSE}
     doc_type = ""
     if doc_prediction_result["predicted_class"] == "UE":
@@ -69,7 +72,7 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
     SUCCESS_RESPONSE["doc_class"] = doc_prediction_result["predicted_class"]
     
     #DocumentStatus api call
-    #requests.post("http://document-status-service/document_service/v1/update_classification_status",data=SUCCESS_RESPONSE)
+    requests.post(f"http://document-status-service/document_service/v1/update_classification_status?case_id={case_id}&uid={uid}&status=success&document_class={doc_prediction_result['predicted_class']}&document_type={doc_prediction_result['type_of_doc']}")
     
     return {"detail" : SUCCESS_RESPONSE}
   else:
@@ -77,7 +80,7 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
     #DocumentStatus api call
     #FAILED_RESPONSE["case_id"] = case_id
     #FAILED_RESPONSE["uid"] = uid
-    #requests.post("http://document-status-service/document_service/v1/update_classification_status",data=SUCCESS_RESPONSE)
+    requests.post(f"http://document-status-service/document_service/v1/update_classification_status?case_id={case_id}&uid={uid}&status=failed")
     
     FAILED_RESPONSE["message"] = "Classification Failed"
     raise HTTPException(status_code=500,detail=FAILED_RESPONSE)
