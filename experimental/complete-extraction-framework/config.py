@@ -26,8 +26,10 @@ MAPPING_DICT = {
             "Primary Phone: ": ["Employee Primary Phone"],
             "First Name": ["Employee First Name"],
             "Last Name": ["Employee Last Name"],
-            "Mailing Address (No., Street, Apt., P.O. Box) ": ["Employee Mailing Address (No., Street, Apt., P.O.Box)"],
-            "E-MAIL Address (Optional but Encouraged) ": ["Employee E-MAIL Address (Optional but Encouraged)"],
+            "Mailing Address (No., Street, Apt., P.O. Box) ": [
+                "Employee Mailing Address (No., Street, Apt., P.O.Box)"],
+            "E-MAIL Address (Optional but Encouraged) ": [
+                "Employee E-MAIL Address (Optional but Encouraged)"],
             "Gender": ["Employee Gender"],
             "Race": ["Employee Race"],
             "Ethnicity": ["Employee Ethnicity"],
@@ -68,7 +70,8 @@ MAPPING_DICT = {
             "EMPLOYER PHONE": ["EMPLOYER PHONE"],
             "FIRST DATE WORKED AT YOUR LAST JOB": ["FIRST DATE WORKED AT YOUR LAST JOB"],
             "DATE LAST WORK ENDED": ["DATE LAST WORK ENDED"],
-            "What kind of work did you do on your last job": ["What kind of work did you do on your last job?"],
+            "What kind of work did you do on your last job": [
+                "What kind of work did you do on your last job?"],
             "Date": ["Date"],
             "Signature": ["Signature"]
         }
@@ -89,15 +92,16 @@ MAPPING_DICT = {
         "default_entities": {
             "employee_address": ["EMPLOYER ADDRESS"],
             "employee_name": ["EMPLOYEE NAME"],
-            "employer_name": ["EMPLOYER NAME"],
             "end_date": ["PAY PERIOD(TO)"],
             "gross_earnings_ytd": ["YTD Gross"],
             "pay_date": ["PAY DATE"],
             "ssn": ["SSN"],
-            "start_date": ["PAY PERIOD(FROM)"],
-            "rate": ["RATE"],
-            "hours": ["HOURS"]
+            "start_date": ["PAY PERIOD(FROM)"]
 
-        }
+        },
+        "derived_entities":
+            {"EMPLOYER NAME": {"rule": "([a-zA-Z ]*)\d*.*"},
+             "RATE": {"rule": "Regular\n(.*?)\n"},
+             "HOURS": {"rule": "Regular\n.*?\n(.*?)\n"}}
     }
 }
