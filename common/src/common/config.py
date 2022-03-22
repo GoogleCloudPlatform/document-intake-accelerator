@@ -13,3 +13,4 @@ DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
 
 
 BUCKET_NAME ="document-upload-test"
+PATH ="gs://async_form_parser/Jsons/trial.json"
