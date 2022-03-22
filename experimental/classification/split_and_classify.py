@@ -1,15 +1,19 @@
 """Performs pdf splitting and classification on
 first page
 """
-from classification.pdf_splitter import PDFManager
-from classification.vertex_predicitons import VertexPredictions
-from classification.download_pdf_gcs import download_pdf_gcs
-from classification.classification_config import CONF_THRESH, ENDPOINT_ID, PROJECT_ID
+
 import json
 import os
 import sys
 from os.path import basename
 import warnings
+
+from classification.pdf_splitter import PDFManager
+from classification.vertex_predicitons import VertexPredictions
+from classification.download_pdf_gcs import download_pdf_gcs
+from classification.classification_config import CONF_THRESH, ENDPOINT_ID
+from classification.classification_config import PROJECT_ID
+from common.src.common.utils.logging_handler import Logger
 warnings.filterwarnings('ignore')
 
 
@@ -29,7 +33,7 @@ class DocClassifier:
 
   def __init__(self, case_id, uid, pdf_uri, out_folder) -> None:
     if not pdf_uri.endswith('pdf'):
-      print('Invalid input file. Require PDF file')
+      Logger.error('Invalid input file. Require PDF file')
       sys.exit()
 
     self.case_id = case_id
@@ -38,9 +42,9 @@ class DocClassifier:
     self.endpoint_id = ENDPOINT_ID
 
     self.pdf_path = f'{out_folder}\\{case_id}_{uid}_' + basename(pdf_uri)
-    print('PDF at '+self.pdf_path)
-    print('Downloading PDF from GCS')
-    print('PDF URI: ', pdf_uri)
+    Logger.info('PDF at '+self.pdf_path)
+    Logger.info('Downloading PDF from GCS')
+    Logger.info('PDF URI: ', pdf_uri)
 
     download_pdf_gcs(
     gcs_uri=pdf_uri,
@@ -60,30 +64,33 @@ class DocClassifier:
     Returns:
         JSON: json object
     """
+    try:
+      # contains output image path
+      img_path = self.splitter.split_save2img(page_num=page_num)
+      print(img_path)
+      predictions = self.classifier.endpoint_image_classification(
+          endpoint_id=self.endpoint_id, filename=img_path)
 
-    # contains output image path
-    img_path = self.splitter.split_save2img(page_num=page_num)
-    print(img_path)
-    predictions = self.classifier.endpoint_image_classification(
-        endpoint_id=self.endpoint_id, filename=img_path)
-
-    # If confidence is greater than the threshold then its a valid doc
-    predicted_class = predictions['displayNames'][0]
-    if predictions['confidences'][0] < self.conf:
-      predicted_class = 'Negative'
+      # If confidence is greater than the threshold then its a valid doc
+      predicted_class = predictions['displayNames'][0]
+      if predictions['confidences'][0] < self.conf:
+        predicted_class = 'Negative'
 
 
-    output = {
-      'case_id': self.case_id,
-      'u_id': self.uid,
-      'predicted_class': predicted_class,
-      'model_conf': predictions['confidences'][0],
-      'model_endpoint_id': predictions['ids'][0]
-    }
+      output = {
+        'case_id': self.case_id,
+        'u_id': self.uid,
+        'predicted_class': predicted_class,
+        'model_conf': predictions['confidences'][0],
+        'model_endpoint_id': predictions['ids'][0]
+      }
 
-    # remove the image from local after prediction as it is of no use further
-    os.remove(img_path)
-    os.remove(self.pdf_path)
+      # remove the image from local after prediction as it is of no use further
+      os.remove(img_path)
+      os.remove(self.pdf_path)
 
-    return json.dumps(output)
+      return json.dumps(output)
+    except Exception as e:
+      Logger.error(e)
+      return None
 
