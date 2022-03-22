@@ -33,26 +33,28 @@ def string_to_number(value):
         value: Input string
     Output:
         value: Returns corrected string'''
+    if value==None:
+        pass
+    else:
+        # convert input string to list
+        string = list(value)
+        # traverse through the list
+        for index, i in enumerate(string):
+            # check for the match character in str_to_num template
+            for k, v in str_to_num_dict.items():
+                # check if upper case match
+                if i == k:
+                    # check if input is in lower case
+                    if i.islower():
+                        # correct the value
+                        string[index] = v.lower()
+                    else:
+                        # check if input is in upper case
+                        # correct the value
+                        string[index] = v.upper()
 
-    # convert input string to list
-    string = list(value)
-    # traverse through the list
-    for index, i in enumerate(string):
-        # check for the match character in str_to_num template
-        for k, v in str_to_num_dict.items():
-            # check if upper case match
-            if i == k:
-                # check if input is in lower case
-                if i.islower():
-                    # correct the value
-                    string[index] = v.lower()
-                else:
-                    # check if input is in upper case
-                    # correct the value
-                    string[index] = v.upper()
-
-    # concatenate list to string
-    value = listToString(string)
+        # concatenate list to string
+        value = listToString(string)
     return value
 
 
@@ -63,38 +65,44 @@ def number_to_string(value):
     Output:
         value: Returns corrected string
     '''
+    if value==None:
+        pass
+    else:
+        # convert input string to list
+        string = list(value)
 
-    # convert input string to list
-    string = list(value)
+        # traverse through the list
+        for index, i in enumerate(string):
+            # check for the match character in num_to_str template
+            for k, v in num_to_str_dict.items():
+                # check if the key values match
+                if i == k:
+                    # check if input string is in lower case
+                    if i.islower():
+                        # correct the value
+                        string[index] = v.lower()
+                    else:
+                        # check if input string is in upper case
+                        # correct the value
+                        string[index] = v.upper()
 
-    # traverse through the list
-    for index, i in enumerate(string):
-        # check for the match character in num_to_str template
-        for k, v in num_to_str_dict.items():
-            # check if the key values match
-            if i == k:
-                # check if input string is in lower case
-                if i.islower():
-                    # correct the value
-                    string[index] = v.lower()
-                else:
-                    # check if input string is in upper case
-                    # correct the value
-                    string[index] = v.upper()
-
-    # concatenate list to string
-    value = listToString(string)
+        # concatenate list to string
+        value = listToString(string)
     return value
 
 
 def upper_to_lower(value):
+   
     '''Function to convert to lower case
     Input:
         value: Input string
     Output:
         corrected_value: converted string'''
-    # convert to lower case
-    corrected_value = value.lower()
+    if value==None:
+        corrected_value=value
+    else:
+        # convert to lower case
+        corrected_value = value.lower()
     return corrected_value
 
 
@@ -104,8 +112,12 @@ def lower_to_upper(value):
         value: Input string
     Output:
         corrected_value: converted string'''
-    # convert to upper case
-    corrected_value = value.upper()
+    if value==None:
+        corrected_value=value
+        
+    else:
+        # convert to upper case
+        corrected_value = value.upper()
     return corrected_value
 
 
@@ -116,8 +128,11 @@ def clean_value(value, noise):
          noise: Noise in the input string
     Output:
          corrected_value: corrected string without noise'''
-    # replace noise in string
-    corrected_value = value.replace(noise, '')
+    if value==None:
+        corrected_value=value
+    else:
+        # replace noise in string
+        corrected_value = value.replace(noise, '')
     return corrected_value
 
 
@@ -127,10 +142,13 @@ def clean_multiple_space(value):
          value: Input string
     Output:
          corrected_value: corrected string removing extra spaces'''
-    # create a pattern for extra space
-    pattern = re.compile(r"\s+")
-    # replace the pattern with single space in the string
-    corrected_value = re.sub(pattern, ' ', value)
+    if value==None:
+        corrected_value=value
+    else:
+        # create a pattern for extra space
+        pattern = re.compile(r"\s+")
+        # replace the pattern with single space in the string
+        corrected_value = re.sub(pattern, ' ', value)
     return corrected_value
 
 
@@ -142,13 +160,15 @@ def get_date_in_format(input_date_format, output_date_format, value):
          value: Input date string
     Output:
          new_date: date in new format'''
-
-    try:
-        # convert existing date to new date format
-        new_date = datetime.strptime(value, input_date_format).strftime(output_date_format)  # 2022-02-02
-    except:
-        # if any error in date format no change in input date
-        new_date = value
+    if value==None:
+        new_date=value
+    else:
+        try:
+            # convert existing date to new date format
+            new_date = datetime.strptime(value, input_date_format).strftime(output_date_format)  # 2022-02-02
+        except:
+            # if any error in date format no change in input date
+            new_date = value
 
     return new_date
 
@@ -173,7 +193,7 @@ def correction_script(corrected_dict, template):
                     # copy input value
                     input_value = v
                     # iterate through all noise value
-                    for index, i in enumerate(value):
+                    for index, i in enumerate(noise):
                         # call clean_value function
                         corrected_value = clean_value(input_value, i)
                         input_value = corrected_value
@@ -258,30 +278,33 @@ def data_transformation(input_dict):
     Output:
         input_dict: original dictionary
         temp_dict: corrected dictionary'''
-
-    # get a copy of input dictionary
-    temp_dict = input_dict.copy()
-    # traverse through input_dict
-    for index, input_item in enumerate(input_dict):
-        # get input dictionary
-        corrected_dict = input_item.copy()
-        # check for string
-        corrected_dict = correction_script(corrected_dict, 'convert_to_string')
-        # check for number
-        corrected_dict = correction_script(corrected_dict, 'convert_to_number')
-        # check for noise
-        corrected_dict = correction_script(corrected_dict, 'clean_value')
-        # check for upper to lower
-        corrected_dict = correction_script(corrected_dict, 'upper_to_lower')
-        # check for lower to upper
-        corrected_dict = correction_script(corrected_dict, 'lower_to_upper')
-        # check for multiple spaces
-        corrected_dict = correction_script(corrected_dict, 'clean_multiple_space')
-        # check for date format
-        corrected_dict = correction_script(corrected_dict, 'date_format')
-        # correct input dictionary
-        temp_dict[index] = corrected_dict
-    return input_dict, temp_dict
+    try:
+        # get a copy of input dictionary
+        temp_dict = input_dict.copy()
+        # traverse through input_dict
+        for index, input_item in enumerate(input_dict):
+            # get input dictionary
+            corrected_dict = input_item.copy()
+            # check for string
+            corrected_dict = correction_script(corrected_dict, 'convert_to_string')
+            # check for number
+            corrected_dict = correction_script(corrected_dict, 'convert_to_number')
+            # check for noise
+            corrected_dict = correction_script(corrected_dict, 'clean_value')
+            # check for upper to lower
+            corrected_dict = correction_script(corrected_dict, 'upper_to_lower')
+            # check for lower to upper
+            corrected_dict = correction_script(corrected_dict, 'lower_to_upper')
+            # check for multiple spaces
+            corrected_dict = correction_script(corrected_dict, 'clean_multiple_space')
+            # check for date format
+            corrected_dict = correction_script(corrected_dict, 'date_format')
+            # correct input dictionary
+            temp_dict[index] = corrected_dict
+        return input_dict, temp_dict
+    except Exception as e:
+            print(e)
+    
 
 # Function call
 # input_dict=get_json_format_for_processing(input_json)
