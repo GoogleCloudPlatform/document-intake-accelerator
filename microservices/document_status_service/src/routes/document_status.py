@@ -259,7 +259,7 @@ async def update_matching_status(case_id: str,
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-      document.extraction_score = matching_score
+      document.matching_score = matching_score
       document.entities = entity
       document.save()
     else:
@@ -270,7 +270,7 @@ async def update_matching_status(case_id: str,
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-      return {"status": "Success", "case_id": case_id, "uid": uid}
+    return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
     Logger.error(f"Error in updating matching status for"
                  f" case_id {case_id} and uid {uid}")
