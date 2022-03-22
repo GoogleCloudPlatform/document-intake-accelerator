@@ -304,6 +304,7 @@ def data_transformation(input_dict):
             temp_dict[index] = corrected_dict
         return input_dict, temp_dict
     except Exception as e:
+            Logger.error(e)
             return None,None
     
 
