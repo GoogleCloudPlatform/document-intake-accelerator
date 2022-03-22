@@ -301,12 +301,15 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
                 json.dump(final_extracted_entities, outfile, indent=4)
 
             # extraction accuracy calculation
-            document_extraction_confidence = extraction_accuracy_calc(desired_entities_list)
+            document_extraction_confidence = extraction_accuracy_calc(final_extracted_entities)
+
+            return final_extracted_entities, document_extraction_confidence
         else:
             # Parser not available
             print('parser not available for this document')
+            return None
 
-    return desired_entities_list, document_extraction_confidence
+
 
 
 if __name__ == "__main__":
