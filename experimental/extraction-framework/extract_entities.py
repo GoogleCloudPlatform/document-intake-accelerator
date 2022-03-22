@@ -284,11 +284,14 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
 
             # extraction accuracy calculation
             document_extraction_confidence = extraction_accuracy_calc(desired_entities_list)
+
+            return desired_entities_list, document_extraction_confidence
+
         else:
             # Parser not available
             print('parser not available for this document')
+            return None
 
-    return desired_entities_list, document_extraction_confidence
 
 
 if __name__ == "__main__":
