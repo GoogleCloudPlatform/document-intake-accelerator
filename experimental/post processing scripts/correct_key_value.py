@@ -8,6 +8,7 @@ import datetime
 from datetime import datetime
 from post_processing_config import str_to_num_dict, num_to_str_dict, clean_value_dict, lower_to_upper_list, \
     upper_to_lower_list, clean_space_list, date_format_dict, convert_to_string, convert_to_number
+from common.utils.logging_handler import Logger
 
 
 def listToString(string_list):
@@ -303,7 +304,7 @@ def data_transformation(input_dict):
             temp_dict[index] = corrected_dict
         return input_dict, temp_dict
     except Exception as e:
-            print(e)
+            return None,None
     
 
 # Function call
