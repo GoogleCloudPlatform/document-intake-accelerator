@@ -29,7 +29,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install gcloud
-      uses: google-github-actions/setup-gcloud@master
+      uses: google-github-actions/setup-gcloud@v0
       with:
         project_id: claims-processing-dev
         service_account_key: ${{ secrets.FIREBASE_EMULATOR_SA_KEY }}
