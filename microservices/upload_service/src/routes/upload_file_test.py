@@ -18,7 +18,7 @@ SUCCESS_RESPONSE = {"status": "Success"}
 def test_upload_json_without_case_id_positive(client_with_emulator):
   with mock.patch("routes.upload_file.create_document_from_data"):
     with mock.patch("routes.upload_file.Logger"):
-        response = client_with_emulator.post(
+      response = client_with_emulator.post(
             f"{api_url}upload_json",
             json={
                 "name": "Jon",
@@ -38,14 +38,14 @@ def test_upload_json_without_case_id_positive(client_with_emulator):
                 "work_end_date": "2022/03",
                 "sex": "Female"
             })
-        print(response)
+      print(response)
   assert response.status_code == 200
 
 
 def test_upload_json_with_case_id_positive(client_with_emulator):
   with mock.patch("routes.upload_file.create_document_from_data"):
     with mock.patch("routes.upload_file.Logger"):
-        response = client_with_emulator.post(
+      response = client_with_emulator.post(
             f"{api_url}upload_json",
             json={
                 "case_id": "123A",
@@ -66,7 +66,7 @@ def test_upload_json_with_case_id_positive(client_with_emulator):
                 "work_end_date": "2022/03",
                 "sex": "Female"
             })
-        print(response)
+      print(response)
   assert response.status_code == 200
 
 
