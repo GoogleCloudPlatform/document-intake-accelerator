@@ -34,7 +34,7 @@ def string_to_number(value):
         value: Input string
     Output:
         value: Returns corrected string'''
-    if value==None:
+    if value=="null":
         pass
     else:
         # convert input string to list
@@ -66,7 +66,7 @@ def number_to_string(value):
     Output:
         value: Returns corrected string
     '''
-    if value==None:
+    if value=="null":
         pass
     else:
         # convert input string to list
@@ -99,7 +99,7 @@ def upper_to_lower(value):
         value: Input string
     Output:
         corrected_value: converted string'''
-    if value==None:
+    if value=="null":
         corrected_value=value
     else:
         # convert to lower case
@@ -113,7 +113,7 @@ def lower_to_upper(value):
         value: Input string
     Output:
         corrected_value: converted string'''
-    if value==None:
+    if value=="null":
         corrected_value=value
         
     else:
@@ -129,7 +129,7 @@ def clean_value(value, noise):
          noise: Noise in the input string
     Output:
          corrected_value: corrected string without noise'''
-    if value==None:
+    if value=="null":
         corrected_value=value
     else:
         # replace noise in string
@@ -143,7 +143,7 @@ def clean_multiple_space(value):
          value: Input string
     Output:
          corrected_value: corrected string removing extra spaces'''
-    if value==None:
+    if value=="null":
         corrected_value=value
     else:
         # create a pattern for extra space
@@ -161,7 +161,7 @@ def get_date_in_format(input_date_format, output_date_format, value):
          value: Input date string
     Output:
          new_date: date in new format'''
-    if value==None:
+    if value=="null":
         new_date=value
     else:
         try:
@@ -304,6 +304,7 @@ def data_transformation(input_dict):
             temp_dict[index] = corrected_dict
         return input_dict, temp_dict
     except Exception as e:
+            Logger.error(e)
             return None,None
     
 
