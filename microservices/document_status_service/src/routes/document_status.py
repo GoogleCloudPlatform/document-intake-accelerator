@@ -33,7 +33,7 @@ async def create_document(case_id: str, filename: str, context: str):
     document.upload_timestamp = str(datetime.datetime.utcnow())
     document.context = context
     document.uid = document.save().id
-    gcs_base_url = f"http://storage.googleapis.com/{BUCKET_NAME}"
+    gcs_base_url = f"gs://{BUCKET_NAME}"
     document.url = f"{gcs_base_url}/{case_id}/{document.uid}/{filename}"
     document.active = "active"
     system_status = {
@@ -77,13 +77,10 @@ async def update_classification_status(
                 Example - Arizona , Callifornia etc
      Returns:
        200 : PDF files are successfully saved in db
-       404 : Document not found
        500 :Internal Server Error if something fails
        """
   try:
     document = Document.find_by_uid(uid)
-    if document is None:
-      raise HTTPException(status_code=404, detail="document not found")
     if status == "success":
       #update  the document type and document class
       document.document_class = document_class
@@ -145,12 +142,9 @@ async def update_extraction_status(case_id: str,
            status : status of extraction service
          Returns:
            200 : Database updated successfully
-           404 :Document not found
            """
   try:
     document = Document.find_by_uid(uid)
-    if document is None:
-      raise HTTPException(status_code=404, detail="document not found")
     if status == "success":
       system_status = {
           "stage": "extraction",
@@ -194,13 +188,10 @@ async def update_validation_status(case_id: str,
            status : status of validation service
          Returns:
            200 : Database updated successfully
-           404 :Document not found
            505 : If something fails
           """
   try:
     document = Document.find_by_uid(uid)
-    if document is None:
-      raise HTTPException(status_code=404, detail="document not found")
     if status == "success":
       document.validation_score = validation_score
       system_status = {
@@ -218,7 +209,7 @@ async def update_validation_status(case_id: str,
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-      return {"status": "Success", "case_id": case_id, "uid": uid}
+    return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
     Logger.error(f"Error in updating validation status"
                  f" for case_id {case_id} and uid {uid}")
@@ -249,8 +240,6 @@ async def update_matching_status(case_id: str,
            """
   try:
     document = Document.find_by_uid(uid)
-    if document is None:
-      raise HTTPException(status_code=404, detail="document not found")
     if status == "success":
       system_status = {
         "stage": "matching",
@@ -270,7 +259,7 @@ async def update_matching_status(case_id: str,
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-      return {"status": "Success", "case_id": case_id, "uid": uid}
+    return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
     Logger.error(f"Error in updating matching status for"
                  f" case_id {case_id} and uid {uid}")
@@ -284,28 +273,25 @@ async def update_autoapproved(case_id: str, uid: str, status: str,
                               autoapproved_status: str, is_autoapproved: str):
   try:
     document = Document.find_by_uid(uid)
-    if document is None:
-      raise HTTPException(status_code=404, detail="document not found")
+    if status == "success":
+      document.auto_approval = autoapproved_status
+      system_status = {
+          "stage": "auto_approval",
+          "status": "success",
+          "timestamp": str(datetime.datetime.utcnow())
+      }
+      document.system_status = fireo.ListUnion([system_status])
+      document.is_autoapproved = is_autoapproved
+      document.update()
     else:
-      if status == "success":
-        document.auto_approval = autoapproved_status
-        system_status = {
-            "stage": "auto_approval",
-            "status": "success",
-            "timestamp": str(datetime.datetime.utcnow())
-        }
-        document.system_status = fireo.ListUnion([system_status])
-        document.is_autoapproved = is_autoapproved
-        document.update()
-      else:
-        system_status = {
-            "stage": "auto_approval",
-            "status": "fail",
-            "timestamp": str(datetime.datetime.utcnow())
-        }
-        document.system_status = fireo.ListUnion([system_status])
-        document.update()
-      return {"status": "Success", "case_id": case_id, "uid": uid}
+      system_status = {
+          "stage": "auto_approval",
+          "status": "fail",
+          "timestamp": str(datetime.datetime.utcnow())
+      }
+      document.system_status = fireo.ListUnion([system_status])
+      document.update()
+    return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
     raise HTTPException(
         status_code=500, detail="Error in "
@@ -342,7 +328,7 @@ async def create_documet_json_input(case_id: str, document_class: str,
     document.document_type = document_type
     document.context = context
     document.uid = document.save().id
-    gcs_base_url = f"http://storage.googleapis.com/{BUCKET_NAME}"
+    gcs_base_url = f"gs://{BUCKET_NAME}"
     document.url = f"{gcs_base_url}/{case_id}/{document.uid}" \
                 f"/input_data_{case_id}_{document.uid}.json"
     document.save()
