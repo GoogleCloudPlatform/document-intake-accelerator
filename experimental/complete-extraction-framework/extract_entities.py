@@ -242,7 +242,8 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
         json.dump(extracted_entity_list, outfile, indent=4)
 
     # mappping dictionary of document type and state
-    mapping_dict = MAPPING_DICT[state]
+    doc_state = doc_type+"_"+state
+    mapping_dict = MAPPING_DICT[doc_state]
 
     # Extract desired entites from form parser
     form_parser_entities_list = form_parser_entities_mapping(extracted_entity_list, mapping_dict, form_parser_text)
@@ -301,12 +302,15 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
                 json.dump(final_extracted_entities, outfile, indent=4)
 
             # extraction accuracy calculation
-            document_extraction_confidence = extraction_accuracy_calc(desired_entities_list)
+            document_extraction_confidence = extraction_accuracy_calc(final_extracted_entities)
+
+            return final_extracted_entities, document_extraction_confidence
         else:
             # Parser not available
             print('parser not available for this document')
+            return None
 
-    return desired_entities_list, document_extraction_confidence
+
 
 
 if __name__ == "__main__":
