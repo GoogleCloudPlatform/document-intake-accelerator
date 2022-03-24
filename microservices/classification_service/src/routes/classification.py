@@ -1,4 +1,5 @@
 """ classification endpoints """
+from distutils.log import Log
 import os
 import json
 from fastapi import APIRouter
@@ -7,6 +8,7 @@ from google.cloud import storage
 from google.cloud import storage
 from google.cloud.storage import Blob
 from common.models import Document
+from common.utils.logging_handler import Logger
 #from services.classification_service import predict_doc_type
 from utils.classification.split_and_classify import DocClassifier
 import requests
@@ -66,53 +68,74 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
           500  : HTTPException: 500 Internal Server Error if something fails
     """
   if not case_id.strip() or not uid.strip() or not gcs_url.strip():
+    Logger.error(f"Classification failed parameters missing")
     raise HTTPException(status_code=400,detail={"status":"Failed", "message":"Parameters Missing"})
+
   if not gcs_url.endswith(".pdf") or not gcs_url.startswith("gs://"):
+    Logger.error(f"Classification failed GCS path is invalid")
     raise HTTPException(status_code=400,detail={"status":"Failed", "message":"GCS pdf path is incorrect"})
 
   if case_id != gcs_url.split('/')[3] or uid != gcs_url.split('/')[4]:
+    Logger.error(f"Classification failed parameters mismatched")
     raise HTTPException(status_code=400,detail={"status":"Failed", "message":"Parameters Mismatched"})
 
   try:
-    #label_map = {"UE":"unemployment_form", "DL" : "driving_licence",  }
+    
+    label_map = {"UE":"unemployment_form", "DL" : "driving_licence", "Claim":"claims_form", "Utility":"utility_bill" , "PayStub" : "pay_stub" }
+    
+    Logger.info(f"Starting classification for {case_id} and {uid}")
+
     doc_prediction_result = predict_doc_type(case_id,uid,gcs_url)
-    print(doc_prediction_result)
+    
     if doc_prediction_result:
+      
       if doc_prediction_result["predicted_class"] == "Negative":
         FAILED_RESPONSE["message"] = "Invalid Document"
-        update_classification_status(case_id,uid,"failed")
+        response = update_classification_status(case_id,uid,"failed")
+        Logger.error(f"Document unclassified")
+        
+        if response.status_code != 200:
+          Logger.error(f"Document unclassified")
+          raise HTTPException(status_code=500,detail="Failed to update document status")  
         return {"detail" : FAILED_RESPONSE}
+      
       doc_type = ""
+      doc_class = label_map[doc_prediction_result["predicted_class"]]
+      
       if doc_prediction_result["predicted_class"] == "UE":
-        doc_type = "AF"
+        doc_type = "application"
       else:
-        doc_type = "SD"
+        doc_type = "supporting_documents"
+      
       SUCCESS_RESPONSE["case_id"] = doc_prediction_result["case_id"]
       SUCCESS_RESPONSE["uid"] =  uid
-      SUCCESS_RESPONSE["type_of_doc"] = doc_type
-      SUCCESS_RESPONSE["doc_class"] = doc_prediction_result["predicted_class"]
+      SUCCESS_RESPONSE["doc_type"] = doc_type
+      SUCCESS_RESPONSE["doc_class"] = doc_class
     
       #DocumentStatus api call
-      response = update_classification_status(case_id,uid,"success",document_class=doc_prediction_result["predicted_class"],document_type=doc_type)
-      print(response.json())
+      response = update_classification_status(case_id,uid,"success",document_class=doc_class,document_type=doc_type)
+      
+      if response.status_code != 200:
+        Logger.error(f"Document status updation failed for {case_id} and {uid}")
+        raise HTTPException(status_code=500,detail="Document status updation failed")
+      
       return {"detail" : SUCCESS_RESPONSE}
+    
     else:
 
-      #DocumentStatus api call
-      update_classification_status(case_id,uid,"failed")
-      
       FAILED_RESPONSE["message"] = "Classification Failed"
       raise HTTPException(status_code=500,detail=FAILED_RESPONSE)
 
   except HTTPException as e:
     print(e)
+    Logger.error(f"{e} while classification {case_id} and {uid}")
     update_classification_status(case_id,uid,"failed")
     raise e
+  
   except Exception as e:
-    print(e)
+    print(f"{e} while classification {case_id} and {uid}")
+    Logger.error()
     #DocumentStatus api call
     update_classification_status(case_id,uid,"failed")
     FAILED_RESPONSE["message"] = "Classification Failed"
     raise HTTPException(status_code=500, detail=FAILED_RESPONSE)
-
-  
