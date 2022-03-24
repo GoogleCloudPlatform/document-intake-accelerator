@@ -57,21 +57,19 @@ MAPPING_DICT = {
             "MIDDLE INITIAL": ["EMPLOYEE MIDDLE INITIAL"],
             "LAST NAME": ["EMPLOYEE LAST NAME"],
             "Mailing Address": ["EMPLOYEE Mailing Address"],
-            "ZIP CODE": ["EMPLOYER ZIP CODE", "Current zip", "EMPLOYEE ZIP CODE"],
-            "CITY": ["EMPLOYER CITY"],
             "State of Residence": ["Employee State of Residence"],
             "County of Residence": ["Employee County of Residence"],
             "DATE OF BIRTH": ["EMPLOYEE DATE OF BIRTH"],
             "EMPLOYER NAME": ["EMPLOYER NAME"],
             "STREET NAME": ["EMPLOYER STREET NAME"],
-            "STATE": ["EMPLOYER STATE"],
             "COUNTY": ["EMPLOYER COUNTY"],
             "EMPLOYER PHONE": ["EMPLOYER PHONE"],
             "FIRST DATE WORKED AT YOUR LAST JOB": ["FIRST DATE WORKED AT YOUR LAST JOB"],
             "DATE LAST WORK ENDED": ["DATE LAST WORK ENDED"],
             "What kind of work did you do on your last job": ["What kind of work did you do on your last job?"],
             "Date": ["Date"],
-            "Signature": ["Signature"]
+            "Signature": ["Signature"],
+            "E-Mail Address": ["Employee E-Mail Address"]
         }
     },
    "driver_license": {
