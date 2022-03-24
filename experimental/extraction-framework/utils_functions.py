@@ -51,7 +51,6 @@ def default_entities_extraction(parser_entities, default_entities):
 
     """
 
-
     parser_entities_dict = {}
 
     # retrieve parser given entities
@@ -60,7 +59,6 @@ def default_entities_extraction(parser_entities, default_entities):
             each_entity.get("confidence", 0), 2)
 
         parser_entities_dict[key] = [val, confidence]
-
 
     entity_dict = {}
 
@@ -80,7 +78,6 @@ def default_entities_extraction(parser_entities, default_entities):
 
 
 def name_entity_creation(entity_dict, name_list):
-
     """
     This function is to create name from Fname and Gname. Can be re-used if it helps
     Parameters
@@ -178,6 +175,97 @@ def entities_extraction(parser_data, required_entities, doc_type):
     return entity_dict
 
 
+def standard_entity_mapping(parser_extracted_entity_json):
+    # convert extracted json to pandas dataframe
+    df_json = pd.DataFrame.from_dict(parser_extracted_entity_json)
+    # read entity standardization csv
+    entities_standardization_csv = pd.read_csv('Entity Standardization.csv')
+    entities_standardization_csv.dropna(how='all', inplace=True)
+    # Create a dictionary from the look up dataframe/excel which has the key col and the value col
+    dict_lookup = dict(
+        zip(entities_standardization_csv['entity'], entities_standardization_csv['standard_entity_name']))
+    # Get( all the entity (key column) from the json as a list
+    key_list = list(df_json['entity'])
+
+    # Iterate over the key list and check if the key is in the dictionary
+    if all(i in dict_lookup for i in key_list):
+        # Replace the value by creating a list by looking up the value and assign to json entity
+        df_json['entity'] = [dict_lookup[item] for item in key_list]
+        # convert datatype from object to int for column 'extraction_confidence'
+        df_json['extraction_confidence'] = pd.to_numeric(df_json['extraction_confidence'], errors='coerce')
+
+        # check if there is any repeated entity (many to one)
+        if any(df_json.duplicated('entity')):
+
+            # check if there is any None value in json (value field)
+            if any(df_json['value'].apply(lambda x: x == None)):
+                df_none = df_json[df_json['value'].isna()]
+                df_json.drop(df_none.index, inplace=True)
+                # concatenation of same entities values
+                df_conc = df_json.groupby('entity')['value'].apply(' '.join).reset_index()
+                # average of extraction_confidence of same/repeated entities
+                df_av = df_json.groupby(['entity', 'manual_extraction'])[
+                    'extraction_confidence'].mean().reset_index().round(2)
+                df_final = pd.merge(df_conc, df_av, on="entity", how="inner")
+                df_final = df_final.append(df_none, ignore_index=True)
+
+                def is_digit(s):
+                    """Return True if all characters in the string are digits or space characters."""
+                    return s.replace(' ', '').isdigit()  # remove spaces
+
+                for i in range(len(df_final)):
+                    # check if the value is digit and have more than one space between digits for "DOB" format entities
+                    if (is_digit(df_final.loc[i, "value"]) == True) & (df_final.loc[i, "value"].count(" ") > 1):
+                        # replace ' ' with '/' for "DOB" format entities
+                        add_delimiter_date = df_final.loc[i, 'value'].replace(' ', '/')
+                        df_final.loc[i, 'value'] = add_delimiter_date
+                        entities_extraction_dict = df_final.reset_index().to_dict(orient='records')
+                        extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
+                                                         entities_extraction_dict]
+                        return extracted_entities_final_json
+                    else:
+                        entities_extraction_dict = df_final.reset_index().to_dict(orient='records')
+                        extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
+                                                         entities_extraction_dict]
+                        return extracted_entities_final_json
+
+            else:
+                # concatenation of same entities values
+                df_conc = df_json.groupby('entity')['value'].apply(' '.join).reset_index()
+                # average of extraction_confidence of same/repeated entities
+                df_av = df_json.groupby(['entity', 'manual_extraction'])[
+                    'extraction_confidence'].mean().reset_index().round(2)
+                df_final = pd.merge(df_conc, df_av, on="entity", how="inner")
+
+                def is_digit(s):
+                    """Return True if all characters in the string are digits or space characters."""
+                    return s.replace(' ', '').isdigit()  # remove spaces
+
+                for i in range(len(df_final)):
+                    # check if the value is digit and have more than one space between digits for "DOB" format entities
+                    if (is_digit(df_final.loc[i, "value"]) == True) & (df_final.loc[i, "value"].count(" ") > 1):
+                        # replace ' ' with '/' for "DOB" format entities
+                        add_delimiter_date = df_final.loc[i, 'value'].replace(' ', '/')
+                        df_final.loc[i, 'value'] = add_delimiter_date
+                        entities_extraction_dict = df_final.reset_index().to_dict(orient='records')
+                        extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
+                                                         entities_extraction_dict]
+                        return extracted_entities_final_json
+                    else:
+                        entities_extraction_dict = df_final.reset_index().to_dict(orient='records')
+                        extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
+                                                         entities_extraction_dict]
+                        return extracted_entities_final_json
+
+        else:
+            entities_extraction_dict = df_json.reset_index().to_dict(orient='records')
+            extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
+                                             entities_extraction_dict]
+            return extracted_entities_final_json
+
+   
+
+
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_parser_text):
     """
     Form parser entity mapping function
@@ -198,36 +286,57 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
     derived_entities = mapping_dict.get("derived_entities")
 
     df = pd.DataFrame(form_parser_entity_list)
+    print(df['value_coordinates'])
 
     required_entities_list = []
 
     # loop through one by one deafult entities mentioned in the config file
+    # for duplicate entities
     for each_ocr_key, each_ocr_val in default_entities.items():
-
         idx_list = df.index[df['key'] == each_ocr_key].tolist()
+        
 
         # loop for matched records of mapping dictionary
         for idx, each_val in enumerate(each_ocr_val):
-
+           
             if idx_list:
                 try:
+                    
                     # creating response
                     temp_dict = {"entity": each_val, "value": df['value'][idx_list[idx]],
                                  "extraction_confidence": df['value_confidence'][idx_list[idx]],
-                                 "manual_extraction": False}
+                                 "manual_extraction": False,
+                                  "value_coordinates":df['value_coordinates'][idx_list[idx]],
+                                 "key_coordinates":df['key_coordinates'][idx_list[idx]],
+                                 "page_no":df['page_no'][idx_list[idx]],
+                                  "page_width":df['page_width'][idx_list[idx]],
+                                 "page_height":df['page_height'][idx_list[idx]]
+                                   }
                 except Exception as e:
                     print('Key not found in parser output')
+                 
                     temp_dict = {"entity": each_val, "value": None,
                                  "extraction_confidence": None,
-                                 "manual_extraction": False}
+                                 "manual_extraction": False,
+                                  "value_coordinates":None,
+                                 "key_coordinates":None,
+                                 "page_no":None,
+                                  "page_width":None,
+                                 "page_height":None
+                                }
 
                 required_entities_list.append(temp_dict)
             else:
                 # filling null value if parser didn't extract
-
                 temp_dict = {"entity": each_val, "value": None,
                              "extraction_confidence": None,
-                             "manual_extraction": False}
+                             "manual_extraction": False,
+                              "value_coordinates":None,
+                              "key_coordinates":None,
+                              "page_no":None,
+                              "page_width":None,
+                              "page_height":None
+                            }
                 required_entities_list.append(temp_dict)
 
     if derived_entities:
@@ -241,7 +350,6 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
 
 
 def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None, output_filename=None) -> str:
-
     """
     Function takes a path of an object/file stored in GCS bucket and downloads
     the file in the current working directory
@@ -277,7 +385,6 @@ def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None, outp
 
 
 def clean_form_parser_keys(text):
-
     """
     Cleaning form parser keys
 
@@ -304,7 +411,6 @@ def clean_form_parser_keys(text):
 
 
 def del_gcs_folder(bucket, folder):
-
     """
     This function is to delete folder from gcs bucket, this is used to delete temp folder from bucket
 
@@ -327,9 +433,7 @@ def del_gcs_folder(bucket, folder):
     print("Delete successful")
 
 
-
 def extract_form_fields(doc_element: dict, document: dict):
-
     """
 
     # Extract form fields from form parser raw json
@@ -356,7 +460,9 @@ def extract_form_fields(doc_element: dict, document: dict):
         end_index = int(segment.end_index)
         response += document.text[start_index:end_index]
     confidence = doc_element.confidence
-    return response, confidence
+    coordinate=doc_element.bounding_poly.normalized_vertices
+    return response, confidence,coordinate
+    
 
 
 def extraction_accuracy_calc(total_entities_list):
@@ -386,8 +492,8 @@ if __name__ == "__main__":
 
     # these variables are used to run in local environment
 
-    parser_json = "utility-docs/parser-json/without-noisy"
-    extracted_entities = "utility-docs/extracted-entities/without-noisy"
+    parser_json = "/home/jupyter/parsers_output"
+    #extracted_entities = "/home/jupyter/parsers_output"
 
     required_entities = {
         "default_entities": ["Family Name", "Given Names", "Document Id", "Expiration Date", "Date Of Birth",
@@ -407,13 +513,13 @@ if __name__ == "__main__":
     for each_json in json_files:
         with open(os.path.join(parser_json, each_json), 'r') as j:
             data = json.loads(j.read())
-            print(each_json)
+           # print(each_json)
 
             entity_dict = entities_extraction(data, required_entities)
 
             # save extracted entities json
-            with open("{}.json".format(os.path.join(extracted_entities, each_json.split('.')[0])), "w") as outfile:
-                json.dump(entity_dict, outfile, indent=4)
+            #with open("{}.json".format(os.path.join(extracted_entities, each_json.split('.')[0])), "w") as outfile:
+             #   json.dump(entity_dict, outfile, indent=4)
 
     download_pdf_gcs(
         gcs_uri='gs://async_form_parser/input/arizona-driver-form-13.pdf'
@@ -434,4 +540,4 @@ if __name__ == "__main__":
         }
     ]
 
-    extraction_accuracy_calc(total_entities_list)
+    #extraction_accuracy_calc(total_entities_list)
