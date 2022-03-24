@@ -59,22 +59,6 @@ def test_matching_api_all_ok(client_with_emulator):
 def test_matching_api_no_AF(client_with_emulator):
   """Test case to check the matching endpoint"""
 
-  # doc = Document()
-
-  # doc.case_id = "test_id123"
-
-  # doc.uid = "2102"
-
-  # doc.active = "active"
-
-  # doc.document_class = "unemployment_form"
-
-  # doc.document_type = "application_form"
-
-  # doc.entities = [{"entity":"first name","value":"Moh","corrected_value":"Mohit"}]
-  # doc.save()
-
-
   doc_sd = Document()
 
   doc_sd.case_id = "test_id123"

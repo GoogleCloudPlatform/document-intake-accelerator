@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 import requests
 from common.models import Document
 from common.utils.logging_handler import Logger
-from typing import Optional, List, Dict
+from typing import Optional, List
 from utils.json_matching.match_json import compare_json
 # disabling for linting to pass
 # pylint: disable = broad-except
@@ -19,7 +19,7 @@ def get_matching_score(AF_dict:dict, SD_dict:dict):
   
   print(AF_dict["entities"])
   print(SD_dict["entities"])
-  matching =  compare_json(AF_dict["entities"], SD_dict["entities"], SD_dict["document_class"], AF_dict["document_class"], SD_dict["context"])
+  matching =  compare_json(AF_dict["entities"], SD_dict["entities"], SD_dict["document_class"], AF_dict["document_class"], AF_dict["context"])
   print(matching)
   if matching:
     print("entities",matching[:len(matching)-1])
@@ -39,7 +39,6 @@ def update_matching_status(case_id: str,uid: str,status: str,entity: Optional[Li
     print("success")
     print(response)
     if response.status_code == 200:
-    #return res
       return {"status":"success"}
     else:
       return {"status":"failed"}

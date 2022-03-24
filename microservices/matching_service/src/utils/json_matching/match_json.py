@@ -7,16 +7,9 @@ https://docs.google.com/spreadsheets/d/1WB_fSH-nrsknoJyP0qvPmAt6y
 """
 
 import datetime
-#import os
-import json
-import re
-
 from fuzzywuzzy import fuzz
 import pandas as pd
 from utils.json_matching.matching_config import MATCHING_USER_KEYS_SUPPORTING_DOC
-from utils.json_matching.matching_config import APPLICATION_DOC_TYPE
-from utils.json_matching.matching_config import STATE
-from utils.json_matching.matching_config import SUPPORT_DOC_TYPE
 from utils.json_matching.matching_config import APPLICATION_DOC_DATE_FORMAT
 from common.utils.logging_handler import Logger
 
@@ -70,7 +63,7 @@ def compare_json(application_json_obj, supporting_json_obj, SD_doc_type, AF_doc_
     support_doc_type = SD_doc_type.lower()
     app_doc_type = AF_doc_type.lower()
     state = context.lower()
-
+    out_sd_dict = []
     # Both JSON should be available for comparison
 
     # run the comparison for = total keys in the supporting docs
@@ -129,15 +122,19 @@ def compare_json(application_json_obj, supporting_json_obj, SD_doc_type, AF_doc_
           wt_score = round(wt_score*support_doc_dict[u_key], 2)
           matched.append(wt_score)
 
-        support_df.loc[support_df['entity'] == u_key, 'matching_score'] = wt_score
+        final_score = wt_score
       else:
-        not_found.append(u_key)
+        final_score = 0.0
 
-    modified_support_dict = support_df.to_dict('records')
+      for i_dict in supporting_json_obj:
+        if u_key == i_dict['entity']:
+          i_dict['matching_score'] = final_score
+          out_sd_dict.append(i_dict)
+
     avg_matching_score = {'Avg Matching Score': round(sum(matched), 2)}
-    modified_support_dict.append(avg_matching_score)
+    out_sd_dict.append(avg_matching_score)
 
-    return modified_support_dict
+    return out_sd_dict
 
   except Exception as e:
     Logger.error(e)
