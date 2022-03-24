@@ -1,14 +1,14 @@
 """ classification endpoints """
-
-from pydoc import doc
+import os
+import json
 from fastapi import APIRouter
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from google.cloud import storage
-from common.models import Document
 from google.cloud import storage
 from google.cloud.storage import Blob
-from services.classification_service import predict_doc_type
-from fastapi.responses import HTMLResponse
+from common.models import Document
+#from services.classification_service import predict_doc_type
+from utils.classification.split_and_classify import DocClassifier
 import requests
 from typing import Optional
 # disabling for linting to pass
@@ -17,6 +17,26 @@ from typing import Optional
 router = APIRouter(prefix="/classification")
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
+
+def predict_doc_type(case_id:str , uid:str ,gcs_url : str):
+    """
+    Fetches the model predictions and returns the output in a dictionary format
+    
+    Args: case_id:str, uid:str, gcs_url:str
+
+    Returns: case_id, u_id, predicted_class, model_conf, model_endpoint_id
+    """
+    
+    outfolder = os.path.join(os.path.dirname(__file__),"temp_files")
+    if not os.path.exists(outfolder):
+        os.mkdir(os.path.join(os.path.dirname(__file__),"temp_files"))
+    
+    classifier  = DocClassifier(case_id,uid,gcs_url,outfolder)
+    
+    doc_type = json.loads(classifier.execute_job())
+    os.rmdir(outfolder)
+    print(doc_type)
+    return doc_type
 
 def update_classification_status(case_id: str,uid: str,status: str,document_class: Optional[str] = None,document_type: Optional[str] = None):
   """ Call status update api to update the classification output
@@ -54,10 +74,10 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
     raise HTTPException(status_code=400,detail={"status":"Failed", "message":"Parameters Mismatched"})
 
   try:
+    #label_map = {"UE":"unemployment_form", "DL" : "driving_licence",  }
     doc_prediction_result = predict_doc_type(case_id,uid,gcs_url)
     print(doc_prediction_result)
     if doc_prediction_result:
-      print(predict_doc_type)
       if doc_prediction_result["predicted_class"] == "Negative":
         FAILED_RESPONSE["message"] = "Invalid Document"
         update_classification_status(case_id,uid,"failed")
@@ -73,8 +93,8 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
       SUCCESS_RESPONSE["doc_class"] = doc_prediction_result["predicted_class"]
     
       #DocumentStatus api call
-      update_classification_status(case_id,uid,"success",document_class=doc_prediction_result["predicted_class"],document_type=doc_type)
-      
+      response = update_classification_status(case_id,uid,"success",document_class=doc_prediction_result["predicted_class"],document_type=doc_type)
+      print(response.json())
       return {"detail" : SUCCESS_RESPONSE}
     else:
 

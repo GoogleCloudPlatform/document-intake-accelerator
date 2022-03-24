@@ -42,8 +42,17 @@ def test_classify_all_parameters(client_with_emulator):
   # with patch('routes.classification_test.call_to_classify_all_parameters',return_value = response_data):
   #   response = call_to_classify_all_parameters()
   #   assert response == response
-  response = client_with_emulator.get(f"{api_url}?case_id=%20123&uid=5fd0e97e-9dea-11ec-8e64-da7c2efe947f&gcs_url=gs%3A%2F%2Fdocument-upload-test%2F%20123%2F5fd0e97e-9dea-11ec-8e64-da7c2efe947f%2Ffuture-genral.pdf")
-  assert response.status_code == 200
+  
+  res = {
+      "case_id": "abc",
+      "uid": "def",
+      "predicted_class": "DL",
+      'model_conf': 0.99,
+    }
+  with patch('routes.classification.predict_doc_type',return_value=res):
+    with patch('routes.classification.update_classification_status'):
+      response = client_with_emulator.post(f"{api_url}?case_id=abc&uid=def&gcs_url=gs://document-upload-test/abc/def/arkansas_dl_converted.pdf")
+      assert response.status_code == 200
 
 
 def test_classify_with_missing_parameters_caseid(client_with_emulator):
