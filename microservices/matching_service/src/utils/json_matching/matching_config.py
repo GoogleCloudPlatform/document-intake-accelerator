@@ -29,8 +29,10 @@ Acceptable format for DATES by Example
 SUPPORT_DOC_TYPE = 'drivers_license'
 # date format for supporting doc follows American Date Format: 'yyyy/mm/dd'.
 MATCHING_USER_KEYS_SUPPORTING_DOC = {
+    # 'drivers_license': {
+    #    'name': 0.16, 'dob': (0.16, '%y/%m/%d'), 'sex': 0.16, 'dl_no': 0.16},
     'drivers_license': {
-       'name': 0.16, 'dob': (0.16, '%y/%m/%d'), 'sex': 0.16, 'dl_no': 0.16},
+       'name': 0.16, 'date_last_worked': (0.16, '%Y/%m/%d'), 'ssn': 0.16, 'city': 0.16},
 
     'utility_bill': {
         'name': 0.50, 'residential_address': 0.50},

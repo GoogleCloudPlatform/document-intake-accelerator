@@ -9,6 +9,7 @@ https://docs.google.com/spreadsheets/d/1WB_fSH-nrsknoJyP0qvPmAt6y
 import datetime
 #import os
 import json
+import re
 
 from fuzzywuzzy import fuzz
 import pandas as pd
@@ -74,13 +75,16 @@ def compare_json(application_json_obj, supporting_json_obj):
 
     # run the comparison for = total keys in the supporting docs
     app_df = pd.DataFrame(application_json_obj)
-    app_keys = list(app_df['key'])
-
+    app_keys = list(app_df['entity'])
+    print(app_keys)
+    Logger.info(app_keys)
     support_df = pd.DataFrame(supporting_json_obj)
-    support_keys = list(support_df['key'])
-
+    support_df['matching_score'] =  0.0
+    support_keys = list(support_df['entity'])
+    print(support_keys)
+    Logger.info(app_keys)
     if support_doc_type not in MATCHING_USER_KEYS_SUPPORTING_DOC:
-      Logger.error('Unsupported supporting doc')
+      #Logger.error('Unsupported supporting doc')
       return None
 
     support_doc_dict = MATCHING_USER_KEYS_SUPPORTING_DOC[support_doc_type]
@@ -91,9 +95,9 @@ def compare_json(application_json_obj, supporting_json_obj):
       # check if the user provided key is present in the both the docs
       # if found compare their respectives values
       if u_key in app_keys and u_key in support_keys:
-        app_val = list(app_df.loc[app_df['key'] == u_key, 'value'])[0].lower()
+        app_val = list(app_df.loc[app_df['entity'] == u_key, 'value'])[0].lower()
         support_val = list(
-            support_df.loc[support_df['key'] == u_key, 'value'])[0].lower()
+            support_df.loc[support_df['entity'] == u_key, 'value'])[0].lower()
 
         if app_val[-1] in ['\n', ' ']:
           app_val = app_val[:-1]
@@ -103,42 +107,37 @@ def compare_json(application_json_obj, supporting_json_obj):
 
         # 1. check for dates. date related keys contains value in tuple format
         if isinstance(support_doc_dict[u_key], tuple): # a key signifies a date
-          matched.append(
-              compare_dates(
-                  app_val, support_val,
-                  APPLICATION_DOC_DATE_FORMAT[app_doc_type][state],
-                  support_doc_dict[u_key][1]
-                  )*support_doc_dict[u_key][0]
-          )
+          wt_score = compare_dates(app_val, support_val,
+          APPLICATION_DOC_DATE_FORMAT[app_doc_type][state],
+          support_doc_dict[u_key][1])*support_doc_dict[u_key][0]
+
+          matched.append(round(wt_score, 2))
 
         # 2. match values with only integers
-        elif support_val.isdigit() and  app_val.isdigit():
-          matched.append(
-              (1.0 if support_val == app_val else 0.0)*support_doc_dict[u_key])
+        # remove any special characters and check if the remaining string is contains
+        # # only digit
+        # elif re.sub('[^A-Za-z0-9]+', '', support_val).isdigit() and \
+        #             re.sub('[^A-Za-z0-9]+', '', app_val).isdigit():
+        elif support_val.isdigit() and app_val.isdigit():
+          wt_score = (1.0 if support_val == app_val else 0.0)*support_doc_dict[u_key]
+          matched.append(round(wt_score, 2))
 
         # 3. match values with only characters
         else:
-
-          # check if its a sentence or a single word
           # if a sentence apply fuzzy logic
-          if len(support_val.split(' ')) > 1 or len(app_val.split(' ')) > 1:
-            # apply fuzzy logic --> score x wts
-            score = float(fuzz.token_sort_ratio(
-                support_val, app_val)/100)
-            matched.append(score*support_doc_dict[u_key])
-          else:
-            matched.append(
-              (1.0 if support_val == app_val else 0.0)*support_doc_dict[u_key])
+          wt_score = float(fuzz.token_sort_ratio(support_val, app_val)/100)
+          wt_score = round(wt_score*support_doc_dict[u_key], 2)
+          matched.append(wt_score)
 
+        support_df.loc[support_df['entity'] == u_key, 'matching_score'] = wt_score
       else:
         not_found.append(u_key)
 
-    supporting_json_obj.append({'Matching Score': round(sum(matched),2)})
+    modified_support_dict = support_df.to_dict('records')
+    avg_matching_score = {'Avg Matching Score': round(sum(matched), 2)}
+    modified_support_dict.append(avg_matching_score)
 
-    return supporting_json_obj
-    # return (json.dumps(supporting_json_obj),
-    #  f'Matching Score: {round(sum(matched),2)}',
-    #  f'KeysNotFound: {not_found}')
+    return modified_support_dict
 
   except Exception as e:
     Logger.error(e)

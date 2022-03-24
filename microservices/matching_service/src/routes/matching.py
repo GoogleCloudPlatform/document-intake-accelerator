@@ -18,10 +18,10 @@ def get_matching_score(AF_dict:dict, SD_dict:dict):
   #result = MLCALL()
   matching =  compare_json(AF_dict["entities"],SD_dict["entities"])
   print(matching)
-  print("entities",matching[:len(matching)-1])
-  print("matching score",matching[-1]["Matching Score"])
   if matching:
-    return (matching[:len(matching)-1], matching[-1]["Matching Score"])
+    print("entities",matching[:len(matching)-1])
+    print("matching score",matching[-1]["Avg Matching Score"])
+    return (matching[:len(matching)-1], matching[-1]["Avg Matching Score"])
   else:
     return None
   result = {"status":"success"}
@@ -84,6 +84,7 @@ async def match_document(case_id: str, uid: str):
 
       SD_dict = copy.deepcopy(SD_doc.to_dict())
       AF_dict = copy.deepcopy(AF_doc.to_dict())
+      
       #matching ml call
       matching_result = get_matching_score(AF_dict,SD_dict)
       print(matching_result)
