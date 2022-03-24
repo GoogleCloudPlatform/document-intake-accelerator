@@ -10,10 +10,12 @@ import fitz
 if tuple(map(int, fitz.version[0].split('.'))) < (1, 18, 18):
   raise SystemExit('require PyMuPDF v1.18.18+')
 
+
 class PDFManager:
   """
   A class to perform operations on a pdf file.
   """
+
   def __init__(self, pdf_file, out_path):
     self.inp_file_pdf = pdf_file
     self.out_path = out_path

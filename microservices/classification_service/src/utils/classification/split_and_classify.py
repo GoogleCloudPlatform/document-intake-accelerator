@@ -4,12 +4,14 @@ first page
 from utils.classification.pdf_splitter import PDFManager
 from utils.classification.vertex_predicitons import VertexPredictions
 from utils.classification.download_pdf_gcs import download_pdf_gcs
-from utils.classification.classification_config import CONF_THRESH, ENDPOINT_ID, PROJECT_ID
+from utils.classification.classification_config import \
+   CONF_THRESH,ENDPOINT_ID,PROJECT_ID
 import json
 import os
 import sys
 from os.path import basename
 import warnings
+
 warnings.filterwarnings('ignore')
 
 
@@ -38,14 +40,11 @@ class DocClassifier:
     self.endpoint_id = ENDPOINT_ID
 
     self.pdf_path = f'{out_folder}\\{case_id}_{uid}_' + basename(pdf_uri)
-    print('PDF at '+self.pdf_path)
+    print('PDF at ' + self.pdf_path)
     print('Downloading PDF from GCS')
     print('PDF URI: ', pdf_uri)
 
-    download_pdf_gcs(
-    gcs_uri=pdf_uri,
-    output_filename=self.pdf_path
-)
+    download_pdf_gcs(gcs_uri=pdf_uri, output_filename=self.pdf_path)
     self.doc_path = self.pdf_path
     self.splitter = PDFManager(pdf_file=self.pdf_path, out_path=out_folder)
     self.classifier = VertexPredictions(project_id=PROJECT_ID)
@@ -72,13 +71,12 @@ class DocClassifier:
     if predictions['confidences'][0] < self.conf:
       predicted_class = 'Negative'
 
-
     output = {
-      'case_id': self.case_id,
-      'u_id': self.uid,
-      'predicted_class': predicted_class,
-      'model_conf': predictions['confidences'][0],
-      'model_endpoint_id': predictions['ids'][0]
+        'case_id': self.case_id,
+        'u_id': self.uid,
+        'predicted_class': predicted_class,
+        'model_conf': predictions['confidences'][0],
+        'model_endpoint_id': predictions['ids'][0]
     }
 
     # remove the image from local after prediction as it is of no use further
@@ -86,4 +84,3 @@ class DocClassifier:
     os.remove(self.pdf_path)
 
     return json.dumps(output)
-
