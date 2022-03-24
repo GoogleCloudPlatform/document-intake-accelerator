@@ -23,7 +23,6 @@ def extraction_acc():
         if ".json" in each_json:
             with open(os.path.join(ip_folder_name, each_json)) as f:
                 data = json.load(f)
-                data = json.loads(data)
                 temp_dict = {}
 
                 # create one dict for one file
@@ -36,9 +35,6 @@ def extraction_acc():
 
     # dataframe creation from json files
     extracted_df = pd.DataFrame(list_jsons)
-
-    # create extraction csv
-    extracted_df.to_csv(extraction_csv_path, index=False)
 
     # Extraction stats
 
@@ -55,17 +51,21 @@ def extraction_acc():
     for each_col, val in extraction_perc_df.iteritems():
         if each_col == "filename":
             continue
-        extraction_dict[each_col] = {"missing_count": val, "extraction_percentage": 100 * (1 - round(val / extracted_records, 2))}
+        extraction_dict[each_col] = {"missing_count": val,
+                                     "extraction_percentage": 100 * (1 - round(val / extracted_records, 2))}
 
     print(extraction_dict)
+    extracted_df = extracted_df.astype(str)
+
+    # create extraction csv
+    extracted_df.to_csv(extraction_csv_path, index=False)
 
     # taggers df
-
     taggers_df = pd.read_csv(data_taggers_csv_path)
 
     if rename_required:
         taggers_df.rename(columns=rename_columns, inplace=True)
-
+    taggers_df = taggers_df.astype(str)
     # remove file extension
     taggers_df['filename'] = taggers_df['filename'].apply(lambda x: x[:-4] if '.png' in x else x)
 
@@ -108,23 +108,22 @@ def extraction_acc():
 
     print("extraction accuracy process successfully completed")
 
-if __name__=="__main__":
 
+if __name__ == "__main__":
     # input variables
 
-    ip_folder_name = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/paystub"
-    extraction_csv_path = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/paystub/extracted-csv/extracted_entities.csv"
-    data_taggers_csv_path = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/paystub/taggers-csv/taggers-paystub-test.csv"
-    extraction_accuracy_csv_path = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/paystub/extracted-acc-csv/extraction-accuracy.csv"
+    ip_folder_name = "C:\\Users\\Ajay Sharma\\Documents\\DOCAI\\Parsers\\Payslips\\Mapped Final Json\\Clean"
+    extraction_csv_path = "extracted_entities.csv"
+    data_taggers_csv_path = "taggers-paystub-test.csv"
+    extraction_accuracy_csv_path = "extraction-accuracy.csv"
 
     rename_required = True
 
     # rename data taggers cols, if they are different from standard key names
     rename_columns = {"Filename": "filename", "EMPLOYEE NAME": "name", "EMPLOYER NAME": "employer_name",
-                      "EMPLOYER ADDRESS": "employer_address", "PAY PERIOD(FROM)": "pay_period_from",
+                      "EMPLOYER ADDRESS": "employer_addres  s", "PAY PERIOD(FROM)": "pay_period_from",
                       "PAY PERIOD(TO)": "pay_period_to", "SSN": "ssn", "HOURS": "hours", "YTD Gross": "ytd",
                       "PAY DATE": "pay_date", "RATE": "rate"}
 
     # extraction accuracy function
     extraction_acc()
-
