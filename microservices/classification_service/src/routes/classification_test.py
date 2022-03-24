@@ -9,7 +9,8 @@ from common.testing.firestore_emulator import firestore_emulator, clean_firestor
 from unittest.mock import Mock, patch
 
 # assigning url
-api_url = "http://localhost:8080/classification_service/v1/classification/classification_api"
+api_url = "http://localhost:8080/classification_service/v1/"\
+  "classification/classification_api"
 
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
@@ -23,15 +24,15 @@ def test_classify_all_parameters(client_with_emulator):
       "case_id": "abc",
       "uid": "def",
       "predicted_class": "DL",
-      'model_conf': 0.99,
+      "model_conf": 0.99,
   }
   mockresponse = Mock()
   mockresponse.status_code = 200
-  with patch('routes.classification.predict_doc_type', return_value=res):
+  with patch("routes.classification.predict_doc_type", return_value=res):
     with patch(
-        'routes.classification.update_classification_status',
+        "routes.classification.update_classification_status",
         return_value=mockresponse):
-      with patch('routes.classification.Logger'):
+      with patch("routes.classification.Logger"):
         response = client_with_emulator.post(
             f"{api_url}?case_id=abc&uid=def&gcs_url="\
               "gs://document-upload-test/abc/def/arkansas_dl_converted.pdf"
@@ -47,15 +48,15 @@ def test_classify_with_missing_parameters_caseid(client_with_emulator):
       "case_id": "abc",
       "uid": "def",
       "predicted_class": "DL",
-      'model_conf': 0.99,
+      "model_conf": 0.99,
   }
   mockresponse = Mock()
   mockresponse.status_code = 200
-  with patch('routes.classification.predict_doc_type', return_value=res):
+  with patch("routes.classification.predict_doc_type", return_value=res):
     with patch(
-        'routes.classification.update_classification_status',
+        "routes.classification.update_classification_status",
         return_value=mockresponse):
-      with patch('routes.classification.Logger'):
+      with patch("routes.classification.Logger"):
         response = client_with_emulator.post(
             f"{api_url}?case_id=&uid=def&gcs_url="\
               "gs://document-upload-test/abc/def/arkansas_dl_converted.pdf"
@@ -71,15 +72,15 @@ def test_classify_with_missing_parameters_uid(client_with_emulator):
       "case_id": "abc",
       "uid": "def",
       "predicted_class": "DL",
-      'model_conf': 0.99,
+      "model_conf": 0.99,
   }
   mockresponse = Mock()
   mockresponse.status_code = 200
-  with patch('routes.classification.predict_doc_type', return_value=res):
+  with patch("routes.classification.predict_doc_type", return_value=res):
     with patch(
-        'routes.classification.update_classification_status',
+        "routes.classification.update_classification_status",
         return_value=mockresponse):
-      with patch('routes.classification.Logger'):
+      with patch("routes.classification.Logger"):
         response = client_with_emulator.post(
             f"{api_url}?case_id=abc&uid=&gcs_url="\
               "gs://document-upload-test/abc/def/arkansas_dl_converted.pdf"
@@ -95,15 +96,15 @@ def test_classify_with_invalid_gcs_uri(client_with_emulator):
       "case_id": "abc",
       "uid": "def",
       "predicted_class": "DL",
-      'model_conf': 0.99,
+      "model_conf": 0.99,
   }
   mockresponse = Mock()
   mockresponse.status_code = 200
-  with patch('routes.classification.predict_doc_type', return_value=res):
+  with patch("routes.classification.predict_doc_type", return_value=res):
     with patch(
-        'routes.classification.update_classification_status',
+        "routes.classification.update_classification_status",
         return_value=mockresponse):
-      with patch('routes.classification.Logger'):
+      with patch("routes.classification.Logger"):
         response = client_with_emulator.post(
           f"{api_url}?case_id=&uid=def&gcs_url="\
             "gs://document-upload-test/abc/def/arkansas_dl_converted"
