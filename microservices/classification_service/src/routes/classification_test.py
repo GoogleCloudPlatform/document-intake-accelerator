@@ -7,8 +7,8 @@ import os
 from testing.fastapi_fixtures import client_with_emulator
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
 
-from urllib import request, response
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+from unittest import mock
 # assigning url
 api_url = "http://localhost:8080/classification_service/v1/classification/classification_api"
 
@@ -36,68 +36,75 @@ SUCCESS_RESPONSE = {"status": "Success"}
 
 def test_classify_all_parameters(client_with_emulator):
   """
-    Test to check the classification endpoint with all endpoints
+    Test to check the classification endpoint with all parameters
   """
-  # response_data = {"case_id": " 123", "u_id": "5fd0e97e-9dea-11ec-8e64-da7c2efe947f", "predicted_class": "UE", "model_conf": 0.880875826, "model_endpoint_id": "3512649929430401024"}
-  # with patch('routes.classification_test.call_to_classify_all_parameters',return_value = response_data):
-  #   response = call_to_classify_all_parameters()
-  #   assert response == response
-  
   res = {
       "case_id": "abc",
       "uid": "def",
       "predicted_class": "DL",
       'model_conf': 0.99,
     }
+  mockresponse = Mock()
+  mockresponse.status_code = 200
   with patch('routes.classification.predict_doc_type',return_value=res):
-    with patch('routes.classification.update_classification_status'):
-      response = client_with_emulator.post(f"{api_url}?case_id=abc&uid=def&gcs_url=gs://document-upload-test/abc/def/arkansas_dl_converted.pdf")
-      assert response.status_code == 200
+    with patch('routes.classification.update_classification_status',return_value = mockresponse):
+      with patch('routes.classification.Logger'):
+        response = client_with_emulator.post(f"{api_url}?case_id=abc&uid=def&gcs_url=gs://document-upload-test/abc/def/arkansas_dl_converted.pdf")
+        assert response.status_code == 200
 
 
 def test_classify_with_missing_parameters_caseid(client_with_emulator):
   """
     Test to check the classification endpoint with empty case_id
   """
-  # response_data = {"detail" : {
-  #   "status" : "Failed",
-  #   "message" : "Parameter Missing"
-  # }}
-  
-  # with patch('routes.classification_test.call_to_classify_no_case_id',return_value = response_data):
-  #   response = call_to_classify_no_case_id()
-  #   assert response["detail"]["status"] == "Failed"
-  response = client_with_emulator.get(f"{api_url}?case_id=&uid=5fd0e97e-9dea-11ec-8e64-da7c2efe947f&gcs_url=gs%3A%2F%2Fdocument-upload-test%2F%20123%2F5fd0e97e-9dea-11ec-8e64-da7c2efe947f%2Ffuture-genral.pdf")
-  assert response.status_code == 200
+  res = {
+      "case_id": "abc",
+      "uid": "def",
+      "predicted_class": "DL",
+      'model_conf': 0.99,
+    }
+  mockresponse = Mock()
+  mockresponse.status_code = 200
+  with patch('routes.classification.predict_doc_type',return_value=res):
+    with patch('routes.classification.update_classification_status',return_value = mockresponse):
+      with patch('routes.classification.Logger'):
+        response = client_with_emulator.post(f"{api_url}?case_id=&uid=def&gcs_url=gs://document-upload-test/abc/def/arkansas_dl_converted.pdf")
+        assert response.status_code == 400
 
 def test_classify_with_missing_parameters_uid(client_with_emulator):
   """
     Test to check the classification endpoint with empty uid
   """
+  res = {
+      "case_id": "abc",
+      "uid": "def",
+      "predicted_class": "DL",
+      'model_conf': 0.99,
+    }
+  mockresponse = Mock()
+  mockresponse.status_code = 200
+  with patch('routes.classification.predict_doc_type',return_value=res):
+    with patch('routes.classification.update_classification_status',return_value = mockresponse):
+      with patch('routes.classification.Logger'):
+        response = client_with_emulator.post(f"{api_url}?case_id=abc&uid=&gcs_url=gs://document-upload-test/abc/def/arkansas_dl_converted.pdf")
+        assert response.status_code == 400
+
   
-  # response_data = {"detail" : {
-  #   "status" : "Failed",
-  #   "message" : "Parameter Missing"
-  # }}
-
-  # with patch('routes.classification_test.call_to_classify_no_uid',return_value = response_data):
-  #   response = call_to_classify_no_uid()
-  #   assert response["detail"]["status"] == "Failed"
-  response = client_with_emulator.get(f"{api_url}?case_id=%20123&uid=&gcs_url=gs%3A%2F%2Fdocument-upload-test%2F%20123%2F5fd0e97e-9dea-11ec-8e64-da7c2efe947f%2Ffuture-genral.pdf")
-  assert response.status_code == 200
-
 
 def test_classify_with_invalid_gcs_uri(client_with_emulator):
   """
     Test to check the classification endpoint with invalid gcs uri
   """
-  # response_data = {"detail" : {
-  #   "status" : "Failed",
-  #   "message" : "Invalid gcs uri path"
-  # }}
-
-  # with patch('routes.classification_test.call_to_classify_invalid_gcs_uri',return_value = response_data):
-  #   response = call_to_classify_invalid_gcs_uri()
-  #   assert response["detail"]["status"] == "Failed"
-  response = client_with_emulator.get(f"{api_url}?case_id=%20123&uid=&gcs_url=gs%3A%2F%2Fdocument-upload-test%2F%20123%2F5fd0e97e-9dea-11ec-8e64-da7c2efe947f%2Ffuture-genral.")
-  assert response.status_code == 200
+  res = {
+      "case_id": "abc",
+      "uid": "def",
+      "predicted_class": "DL",
+      'model_conf': 0.99,
+    }
+  mockresponse = Mock()
+  mockresponse.status_code = 200
+  with patch('routes.classification.predict_doc_type',return_value=res):
+    with patch('routes.classification.update_classification_status',return_value = mockresponse):
+      with patch('routes.classification.Logger'):
+        response = client_with_emulator.post(f"{api_url}?case_id=&uid=def&gcs_url=gs://document-upload-test/abc/def/arkansas_dl_converted.pdf")
+        assert response.status_code == 400

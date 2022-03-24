@@ -49,11 +49,17 @@ def update_classification_status(case_id: str,uid: str,status: str,document_clas
 
     """
   base_url = "http://document-status-service/document_status_service" \
-    "/v1/update_classification_status"
-  req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
+  "/v1/update_classification_status"
+  if status.lower() == "success":
+    req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
     f"&status={status}&document_class={document_class}&document_type={document_type}"
-  response = requests.post(req_url)
-  return response
+    response = requests.post(req_url)
+    return response
+  else:
+    req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
+    f"&status={status}"
+    response = requests.post(req_url)
+    return response
 
 @router.post("/classification_api")
 async def classifiction(case_id: str, uid: str, gcs_url: str):
@@ -95,9 +101,9 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
         Logger.error(f"Document unclassified")
         
         if response.status_code != 200:
-          Logger.error(f"Document unclassified")
+          Logger.error(f"Document status update failed")
           raise HTTPException(status_code=500,detail="Failed to update document status")  
-        return {"detail" : FAILED_RESPONSE}
+        return FAILED_RESPONSE
       
       doc_type = ""
       doc_class = label_map[doc_prediction_result["predicted_class"]]
@@ -114,17 +120,15 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
     
       #DocumentStatus api call
       response = update_classification_status(case_id,uid,"success",document_class=doc_class,document_type=doc_type)
-      
+      print(response)
       if response.status_code != 200:
         Logger.error(f"Document status updation failed for {case_id} and {uid}")
         raise HTTPException(status_code=500,detail="Document status updation failed")
       
-      return {"detail" : SUCCESS_RESPONSE}
+      return SUCCESS_RESPONSE
     
     else:
-
-      FAILED_RESPONSE["message"] = "Classification Failed"
-      raise HTTPException(status_code=500,detail=FAILED_RESPONSE)
+      raise HTTPException(status_code=500,detail="Classification Failed")
 
   except HTTPException as e:
     print(e)
@@ -134,8 +138,7 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
   
   except Exception as e:
     print(f"{e} while classification {case_id} and {uid}")
-    Logger.error()
+    Logger.error(e)
     #DocumentStatus api call
     update_classification_status(case_id,uid,"failed")
-    FAILED_RESPONSE["message"] = "Classification Failed"
-    raise HTTPException(status_code=500, detail=FAILED_RESPONSE)
+    raise HTTPException(status_code=500, detail="Classification Failed")
