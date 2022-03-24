@@ -18,7 +18,7 @@ FAILED_RESPONSE = {"status": "Failed"}
 def predict_doc_type(case_id: str, uid: str, gcs_url: str):
   """
     Fetches the model predictions and returns the output in dictionary format
-  
+
       Args: case_id:str, uid:str, gcs_url:str
 
       Returns: case_id, u_id, predicted_class, model_conf, model_endpoint_id
