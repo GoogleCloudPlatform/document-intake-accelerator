@@ -1,19 +1,29 @@
 """ Matching endpoints"""
+import json
 from fastapi import APIRouter, HTTPException
 import requests
 from common.models import Document
 from common.utils.logging_handler import Logger
 from typing import Optional, List, Dict
+from utils.json_matching.match_json import compare_json
 # disabling for linting to pass
 # pylint: disable = broad-except
-
+import copy
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
 
-def get_matching_score(AF_doc:dict, SD_doc:dict):
+def get_matching_score(AF_dict:dict, SD_dict:dict):
   #ML script function Call
   #result = MLCALL()
+  matching =  compare_json(AF_dict["entities"],SD_dict["entities"])
+  print(matching)
+  print("entities",matching[:len(matching)-1])
+  print("matching score",matching[-1]["Matching Score"])
+  if matching:
+    return (matching[:len(matching)-1], matching[-1]["Matching Score"])
+  else:
+    return None
   result = {"status":"success"}
   return result
 
@@ -23,7 +33,7 @@ def update_matching_status(case_id: str,uid: str,status: str,entity: Optional[Li
   response = None
   if status.lower() == "success":
     base_url = "http://document-status-service/document_status_service/v1/update_matching_status"
-    req_url = f"{base_url}?case_id={case_id}&uid={uid}&status={status}&matching_score=0.0"
+    req_url = f"{base_url}?case_id={case_id}&uid={uid}&status={status}&entity={entity}&matching_score={matching_score}"
     response = requests.post(req_url,json=entity)
     print("success")
     print(response)
@@ -63,26 +73,32 @@ async def match_document(case_id: str, uid: str):
   try:
     
     AF_doc = Document.collection.filter(case_id = case_id).filter(active = "active").filter(document_type = "AF").get()
-    print(AF_doc)
     if AF_doc:
       Logger.info(f"Matching document with case_id {case_id} and uid {uid} with the corresponding Application form")
     
-      print(AF_doc.to_dict())
+      #print(AF_doc.to_dict())
       
       SD_doc = Document.find_by_uid(uid)
-      print(SD_doc.to_dict())
-      Logger.info(SD_doc)
-    
+      print("Before")
+      print(SD_doc.to_dict()["entities"])
+
+      SD_dict = copy.deepcopy(SD_doc.to_dict())
+      AF_dict = copy.deepcopy(AF_doc.to_dict())
       #matching ml call
-      matching_result = get_matching_score(AF_doc,SD_doc)
+      matching_result = get_matching_score(AF_dict,SD_dict)
       print(matching_result)
+      Logger.info(matching_result)
     
-      if matching_result["status"].lower() == "success":
-        dsm_status = update_matching_status(case_id,uid,matching_result["status"])
+      if matching_result:
+        updated_entity = matching_result[0]
+        overall_score = matching_result[1]
+        print("After")
+        print(updated_entity)
+        dsm_status = update_matching_status(case_id,uid,"success",entity = updated_entity, matching_score=overall_score)
         
         if dsm_status["status"].lower() == "success":
           Logger.info(f"Matching document with case_id {case_id} and uid {uid} was successful")
-          return matching_result
+          return {"status":"success"}
         else:
           Logger.error(f"Matching document with case_id {case_id} and uid {uid} Failed Doc status not updated")
           raise HTTPException(status_code=500,detail="Document Matching failed.Status failed to update")
