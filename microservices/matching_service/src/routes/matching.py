@@ -16,7 +16,10 @@ FAILED_RESPONSE = {"status": "Failed"}
 def get_matching_score(AF_dict:dict, SD_dict:dict):
   #ML script function Call
   #result = MLCALL()
-  matching =  compare_json(AF_dict["entities"],SD_dict["entities"])
+  
+  print(AF_dict["entities"])
+  print(SD_dict["entities"])
+  matching =  compare_json(AF_dict["entities"], SD_dict["entities"], SD_dict["document_class"], AF_dict["document_class"], SD_dict["context"])
   print(matching)
   if matching:
     print("entities",matching[:len(matching)-1])
@@ -24,8 +27,6 @@ def get_matching_score(AF_dict:dict, SD_dict:dict):
     return (matching[:len(matching)-1], matching[-1]["Avg Matching Score"])
   else:
     return None
-  result = {"status":"success"}
-  return result
 
 
 def update_matching_status(case_id: str,uid: str,status: str,entity: Optional[List[dict]] = None, matching_score: Optional[float] = None):
@@ -72,16 +73,12 @@ async def match_document(case_id: str, uid: str):
     """
   try:
     
-    AF_doc = Document.collection.filter(case_id = case_id).filter(active = "active").filter(document_type = "AF").get()
+    AF_doc = Document.collection.filter(case_id = case_id).filter(active = "active").filter(document_type = "application_form").get()
     if AF_doc:
       Logger.info(f"Matching document with case_id {case_id} and uid {uid} with the corresponding Application form")
-    
-      #print(AF_doc.to_dict())
-      
-      SD_doc = Document.find_by_uid(uid)
-      print("Before")
-      print(SD_doc.to_dict()["entities"])
 
+      SD_doc = Document.find_by_uid(uid)
+      
       SD_dict = copy.deepcopy(SD_doc.to_dict())
       AF_dict = copy.deepcopy(AF_doc.to_dict())
       
@@ -93,13 +90,12 @@ async def match_document(case_id: str, uid: str):
       if matching_result:
         updated_entity = matching_result[0]
         overall_score = matching_result[1]
-        print("After")
-        print(updated_entity)
+
         dsm_status = update_matching_status(case_id,uid,"success",entity = updated_entity, matching_score=overall_score)
         
         if dsm_status["status"].lower() == "success":
           Logger.info(f"Matching document with case_id {case_id} and uid {uid} was successful")
-          return {"status":"success"}
+          return {"status":"success" , "score" : overall_score}
         else:
           Logger.error(f"Matching document with case_id {case_id} and uid {uid} Failed Doc status not updated")
           raise HTTPException(status_code=500,detail="Document Matching failed.Status failed to update")

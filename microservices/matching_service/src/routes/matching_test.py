@@ -27,11 +27,11 @@ def test_matching_api_all_ok(client_with_emulator):
 
   doc.active = "active"
 
-  doc.document_class = "UE"
+  doc.document_class = "unemployment_form"
 
-  doc.document_type = "AF"
+  doc.document_type = "application_form"
 
-  doc.entities = [{"key":"first name","raw-value":"Moh","corrected_value":"Mohit"}]
+  doc.entities = [{"entity":"name","value":"Mohit"}]
   doc.save()
 
 
@@ -42,11 +42,11 @@ def test_matching_api_all_ok(client_with_emulator):
   doc_sd.uid = "2103"
   doc_sd.active = "active"
 
-  doc_sd.document_class = "Utility"
+  doc_sd.document_class = "utility_bill"
 
-  doc_sd.document_type = "SD"
+  doc_sd.document_type = "supporting_documents"
 
-  doc_sd.entities = [{"key":"first name","raw-value":"Moh","corrected_value":"Mohit"}]
+  doc_sd.entities = [{"entity":"name","value":"Mohi"}]
   doc_sd.save()
 
   with mock.patch('routes.matching.get_matching_score',return_value={"status":"success"}):
@@ -67,11 +67,11 @@ def test_matching_api_no_AF(client_with_emulator):
 
   # doc.active = "active"
 
-  # doc.document_class = "UE"
+  # doc.document_class = "unemployment_form"
 
-  # doc.document_type = "AF"
+  # doc.document_type = "application_form"
 
-  # doc.entities = [{"key":"first name","raw-value":"Moh","corrected_value":"Mohit"}]
+  # doc.entities = [{"entity":"first name","value":"Moh","corrected_value":"Mohit"}]
   # doc.save()
 
 
@@ -82,11 +82,11 @@ def test_matching_api_no_AF(client_with_emulator):
   doc_sd.uid = "2103"
   doc_sd.active = "active"
 
-  doc_sd.document_class = "Utility"
+  doc_sd.document_class = "utility_bill"
 
-  doc_sd.document_type = "SD"
+  doc_sd.document_type = "supporting_documents"
 
-  doc_sd.entities = [{"key":"first name","raw-value":"Moh","corrected_value":"Mohit"}]
+  doc_sd.entities = [{"entity":"first name","value":"Moh","corrected_value":"Mohit"}]
   doc_sd.save()
 
   with mock.patch('routes.matching.get_matching_score',return_value={"status":"success"}):
@@ -108,11 +108,11 @@ def test_matching_api_update_dsm_failed(client_with_emulator):
 
   doc.active = "active"
 
-  doc.document_class = "UE"
+  doc.document_class = "unemployment_form"
 
-  doc.document_type = "AF"
+  doc.document_type = "application_form"
 
-  doc.entities = [{"key":"first name","raw-value":"Moh","corrected_value":"Mohit"}]
+  doc.entities = [{"entity":"first name","value":"Moh","corrected_value":"Mohit"}]
   doc.save()
 
 
@@ -123,11 +123,11 @@ def test_matching_api_update_dsm_failed(client_with_emulator):
   doc_sd.uid = "2103"
   doc_sd.active = "active"
 
-  doc_sd.document_class = "Utility"
+  doc_sd.document_class = "utility_bill"
 
-  doc_sd.document_type = "SD"
+  doc_sd.document_type = "supporting_documents"
 
-  doc_sd.entities = [{"key":"first name","raw-value":"Moh","corrected_value":"Mohit"}]
+  doc_sd.entities = [{"entity":"first name","value":"Moh","corrected_value":"Mohit"}]
   doc_sd.save()
 
   with mock.patch('routes.matching.get_matching_score',return_value={"status":"success"}):
@@ -145,9 +145,9 @@ def test_matching_api_update_get_matching_failed(client_with_emulator):
   doc.case_id = "test_id123"
   doc.uid = "2102"
   doc.active = "active"
-  doc.document_class = "UE"
-  doc.document_type = "AF"
-  doc.entities = [{"key":"first name","raw-value":"Moh","corrected_value":"Mohit"}]
+  doc.document_class = "unemployment_form"
+  doc.document_type = "application_form"
+  doc.entities = [{"entity":"first name","value":"Moh","corrected_value":"Mohit"}]
   doc.save()
 
 
@@ -155,9 +155,9 @@ def test_matching_api_update_get_matching_failed(client_with_emulator):
   doc_sd.case_id = "test_id123"
   doc_sd.uid = "2103"
   doc_sd.active = "active"
-  doc_sd.document_class = "Utility"
-  doc_sd.document_type = "SD"
-  doc_sd.entities = [{"key":"first name","raw-value":"Moh","corrected_value":"Mohit"}]
+  doc_sd.document_class = "utility_bill"
+  doc_sd.document_type = "supporting_documents"
+  doc_sd.entities = [{"entity":"first name","value":"Moh","corrected_value":"Mohit"}]
   doc_sd.save()
 
   with mock.patch('routes.matching.get_matching_score',return_value={"status":"failed"}):

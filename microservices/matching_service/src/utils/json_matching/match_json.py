@@ -59,7 +59,7 @@ def compare_dates(date1: str, date2: str,
     return 0.0
 
 
-def compare_json(application_json_obj, supporting_json_obj):
+def compare_json(application_json_obj, supporting_json_obj, SD_doc_type, AF_doc_type, context):
   """Function takes two JSON files, 1. application form JSON and 2.
    supporting doc JSON file
   Args:
@@ -67,9 +67,9 @@ def compare_json(application_json_obj, supporting_json_obj):
   """
   try:
     # Get the doc type for application doc and supporting doc
-    support_doc_type = SUPPORT_DOC_TYPE.lower()
-    app_doc_type = APPLICATION_DOC_TYPE.lower()
-    state = STATE.lower()
+    support_doc_type = SD_doc_type.lower()
+    app_doc_type = AF_doc_type.lower()
+    state = context.lower()
 
     # Both JSON should be available for comparison
 
@@ -84,7 +84,7 @@ def compare_json(application_json_obj, supporting_json_obj):
     print(support_keys)
     Logger.info(app_keys)
     if support_doc_type not in MATCHING_USER_KEYS_SUPPORTING_DOC:
-      #Logger.error('Unsupported supporting doc')
+      Logger.error('Unsupported supporting doc')
       return None
 
     support_doc_dict = MATCHING_USER_KEYS_SUPPORTING_DOC[support_doc_type]

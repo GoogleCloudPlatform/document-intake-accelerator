@@ -31,7 +31,7 @@ SUPPORT_DOC_TYPE = 'drivers_license'
 MATCHING_USER_KEYS_SUPPORTING_DOC = {
     # 'drivers_license': {
     #    'name': 0.16, 'dob': (0.16, '%y/%m/%d'), 'sex': 0.16, 'dl_no': 0.16},
-    'drivers_license': {
+    'driving_licence': {
        'name': 0.16, 'date_last_worked': (0.16, '%Y/%m/%d'), 'ssn': 0.16, 'city': 0.16},
 
     'utility_bill': {
@@ -42,7 +42,7 @@ MATCHING_USER_KEYS_SUPPORTING_DOC = {
         'pay_period_from': (0.14, '%y/%m/%d'),
         'pay_period_to': (0.14, '%y/%m/%d'), 'ssn': 0.14},
 
-    'claim': {'employer_info': 0.25, 'work_start_date': (0.25, '%y/%m/%d'),
+    'claims_form': {'employer_info': 0.25, 'work_start_date': (0.25, '%y/%m/%d'),
               'employer_name': 0.25, 'employer_address': 0.25,
               'employer_city': 0.25}
 }
@@ -52,6 +52,6 @@ APPLICATION_DOC_TYPE = 'unemployement'
 STATE = 'arkansas'
 
 APPLICATION_DOC_DATE_FORMAT = {
-    'unemployement': {'arizona': '%m/%d/%y', 'arkansas': '%m/%d/%Y',
+    'unemployement_form': {'arizona': '%m/%d/%y', 'arkansas': '%m/%d/%Y',
                       'california': '%m/%d/%y', 'illinois': '%m/%d/%y'}
 }
