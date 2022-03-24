@@ -19,7 +19,7 @@ Create state wise mapping if it form parser, and one doc type mapping if it is s
 """
 
 MAPPING_DICT = {
-    "arizona": {
+    "unemployment_form_arizona": {
         "default_entities": {
             "Social Security Number:": ["Social Security Number"],
             "Date:": ["Date"],
@@ -49,7 +49,7 @@ MAPPING_DICT = {
             "Year": ["Employee DOB Year", "Year (Last Day of Work)"]
         }
     },
-    "arkansas": {
+    "unemployment_form_arkansas": {
         "default_entities": {
             "TODAY'S DATE": ["TODAY'S DATE"],
             "SOCIAL SECURITY NUMBER": ["SOCIAL SECURITY NUMBER"],
