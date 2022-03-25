@@ -1,5 +1,5 @@
 '''
-This code is Used to check the auto approval status of a document depending on the 3 different scores
+This code is Used to check the approval status of a document depending on the 3 different scores
 '''
 import json
 
@@ -23,7 +23,6 @@ def read_json(path):
   data = blob.download_as_string(client=None)
   data_dict = json.loads(data)
   return data_dict
-
 
 
 
