@@ -33,7 +33,7 @@ async def validation(case_id: str, uid: str, doc_class: str):
       f" doc_class:{doc_class} is {validation_score}")
     return {
       "status": status,
-      "score": f"{validation_score}"
+      "score": validation_score
     }
   except Exception as error:
     Logger.error(error)
