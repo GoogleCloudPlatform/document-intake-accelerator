@@ -228,23 +228,65 @@ async def fetch_file(case_id: str, uid: str, download: Optional[bool] = False):
           Try checking if the case_id and uid are correct"
     ) from e
 
+
+@router.get("/get_unclassified")
+async def get_unclassified():
+  """
+  Fetches a queue of all unclassified documents
+  Returns:
+    200 : Fetches a list of documents with the same status from Firestore
+    500 : If there is any error during fetching from firestore
+  """
+  try:
+    docs = list(Document.collection.filter("active", "==", "active").fetch())
+    result_queue = []
+    for d in docs:
+      doc_dict = d.to_dict()
+      system_trail = doc_dict["system_status"]
+
+      #Preference for hitl_status
+      #if hitl_status trail is not present autoapproval status is considered
+      if system_trail:
+        in_consideration = None
+        for status in system_trail:
+          if status["stage"].lower() == "classification":
+            in_consideration = status
+        if in_consideration["status"].lower() == "unclassified":
+          result_queue.append(doc_dict)
+    response = {"status": "Success"}
+    response["data"] = result_queue
+    return response
+  except Exception as e:
+    print(e)
+    Logger.error(e)
+    raise HTTPException(status_code=500,detail="Error")
+
+
 @router.get("/update_hitl_classification")
 async def update_hitl_classification(case_id: str, uid: str, document_class: str):
   """
   Updates the hitl classification status flag and doc type and doc class in DB
+  and starts the process task
   Args : case_id : str, uid : str
-  Returns 200: returns the file and displays it
+  Returns 200: updates the DB and starts process task
   Returns 500: If something fails
   """
   try:
-    pass
+    document_type = None
+    if document_class.lower() == "UE":
+      document_type = "application_form"
+    else:
+      document_type = "supporting_documents"
+    #Update DSM
+
+    #Call Process task
+    
   except HTTPException as e:
     print(e)
     Logger.error(e)
     raise e
 
   except Exception as e:
-    #return Response(content=None,media_type="application/pdf")
     print(e)
     Logger.error(e)
     raise HTTPException(
