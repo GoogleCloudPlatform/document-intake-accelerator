@@ -31,9 +31,8 @@ def test_matching_api_all_ok(client_with_emulator):
 
   doc.document_type = "application_form"
 
-  doc.entities = [{"entity":"name","value":"Mohit"}]
+  doc.entities = [{"entity": "name", "value": "Mohit"}]
   doc.save()
-
 
   doc_sd = Document()
 
@@ -46,15 +45,20 @@ def test_matching_api_all_ok(client_with_emulator):
 
   doc_sd.document_type = "supporting_documents"
 
-  doc_sd.entities = [{"entity":"name","value":"Mohi"}]
+  doc_sd.entities = [{"entity": "name", "value": "Mohi"}]
   doc_sd.save()
 
-  with mock.patch('routes.matching.get_matching_score',return_value={"status":"success"}):
-    with mock.patch('routes.matching.update_matching_status',return_value= {"status":"success"}):
-      response = client_with_emulator.post(
-          f"{api_url}match_document?case_id=test_id123&uid=2103")
-      print(response)
-      assert response.status_code == 200, "Status 200"
+  with mock.patch(
+      "routes.matching.get_matching_score", return_value={"status": "success"}):
+    with mock.patch(
+        "routes.matching.update_matching_status",
+        return_value={"status": "success"}):
+      with mock.patch("routes.matching.Logger"):
+        response = client_with_emulator.post(
+            f"{api_url}match_document?case_id=test_id123&uid=2103")
+        print(response)
+        assert response.status_code == 200, "Status 200"
+
 
 def test_matching_api_no_AF(client_with_emulator):
   """Test case to check the matching endpoint"""
@@ -70,15 +74,23 @@ def test_matching_api_no_AF(client_with_emulator):
 
   doc_sd.document_type = "supporting_documents"
 
-  doc_sd.entities = [{"entity":"first name","value":"Moh","corrected_value":"Mohit"}]
+  doc_sd.entities = [{
+      "entity": "first name",
+      "value": "Moh",
+      "corrected_value": "Mohit"
+  }]
   doc_sd.save()
 
-  with mock.patch('routes.matching.get_matching_score',return_value={"status":"success"}):
-    with mock.patch('routes.matching.update_matching_status',return_value= {"status":"success"}):
-      response = client_with_emulator.post(
-          f"{api_url}match_document?case_id=test_id123&uid=2103")
-      print(response)
-      assert response.status_code == 404, "Status 404"
+  with mock.patch(
+      "routes.matching.get_matching_score", return_value={"status": "success"}):
+    with mock.patch(
+        "routes.matching.update_matching_status",
+        return_value={"status": "success"}):
+      with mock.patch("routes.matching.Logger"):
+        response = client_with_emulator.post(
+            f"{api_url}match_document?case_id=test_id123&uid=2103")
+        print(response)
+        assert response.status_code == 404, "Status 404"
 
 
 def test_matching_api_update_dsm_failed(client_with_emulator):
@@ -96,9 +108,12 @@ def test_matching_api_update_dsm_failed(client_with_emulator):
 
   doc.document_type = "application_form"
 
-  doc.entities = [{"entity":"first name","value":"Moh","corrected_value":"Mohit"}]
+  doc.entities = [{
+      "entity": "first name",
+      "value": "Moh",
+      "corrected_value": "Mohit"
+  }]
   doc.save()
-
 
   doc_sd = Document()
 
@@ -111,15 +126,23 @@ def test_matching_api_update_dsm_failed(client_with_emulator):
 
   doc_sd.document_type = "supporting_documents"
 
-  doc_sd.entities = [{"entity":"first name","value":"Moh","corrected_value":"Mohit"}]
+  doc_sd.entities = [{
+      "entity": "first name",
+      "value": "Moh",
+      "corrected_value": "Mohit"
+  }]
   doc_sd.save()
 
-  with mock.patch('routes.matching.get_matching_score',return_value={"status":"success"}):
-    with mock.patch('routes.matching.update_matching_status',return_value= {"status":"failed"}):
-      response = client_with_emulator.post(
-          f"{api_url}match_document?case_id=test_id123&uid=2103")
-      print(response)
-      assert response.status_code == 500, "Status 500"
+  with mock.patch(
+      "routes.matching.get_matching_score", return_value={"status": "success"}):
+    with mock.patch(
+        "routes.matching.update_matching_status",
+        return_value={"status": "failed"}):
+      with mock.patch("routes.matching.Logger"):
+        response = client_with_emulator.post(
+            f"{api_url}match_document?case_id=test_id123&uid=2103")
+        print(response)
+        assert response.status_code == 500, "Status 500"
 
 
 def test_matching_api_update_get_matching_failed(client_with_emulator):
@@ -131,9 +154,12 @@ def test_matching_api_update_get_matching_failed(client_with_emulator):
   doc.active = "active"
   doc.document_class = "unemployment_form"
   doc.document_type = "application_form"
-  doc.entities = [{"entity":"first name","value":"Moh","corrected_value":"Mohit"}]
+  doc.entities = [{
+      "entity": "first name",
+      "value": "Moh",
+      "corrected_value": "Mohit"
+  }]
   doc.save()
-
 
   doc_sd = Document()
   doc_sd.case_id = "test_id123"
@@ -141,12 +167,20 @@ def test_matching_api_update_get_matching_failed(client_with_emulator):
   doc_sd.active = "active"
   doc_sd.document_class = "utility_bill"
   doc_sd.document_type = "supporting_documents"
-  doc_sd.entities = [{"entity":"first name","value":"Moh","corrected_value":"Mohit"}]
+  doc_sd.entities = [{
+      "entity": "first name",
+      "value": "Moh",
+      "corrected_value": "Mohit"
+  }]
   doc_sd.save()
 
-  with mock.patch('routes.matching.get_matching_score',return_value={"status":"failed"}):
-    with mock.patch('routes.matching.update_matching_status',return_value= {"status":"success"}):
-      response = client_with_emulator.post(
-          f"{api_url}match_document?case_id=test_id123&uid=2103")
-      print(response)
-      assert response.status_code == 500, "Status 500"
+  with mock.patch(
+      "routes.matching.get_matching_score", return_value={"status": "failed"}):
+    with mock.patch(
+        "routes.matching.update_matching_status",
+        return_value={"status": "success"}):
+      with mock.patch("routes.matching.Logger"):
+        response = client_with_emulator.post(
+            f"{api_url}match_document?case_id=test_id123&uid=2103")
+        print(response)
+        assert response.status_code == 500, "Status 500"
