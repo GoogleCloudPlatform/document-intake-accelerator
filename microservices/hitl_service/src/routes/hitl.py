@@ -227,3 +227,28 @@ async def fetch_file(case_id: str, uid: str, download: Optional[bool] = False):
         detail="Couldn't fetch the requested file.\
           Try checking if the case_id and uid are correct"
     ) from e
+
+@router.get("/update_hitl_classification")
+async def update_hitl_classification(case_id: str, uid: str, document_class: str):
+  """
+  Updates the hitl classification status flag and doc type and doc class in DB
+  Args : case_id : str, uid : str
+  Returns 200: returns the file and displays it
+  Returns 500: If something fails
+  """
+  try:
+    pass
+  except HTTPException as e:
+    print(e)
+    Logger.error(e)
+    raise e
+
+  except Exception as e:
+    #return Response(content=None,media_type="application/pdf")
+    print(e)
+    Logger.error(e)
+    raise HTTPException(
+        status_code=500,
+        detail="Couldn't fetch the requested file.\
+          Try checking if the case_id and uid are correct"
+    ) from e
