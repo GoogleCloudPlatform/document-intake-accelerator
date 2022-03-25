@@ -134,7 +134,7 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
       doc_class = label_map[doc_prediction_result["predicted_class"]]
 
       if doc_prediction_result["predicted_class"] == "UE":
-        doc_type = "application"
+        doc_type = "application_form"
       else:
         doc_type = "supporting_documents"
 
