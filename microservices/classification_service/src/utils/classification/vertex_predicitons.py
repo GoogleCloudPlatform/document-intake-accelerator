@@ -15,16 +15,20 @@ class VertexPredictions:
   This class does batch as well as online predictions on a trained model.
   Results are uploaded to a user specified bucket.
   """
-  def __init__(self, project_id, location="us-central1",
-    credentials_json=None) -> None:
+
+  def __init__(self,
+               project_id,
+               location="us-central1",
+               credentials_json=None) -> None:
     self.project_id = project_id
     self.loc = location
     self.credential = credentials_json
 
-
-  def endpoint_image_classification(self, endpoint_id: str, filename: str,
-    api_endpoint: str = "us-central1-aiplatform.googleapis.com"):
-
+  def endpoint_image_classification(
+      self,
+      endpoint_id: str,
+      filename: str,
+      api_endpoint: str = "us-central1-aiplatform.googleapis.com"):
     """ Get prediction on images.
 
     Returns:
@@ -38,7 +42,7 @@ class VertexPredictions:
     # This client only needs to be created once, and
     # can be reused for multiple requests.
     client = aiplatform.gapic.PredictionServiceClient(
-      client_options=client_options)
+        client_options=client_options)
     with open(filename, "rb") as f:
       file_content = f.read()
 
@@ -46,16 +50,16 @@ class VertexPredictions:
     # model's prediction input schema.
     encoded_content = base64.b64encode(file_content).decode("utf-8")
     instance = predict.instance.ImageClassificationPredictionInstance(
-      content=encoded_content).to_value()
+        content=encoded_content).to_value()
     instances = [instance]
     parameters = predict.params.ImageClassificationPredictionParams(
-      confidence_threshold=0.5, max_predictions=5,).to_value()
+        confidence_threshold=0.5,
+        max_predictions=5,
+    ).to_value()
     endpoint = client.endpoint_path(
-      project=self.project_id, location=self.loc, endpoint=endpoint_id
-    )
+        project=self.project_id, location=self.loc, endpoint=endpoint_id)
     response = client.predict(
-      endpoint=endpoint, instances=instances, parameters=parameters
-    )
+        endpoint=endpoint, instances=instances, parameters=parameters)
     print("response")
     print(" deployed_model_id:", response.deployed_model_id)
     predictions = response.predictions
