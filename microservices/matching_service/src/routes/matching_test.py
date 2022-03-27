@@ -59,7 +59,7 @@ def test_matching_api_all_ok(client_with_emulator):
         assert response.status_code == 200, "Status 200"
 
 
-def test_matching_api_no_AF(client_with_emulator):
+def test_matching_api_no_af(client_with_emulator):
   """Test case to check the matching endpoint"""
 
   doc_sd = Document()

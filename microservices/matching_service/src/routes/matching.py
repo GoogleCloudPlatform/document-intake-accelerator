@@ -14,17 +14,17 @@ SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
 
 
-def get_matching_score(AF_dict: dict, SD_dict: dict):
+def get_matching_score(af_dict: dict, sd_dict: dict):
   """
     Makes call to json matching function and returns the result
 
-    Args: AF_dict: Dictionary of Application form
-          SD_dict: Dictionary of Application form
+    Args: af_dict: Dictionary of Application form
+          sd_dict: Dictionary of Application form
     Returns: Updated supporting document entity and avg matching score
   """
-  matching = compare_json(AF_dict["entities"], SD_dict["entities"],
-                          SD_dict["document_class"], AF_dict["document_class"],
-                          AF_dict["context"])
+  matching = compare_json(af_dict["entities"], sd_dict["entities"],
+                          sd_dict["document_class"], af_dict["document_class"],
+                          af_dict["context"])
   Logger.info(matching)
   if matching:
     return (matching[:len(matching) - 1], matching[-1]["Avg Matching Score"])
@@ -80,21 +80,21 @@ async def match_document(case_id: str, uid: str):
   try:
 
     #Get Application form data with the same caseid
-    AF_doc = Document.collection.filter(case_id=case_id).filter(
+    af_doc = Document.collection.filter(case_id=case_id).filter(
         active="active").filter(document_type="application_form").get()
 
-    if AF_doc:
+    if af_doc:
       Logger.info(f"Matching document with case_id {case_id}"\
         " and uid {uid} with the corresponding Application form")
 
       #Get Supporting Document data from DB
-      SD_doc = Document.find_by_uid(uid)
+      sd_doc = Document.find_by_uid(uid)
 
-      SD_dict = copy.deepcopy(SD_doc.to_dict())
-      AF_dict = copy.deepcopy(AF_doc.to_dict())
+      sd_dict = copy.deepcopy(sd_doc.to_dict())
+      af_dict = copy.deepcopy(af_doc.to_dict())
 
       #getting json matching result
-      matching_result = get_matching_score(AF_dict, SD_dict)
+      matching_result = get_matching_score(af_dict, sd_dict)
       Logger.info(matching_result)
 
       #If the matching result is not null update the status in DB
@@ -129,7 +129,7 @@ async def match_document(case_id: str, uid: str):
         Logger.error(f"Matching document with case_id {case_id} and uid {uid}"\
           f" Failed. Error in geting Matching score")
         raise HTTPException(status_code=500,detail="Document Matching failed"\
-          f"Error in getting matching score")
+          "Error in getting matching score")
 
     else:
       Logger.error(f"Error while matching document with case_id {case_id}"\
