@@ -7,7 +7,7 @@ import os
 from testing.fastapi_fixtures import client_with_emulator
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
 from common.models import Document
-from unittest import mock
+from unittest.mock import patch
 # assigning url
 api_url = "http://localhost:8080/matching_service/v1/"
 
@@ -48,12 +48,11 @@ def test_matching_api_all_ok(client_with_emulator):
   doc_sd.entities = [{"entity": "name", "value": "Mohi"}]
   doc_sd.save()
 
-  with mock.patch(
-      "routes.matching.get_matching_score", return_value={"status": "success"}):
-    with mock.patch(
+  with patch("routes.matching.get_matching_score", return_value=([], 0)):
+    with patch(
         "routes.matching.update_matching_status",
         return_value={"status": "success"}):
-      with mock.patch("routes.matching.Logger"):
+      with patch("routes.matching.Logger"):
         response = client_with_emulator.post(
             f"{api_url}match_document?case_id=test_id123&uid=2103")
         print(response)
@@ -81,12 +80,11 @@ def test_matching_api_no_AF(client_with_emulator):
   }]
   doc_sd.save()
 
-  with mock.patch(
-      "routes.matching.get_matching_score", return_value={"status": "success"}):
-    with mock.patch(
+  with patch("routes.matching.get_matching_score", return_value=([], 0)):
+    with patch(
         "routes.matching.update_matching_status",
         return_value={"status": "success"}):
-      with mock.patch("routes.matching.Logger"):
+      with patch("routes.matching.Logger"):
         response = client_with_emulator.post(
             f"{api_url}match_document?case_id=test_id123&uid=2103")
         print(response)
@@ -133,19 +131,18 @@ def test_matching_api_update_dsm_failed(client_with_emulator):
   }]
   doc_sd.save()
 
-  with mock.patch(
-      "routes.matching.get_matching_score", return_value={"status": "success"}):
-    with mock.patch(
+  with patch("routes.matching.get_matching_score", return_value=([], 0)):
+    with patch(
         "routes.matching.update_matching_status",
         return_value={"status": "failed"}):
-      with mock.patch("routes.matching.Logger"):
+      with patch("routes.matching.Logger"):
         response = client_with_emulator.post(
             f"{api_url}match_document?case_id=test_id123&uid=2103")
         print(response)
         assert response.status_code == 500, "Status 500"
 
 
-def test_matching_api_update_get_matching_failed(client_with_emulator):
+def test_matching_api_get_matching_failed(client_with_emulator):
   """Test case to check the matching endpoint"""
 
   doc = Document()
@@ -174,12 +171,11 @@ def test_matching_api_update_get_matching_failed(client_with_emulator):
   }]
   doc_sd.save()
 
-  with mock.patch(
-      "routes.matching.get_matching_score", return_value={"status": "failed"}):
-    with mock.patch(
+  with patch("routes.matching.get_matching_score", return_value=None):
+    with patch(
         "routes.matching.update_matching_status",
         return_value={"status": "success"}):
-      with mock.patch("routes.matching.Logger"):
+      with patch("routes.matching.Logger"):
         response = client_with_emulator.post(
             f"{api_url}match_document?case_id=test_id123&uid=2103")
         print(response)

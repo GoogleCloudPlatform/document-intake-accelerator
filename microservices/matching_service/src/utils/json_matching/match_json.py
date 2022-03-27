@@ -109,7 +109,7 @@ def compare_json(application_json_obj, supporting_json_obj, SD_doc_type,
           matched.append(round(wt_score, 2))
 
         # 2. match values with only integers
-        # remove any special characters 
+        # remove any special characters
         # and check if the remaining string is contains
         # # only digit
         # elif re.sub('[^A-Za-z0-9]+', '', support_val).isdigit() and \
