@@ -22,7 +22,7 @@ env:
   SKAFFOLD_PROFILE: dev
   SKAFFOLD_NAMESPACE: default
   GKE_CLUSTER: default-cluster
-  GKE_ZONE: us-central1
+  GKE_REGION: us-central1
   KUSTOMIZE_VERSION: 4.1.3
   SKAFFOLD_VERSION: 1.29.0
   SKAFFOLD_CACHE_GCS: gs://claims-processing-dev/skaffold/cache
@@ -46,7 +46,7 @@ jobs:
 
     - name: Connect to cluster
       run: |
-        gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
+        gcloud container clusters get-credentials "$GKE_CLUSTER" --region $GKE_REGION --project $PROJECT_ID
 
     - name: Install Kustomize
       run: |
