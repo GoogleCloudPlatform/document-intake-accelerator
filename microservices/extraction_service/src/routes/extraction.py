@@ -101,7 +101,8 @@ def update_extraction_status(case_id: str, uid: str, extraction_status: str,
   if extraction_status == "success":
     response = requests.post(
         f"{req_url}?case_id={case_id}"
-        f"&uid={uid}&status={extraction_status}&extraction_score={extraction_score}",
+        f"&uid={uid}&status={extraction_status}"
+        f"&extraction_score={extraction_score}",
         json=entity)
   else:
     response = requests.post(f"{req_url}?case_id={case_id}"
