@@ -30,7 +30,7 @@ spec:
           failureThreshold: 5
           httpGet:
             path: /ping
-            port: 80
+            port: 8889
             scheme: HTTP
           periodSeconds: 30
           successThreshold: 1
@@ -39,7 +39,7 @@ spec:
           failureThreshold: 5
           httpGet:
             path: /ping
-            port: 80
+            port: 8889
             scheme: HTTP
           periodSeconds: 30
           successThreshold: 1
