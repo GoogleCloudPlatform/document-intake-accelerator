@@ -43,7 +43,7 @@ async def create_document(case_id: str, filename: str, context: str):
     }
     document.system_status = [system_status]
     document.save()
-    return {"status": "Success", "uid": document.uid}
+    return {"status": "Success", "uid": document.uid ,"gcs_url": document.url}
   except Exception as e:
     Logger.error(f"Error in create document for case_id {case_id}")
     Logger.error(e)

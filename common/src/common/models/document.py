@@ -29,7 +29,7 @@ class Document(BaseModel):
 
   class Meta:
     ignore_none_field = False
-    collection_name = DATABASE_PREFIX+ "document"
+    collection_name = DATABASE_PREFIX+ "stestdocument"
 
   @classmethod
   def find_by_uid(cls, uuid):

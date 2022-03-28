@@ -8,6 +8,7 @@ from typing import Optional, List
 from schemas.input_data import InputData
 import utils.upload_file_gcs_bucket as ug
 from common.utils.logging_handler import Logger
+from common.utils.publisher import publish_document
 
 
 # pylint: disable = broad-except ,literal-comparison
@@ -42,7 +43,9 @@ async def upload_file(context: str,
     case_id = str(uuid.uuid1())
 
   for file in files:
-    uid = create_document(case_id, file.filename, context)
+    output  = create_document(case_id, file.filename, context)
+    uid = output[0]
+    gcs_url = output[1]
     status = await run_in_threadpool(ug.upload_file, case_id, uid, file)
     if status is not "success":
       Logger.error({f"Error in uploading document to "
@@ -53,11 +56,9 @@ async def upload_file(context: str,
     Logger.info(
         f"File with case_id {case_id} and uid {uid}"
         f" uploaded successfullly ")
-    # pubsub_msg = f"batch moved to bucket
-    # name{case_id}{uid}"
-    # message_dict = {'message': pubsub_msg,
-    # 'gcs_url': document.url, 'caseid': case_id}
-    # publish_claim(message_dict)
+    pubsub_msg = f"batch moved to bucket name{case_id}{uid}"
+    message_dict = {'message': pubsub_msg,'gcs_url': gcs_url, 'caseid': case_id ,"uid":uid}
+    publish_document(message_dict)
   Logger.info(f"Files with case id {case_id} uploaded"
               f" successfully")
   return {
@@ -143,4 +144,5 @@ def create_document(case_id, filename, context):
       f"{req_url}?case_id={case_id}&filename={filename}&context={context}")
   response = response.json()
   uid = response["uid"]
-  return uid
+  gcs_url = response["gcs_url"]
+  return uid , gcs_url
