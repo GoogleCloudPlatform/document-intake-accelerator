@@ -248,7 +248,7 @@ async def update_matching_status(case_id: str,
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-      document.extraction_score = matching_score
+      document.matching_score = matching_score
       document.entities = entity
       document.save()
     else:

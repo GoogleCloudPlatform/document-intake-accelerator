@@ -3,9 +3,10 @@
 from google.cloud import storage
 
 
-def download_pdf_gcs(
-  bucket_name=None, gcs_uri=None,
-  file_to_download=None, output_filename='gcs.pdf') -> str:
+def download_pdf_gcs(bucket_name=None,
+                     gcs_uri=None,
+                     file_to_download=None,
+                     output_filename='gcs.pdf') -> str:
   """
   Function takes a path of an object/file stored in GCS bucket
   and downloads
