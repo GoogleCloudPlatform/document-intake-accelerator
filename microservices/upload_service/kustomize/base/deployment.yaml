@@ -25,7 +25,7 @@ spec:
             memory: "5000Mi"
             cpu: "2000m"
         ports:
-        - containerPort: 80
+        - containerPort: 8889
         livenessProbe:
           failureThreshold: 5
           httpGet:
