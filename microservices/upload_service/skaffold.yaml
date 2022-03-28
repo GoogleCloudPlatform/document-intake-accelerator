@@ -22,7 +22,7 @@ build:
 portForward:
 - resourceType: service
   resourceName: upload-service
-  port: 80
+  port: 8889
   localPort: 8889
 deploy:
   kustomize:
