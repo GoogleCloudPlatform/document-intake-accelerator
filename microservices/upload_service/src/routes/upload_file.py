@@ -3,16 +3,17 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from typing import Optional, List
 from schemas.input_data import InputData
+from fastapi.concurrency import run_in_threadpool
 import uuid
 import requests
 from common.utils.logging_handler import Logger
 import utils.upload_file_gcs_bucket as ug
 
+
 # pylint: disable = broad-except
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
-
 
 
 @router.post("/upload_files")
@@ -27,11 +28,41 @@ async def upload_file(context: str,
     list of files : to get the list of documents from user
   Returns:
     200 : PDF files are successfully uploaded
-    422 : If file other than pdf is uploaded by user """
+    422 : If file other than pdf is uploaded by user
+    500 :Error in uploading documents
+    """
+  #checking if all uploaded files are pdf documents
   for file in files:
     print(file.filename)
-  print(context + case_id)
-  return SUCCESS_RESPONSE
+    print(type(file.filename))
+    if not file.filename.lower().endswith(".pdf"):
+      Logger.error("Uploaded file is not a pdf document")
+      raise HTTPException(status_code=422, detail="Please upload all pdf files")
+    #generate a case_id if not provided by the user
+  if case_id == None:
+    case_id = str(uuid.uuid1())
+
+  for file in files:
+    uid = create_document(case_id, file.filename, context)
+    print("document id" + uid)
+    print("Inside loop")
+    print(type(file))
+    status = await run_in_threadpool(ug.upload_file, case_id, uid, file)
+    if status is not "success":
+      raise HTTPException(
+          status_code=500, detail="Error "
+          "in uploading document")
+    print("AFTER AWAITTT" + uid)
+    Logger.info(
+        f"File with case_id {case_id} and uid {uid} uploaded successfullly ")
+    # pubsub_msg = f"batch moved to bucket name{case_id}{uid}"
+    # message_dict = {'message': pubsub_msg, 'gcs_url': document.url, 'caseid': case_id}
+    # publish_claim(message_dict)
+  Logger.info(f"Files with case id {case_id} uploaded successfully")
+  return {
+      "status": f"Files with case id {case_id} uploaded successfully",
+      "case_id": case_id
+  }
 
 
 @router.post("/upload_json")
@@ -44,7 +75,6 @@ async def upload_data_json(input_data: InputData):
        422 : incorrect data passed
        500 : if something fails
      """
-
   try:
     input_data = dict(input_data)
     entity = []
@@ -65,8 +95,10 @@ async def upload_data_json(input_data: InputData):
     return {"status": status, "input_data": input_data, "case_id": case_id}
   except Exception as e:
     Logger.error(e)
-    raise HTTPException(status_code=500, detail="Error "
-                                    "in uploading document")from e
+    raise HTTPException(
+        status_code=500, detail="Error "
+        "in uploading document") from e
+
 
 @router.post("/process_task")
 async def process_task(case_id: str, uid: str, gcs_url: str):
@@ -97,6 +129,16 @@ def create_document_from_data(case_id, document_type, document_class, context,
       f"{req_url}?case_id={case_id}&document_class={document_class}"
       f"&document_type={document_type}&context={context}",
       json=entity)
+  response = response.json()
+  uid = response["uid"]
+  return uid
+
+
+def create_document(case_id, filename, context):
+  base_url = "http://document-status-service/document_status_service/v1/"
+  req_url = f"{base_url}create_document"
+  response = requests.post(
+      f"{req_url}?case_id={case_id}&filename={filename}&context={context}")
   response = response.json()
   uid = response["uid"]
   return uid

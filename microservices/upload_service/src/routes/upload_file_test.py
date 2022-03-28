@@ -14,30 +14,38 @@ os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
 SUCCESS_RESPONSE = {"status": "Success"}
 
+TESTDATA_FILENAME1 = os.path.join(
+    os.path.dirname(__file__), "..", "testing", "arkansas-driver-form-5.png")
+TESTDATA_FILENAME2 = os.path.join(
+    os.path.dirname(__file__), "..", "testing", "Arkansas-form-1.pdf")
+
+TESTDATA_FILENAME3 = os.path.join(
+    os.path.dirname(__file__), "..", "testing", "Arkansa-claim-2.pdf")
+
 
 def test_upload_json_without_case_id_positive(client_with_emulator):
   with mock.patch("routes.upload_file.create_document_from_data"):
     with mock.patch("routes.upload_file.Logger"):
       response = client_with_emulator.post(
-            f"{api_url}upload_json",
-            json={
-                "name": "Jon",
-                "employer_name": "Quantiphi",
-                "employer_phone_no": "9282112222",
-                "context": "Callifornia",
-                "dob": "7 Feb 1997",
-                "document_type": "application/ supporting",
-                "document_class": "unemployment",
-                "ssn": "1234567",
-                "phone_no": "9730388333",
-                "application_apply_date": "2022/03/16",
-                "mailing_address": "Arizona USA",
-                "mailing_city": "Phoniex",
-                "mailing_zip": "123-33-22",
-                "residential_address": "Phoniex , USA",
-                "work_end_date": "2022/03",
-                "sex": "Female"
-            })
+          f"{api_url}upload_json",
+          json={
+              "name": "Jon",
+              "employer_name": "Quantiphi",
+              "employer_phone_no": "9282112222",
+              "context": "Callifornia",
+              "dob": "7 Feb 1997",
+              "document_type": "application/ supporting",
+              "document_class": "unemployment",
+              "ssn": "1234567",
+              "phone_no": "9730388333",
+              "application_apply_date": "2022/03/16",
+              "mailing_address": "Arizona USA",
+              "mailing_city": "Phoniex",
+              "mailing_zip": "123-33-22",
+              "residential_address": "Phoniex , USA",
+              "work_end_date": "2022/03",
+              "sex": "Female"
+          })
       print(response)
   assert response.status_code == 200
 
@@ -46,44 +54,158 @@ def test_upload_json_with_case_id_positive(client_with_emulator):
   with mock.patch("routes.upload_file.create_document_from_data"):
     with mock.patch("routes.upload_file.Logger"):
       response = client_with_emulator.post(
-            f"{api_url}upload_json",
-            json={
-                "case_id": "123A",
-                "name": "Jon",
-                "employer_name": "Quantiphi",
-                "employer_phone_no": "9282112222",
-                "context": "Callifornia",
-                "dob": "7 Feb 1997",
-                "document_type": "application/ supporting",
-                "document_class": "unemployment",
-                "ssn": "1234567",
-                "phone_no": "9730388333",
-                "application_apply_date": "2022/03/16",
-                "mailing_address": "Arizona USA",
-                "mailing_city": "Phoniex",
-                "mailing_zip": "123-33-22",
-                "residential_address": "Phoniex , USA",
-                "work_end_date": "2022/03",
-                "sex": "Female"
-            })
+          f"{api_url}upload_json",
+          json={
+              "case_id": "123A",
+              "name": "Jon",
+              "employer_name": "Quantiphi",
+              "employer_phone_no": "9282112222",
+              "context": "Callifornia",
+              "dob": "7 Feb 1997",
+              "document_type": "application/ supporting",
+              "document_class": "unemployment",
+              "ssn": "1234567",
+              "phone_no": "9730388333",
+              "application_apply_date": "2022/03/16",
+              "mailing_address": "Arizona USA",
+              "mailing_city": "Phoniex",
+              "mailing_zip": "123-33-22",
+              "residential_address": "Phoniex , USA",
+              "work_end_date": "2022/03",
+              "sex": "Female"
+          })
       print(response)
   assert response.status_code == 200
 
 
-def test_upload_file_json_negative(client_with_emulator):
+def test_upload_json_negative(client_with_emulator):
   with mock.patch("routes.upload_file.create_document_from_data"):
     with mock.patch("routes.upload_file.Logger"):
       response = client_with_emulator.post(
-        f"{api_url}upload_json",
-        json={
-            "case_id": "123A",
-            "first_name": "Jon",
-            "middle_name": "Max",
-            "last_name": "Doe",
-            "employer_name": "Quantiphi",
-            "city": "New York",
-            "state": "Callifornia",
-            "dob": "7 Feb 1997"
-        })
+          f"{api_url}upload_json",
+          json={
+              "case_id": "123A",
+              "first_name": "Jon",
+              "middle_name": "Max",
+              "last_name": "Doe",
+              "employer_name": "Quantiphi",
+              "city": "New York",
+              "state": "Callifornia",
+              "dob": "7 Feb 1997"
+          })
   print(response)
   assert response.status_code == 422
+
+
+def test_upload_one_pdf_positive(client_with_emulator):
+  payload = {}
+  files = [('files', ('Arkansa-claim-2.pdf', open(TESTDATA_FILENAME2,
+                                                  'rb'), 'application/pdf'))]
+  # mocker.patch(
+  #     "ingest_emsi.fetch_emsi_skills", return_value=fetch_skills_return_value)
+  # mocker.patch("upload_file.create_document", return_value = "ew56VxaPkIvghNbLnbF4")
+
+  # mock.patch ('upload_file.create_document',return_value = "3333uiu-hjjh")
+  with mock.patch("routes.upload_file.Logger"):
+    with mock.patch("routes.upload_file.create_document"):
+      response = client_with_emulator.post(
+          f"{api_url}upload_files"
+          f"?context=arkansas&case_id=test123",
+          files=files,
+          data=payload)
+      print(response.text)
+  assert response.status_code == 200
+
+
+def test_upload_files_pdf_positive(client_with_emulator):
+  payload = {}
+  files = [('files', ('Arkansa-claim-2.pdf', open(TESTDATA_FILENAME2,
+                                                  'rb'), 'application/pdf')),
+           ('files', ('Arkansas-form-1.pdf', open(TESTDATA_FILENAME3,
+                                                  'rb'), 'application/pdf'))]
+  # mocker.patch(
+  #     "ingest_emsi.fetch_emsi_skills", return_value=fetch_skills_return_value)
+  # mocker.patch("upload_file.create_document", return_value = "ew56VxaPkIvghNbLnbF4")
+
+  # mock.patch ('upload_file.create_document',return_value = "3333uiu-hjjh")
+  with mock.patch("routes.upload_file.Logger"):
+    with mock.patch("routes.upload_file.create_document"):
+      response = client_with_emulator.post(
+          f"{api_url}upload_files"
+          f"?context=arkansas&case_id=test123",
+          files=files,
+          data=payload)
+      print(response.text)
+  assert response.status_code == 200
+
+
+def test_upload_files_not_pdf_file(client_with_emulator):
+  payload = {}
+  files = [('files', ('arkansas-driver-form-5.png',
+                      open(TESTDATA_FILENAME1, 'rb'), 'application/png'))]
+  # mocker.patch(
+  #     "ingest_emsi.fetch_emsi_skills", return_value=fetch_skills_return_value)
+  # mocker.patch("upload_file.create_document", return_value = "ew56VxaPkIvghNbLnbF4")
+
+  # mock.patch ('upload_file.create_document',return_value = "3333uiu-hjjh")
+  with mock.patch("routes.upload_file.Logger"):
+    with mock.patch("routes.upload_file.create_document"):
+      response = client_with_emulator.post(
+          f"{api_url}upload_files"
+          f"?context=arkansas&case_id=test123",
+          files=files,
+          data=payload)
+      print(response.text)
+  assert response.status_code == 422
+
+
+def test_upload_files_negative(client_with_emulator):
+  payload = {}
+  files = [('files', ('Arkansa-claim-2.pdf', open(TESTDATA_FILENAME2,
+                                                  'rb'), 'application/pdf'))]
+  # mocker.patch(
+  #     "ingest_emsi.fetch_emsi_skills", return_value=fetch_skills_return_value)
+  # mocker.patch("upload_file.create_document", return_value = "ew56VxaPkIvghNbLnbF4")
+
+  # mock.patch ('upload_file.create_document',return_value = "3333uiu-hjjh")
+  with mock.patch("routes.upload_file.Logger"):
+    with mock.patch("routes.upload_file.create_document", return_value=4):
+      response = client_with_emulator.post(
+          f"{api_url}upload_files"
+          f"?context=arkansas&case_id=test123",
+          files=files,
+          data=payload)
+      print(response.text)
+  assert response.status_code == 500
+
+
+def test_upload_one_file_without_case_id(client_with_emulator):
+  payload = {}
+  files = [('files', ('Arkansa-claim-2.pdf', open(TESTDATA_FILENAME2,
+                                                  'rb'), 'application/pdf'))]
+  with mock.patch("routes.upload_file.Logger"):
+    with mock.patch("routes.upload_file.create_document"):
+      response = client_with_emulator.post(
+          f"{api_url}upload_files"
+          f"?context=arkansas",
+          files=files,
+          data=payload)
+      print(response.text)
+  assert response.status_code == 200
+
+
+def test_upload_multiple_file_without_case_id(client_with_emulator):
+  payload = {}
+  files = [('files', ('Arkansa-claim-2.pdf', open(TESTDATA_FILENAME2,
+                                                  'rb'), 'application/pdf')),
+           ('files', ('Arkansas-form-1.pdf', open(TESTDATA_FILENAME3,
+                                                  'rb'), 'application/pdf'))]
+  with mock.patch("routes.upload_file.Logger"):
+    with mock.patch("routes.upload_file.create_document"):
+      response = client_with_emulator.post(
+          f"{api_url}upload_files"
+          f"?context=arkansas",
+          files=files,
+          data=payload)
+      print(response.text)
+  assert response.status_code == 200
