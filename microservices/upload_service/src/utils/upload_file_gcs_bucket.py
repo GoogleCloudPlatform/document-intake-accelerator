@@ -8,13 +8,10 @@ import time
 
 
 def upload_file(case_id, uid, file):
-  print(case_id + uid + file.filename)
-  print(BUCKET_NAME)
   client = storage.Client()
-  bucket = client.get_bucket('document-upload-test')
+  bucket = client.get_bucket(BUCKET_NAME)
   blob_name = f"{case_id}/{uid}/{file.filename}"
   blob = Blob(blob_name, bucket)
-  print("after blob")
   blob.upload_from_file(file.file)
   return "success"
 

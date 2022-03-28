@@ -4,7 +4,7 @@
 import os
 from unittest import mock
 # disabling pylint rules that conflict with pytest fixtures
-# pylint: disable=unused-argument,redefined-outer-name,unused-import
+# pylint: disable=unused-argument,redefined-outer-name,unused-import,consider-using-with
 from testing.fastapi_fixtures import client_with_emulator
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
 
@@ -99,13 +99,8 @@ def test_upload_json_negative(client_with_emulator):
 
 def test_upload_one_pdf_positive(client_with_emulator):
   payload = {}
-  files = [('files', ('Arkansa-claim-2.pdf', open(TESTDATA_FILENAME2,
-                                                  'rb'), 'application/pdf'))]
-  # mocker.patch(
-  #     "ingest_emsi.fetch_emsi_skills", return_value=fetch_skills_return_value)
-  # mocker.patch("upload_file.create_document", return_value = "ew56VxaPkIvghNbLnbF4")
-
-  # mock.patch ('upload_file.create_document',return_value = "3333uiu-hjjh")
+  files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
+                                                  "rb"), "application/pdf"))]
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document"):
       response = client_with_emulator.post(
@@ -119,15 +114,10 @@ def test_upload_one_pdf_positive(client_with_emulator):
 
 def test_upload_files_pdf_positive(client_with_emulator):
   payload = {}
-  files = [('files', ('Arkansa-claim-2.pdf', open(TESTDATA_FILENAME2,
-                                                  'rb'), 'application/pdf')),
-           ('files', ('Arkansas-form-1.pdf', open(TESTDATA_FILENAME3,
-                                                  'rb'), 'application/pdf'))]
-  # mocker.patch(
-  #     "ingest_emsi.fetch_emsi_skills", return_value=fetch_skills_return_value)
-  # mocker.patch("upload_file.create_document", return_value = "ew56VxaPkIvghNbLnbF4")
-
-  # mock.patch ('upload_file.create_document',return_value = "3333uiu-hjjh")
+  files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
+                                                  "rb"), "application/pdf")),
+           ("files", ("Arkansas-form-1.pdf", open(TESTDATA_FILENAME3,
+                                                  "rb"), "application/pdf"))]
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document"):
       response = client_with_emulator.post(
@@ -141,13 +131,9 @@ def test_upload_files_pdf_positive(client_with_emulator):
 
 def test_upload_files_not_pdf_file(client_with_emulator):
   payload = {}
-  files = [('files', ('arkansas-driver-form-5.png',
-                      open(TESTDATA_FILENAME1, 'rb'), 'application/png'))]
-  # mocker.patch(
-  #     "ingest_emsi.fetch_emsi_skills", return_value=fetch_skills_return_value)
-  # mocker.patch("upload_file.create_document", return_value = "ew56VxaPkIvghNbLnbF4")
+  files = [("files", ("arkansas-driver-form-5.png",
+                      open(TESTDATA_FILENAME1, "rb"), "application/png"))]
 
-  # mock.patch ('upload_file.create_document',return_value = "3333uiu-hjjh")
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document"):
       response = client_with_emulator.post(
@@ -161,13 +147,9 @@ def test_upload_files_not_pdf_file(client_with_emulator):
 
 def test_upload_files_negative(client_with_emulator):
   payload = {}
-  files = [('files', ('Arkansa-claim-2.pdf', open(TESTDATA_FILENAME2,
-                                                  'rb'), 'application/pdf'))]
-  # mocker.patch(
-  #     "ingest_emsi.fetch_emsi_skills", return_value=fetch_skills_return_value)
-  # mocker.patch("upload_file.create_document", return_value = "ew56VxaPkIvghNbLnbF4")
+  files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
+                                                  "rb"), "application/pdf"))]
 
-  # mock.patch ('upload_file.create_document',return_value = "3333uiu-hjjh")
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document", return_value=4):
       response = client_with_emulator.post(
@@ -181,8 +163,8 @@ def test_upload_files_negative(client_with_emulator):
 
 def test_upload_one_file_without_case_id(client_with_emulator):
   payload = {}
-  files = [('files', ('Arkansa-claim-2.pdf', open(TESTDATA_FILENAME2,
-                                                  'rb'), 'application/pdf'))]
+  files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
+                                                  "rb"), "application/pdf"))]
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document"):
       response = client_with_emulator.post(
@@ -196,10 +178,10 @@ def test_upload_one_file_without_case_id(client_with_emulator):
 
 def test_upload_multiple_file_without_case_id(client_with_emulator):
   payload = {}
-  files = [('files', ('Arkansa-claim-2.pdf', open(TESTDATA_FILENAME2,
-                                                  'rb'), 'application/pdf')),
-           ('files', ('Arkansas-form-1.pdf', open(TESTDATA_FILENAME3,
-                                                  'rb'), 'application/pdf'))]
+  files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
+                                                  "rb"), "application/pdf")),
+           ("files", ("Arkansas-form-1.pdf", open(TESTDATA_FILENAME3,
+                                                  "rb"), "application/pdf"))]
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document"):
       response = client_with_emulator.post(

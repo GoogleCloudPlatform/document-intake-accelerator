@@ -1,13 +1,13 @@
 """ Upload and process task api endpoints """
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from typing import Optional, List
-from schemas.input_data import InputData
-from fastapi.concurrency import run_in_threadpool
 import uuid
 import requests
-from common.utils.logging_handler import Logger
+from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi.concurrency import run_in_threadpool
+from typing import Optional, List
+from schemas.input_data import InputData
 import utils.upload_file_gcs_bucket as ug
+from common.utils.logging_handler import Logger
 
 
 # pylint: disable = broad-except
@@ -33,34 +33,34 @@ async def upload_file(context: str,
     """
   #checking if all uploaded files are pdf documents
   for file in files:
-    print(file.filename)
-    print(type(file.filename))
+
     if not file.filename.lower().endswith(".pdf"):
       Logger.error("Uploaded file is not a pdf document")
       raise HTTPException(status_code=422, detail="Please upload all pdf files")
     #generate a case_id if not provided by the user
-  if case_id == None:
+  if case_id is None:
     case_id = str(uuid.uuid1())
 
   for file in files:
     uid = create_document(case_id, file.filename, context)
-    print("document id" + uid)
-    print("Inside loop")
-    print(type(file))
     status = await run_in_threadpool(ug.upload_file, case_id, uid, file)
     if status is not "success":
       raise HTTPException(
           status_code=500, detail="Error "
           "in uploading document")
-    print("AFTER AWAITTT" + uid)
     Logger.info(
-        f"File with case_id {case_id} and uid {uid} uploaded successfullly ")
-    # pubsub_msg = f"batch moved to bucket name{case_id}{uid}"
-    # message_dict = {'message': pubsub_msg, 'gcs_url': document.url, 'caseid': case_id}
+        f"File with case_id {case_id} and uid {uid}"
+        f" uploaded successfullly ")
+    # pubsub_msg = f"batch moved to bucket
+    # name{case_id}{uid}"
+    # message_dict = {'message': pubsub_msg,
+    # 'gcs_url': document.url, 'caseid': case_id}
     # publish_claim(message_dict)
-  Logger.info(f"Files with case id {case_id} uploaded successfully")
+  Logger.info(f"Files with case id {case_id} uploaded"
+              f" successfully")
   return {
-      "status": f"Files with case id {case_id} uploaded successfully",
+      "status": f"Files with case id {case_id} uploaded"
+                f"successfully",
       "case_id": case_id
   }
 
