@@ -1,10 +1,9 @@
 """ Upload file to gcs bucket function """
 
 from common.config import BUCKET_NAME
-from google.cloud import storage
 from google.cloud.storage import Blob
 from google.cloud import storage
-import time
+
 
 
 def upload_file(case_id, uid, file):

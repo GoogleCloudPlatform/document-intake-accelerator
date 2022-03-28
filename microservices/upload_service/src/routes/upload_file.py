@@ -10,7 +10,7 @@ import utils.upload_file_gcs_bucket as ug
 from common.utils.logging_handler import Logger
 
 
-# pylint: disable = broad-except
+# pylint: disable = broad-except ,literal-comparison
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
@@ -45,6 +45,8 @@ async def upload_file(context: str,
     uid = create_document(case_id, file.filename, context)
     status = await run_in_threadpool(ug.upload_file, case_id, uid, file)
     if status is not "success":
+      Logger.error({f"Error in uploading document to "
+                    f"bucket with {case_id} and uid {uid}"})
       raise HTTPException(
           status_code=500, detail="Error "
           "in uploading document")
