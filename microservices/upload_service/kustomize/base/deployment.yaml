@@ -25,12 +25,12 @@ spec:
             memory: "5000Mi"
             cpu: "2000m"
         ports:
-        - containerPort: 8889
+        - containerPort: 80
         livenessProbe:
           failureThreshold: 5
           httpGet:
             path: /ping
-            port: 8889
+            port: 80
             scheme: HTTP
           periodSeconds: 30
           successThreshold: 1
@@ -39,7 +39,7 @@ spec:
           failureThreshold: 5
           httpGet:
             path: /ping
-            port: 8889
+            port: 80
             scheme: HTTP
           periodSeconds: 30
           successThreshold: 1

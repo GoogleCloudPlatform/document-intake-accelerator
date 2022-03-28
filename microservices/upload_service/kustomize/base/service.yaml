@@ -7,8 +7,8 @@ metadata:
 spec:
   type: NodePort
   ports:
-  - port: 8889
+  - port: 80
     protocol: TCP
-    targetPort: 8889
+    targetPort: 80
   selector:
     app: upload-service
