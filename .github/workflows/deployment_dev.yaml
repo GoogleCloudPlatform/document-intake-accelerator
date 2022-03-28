@@ -29,7 +29,7 @@ jobs:
 
       - name: Connect to cluster
         run: |
-          gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
+          gcloud container clusters get-credentials "$GKE_CLUSTER" --region us-central1 --project $PROJECT_ID
 
       - name: Set up Service Account
         run: |
