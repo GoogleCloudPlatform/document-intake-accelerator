@@ -5,6 +5,8 @@ values as referenced below
 https://docs.google.com/spreadsheets/d/1WB_fSH-nrsknoJyP0qvPmAt6y
 -ZQKxzXPZzAp62QQrQ/edit?resourcekey=0-Z5uzfFoLMCM3OQd27wZ_Yw#gid=810561467
 """
+# disabling pylint rules that conflict with pytest fixtures
+# pylint: disable=broad-except
 
 import datetime
 from fuzzywuzzy import fuzz
