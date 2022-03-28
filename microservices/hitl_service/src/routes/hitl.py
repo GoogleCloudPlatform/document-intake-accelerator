@@ -7,6 +7,7 @@ from common.config import BUCKET_NAME
 # disabling for linting to pass
 # pylint: disable = broad-except
 import datetime
+import requests
 from google.cloud import storage
 
 router = APIRouter()
@@ -242,17 +243,17 @@ async def get_unclassified():
     result_queue = []
     for d in docs:
       doc_dict = d.to_dict()
-      system_trail = doc_dict["system_status"]
+      # system_trail = doc_dict["system_status"]
 
-      #Preference for hitl_status
-      #if hitl_status trail is not present autoapproval status is considered
-      if system_trail:
-        in_consideration = None
-        for status in system_trail:
-          if status["stage"].lower() == "classification":
-            in_consideration = status
-        if in_consideration["status"].lower() == "unclassified":
-          result_queue.append(doc_dict)
+      # if system_trail:
+      #   in_consideration = None
+      #   for status in system_trail:
+      #     if status["stage"].lower() == "classification":
+      #       in_consideration = status
+      #   if in_consideration["status"].lower() == "unclassified":
+      #     result_queue.append(doc_dict)
+      if d.is_unclassified == True:
+        result_queue.append(doc_dict)
     response = {"status": "Success"}
     response["data"] = result_queue
     return response
@@ -261,6 +262,34 @@ async def get_unclassified():
     Logger.error(e)
     raise HTTPException(status_code=500,detail="Error")
 
+def update_classification_status(case_id: str,
+                                 uid: str,
+                                 status: str,
+                                 document_class: Optional[str] = None,
+                                 document_type: Optional[str] = None,
+                                 is_unclassified: Optional[bool] = False):
+  """ Call status update api to update the classification output
+    Args:
+    case_id (str): Case id of the file ,
+     uid (str): unique id for  each document
+     status (str): status success/failure depending on the validation_score
+
+    """
+  base_url = "http://document-status-service/document_status_service" \
+  "/v1/update_classification_status"
+
+  if status.lower() == "success":
+    req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
+    f"&status={status}&document_class={document_class}"\
+      f"&document_type={document_type}"
+    response = requests.post(req_url)
+    return response
+
+  else:
+    req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
+    f"&status={status}&is_unclassified={is_unclassified}"
+    response = requests.post(req_url)
+    return response
 
 @router.get("/update_hitl_classification")
 async def update_hitl_classification(case_id: str, uid: str, document_class: str):
@@ -273,11 +302,25 @@ async def update_hitl_classification(case_id: str, uid: str, document_class: str
   """
   try:
     document_type = None
-    if document_class.lower() == "UE":
+    if document_class.lower() == "unemployment_form":
       document_type = "application_form"
     else:
       document_type = "supporting_documents"
+    
     #Update DSM
+    
+    response = update_classification_status(
+      case_id,
+      uid,
+      "success",
+      document_class=document_class,
+      document_type=document_type,
+      is_unclassified=False)
+    print(response)
+    if response.status_code != 200:
+      Logger.error(f"Document status update failed for {case_id} and {uid}")
+      raise HTTPException(
+        status_code=500, detail="Document status updation failed")
 
     #Call Process task
     

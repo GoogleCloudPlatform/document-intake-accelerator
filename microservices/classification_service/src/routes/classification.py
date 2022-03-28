@@ -39,7 +39,8 @@ def update_classification_status(case_id: str,
                                  uid: str,
                                  status: str,
                                  document_class: Optional[str] = None,
-                                 document_type: Optional[str] = None):
+                                 document_type: Optional[str] = None,
+                                 is_unclassified: Optional[bool] = False):
   """ Call status update api to update the classification output
     Args:
     case_id (str): Case id of the file ,
@@ -59,7 +60,7 @@ def update_classification_status(case_id: str,
 
   else:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
-    f"&status={status}"
+    f"&status={status}&is_unclassified={is_unclassified}"
     response = requests.post(req_url)
     return response
 
@@ -121,7 +122,7 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
 
       if doc_prediction_result["predicted_class"] == "Negative":
         FAILED_RESPONSE["message"] = "Invalid Document"
-        response = update_classification_status(case_id, uid, "failed")
+        response = update_classification_status(case_id,uid,"failed",is_unclassified=True)
         Logger.error("Document unclassified")
 
         if response.status_code != 200:
@@ -164,12 +165,12 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
   except HTTPException as e:
     print(e)
     Logger.error(f"{e} while classification {case_id} and {uid}")
-    update_classification_status(case_id, uid, "failed")
+    update_classification_status(case_id, uid, "failed",is_unclassified=True)
     raise e
 
   except Exception as e:
     print(f"{e} while classification {case_id} and {uid}")
     Logger.error(e)
     #DocumentStatus api call
-    update_classification_status(case_id, uid, "failed")
+    update_classification_status(case_id, uid, "failed",is_unclassified=True)
     raise HTTPException(status_code=500, detail="Classification Failed") from e

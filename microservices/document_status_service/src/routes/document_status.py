@@ -59,6 +59,7 @@ async def update_classification_status(
     status: str,
     document_class: Optional[str] = None,
     document_type: Optional[str] = None,
+    is_unclassified : Optional[bool] = False
 ):
   """takes case_id , uid , document_class ,document_type ,status of
         classification service as input
@@ -90,6 +91,7 @@ async def update_classification_status(
           "status": "success",
           "timestamp": str(datetime.datetime.utcnow())
       }
+      document.is_unclassified = False
       document.system_status = fireo.ListUnion([system_status])
       document.update()
       #Check if document with same case_id , document type and
@@ -112,6 +114,7 @@ async def update_classification_status(
           "status": "fail",
           "timestamp": str(datetime.datetime.utcnow())
       }
+      document.is_unclassified = True
       document.system_status = fireo.ListUnion([system_status])
       document.update()
     return {"status": "Success", "case_id": case_id, "uid": uid}
