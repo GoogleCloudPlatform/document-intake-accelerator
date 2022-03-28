@@ -10,5 +10,6 @@ def test_new_document_status():
   case_id = "test_id123"
   document = Document()
   document.case_id = case_id
+  document.validation_score = 0.9
   document.save()
   assert document.case_id == case_id
