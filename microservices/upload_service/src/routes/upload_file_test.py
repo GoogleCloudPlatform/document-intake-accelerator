@@ -152,12 +152,13 @@ def test_upload_files_negative(client_with_emulator):
 
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document", return_value=4):
-      response = client_with_emulator.post(
-          f"{api_url}upload_files"
-          f"?context=arkansas&case_id=test123",
-          files=files,
-          data=payload)
-      print(response.text)
+      with mock.patch("routes.upload_file.ug.upload_file", return_value="fail"):
+        response = client_with_emulator.post(
+            f"{api_url}upload_files"
+            f"?context=arkansas&case_id=test123",
+            files=files,
+            data=payload)
+        print(response.text)
   assert response.status_code == 500
 
 
