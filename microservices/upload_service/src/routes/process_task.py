@@ -1,0 +1,144 @@
+""" Process task api endpoint """
+import traceback
+from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi.concurrency import run_in_threadpool
+from typing import Optional, List
+from common.models import Document
+from models.process_task import ProcessTask
+import requests
+from common.utils.logging_handler import Logger
+from utils.autoapproval import get_values
+
+# pylint: disable = broad-except
+router = APIRouter()
+SUCCESS_RESPONSE = {"status": "Success"}
+FAILED_RESPONSE = {"status": "Failed"}
+
+extraction_url = "http://extraction-service/extraction_service/v1/extraction/extraction_api"
+classification_url = "http://classification-service/classification_service/v1/classification/classification_api"
+validation_url = "http://validation-service/validation_service/v1/validation/document_validation"
+matching_url = "http://matching-service/matching_service/v1/matching/document_validation"
+
+
+@router.post("/process_task")
+async def process_task(payload:ProcessTask, background_task:BackgroundTasks):
+  """Runs the Pipeline to process the document"""
+  payload = payload.dict()
+  case_id = payload.get("case_id")
+  uid = payload.get("uid")
+  gcs_url = payload.get("gcs_url")
+  isHitl = payload.get("isHitl")
+  document_class = payload.get("document_class")
+  document_type = payload.get("document_type")
+
+  doc = Document.collection.filter("case_id", "==", case_id).filter("uid", "==", uid).get()
+  if not doc:
+    raise HTTPException(status_code=404,detail="Document not found")
+  background_task.add_task(run_pipeline,case_id,uid,gcs_url,isHitl,document_class,document_type)
+  return {"message": f"Processing your document {doc}"}
+
+async def run_pipeline(case_id: str, uid: str, gcs_url: str,isHitl: bool = False, document_class:str = "", document_type:str=""):
+  validation_score = None
+  extraction_score = None
+  matching_score = None
+  if not isHitl:
+    cl_result = get_classification(case_id, uid, gcs_url)
+    print("====================classification_status===================",cl_result.json(),cl_result.status_code)
+    if cl_result.status_code == 200:
+      print("===============classification successful======================",cl_result.json())
+      document_type = cl_result.json().get('doc_type')
+      document_class = cl_result.json().get('doc_class')
+  
+  
+  if isHitl or cl_result.status_code == 200:
+    print("===============Start Extraction for======================",document_type,document_class)
+    extract_res = get_extraction_score(case_id, uid, gcs_url, document_class)
+    print("===extract_res,extract_res.status_code,document_type====",extract_res,extract_res.status_code,document_type)
+    if extract_res.status_code is 200 and document_type == "application_form":
+      print("===============Extraction successful for application_form======================")
+    elif extract_res.status_code == 200 and document_type == "supporting_documents":
+      extraction_score = extract_res.json().get("score")
+      # extraction_score = 0.8
+      print("===============Extraction successful for supporting_document======================",extract_res,document_class)
+      validation_res = get_validation_score(case_id, uid, document_class)
+      print("===============Start Validation======================",validation_res)
+      if validation_res.status_code == 200:
+        validation_score = validation_res.json().get("score")
+        # validation_score = 0.8
+        print("===============Validation successful======================",validation_res.json())
+        matching_res = get_matching_score(case_id, uid)
+        if matching_res.status_code == 200:
+          matching_score = matching_res.json().get("score")
+          # matching_score = 0.8
+          print("===============Matching successful======================",matching_res)
+          try:
+            autoapproval_status=get_values(validation_score,extraction_score,matching_score,document_class,document_type)
+            print(autoapproval_status)
+            update_autoapproval_status(case_id, uid, "success",autoapproval_status[0], autoapproval_status[1])
+          except Exception as e:
+            Logger.error(e)
+            update_autoapproval_status(case_id, uid, "fail",None, None)
+
+
+          print("success_msg: process task successfully executed")
+        else:
+          err = traceback.format_exc().replace('\n', ' ')
+          Logger.error(err)
+          print("failed_msg : matching failed")
+      else:
+        err = traceback.format_exc().replace('\n', ' ')
+        Logger.error(err)
+        print("failed_msg : validation failed")
+
+  else:
+    # mark document as unclassified
+    return {"failed_msg": "classification failed"}
+  # call autoapproval and call document status update to update autoupdate status
+
+def get_classification(case_id: str, uid: str, gcs_url: str):
+  """Call the classification API and get the type and class of 
+  the document"""
+  base_url = "http://classification-service/classification_service/v1/"\
+    "classification/classification_api"
+  req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
+    f"&gcs_url={gcs_url}"
+  response = requests.post(req_url)
+  return response
+
+
+def get_extraction_score(case_id: str, uid: str, gcs_url: str, document_class: str):
+  """Call the Extraction API and get the extraction score"""
+  base_url = "http://extraction-service/extraction_service/v1/extraction_api"
+  req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
+    f"&doc_class={document_class}"
+  response = requests.post(req_url)
+  return response
+
+
+def get_validation_score(case_id: str, uid: str, document_class: str):
+  """Call the validation API and get the validation score"""
+  base_url = "http://validation-service/validation_service/v1/validation/"\
+    "validation_api"
+  req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
+    f"&doc_class={document_class}"
+  response = requests.post(req_url)
+  return response
+
+
+def get_matching_score(case_id: str, uid: str):
+  """Call the matching API and get the matching score"""
+  base_url = "http://matching-service/matching_service/v1/"\
+    "match_document"
+  req_url = f"{base_url}?case_id={case_id}&uid={uid}"
+  response = requests.post(req_url)
+  return response
+
+def update_autoapproval_status(case_id: str, uid: str, status: str,
+                              autoapproved_status: str, is_autoapproved: str):
+  """Update auto approval status"""
+  base_url = "http://document-status-service/document_status_service" \
+    "/v1/update_autoapproved_status"
+  req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
+    f"&status={status}&autoapproved_status={autoapproved_status}&is_autoapproved={is_autoapproved}"
+  response = requests.post(req_url)
+  return response
