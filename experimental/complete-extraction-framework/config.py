@@ -49,6 +49,27 @@ MAPPING_DICT = {
             "Year": ["Employee DOB Year", "Year (Last Day of Work)"]
         }
     },
+
+    "unemployment_form_california": {
+        "default_entities": {
+            "Middle Initial": ["Employee Middle Initial"],
+            "Name of issuing State/entity": ["Name of issuing Stata/entity"],
+            "Driver License Number": ["Driver License Number"],
+            "Race": ["Employee Race"],
+            "Ethnicity": ["Employee Ethnicity"],
+            "Language": ["Employee Language"],
+            "Name": ["Last Employer Name"],
+            "From": ["First day of work (From)"],
+            "To": ["Last Day of work (To)"],
+            "Total Wages": ["Total Wages"],
+            "d) How were you paid? (e.g., weekly, monthly, etc": ["How were you paid? (e.g., weekly, monthly, etc.?)"],
+            "f) How many hours did you work per week": ["How many hours did you work per week?"],
+            "22. Employer name": ["Longest Employer name"],
+            "Years": ["Years worked for longest employer"],
+            "Months": ["Months worked for longest employer"]
+        }
+    },
+
     "unemployment_form_arkansas": {
         "default_entities": {
             "TODAY'S DATE": ["TODAY'S DATE"],
