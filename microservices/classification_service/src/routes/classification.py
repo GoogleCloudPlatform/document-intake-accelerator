@@ -39,8 +39,7 @@ def update_classification_status(case_id: str,
                                  uid: str,
                                  status: str,
                                  document_class: Optional[str] = None,
-                                 document_type: Optional[str] = None,
-                                 is_unclassified: Optional[bool] = False):
+                                 document_type: Optional[str] = None):
   """ Call status update api to update the classification output
     Args:
     case_id (str): Case id of the file ,
@@ -60,7 +59,7 @@ def update_classification_status(case_id: str,
 
   else:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
-    f"&status={status}&is_unclassified={is_unclassified}"
+    f"&status={status}"
     response = requests.post(req_url)
     return response
 
@@ -75,34 +74,25 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
            gcs (str): gcs url of document
       Returns:
           200 : PDF files are successfully classified and database updated
-          500  : HTTPException: 500 Internal Server Error if something fails
+          500 : Internal Server Error if something fails
     """
   if not case_id.strip() or not uid.strip() or not gcs_url.strip():
     Logger.error("Classification failed parameters missing")
     raise HTTPException(
         status_code=400,
-        detail={
-            "status": "Failed",
-            "message": "Parameters Missing"
-        })
+        detail="Parameters Missing")
 
   if not gcs_url.endswith(".pdf") or not gcs_url.startswith("gs://"):
     Logger.error("Classification failed GCS path is invalid")
     raise HTTPException(
         status_code=400,
-        detail={
-            "status": "Failed",
-            "message": "GCS pdf path is incorrect"
-        })
+        detail="GCS pdf path is incorrect")
 
   if case_id != gcs_url.split("/")[3] or uid != gcs_url.split("/")[4]:
     Logger.error("Classification failed parameters mismatched")
     raise HTTPException(
         status_code=400,
-        detail={
-            "status": "Failed",
-            "message": "Parameters Mismatched"
-        })
+        detail="Parameters Mismatched")
 
   try:
 
@@ -122,7 +112,7 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
 
       if doc_prediction_result["predicted_class"] == "Negative":
         FAILED_RESPONSE["message"] = "Invalid Document"
-        response = update_classification_status(case_id,uid,"failed",is_unclassified=True)
+        response = update_classification_status(case_id, uid, "unclassified")
         Logger.error("Document unclassified")
 
         if response.status_code != 200:
@@ -131,7 +121,7 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
               status_code=500, detail="Failed to update document status")
         return FAILED_RESPONSE
 
-      doc_type = ""
+      doc_type = None
       doc_class = label_map[doc_prediction_result["predicted_class"]]
 
       if doc_prediction_result["predicted_class"] == "UE":
@@ -165,12 +155,12 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
   except HTTPException as e:
     print(e)
     Logger.error(f"{e} while classification {case_id} and {uid}")
-    update_classification_status(case_id, uid, "failed",is_unclassified=True)
+    update_classification_status(case_id, uid, "failed")
     raise e
 
   except Exception as e:
     print(f"{e} while classification {case_id} and {uid}")
     Logger.error(e)
     #DocumentStatus api call
-    update_classification_status(case_id, uid, "failed",is_unclassified=True)
+    update_classification_status(case_id, uid, "failed")
     raise HTTPException(status_code=500, detail="Classification Failed") from e
