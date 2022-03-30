@@ -93,7 +93,6 @@ def test_upload_json_negative(client_with_emulator):
               "state": "Callifornia",
               "dob": "7 Feb 1997"
           })
-  print(response)
   assert response.status_code == 422
 
 
@@ -103,12 +102,13 @@ def test_upload_one_pdf_positive(client_with_emulator):
                                                   "rb"), "application/pdf"))]
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document"):
-      response = client_with_emulator.post(
-          f"{api_url}upload_files"
-          f"?context=arkansas&case_id=test123",
-          files=files,
-          data=payload)
-      print(response.text)
+      with mock.patch("routes.upload_file.publish_document"):
+        response = client_with_emulator.post(
+            f"{api_url}upload_files"
+            f"?context=arkansas&case_id=test123",
+            files=files,
+            data=payload)
+        print(response.text)
   assert response.status_code == 200
 
 
@@ -120,12 +120,13 @@ def test_upload_files_pdf_positive(client_with_emulator):
                                                   "rb"), "application/pdf"))]
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document"):
-      response = client_with_emulator.post(
-          f"{api_url}upload_files"
-          f"?context=arkansas&case_id=test123",
-          files=files,
-          data=payload)
-      print(response.text)
+      with mock.patch("routes.upload_file.publish_document"):
+        response = client_with_emulator.post(
+            f"{api_url}upload_files"
+            f"?context=arkansas&case_id=test123",
+            files=files,
+            data=payload)
+        print(response.text)
   assert response.status_code == 200
 
 
@@ -136,12 +137,13 @@ def test_upload_files_not_pdf_file(client_with_emulator):
 
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document"):
-      response = client_with_emulator.post(
-          f"{api_url}upload_files"
-          f"?context=arkansas&case_id=test123",
-          files=files,
-          data=payload)
-      print(response.text)
+      with mock.patch("routes.upload_file.publish_document"):
+        response = client_with_emulator.post(
+            f"{api_url}upload_files"
+            f"?context=arkansas&case_id=test123",
+            files=files,
+            data=payload)
+        print(response.text)
   assert response.status_code == 422
 
 
@@ -153,12 +155,13 @@ def test_upload_files_negative(client_with_emulator):
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document", return_value=4):
       with mock.patch("routes.upload_file.ug.upload_file", return_value="fail"):
-        response = client_with_emulator.post(
-            f"{api_url}upload_files"
-            f"?context=arkansas&case_id=test123",
-            files=files,
-            data=payload)
-        print(response.text)
+        with mock.patch("routes.upload_file.publish_document"):
+          response = client_with_emulator.post(
+              f"{api_url}upload_files"
+              f"?context=arkansas&case_id=test123",
+              files=files,
+              data=payload)
+          print(response.text)
   assert response.status_code == 500
 
 
@@ -168,12 +171,13 @@ def test_upload_one_file_without_case_id(client_with_emulator):
                                                   "rb"), "application/pdf"))]
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document"):
-      response = client_with_emulator.post(
-          f"{api_url}upload_files"
-          f"?context=arkansas",
-          files=files,
-          data=payload)
-      print(response.text)
+      with mock.patch("routes.upload_file.publish_document"):
+        response = client_with_emulator.post(
+            f"{api_url}upload_files"
+            f"?context=arkansas",
+            files=files,
+            data=payload)
+        print(response.text)
   assert response.status_code == 200
 
 
@@ -185,10 +189,11 @@ def test_upload_multiple_file_without_case_id(client_with_emulator):
                                                   "rb"), "application/pdf"))]
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document"):
-      response = client_with_emulator.post(
-          f"{api_url}upload_files"
-          f"?context=arkansas",
-          files=files,
-          data=payload)
-      print(response.text)
+      with mock.patch("routes.upload_file.publish_document"):
+        response = client_with_emulator.post(
+            f"{api_url}upload_files"
+            f"?context=arkansas",
+            files=files,
+            data=payload)
+        print(response.text)
   assert response.status_code == 200

@@ -2,7 +2,8 @@
 
 import uuid
 import requests
-from fastapi import APIRouter, UploadFile, File, HTTPException
+import traceback
+from fastapi import APIRouter, UploadFile, File, HTTPException ,status, Response
 from fastapi.concurrency import run_in_threadpool
 from typing import Optional, List
 from schemas.input_data import InputData
@@ -34,39 +35,45 @@ async def upload_file(context: str,
     """
   #checking if all uploaded files are pdf documents
   for file in files:
-
     if not file.filename.lower().endswith(".pdf"):
       Logger.error("Uploaded file is not a pdf document")
       raise HTTPException(status_code=422, detail="Please upload all pdf files")
     #generate a case_id if not provided by the user
   if case_id is None:
     case_id = str(uuid.uuid1())
-
-  for file in files:
-    output  = create_document(case_id, file.filename, context)
-    uid = output[0]
-    gcs_url = output[1]
-    status = await run_in_threadpool(ug.upload_file, case_id, uid, file)
-    if status is not "success":
-      Logger.error({f"Error in uploading document to "
-                    f"bucket with {case_id} and uid {uid}"})
-      raise HTTPException(
-          status_code=500, detail="Error "
-          "in uploading document")
-    Logger.info(
-        f"File with case_id {case_id} and uid {uid}"
-        f" uploaded successfullly ")
-    pubsub_msg = f"batch moved to bucket name{case_id}{uid}"
-    message_dict = {'message': pubsub_msg,'gcs_url': gcs_url, 'caseid': case_id ,"uid":uid}
-    publish_document(message_dict)
-  Logger.info(f"Files with case id {case_id} uploaded"
-              f" successfully")
-  return {
-      "status": f"Files with case id {case_id} uploaded"
-                f"successfully",
-      "case_id": case_id
-  }
-
+  try :
+    for file in files:
+      output  = create_document(case_id, file.filename, context)
+      uid = output[0]
+      gcs_url = output[1]
+      status = await run_in_threadpool(ug.upload_file, case_id, uid, file)
+      if status != "success":
+        raise HTTPException(
+            status_code=500, detail="Error "
+            "in uploading document in gcs bucket")
+      Logger.info(
+          f"File with case_id {case_id} and uid {uid}"
+          f" uploaded successfullly ")
+      pubsub_msg = f"batch moved to bucket name{case_id}{uid}"
+      message_dict = {'message': pubsub_msg,'gcs_url': gcs_url, 'caseid': case_id ,"uid":uid}
+      future_result = publish_document(message_dict)
+      print("AFTER PUBLISHER")
+      print(future_result)
+      print(type(future_result))
+    Logger.info(f"Files with case id {case_id} uploaded"
+                f" successfully")
+    return {
+        "status": f"Files with case id {case_id} uploaded"
+                  f"successfully",
+        "case_id": case_id
+    }
+  except Exception as e :
+    Logger.error(e)
+    err = traceback.format_exc().replace('\n', ' ')
+    Logger.error(err)
+    raise HTTPException(
+      status_code=500, detail="Error "
+                              "in uploading document") from e
 
 @router.post("/upload_json")
 async def upload_data_json(input_data: InputData):

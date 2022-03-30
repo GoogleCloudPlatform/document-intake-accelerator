@@ -1,5 +1,5 @@
 """ extraction endpoints """
-
+import traceback
 from fastapi import APIRouter, HTTPException, status, Response
 from common.db_client import bq_client
 from common.models import Document
@@ -71,11 +71,13 @@ async def extraction(case_id: str, uid: str, doc_class: str,
       return response
     #check if  extract_entities returned unexpected output
     else:
-      raise HTTPException(status_code=500)
-  except Exception as e:
+      raise HTTPException(status_code=500,detail= extraction_output )
+  except Exception as error:
     update_extraction_status(case_id, uid, "fail", None, None)
     Logger.error(f"Extraction failed for case_id {case_id} and uid {uid}")
-    Logger.error(e)
+    Logger.error(error)
+    err =  traceback.format_exc().replace('\n', ' ')
+    Logger.error(err)
     response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     response.body = "Extraction failed for case_id {case_id} " \
                     "and uid {uid}"
