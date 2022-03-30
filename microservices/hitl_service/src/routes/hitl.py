@@ -48,12 +48,17 @@ async def get_document(uid: str):
     """
   try:
     doc = Document.find_by_uid(uid)
+    if doc:
+      print(doc)
+      print(doc.to_dict()["active"])
+      
     if not doc or not doc.to_dict()["active"] == "active":
       response = {"status": "Failed"}
       response["detail"] = "No Document found with the given uid"
       return response
     response = {"status": "Success"}
-    response["data"] = doc
+    response["data"] = doc.to_dict()
+    print(response)
     return response
 
   except Exception as e:
@@ -77,7 +82,7 @@ async def get_queue(hitl_status: str):
   if hitl_status.lower() not in ["approved", "rejected", "pending", "review"]:
     raise HTTPException(status_code=400, detail="Invalid Parameter")
   try:
-    docs = list(Document.collection.filter("active", "==", "active").fetch())
+    docs = list(Document.collection.filter(active = "active").fetch())
     result_queue = []
     for d in docs:
       status_class = ""
@@ -116,7 +121,7 @@ async def update_entity(uid: str, updated_doc: dict):
   """
   try:
     doc = Document.find_by_uid(uid)
-    if not doc or not doc.to_dict()["active"] == "active":
+    if not doc or not doc.to_dict()["active"].lower() == "active":
       response = {"status": "Failed"}
       response["detail"] = "No Document found with the given uid"
       return response
@@ -156,7 +161,7 @@ async def update_hitl_status(uid: str,
     }
 
     doc = Document.find_by_uid(uid)
-    if not doc or not doc.to_dict()["active"] == "active":
+    if not doc or not doc.to_dict()["active"].lower() == "active":
       response = {"status": "Failed"}
       response["detail"] = "No Document found with the given uid"
       return response
@@ -243,18 +248,18 @@ async def get_unclassified():
     result_queue = []
     for d in docs:
       doc_dict = d.to_dict()
-      # system_trail = doc_dict["system_status"]
-
-      # if system_trail:
-      #   in_consideration = None
-      #   for status in system_trail:
-      #     if status["stage"].lower() == "classification":
-      #       in_consideration = status
-      #   if in_consideration["status"].lower() == "unclassified":
-      #     result_queue.append(doc_dict)
-      if d.is_unclassified == True:
-        result_queue.append(doc_dict)
-    response = {"status": "Success"}
+      print("document",doc_dict)
+      system_trail = doc_dict["system_status"]
+      print("system trail",system_trail)
+      if system_trail:
+        in_consideration = None
+        for status in system_trail:
+          if status["stage"].lower() == "classification":
+            in_consideration = status
+        if in_consideration:
+          if in_consideration["status"].lower() != "success":
+            result_queue.append(doc_dict)
+    response = {"status": "success"}
     response["data"] = result_queue
     return response
   except Exception as e:
@@ -262,12 +267,13 @@ async def get_unclassified():
     Logger.error(e)
     raise HTTPException(status_code=500,detail="Error")
 
+
 def update_classification_status(case_id: str,
                                  uid: str,
                                  status: str,
                                  document_class: Optional[str] = None,
-                                 document_type: Optional[str] = None,
-                                 is_unclassified: Optional[bool] = False):
+                                 document_type: Optional[str] = None
+                                ):
   """ Call status update api to update the classification output
     Args:
     case_id (str): Case id of the file ,
@@ -287,20 +293,59 @@ def update_classification_status(case_id: str,
 
   else:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
-    f"&status={status}&is_unclassified={is_unclassified}"
+    f"&status={status}"
     response = requests.post(req_url)
     return response
 
-@router.get("/update_hitl_classification")
+
+def call_process_task(case_id:str,uid:str,document_class:str,document_type:str,gcs_uri:str):
+  """
+    Starts the process task API after hitl classification
+  """
+  
+  data = {"case_id": case_id,
+  "uid": uid,
+  "gcs_url": gcs_uri,
+  "isHitl": True,
+  "document_class": document_class,
+  "document_type": document_type}
+
+  base_url = "http://upload_service/v1/process_task"
+  req_url = f"{base_url}?case_id={case_id}&uid={uid}"
+  #response = requests.post(req_url,json=data)
+  #return response
+  return {"status":"success"}
+
+
+@router.post("/update_hitl_classification")
 async def update_hitl_classification(case_id: str, uid: str, document_class: str):
   """
   Updates the hitl classification status flag and doc type and doc class in DB
   and starts the process task
   Args : case_id : str, uid : str
   Returns 200: updates the DB and starts process task
+  Returns 400: Invalid Parameters
+  Returns 404: Document not found
   Returns 500: If something fails
   """
   try:
+    
+    doc = Document.find_by_uid(uid)
+    print(doc.to_dict()["active"].lower())
+    if not doc or not doc.to_dict()["active"].lower() == "active" :
+      Logger.error("Document for hitl classification not found")
+      raise HTTPException(status_code=404,detail="Document not found")
+    
+    if document_class not in ["unemployment_form",
+        "driving_licence",
+        "claims_form",
+        "utility_bill",
+        "pay_stub"]:
+      Logger.error("Invalid parameter document_class")
+      raise HTTPException(status_code=400,detail="Invalid Parameter. Document class")
+    
+    Logger.info(f"Starting manual classification for case_id"\
+        f" {case_id} and uid {uid}")
     document_type = None
     if document_class.lower() == "unemployment_form":
       document_type = "application_form"
@@ -308,14 +353,14 @@ async def update_hitl_classification(case_id: str, uid: str, document_class: str
       document_type = "supporting_documents"
     
     #Update DSM
-    
+    Logger.info("Updating Doc status from Hitl classification for case_id"\
+      f"{case_id} and uid {uid}")
     response = update_classification_status(
       case_id,
       uid,
       "success",
       document_class=document_class,
-      document_type=document_type,
-      is_unclassified=False)
+      document_type=document_type)
     print(response)
     if response.status_code != 200:
       Logger.error(f"Document status update failed for {case_id} and {uid}")
@@ -323,7 +368,12 @@ async def update_hitl_classification(case_id: str, uid: str, document_class: str
         status_code=500, detail="Document status updation failed")
 
     #Call Process task
-    
+    Logger.info("Starting Process task from hitl classification")
+    res = call_process_task(case_id,uid,document_class,document_type,doc.url)
+    if res["status"].lower() == "success":
+      return {"status":"success",
+      "message":"Process task api has been started successfully"} 
+
   except HTTPException as e:
     print(e)
     Logger.error(e)
@@ -334,6 +384,6 @@ async def update_hitl_classification(case_id: str, uid: str, document_class: str
     Logger.error(e)
     raise HTTPException(
         status_code=500,
-        detail="Couldn't fetch the requested file.\
+        detail="Couldn't update the classification.\
           Try checking if the case_id and uid are correct"
     ) from e
