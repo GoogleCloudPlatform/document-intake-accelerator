@@ -1,5 +1,6 @@
 """ classification endpoints """
 import os
+import shutil
 import json
 from fastapi import APIRouter, HTTPException
 from common.utils.logging_handler import Logger
@@ -31,7 +32,7 @@ def predict_doc_type(case_id: str, uid: str, gcs_url: str):
   classifier = DocClassifier(case_id, uid, gcs_url, outfolder)
 
   doc_type = json.loads(classifier.execute_job())
-  os.rmdir(outfolder)
+  shutil.rmtree(outfolder)
   return doc_type
 
 
@@ -74,28 +75,33 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
            gcs (str): gcs url of document
       Returns:
           200 : PDF files are successfully classified and database updated
+          400 : Improper parameters
+          422 : Document classified as invalid
           500 : Internal Server Error if something fails
     """
   if not case_id.strip() or not uid.strip() or not gcs_url.strip():
     Logger.error("Classification failed parameters missing")
+    update_classification_status(case_id, uid, "failed")
     raise HTTPException(
         status_code=400,
         detail="Parameters Missing")
 
   if not gcs_url.endswith(".pdf") or not gcs_url.startswith("gs://"):
     Logger.error("Classification failed GCS path is invalid")
+    update_classification_status(case_id, uid, "failed")
     raise HTTPException(
         status_code=400,
         detail="GCS pdf path is incorrect")
 
   if case_id != gcs_url.split("/")[3] or uid != gcs_url.split("/")[4]:
     Logger.error("Classification failed parameters mismatched")
+    update_classification_status(case_id, uid, "failed")
     raise HTTPException(
         status_code=400,
         detail="Parameters Mismatched")
 
   try:
-
+    #Map to standardise classification values
     label_map = {
         "UE": "unemployment_form",
         "DL": "driving_licence",
@@ -106,20 +112,23 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
 
     Logger.info(f"Starting classification for {case_id} and {uid}")
 
+    #Making prediction
     doc_prediction_result = predict_doc_type(case_id, uid, gcs_url)
 
     if doc_prediction_result:
 
-      if doc_prediction_result["predicted_class"] == "Negative":
-        FAILED_RESPONSE["message"] = "Invalid Document"
+      if doc_prediction_result["predicted_class"].lower() == "negative":
+        #DocumentStatus api call
         response = update_classification_status(case_id, uid, "unclassified")
         Logger.error("Document unclassified")
 
         if response.status_code != 200:
           Logger.error("Document status update failed")
+          #DocumentStatus api call
+          update_classification_status(case_id, uid, "failed")
           raise HTTPException(
               status_code=500, detail="Failed to update document status")
-        return FAILED_RESPONSE
+        raise HTTPException(status_code=422,detail="Invalid Document")
 
       doc_type = None
       doc_class = label_map[doc_prediction_result["predicted_class"]]
@@ -144,18 +153,21 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
       print(response)
       if response.status_code != 200:
         Logger.error(f"Document status update failed for {case_id} and {uid}")
+        #DocumentStatus api call
+        update_classification_status(case_id, uid, "failed")
         raise HTTPException(
             status_code=500, detail="Document status updation failed")
 
       return SUCCESS_RESPONSE
 
     else:
+      #DocumentStatus api call
+      update_classification_status(case_id, uid, "failed")
       raise HTTPException(status_code=500, detail="Classification Failed")
 
   except HTTPException as e:
     print(e)
     Logger.error(f"{e} while classification {case_id} and {uid}")
-    update_classification_status(case_id, uid, "failed")
     raise e
 
   except Exception as e:
