@@ -7,6 +7,8 @@ import os
 import re
 import json
 import pandas as pd
+import numpy as np
+from functools import reduce
 from google.cloud import storage
 
 
@@ -174,112 +176,91 @@ def entities_extraction(parser_data, required_entities, doc_type):
 
     return entity_dict
 
-
-def standard_entity_mapping(parser_extracted_entity_json):
+def check_int(d):
     """
-    This function is used to map the standard entities to the parser extracted entities
+    This function check given string is integer
+    Parameters
+    ----------
+    d: input string
+
+    Returns: True/False
+    -------
+
+    """
+
+    count = 0
+
+    for i in d:
+        if i and i.isdigit():
+            count = count + 1
+    if count >= 2:
+        return True
+    else:
+        return False
+
+def standard_entity_mapping(desired_entities_list):
+    """
+    This function changes entity name to standard names and also
+                create consolidated entities like name and date
+    Parameters
+    ----------
+    desired_entities_list: List of default and derived entities
+
+    Returns: Standard entities list
+    -------
+
     """
 
     # convert extracted json to pandas dataframe
-    df_json = pd.DataFrame.from_dict(parser_extracted_entity_json)
+    df_json = pd.DataFrame.from_dict(desired_entities_list)
+
     # read entity standardization csv
+    # entities_standardization_csv = pd.read_csv('entity-standardization.csv')
+    # entities_standardization_csv.dropna(how='all', inplace=True)
     entity_standardization = os.path.join(
-        os.path.dirname(__file__), ".", "Entity Standardization.csv")
+        os.path.dirname(__file__), ".", "entity-standardization.csv")
     entities_standardization_csv = pd.read_csv(entity_standardization)
     entities_standardization_csv.dropna(how='all', inplace=True)
+    # Keep first record incase of duplicate entities
+
+    entities_standardization_csv.drop_duplicates(subset=['entity'], keep="first", inplace=True)
+
+    entities_standardization_csv.reset_index(drop=True)
+
+    # # filter records based on doc and state
+    # entities_standardization_csv = entities_standardization_csv[entities_standardization_csv["document_type"]==doc_state]
+
     # Create a dictionary from the look up dataframe/excel which has the key col and the value col
     dict_lookup = dict(
         zip(entities_standardization_csv['entity'], entities_standardization_csv['standard_entity_name']))
-    # Get all the entity (key column) from the json as a list
+    # Get( all the entity (key column) from the json as a list
     key_list = list(df_json['entity'])
+    # Replace the value by creating a list by looking up the value and assign to json entity
+    df_json['entity'] = [dict_lookup[item] for item in key_list]
+    # convert datatype from object to int for column 'extraction_confidence'
+    df_json['extraction_confidence'] = pd.to_numeric(df_json['extraction_confidence'], errors='coerce')
 
-    # Iterate over the key list and check if the key is in the dictionary
-    if all(i in dict_lookup for i in key_list):
-        # Replace the value by creating a list by looking up the value and assign to json entity
-        df_json['entity'] = [dict_lookup[item] for item in key_list]
-        # convert datatype from object to int for column 'extraction_confidence'
-        df_json['extraction_confidence'] = pd.to_numeric(df_json['extraction_confidence'], errors='coerce')
+    group_by_columns = ['value', 'extraction_confidence', 'manual_extraction']
+    df_conc = df_json.groupby('entity')[group_by_columns[0]].apply(
+        lambda x: '/'.join([v for v in x if v]) if check_int(x) else ' '.join(v for v in x if v)).reset_index()
 
-        # check if there is any repeated entity (many to one)
-        if any(df_json.duplicated('entity')):
-            # concatenation of same entities values
-            df_conc = df_json.groupby('entity')['value'].apply(' '.join).reset_index()
-            # average of extraction_confidence of same/repeated entities
-            df_av = df_json.groupby(['entity', 'mannual_extraction'])[
-                'extraction_confidence'].mean().reset_index().round(2)
-            df_final = pd.merge(df_conc, df_av, on="entity", how="inner")
 
-            def is_digit(s):
-                """Return True if all characters in the string are digits or space characters."""
-                return s.replace(' ', '').isdigit()  # remove spaces
+    df_av = df_json.groupby(['entity'])[group_by_columns[1]].mean().reset_index().round(2)
 
-            for i in range(len(df_final)):
-                # check if the value is digit and have more than one space between digits for "DOB" format entities
-                if (is_digit(df_final.loc[i, "value"]) == True) & (df_final.loc[i, "value"].count(" ") > 1):
-                    # replace ' ' with '/' for "DOB" format entities
-                    add_delimiter_date = df_final.loc[i, 'value'].replace(' ', '/')
-                    df_final.loc[i, 'value'] = add_delimiter_date
-                    entities_extraction_dict = df_final.reset_index().to_dict(orient='records')
-                    extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
-                                                     entities_extraction_dict]
-                    return extracted_entities_final_json
-                else:
-                    entities_extraction_dict = df_final.reset_index().to_dict(orient='records')
-                    extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
-                                                     entities_extraction_dict]
-                    return extracted_entities_final_json
-        else:
-            entities_extraction_dict = df_json.reset_index().to_dict(orient='records')
-            extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
-                                             entities_extraction_dict]
-            return extracted_entities_final_json
+    # taking mode for categorical variables
+    df_manual_extraction = df_json.groupby(['entity'])[group_by_columns[2]].agg(pd.Series.mode).reset_index()
 
-    else:
+    dfs = [df_conc, df_av, df_manual_extraction]
 
-        # if the json key (entity) is not in the dictionary (excel), return the json entity as it is
-        json_uncommon_key = [element for element in key_list if element not in dict_lookup]
-        df_json_uncommon = df_json[df_json['entity'] == json_uncommon_key[0]]
-        df_json.drop(df_json[df_json['entity'] == json_uncommon_key[0]].index, inplace=True)
-        key_list.remove(json_uncommon_key[0])
-        # Replace the value by creating a list by looking up the value and assign to json entity
-        df_json['entity'] = [dict_lookup[item] for item in key_list]
-        # convert datatype from object to int for column 'extraction_confidence'
-        df_json['extraction_confidence'] = pd.to_numeric(df_json['extraction_confidence'], errors='coerce')
+    df_final = reduce(lambda left, right: pd.merge(left, right, on='entity'), dfs)
 
-        # check if there is any repeated entity (many to one)
-        if any(df_json.duplicated('entity')):
-            # concatenation of same entities value
-            df_conc = df_json.groupby('entity')['value'].apply(' '.join).reset_index()
-            # average of extraction_confidence of same entities
-            df_av = df_json.groupby(['entity', 'mannual_extraction'])[
-                'extraction_confidence'].mean().reset_index().round(2)
-            df_final = pd.merge(df_conc, df_av, on="entity", how="inner")
-            df_final = df_final.append(df_json_uncommon, ignore_index=True)
+    df_final = df_final.replace(r'^\s*$', np.nan, regex=True)
 
-            def is_digit(s):
-                """Return True if all characters in the string are digits or space characters."""
-                return s.replace(' ', '').isdigit()  # remove spaces
+    df_final = df_final.replace({np.nan: None})
 
-            for i in range(len(df_final)):
-                # check if the value is digit and have more than one space between digits for "DOB" format entities
-                if (is_digit(df_final.loc[i, "value"]) == True) & (df_final.loc[i, "value"].count(" ") > 1):
-                    # replace ' ' with '/' for "DOB" format entities
-                    add_delimiter_date = df_final.loc[i, 'value'].replace(' ', '/')
-                    df_final.loc[i, 'value'] = add_delimiter_date
-                    entities_extraction_dict = df_final.reset_index().to_dict(orient='records')
-                    extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
-                                                     entities_extraction_dict]
-                    return extracted_entities_final_json
-                else:
-                    entities_extraction_dict = df_final.reset_index().to_dict(orient='records')
-                    extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
-                                                     entities_extraction_dict]
-                    return extracted_entities_final_json
-        else:
-            entities_extraction_dict = df_json.reset_index().to_dict(orient='records')
-            extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
-                                             entities_extraction_dict]
-            return extracted_entities_final_json
+    extracted_entities_final_json = df_final.to_dict("records")
+
+    return extracted_entities_final_json
 
 
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_parser_text):
@@ -511,8 +492,8 @@ if __name__ == "__main__":
             entity_dict = entities_extraction(data, required_entities)
 
             # save extracted entities json
-            # with open("{}.json".format(os.path.join(extracted_entities, each_json.split('.')[0])), "w") as outfile:
-            #     json.dump(entity_dict, outfile, indent=4)
+            with open("{}.json".format(os.path.join(extracted_entities, each_json.split('.')[0])), "w") as outfile:
+                json.dump(entity_dict, outfile, indent=4)
 
     download_pdf_gcs(
         gcs_uri='gs://async_form_parser/input/arizona-driver-form-13.pdf'

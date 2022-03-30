@@ -14,13 +14,13 @@ from google.cloud import storage
 
 from .change_json_format import get_json_format_for_processing, correct_json_format_for_db
 from .correct_key_value import data_transformation
-
 from .utils_functions import entities_extraction, download_pdf_gcs, extract_form_fields, del_gcs_folder, \
     form_parser_entities_mapping, extraction_accuracy_calc, clean_form_parser_keys, standard_entity_mapping
 from .config import *
 import warnings
 parser_config = os.path.join(
     os.path.dirname(__file__), ".", "parser_config.json")
+
 
 warnings.simplefilter(action='ignore')
 
@@ -92,6 +92,7 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_t
 
     # this can be removed while integration
     # save parser op output
+    # print(data)
     # with open("{}.json".format(os.path.join(parser_op, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
     #     json.dump(data, outfile)
 
@@ -192,10 +193,10 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
     form_parser_text = ""
 
     # saving form parser json, this can be removed from pipeline
-    parser_json_folder = os.path.join(form_parser_raw_json_folder, gcs_doc_path.split("/")[-1][:-4])
+    # parser_json_folder = os.path.join(form_parser_raw_json_folder, gcs_doc_path.split("/")[-1][:-4])
 
-    if not os.path.exists(parser_json_folder):
-        os.mkdir(parser_json_folder)
+    # if not os.path.exists(parser_json_folder):
+    #     os.mkdir(parser_json_folder)
 
     # browse through output jsons
     for i, blob in enumerate(blob_list):
@@ -207,7 +208,8 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
             blob_as_bytes = blob.download_as_bytes()
 
             # saving the parser response to the folder, remove this while integration
-            parser_json_fname = os.path.join(parser_json_folder, 'res_{}.json'.format(i))
+            parser_json_fname = "temp.json"
+            # parser_json_fname = os.path.join(parser_json_folder, 'res_{}.json'.format(i))
             with open(parser_json_fname, "wb") as file_obj:
                 blob.download_to_file(file_obj)
 
@@ -244,7 +246,8 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
     #     json.dump(extracted_entity_list, outfile, indent=4)
 
     # mappping dictionary of document type and state
-    mapping_dict = MAPPING_DICT[state]
+    doc_state = doc_type+"_"+state
+    mapping_dict = MAPPING_DICT[doc_state]
 
     # Extract desired entites from form parser
     form_parser_entities_list = form_parser_entities_mapping(extracted_entity_list, mapping_dict, form_parser_text)
@@ -254,6 +257,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
     #     json.dump(form_parser_entities_list, outfile, indent=4)
 
     return form_parser_entities_list
+
 
 def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
     """
@@ -272,7 +276,7 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
         Extraction accuracy
     """
 
-    # parser_config_json = r"./parser_config.json"
+    # parser_config_json = "parser_config.json"
     parser_config_json = parser_config
     # read parser details from configuration json file
     with open(parser_config_json, 'r') as j:
@@ -303,30 +307,38 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
 
             # extraction accuracy calculation
             document_extraction_confidence = extraction_accuracy_calc(final_extracted_entities)
-
+            print(final_extracted_entities)
+            print(document_extraction_confidence)
             return final_extracted_entities, document_extraction_confidence
         else:
             # Parser not available
             print('parser not available for this document')
             return None
 
+
+
+
 if __name__ == "__main__":
-    extracted_entities = "C:\\Users\\Ajay Sharma\\Documents\\DOCAI\\Parsers\\Payslips\\Final Json\\Clean"
-    mapped_extracted_entities = "C:\\Users\\Ajay Sharma\\Documents\\DOCAI\\Parsers\\Payslips\\Mapped Final Json\\Clean"
-    parser_op = "C:\\Users\\Ajay Sharma\\Documents\\DOCAI\\Parsers\\Payslips\\Json\\Clean"
-    form_parser_raw_json_folder = ""
-    gcs_doc_path = "gs://"
+
+    extracted_entities = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/pay-stub"
+    mapped_extracted_entities = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/pay-stub"
+    parser_op = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/pay-stub"
+    form_parser_raw_json_folder = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/pay-stub"
+    # gcs_doc_path = "gs://gs://async_form_parser/input/Arkansas application form.pdf"
 
     os.environ[
-        'GOOGLE_APPLICATION_CREDENTIALS'] = "C:\\Users\\Ajay Sharma\\Documents\\DOCAI\\claims-processing-dev-1c8ccc031fa7.json"
+        'GOOGLE_APPLICATION_CREDENTIALS'] = "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/claims-processing-dev-a07894631cd2.json"
+
+    #os.environ[
+     #   'GOOGLE_APPLICATION_CREDENTIALS'] = "C:\\Users\\Ajay Sharma\\Documents\\DOCAI\\claims-processing-dev-1c8ccc031fa7.json"
 
     # API Integration will start from here
 
     # Extract API Provides label and document
-    doc_type = "payslip"
+    doc_type = "pay_stub"
     state = "arizona"
-    # gcs_doc_path = "gs://async_form_parser/input/Arizona2-latest.pdf"
     gcs_doc_path = "gs://adp_paystubs/arizona-paystub-form-10 (1).pdf"
+    # gcs_doc_path = "gs://async_form_parser/input/illinois-driver-form-20.pdf"
 
     extract_entities(gcs_doc_path, doc_type, state)
 
