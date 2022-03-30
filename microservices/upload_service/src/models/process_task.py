@@ -12,4 +12,4 @@ class ProcessTask(BaseModel):
     gcs_url: str
     isHitl: bool = False
     document_class: str = ""
-    type_of_doc: str=""
+    document_type: str=""
