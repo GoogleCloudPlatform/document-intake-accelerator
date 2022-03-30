@@ -9,7 +9,7 @@ from common.utils.logging_handler import Logger
 from concurrent.futures import ThreadPoolExecutor
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Request
-from routes import upload_file
+from routes import upload_file, process_task
 
 app = FastAPI(title="Upload Service API")
 origins = [
@@ -51,6 +51,7 @@ def health_check():
 api = FastAPI(title="Upload Service API", version="latest")
 
 api.include_router(upload_file.router)
+api.include_router(process_task.router)
 
 app.mount("/upload_service/v1", api)
 

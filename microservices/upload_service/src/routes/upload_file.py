@@ -68,25 +68,7 @@ async def upload_data_json(input_data: InputData):
     raise HTTPException(status_code=500, detail="Error "
                                     "in uploading document")from e
 
-@router.post("/process_task")
-async def process_task(case_id: str, uid: str, gcs_url: str):
-  """Process the  input  he record in the database
 
-    Args:
-        case_id (str): Case id of the file ,
-         uid : unique id for  each document
-         gcs : gcs url of document
-    Returns:
-        200 : PDF files are successfully processed
-        500  : HTTPException: 500 Internal Server Error if something fails
-  """
-  print(gcs_url)
-  return {
-      "status":
-          "sucess",
-      "message":
-          f"File with case_id {case_id} , uid {uid} successfully processed"
-  }
 
 
 def create_document_from_data(case_id, document_type, document_class, context,
