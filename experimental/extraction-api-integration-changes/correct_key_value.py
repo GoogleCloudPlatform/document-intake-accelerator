@@ -11,6 +11,7 @@ from .post_processing_config import str_to_num_dict, num_to_str_dict, clean_valu
 from common.utils.logging_handler import Logger
 
 
+
 def listToString(string_list):
     '''Function to join a list of string characters to a single string
     Input:
@@ -304,7 +305,7 @@ def data_transformation(input_dict):
             temp_dict[index] = corrected_dict
         return input_dict, temp_dict
     except Exception as e:
-            Logger.error(e)
+            # Logger.error(e)
             return None,None
     
 

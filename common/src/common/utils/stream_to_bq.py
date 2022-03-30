@@ -2,8 +2,7 @@
 import copy
 import json
 from .logging_handler import Logger
-from common.config import PROJECT_ID, DATABASE_PREFIX
-
+from common.config import PROJECT_ID, DATABASE_PREFIX ,BIGQUERY_DB
 
 def stream_claim_to_bigquery(client, claim_dict, operation, timestamp):
   table_id = f"{PROJECT_ID}.{DATABASE_PREFIX}rules_engine.claims"
@@ -56,7 +55,7 @@ def stream_document_to_bigquery(client, case_id ,uid,
       if successfully executed : returns []
       if fails : returns error
   """
-  table_id = f"{PROJECT_ID}.{DATABASE_PREFIX}data_extraction.entities"
+  table_id = f"{PROJECT_ID}.{DATABASE_PREFIX}{BIGQUERY_DB}"
   rows_to_insert= [
     {"case_id":case_id,
     "uid":uid,
