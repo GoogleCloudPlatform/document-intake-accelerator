@@ -329,9 +329,8 @@ def call_process_task(case_id: str, uid: str, document_class: str,
       "document_type": document_type
   }
 
-  base_url = "http://upload_service/v1/process_task"
-  req_url = f"{base_url}?case_id={case_id}&uid={uid}"
-  #response = requests.post(req_url,json=data)
+  base_url = "http://upload-service/upload_service/v1/process_task"
+  #response = requests.post(base_url,json=data)
   #return response
   return {"status": "success"}
 
