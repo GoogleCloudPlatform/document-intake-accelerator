@@ -1,17 +1,17 @@
 {
-	"utilitybill": {
-		"Rule_1": "Select JSON_QUERY(entities,'$.bill_date') as bill_date from `claims-processing-dev.data_extraction.testing_json` where DATE(JSON_VALUE(entities,'$.bill_date')) > date_add(current_date,interval -2  month)",
-		"Rule_2":"Select JSON_QUERY(entities,'$.date_statement') as date_statement from `claims-processing-dev.data_extraction.testing_json` where  date_add(current_date,interval -2  month) < DATE(JSON_VALUE(entities,'$.date_statement')) and DATE(JSON_VALUE(entities,'$.date_statement')) < date_add(current_date,interval 3  month)",
-		"Rule_3": "Select JSON_QUERY(entities,'$.bill_date') as bill_date from `claims-processing-dev.data_extraction.testing_json` where DATE(JSON_VALUE(entities,'$.bill_date')) > date_add(current_date,interval 0  month)"
-	},
-	"paystub": {
-		"Rule_1": "Select JSON_QUERY(entities,'$.salary') as salay from `claims-processing-dev.data_extraction.testing_json` where cast(JSON_VALUE(entities,'$.salary') as STRING) < cast(20000 as STRING)",
-		"Rule_2": "Select JSON_QUERY(entities,'$.bill_date') as bill_date from `claims-processing-dev.data_extraction.testing_json` where DATE(JSON_VALUE(entities,'$.bill_date')) > date_add(current_date,interval -1  month)",
-		"Rule_3": "select JSON_QUERY(entities,'$.age') as age ,JSON_QUERY(entities,'$.salary') as salary  from `claims-processing-dev.data_extraction.testing_json` where cast(JSON_VALUE(entities,'$.age') as STRING) < cast(45 as STRING)   and  cast(JSON_VALUE(entities,'$.salary') as STRING) < cast(13000 as STRING)"
-	},
-	"driving_license": {
-		"Rule_1": "Select JSON_QUERY(entities,'$.dob') as dob from `claims-processing-dev.data_extraction.testing_json` where DATE(JSON_VALUE(entities,'$.dob')) < date_add(current_date,interval 0  month)",
-		"Rule_2": "Select JSON_QUERY(entities,'$.age') as age from `claims-processing-dev.data_extraction.testing_json` where cast(JSON_VALUE(entities,'$.age') as STRING) < cast(55 as STRING)",
-		"Rule_3": "Select JSON_QUERY(entities,'$.license_id') as license_id from `claims-processing-dev.data_extraction.testing_json` where REGEXP_CONTAINS(JSON_VALUE(entities,'$.license_id'), r'[a-z]{4}-[0-9]{4}')"
-	}
+  "utility_bill": {
+    "Rule_1": "Select JSON_QUERY(entities,'$.bill_date') as bill_date from `claims-processing-dev.data_extraction.entities` where DATE(JSON_VALUE(entities,'$.bill_date')) > date_add(current_date,interval -2  month)",
+    "Rule_2": "Select JSON_QUERY(entities,'$.date_statement') as date_statement from `claims-processing-dev.data_extraction.entities` where  date_add(current_date,interval -2  month) < DATE(JSON_VALUE(entities,'$.date_statement')) and DATE(JSON_VALUE(entities,'$.date_statement')) < date_add(current_date,interval 3  month)",
+    "Rule_3": "Select JSON_QUERY(entities,'$.bill_date') as bill_date from `claims-processing-dev.data_extraction.entities` where DATE(JSON_VALUE(entities,'$.bill_date')) > date_add(current_date,interval 0  month)"
+  },
+  "pay_stub": {
+    "Rule_1": "Select JSON_QUERY(entities,'$.salary') as salay from `claims-processing-dev.data_extraction.entities` where cast(JSON_VALUE(entities,'$.salary') as STRING) < cast(20000 as STRING)",
+    "Rule_2": "Select JSON_QUERY(entities,'$.bill_date') as bill_date from `claims-processing-dev.data_extraction.entities` where DATE(JSON_VALUE(entities,'$.bill_date')) > date_add(current_date,interval -1  month)",
+    "Rule_3": "select JSON_QUERY(entities,'$.age') as age ,JSON_QUERY(entities,'$.salary') as salary  from `claims-processing-dev.data_extraction.entities` where cast(JSON_VALUE(entities,'$.age') as STRING) < cast(45 as STRING)   and  cast(JSON_VALUE(entities,'$.salary') as STRING) < cast(13000 as STRING)"
+  },
+  "driving_licence": {
+    "Rule_1": "Select JSON_QUERY(entities,'$.dob') as dob from `claims-processing-dev.data_extraction.entities` where DATE(JSON_VALUE(entities,'$.dob')) < date_add(current_date,interval 0  month)",
+    "Rule_2": "Select JSON_QUERY(entities,'$.age') as age from `claims-processing-dev.data_extraction.entities` where cast(JSON_VALUE(entities,'$.age') as STRING) < cast(55 as STRING)",
+    "Rule_3": "Select JSON_QUERY(entities,'$.license_id') as license_id from `claims-processing-dev.data_extraction.entities` where REGEXP_CONTAINS(JSON_VALUE(entities,'$.license_id'), r'[a-z]{4}-[0-9]{4}')"
+  }
 }
