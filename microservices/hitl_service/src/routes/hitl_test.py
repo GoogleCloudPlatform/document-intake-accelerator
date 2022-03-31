@@ -47,7 +47,7 @@ def test_get_document_api_invalid_uid(client_with_emulator):
   print(res)
   json_response = json.loads(response.text)
   print(json_response)
-  
+
   assert response.status_code == 200
   assert json_response["status"] == "Failed"
 
@@ -56,7 +56,7 @@ def test_get_queue_api(client_with_emulator):
   """Test case to check the get_queue hitl endpoint"""
 
   d = Document()
-  d.hitl_status = [{"status":"approved","user":"Adam","timestamp":"12.00"}]
+  d.hitl_status = [{"status": "approved","user": "Adam","timestamp": "12.00"}]
   d.active = "active"
   d.save()
   response = client_with_emulator.post(
@@ -69,7 +69,7 @@ def test_get_queue_api_invalid_status(client_with_emulator):
 
   d = Document()
   d.active = "active"
-  d.hitl_status = [{"status":"approved","user":"Adam","timestamp":"12.00"}]
+  d.hitl_status = [{"status": "approved", "user": "Adam", "timestamp": "12.00"}]
   d.save()
   response = client_with_emulator.post(
       f"{api_url}get_queue?hitl_status=accepted")
@@ -169,7 +169,7 @@ def test_fetch_api_download(client_with_emulator):
   """Test case to check the fetch_file hitl endpoint"""
 
   response = client_with_emulator.get(
-      f"{api_url}fetch_file?case_id= wwe&uid=CS2EeDc2Gl0OAkdZ4rWK&download=true"
+    f"{api_url}fetch_file?case_id= wwe&uid=CS2EeDc2Gl0OAkdZ4rWK&download=true"
   )
   assert response.status_code == 200
 
@@ -189,18 +189,15 @@ def test_fetch_api_invalid_uid(client_with_emulator):
       f"{api_url}fetch_file?case_id= wwe&uid=CS2EeDc2Gl0OAkdZ4r")
   assert response.status_code == 404
 
+
 def test_get_unclassified_api(client_with_emulator):
   """Test case to check the get_unclassified hitl endpoint"""
   d = Document()
   d.uid = "u123"
   d.active = "active"
-  d.system_status = [{
-    "stage" : "classification",
-    "status" : "unclassified"
-  }]
+  d.system_status = [{"stage": "classification", "status": "unclassified"}]
   d.save()
-  response = client_with_emulator.get(
-      f"{api_url}get_unclassified")
+  response = client_with_emulator.get(f"{api_url}get_unclassified")
   assert response.status_code == 200
 
 
@@ -210,10 +207,7 @@ def test_update_hitl_classification_api(client_with_emulator):
   d.case_id = "test_case"
   d.uid = "u123"
   d.active = "active"
-  d.system_status = [{
-    "stage" : "classification",
-    "status" : "unclassified"
-  }]
+  d.system_status = [{"stage": "classification", "status": "unclassified"}]
   d.document_class = None
   d.document_type = None
   d.save()
@@ -224,10 +218,14 @@ def test_update_hitl_classification_api(client_with_emulator):
 
   mockresponse = Mock()
   mockresponse.status_code = 200
-  with patch("routes.hitl.call_process_task",return_value={"status":"success"}):
-    with patch("routes.hitl.update_classification_status",return_value=mockresponse):
+  with patch(
+      "routes.hitl.call_process_task", return_value={"status": "success"}):
+    with patch(
+        "routes.hitl.update_classification_status", return_value=mockresponse):
       response = client_with_emulator.post(
-        f"{api_url}update_hitl_classification?case_id={case_id}&uid={uid}&document_class={document_class}")
+        f"{api_url}update_hitl_classification?case_id={case_id}"\
+          f"&uid={uid}&document_class={document_class}"
+      )
       assert response.status_code == 200
 
 
@@ -236,10 +234,7 @@ def test_update_hitl_classification_api_invalid_doc_type(client_with_emulator):
   d = Document()
   d.case_id = "test_case"
   d.uid = "u123"
-  d.system_status = [{
-    "stage" : "classification",
-    "status" : "unclassified"
-  }]
+  d.system_status = [{"stage": "classification", "status": "unclassified"}]
   d.document_class = None
   d.document_type = None
   d.active = "active"
@@ -251,8 +246,12 @@ def test_update_hitl_classification_api_invalid_doc_type(client_with_emulator):
 
   mockresponse = Mock()
   mockresponse.status_code = 400
-  with patch("routes.hitl.call_process_task",return_value={"status":"success"}):
-    with patch("routes.hitl.update_classification_status",return_value=mockresponse):
+  with patch(
+      "routes.hitl.call_process_task", return_value={"status": "success"}):
+    with patch(
+        "routes.hitl.update_classification_status", return_value=mockresponse):
       response = client_with_emulator.post(
-        f"{api_url}update_hitl_classification?case_id={case_id}&uid={uid}&document_class={document_class}")
+          f"{api_url}update_hitl_classification?case_id={case_id}"\
+            f"&uid={uid}&document_class={document_class}"
+      )
       assert response.status_code == 400
