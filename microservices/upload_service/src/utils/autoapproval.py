@@ -65,7 +65,7 @@ def get_values(validation_score, extraction_score, matching_score, document_labe
           Logger.info(f"Status :{status}")
           return status, flag
         else:
-          status = 'Reject'
+          status = 'Rejected'
           Logger.info(f"Status :{status}")
 
           return status, flag
@@ -87,7 +87,7 @@ def get_values(validation_score, extraction_score, matching_score, document_labe
           Logger.info(f"Status :{status}")
           return status, flag
         else:
-          status = 'Reject'
+          status = 'Rejected'
           Logger.info(f"Status :{status}")
 
           return status, flag
