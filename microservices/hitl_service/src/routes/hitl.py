@@ -283,7 +283,7 @@ async def get_unclassified():
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
     raise HTTPException(status_code=500,
-      detail="Error during getting unclassified documents")
+      detail="Error during getting unclassified documents") from e
 
 
 def update_classification_status(case_id: str,
