@@ -38,6 +38,7 @@ async def extraction(case_id: str, uid: str, doc_class: str,
     #Call ML model to extract entities from document
     extraction_output = await run_in_threadpool(extract_entities,
                               gcs_url, doc_class, context)
+    
     #check if the output of extract entity function is
     #touple containing list of dictionaries and extraction score
     is_tuple = isinstance(extraction_output, tuple)
@@ -82,7 +83,7 @@ async def extraction(case_id: str, uid: str, doc_class: str,
   except Exception as e:
     update_extraction_status(case_id, uid, "fail", None, None)
     err = traceback.format_exc().replace("\n", " ")
-    Logger.error(f"Extraction failed for case_id {case_id} and uid {uid}",e)
+    Logger.error(f"Extraction failed for case_id {case_id} and uid {uid}")
     Logger.error(err)
     response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     response.body = "Extraction failed for case_id {case_id} " \
