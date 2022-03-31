@@ -8,6 +8,7 @@ from common.config import BUCKET_NAME
 # pylint: disable = broad-except
 import datetime
 import requests
+import fireo
 from google.cloud import storage
 
 router = APIRouter()
@@ -166,12 +167,8 @@ async def update_hitl_status(uid: str,
       response["detail"] = "No Document found with the given uid"
       return response
     if doc:
-      #if hitl_status is empty
       # create a list push the latest status and update doc
-      existing_hitl = doc.to_dict()["hitl_status"] if doc.to_dict(
-      )["hitl_status"] is not None else []
-      existing_hitl.append(hitl_status)
-      doc.hitl_status = existing_hitl
+      doc.hitl_status = fireo.ListUnion([hitl_status])
       doc.update()
     return {"status": "Success"}
 
@@ -286,7 +283,7 @@ def update_classification_status(case_id: str,
 
   if status.lower() == "success":
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
-    f"&status={status}&document_class={document_class}"\
+    f"&status={status}&is_hitl={True}&document_class={document_class}"\
       f"&document_type={document_type}"
     response = requests.post(req_url)
     return response
