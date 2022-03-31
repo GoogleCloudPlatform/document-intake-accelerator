@@ -70,11 +70,13 @@ def default_entities_extraction(parser_entities, default_entities):
             entity_dict[default_entities[key][0]] = {"entity": default_entities[key][0],
                                                      "value": parser_entities_dict[key][0],
                                                      "extraction_confidence": parser_entities_dict[key][1],
-                                                     "manual_extraction": False}
+                                                     "manual_extraction": False,
+                                                     "corrected_value": None}
         else:
             entity_dict[default_entities[key][0]] = {"entity": default_entities[key][0], "value": None,
                                                      "extraction_confidence": None,
-                                                     "manual_extraction": False}
+                                                     "manual_extraction": False,
+                                                     "corrected_value": None}
 
     return entity_dict
 
@@ -110,7 +112,8 @@ def name_entity_creation(entity_dict, name_list):
 
     name_dict = {"entity": "Name", "value": name,
                  "extraction_confidence": confidence,
-                 "manual_extraction": False}
+                 "manual_extraction": False,
+                 "corrected_value": None}
 
     return name_dict
 
@@ -139,7 +142,8 @@ def derived_entities_extraction(parser_data, derived_entities):
 
         derived_entities_extracted_dict[key] = {"entity": key, "value": pattern_op,
                                                 "extraction_confidence": None,
-                                                "manual_extraction": True}
+                                                "manual_extraction": True,
+                                                "corrected_value": None}
 
     return derived_entities_extracted_dict
 
@@ -215,12 +219,11 @@ def standard_entity_mapping(desired_entities_list):
     df_json = pd.DataFrame.from_dict(desired_entities_list)
 
     # read entity standardization csv
-    # entities_standardization_csv = pd.read_csv('entity-standardization.csv')
-    # entities_standardization_csv.dropna(how='all', inplace=True)
     entity_standardization = os.path.join(
         os.path.dirname(__file__), ".", "entity-standardization.csv")
     entities_standardization_csv = pd.read_csv(entity_standardization)
     entities_standardization_csv.dropna(how='all', inplace=True)
+
     # Keep first record incase of duplicate entities
 
     entities_standardization_csv.drop_duplicates(subset=['entity'], keep="first", inplace=True)
@@ -240,7 +243,7 @@ def standard_entity_mapping(desired_entities_list):
     # convert datatype from object to int for column 'extraction_confidence'
     df_json['extraction_confidence'] = pd.to_numeric(df_json['extraction_confidence'], errors='coerce')
 
-    group_by_columns = ['value', 'extraction_confidence', 'manual_extraction']
+    group_by_columns = ['value', 'extraction_confidence', 'manual_extraction', 'corrected_value']
     df_conc = df_json.groupby('entity')[group_by_columns[0]].apply(
         lambda x: '/'.join([v for v in x if v]) if check_int(x) else ' '.join(v for v in x if v)).reset_index()
 
@@ -250,7 +253,9 @@ def standard_entity_mapping(desired_entities_list):
     # taking mode for categorical variables
     df_manual_extraction = df_json.groupby(['entity'])[group_by_columns[2]].agg(pd.Series.mode).reset_index()
 
-    dfs = [df_conc, df_av, df_manual_extraction]
+    df_corrected_value = df_json.groupby(['entity'])[group_by_columns[3]].mean().reset_index().round(2)
+
+    dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value]
 
     df_final = reduce(lambda left, right: pd.merge(left, right, on='entity'), dfs)
 
@@ -299,12 +304,14 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
                     # creating response
                     temp_dict = {"entity": each_val, "value": df['value'][idx_list[idx]],
                                  "extraction_confidence": df['value_confidence'][idx_list[idx]],
-                                 "manual_extraction": False}
+                                 "manual_extraction": False,
+                                 "corrected_value": None}
                 except Exception as e:
                     print('Key not found in parser output')
                     temp_dict = {"entity": each_val, "value": None,
                                  "extraction_confidence": None,
-                                 "manual_extraction": False}
+                                 "manual_extraction": False,
+                                 "corrected_value": None}
 
                 required_entities_list.append(temp_dict)
             else:
@@ -312,7 +319,8 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
 
                 temp_dict = {"entity": each_val, "value": None,
                              "extraction_confidence": None,
-                             "manual_extraction": False}
+                             "manual_extraction": False,
+                             "corrected_value": None}
                 required_entities_list.append(temp_dict)
 
     if derived_entities:
@@ -504,13 +512,15 @@ if __name__ == "__main__":
             "entity": "Social Security Number",
             "value": None,
             "extraction_confidence": 1,
-            "manual_extraction": False
+            "manual_extraction": False,
+            "corrected_value": None
         },
         {
             "entity": "Date",
             "value": None,
             "extraction_confidence": None,
-            "manual_extraction": False
+            "manual_extraction": False,
+            "corrected_value": None
         }
     ]
 

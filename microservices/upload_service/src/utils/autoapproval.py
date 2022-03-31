@@ -24,7 +24,8 @@ def read_json(path):
   return data_dict
 
 
-def get_values(validation_score, extraction_score, matching_score, document_label, document_type):
+def get_values(validation_score, extraction_score, matching_score,
+               document_label, document_type):
   '''
   Used to calculate the approval status of a document depending on the validation, extraction and Matching Score
   Input:
@@ -38,19 +39,18 @@ def get_values(validation_score, extraction_score, matching_score, document_labe
   '''
   data = read_json("gs://async_form_parser/Jsons/acpt.json")
   Logger.info(
-    f"Validation_Score:{validation_score}, Extraction_score :{extraction_score},Matching_Score:{matching_score},DocumentLabel:{document_label},DocumentType:{document_type}")
-  print("data: ",data)
+      f"Validation_Score:{validation_score}, Extraction_score :{extraction_score},Matching_Score:{matching_score},DocumentLabel:{document_label},DocumentType:{document_type}"
+  )
   if document_type == 'supporting_documents' or document_type == "claims_form":
     for i in data[document_label]:
-      print(f"========={i}================")
       if i != 'Reject':
         v_limit = data[document_label][i]['Validation_Score']
         e_limit = data[document_label][i]['Extraction_Score']
         m_limit = data[document_label][i]['Matching_Score']
         print(v_limit, e_limit, m_limit)
 
-        if (validation_score > v_limit and extraction_score > e_limit
-            and matching_score > m_limit):
+        if (validation_score > v_limit and extraction_score > e_limit and
+            matching_score > m_limit):
           flag = "yes"
           status = 'Approved'
           return status, flag
@@ -59,8 +59,8 @@ def get_values(validation_score, extraction_score, matching_score, document_labe
         e_limit = data[document_label][i]['Extraction_Score']
         m_limit = data[document_label][i]['Matching_Score']
         flag = "no"
-        if (validation_score > v_limit and extraction_score > e_limit
-            and matching_score > m_limit):
+        if (validation_score > v_limit and extraction_score > e_limit and
+            matching_score > m_limit):
           status = 'Review'
           Logger.info(f"Status :{status}")
           return status, flag

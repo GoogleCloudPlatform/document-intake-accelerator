@@ -1,24 +1,31 @@
 """ Upload and process task api endpoints """
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from typing import Optional, List
-from schemas.input_data import InputData
 import uuid
 import requests
-from common.utils.logging_handler import Logger
+import traceback
+from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi.concurrency import run_in_threadpool
+from typing import Optional, List
+from schemas.input_data import InputData
 import utils.upload_file_gcs_bucket as ug
+from common.utils.logging_handler import Logger
+from common.models import Document
+# from common.utils.publisher import publish_document
+from common.config import BUCKET_NAME
+import datetime
 
-# pylint: disable = broad-except
+# pylint: disable = broad-except ,literal-comparison
 router = APIRouter()
-SUCCESS_RESPONSE = {"status": "Success"}
-FAILED_RESPONSE = {"status": "Failed"}
 
 
 
 @router.post("/upload_files")
-async def upload_file(context: str,
-                      files: List[UploadFile] = File(...),
-                      case_id: Optional[str] = None):
+async def upload_file(
+    context: str,
+    files: List[UploadFile] = File(...),
+    case_id: Optional[str] = None,
+    comment: Optional[str] = None,
+):
   """Uploads files to the GCS bucket and Save the record in the database
 
   Args:
@@ -27,11 +34,97 @@ async def upload_file(context: str,
     list of files : to get the list of documents from user
   Returns:
     200 : PDF files are successfully uploaded
-    422 : If file other than pdf is uploaded by user """
+    422 : If file other than pdf is uploaded by user
+    500 :Error in uploading documents
+    """
+  #checking if all uploaded files are pdf documents
   for file in files:
-    print(file.filename)
-  print(context + case_id)
-  return SUCCESS_RESPONSE
+    if not file.filename.lower().endswith(".pdf"):
+      Logger.error("Uploaded file is not a pdf document")
+      raise HTTPException(
+          status_code=422, detail="Please upload"
+          " all pdf files")
+    #generate a case_id if not provided by the user
+  if case_id is None:
+    case_id = str(uuid.uuid1())
+  uid_list = []
+  try:
+    for file in files:
+      #create a record in database for uploaded document
+      output = create_document(case_id, file.filename, context)
+      uid = output
+      uid_list.append(uid)
+      #Upload document in GCS bucket
+      status = await run_in_threadpool(ug.upload_file, case_id, uid, file)
+      #check the uploaded document status
+      if status != "success":
+
+        #Update the document upload in GCS as failed
+        document = Document.find_by_uid(uid)
+        system_status = {
+            "stage": "upload",
+            "status": "fail",
+            "timestamp": str(datetime.datetime.utcnow()),
+            "comment": comment
+        }
+        document.system_status = [system_status]
+        document.update()
+        raise HTTPException(
+            status_code=500,
+            detail="Error "
+            "in uploading document in gcs bucket")
+      Logger.info(f"File with case_id {case_id} and uid {uid}"
+                  f" uploaded successfullly in GCS bucket")
+      # pubsub_msg = f"batch moved to bucket name{case_id}{uid}"
+      # message_dict = {'message': pubsub_msg,'gcs_url':
+      # gcs_url, 'caseid': case_id ,"uid":uid }
+      # future_result = publish_document(message_dict)
+
+      #Update the document upload as success in DB
+      document = Document.find_by_uid(uid)
+      gcs_base_url = f"gs://{BUCKET_NAME}"
+      document.url = f"{gcs_base_url}/{case_id}/{document.uid}/{file.filename}"
+      system_status = {
+          "stage": "uploaded",
+          "status": "success",
+          "timestamp": str(datetime.datetime.utcnow()),
+          "comment": comment
+      }
+      document.system_status = [system_status]
+      document.update()
+    return {
+        "status": f"Files with case id {case_id} uploaded"
+                  f"successfully, the document"
+                  f" will be processed in sometime ",
+        "case_id": case_id,
+        "uid_list": uid_list,
+    }
+    # response = call_process_task(case_id ,uid ,document.url)
+    # if response.status_code == 202:
+    #   Logger.info(f"Files with case id {case_id} uploaded"
+    #               f" successfully")
+    #   return {
+    #       "status": f"Files with case id {case_id} uploaded"
+    #                 f"successfully, the document"
+    #                 f" will be processed in sometime ",
+    #       "case_id": case_id,
+    #       "uid_list": uid_list,
+    #   }
+    # else:
+    #   return {
+    #     "status": f"Files with case id {case_id} uploaded"
+    #               f"successfully,Error in calling process task ",
+    #     "case_id": case_id,
+    #     "uid_list": uid_list,
+    #   }
+
+  except Exception as e:
+    Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
+    raise HTTPException(
+        status_code=500, detail="Error "
+        "in uploading document") from e
 
 
 @router.post("/upload_json")
@@ -44,7 +137,6 @@ async def upload_data_json(input_data: InputData):
        422 : incorrect data passed
        500 : if something fails
      """
-
   try:
     input_data = dict(input_data)
     entity = []
@@ -82,3 +174,31 @@ def create_document_from_data(case_id, document_type, document_class, context,
   response = response.json()
   uid = response["uid"]
   return uid
+
+
+def create_document(case_id, filename, context):
+  base_url = "http://document-status-service/document_status_service/v1/"
+  req_url = f"{base_url}create_document"
+  response = requests.post(
+      f"{req_url}?case_id={case_id}&filename={filename}&context={context}")
+  response = response.json()
+  uid = response["uid"]
+  return uid
+
+
+def call_process_task(case_id: str, uid: str, gcs_url: str):
+  """
+    Starts the process task API after document is uploaded
+  """
+
+  data = {
+      "case_id": case_id,
+      "uid": uid,
+      "gcs_url": gcs_url,
+  }
+
+  req_url = "http://upload-service/upload_service/v1/process_task"
+  response = requests.post(req_url, json=data)
+  response.status_code = 202
+  return response
+  # return {"status": "success"}

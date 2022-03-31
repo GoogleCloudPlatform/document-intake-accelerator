@@ -33,19 +33,12 @@ async def create_document(case_id: str, filename: str, context: str):
     document.upload_timestamp = str(datetime.datetime.utcnow())
     document.context = context
     document.uid = document.save().id
-    gcs_base_url = f"gs://{BUCKET_NAME}"
-    document.url = f"{gcs_base_url}/{case_id}/{document.uid}/{filename}"
     document.active = "active"
-    system_status = {
-        "stage": "uploaded",
-        "status": "success",
-        "timestamp": str(datetime.datetime.utcnow())
-    }
-    document.system_status = [system_status]
     document.save()
     return {"status": "Success", "uid": document.uid}
   except Exception as e:
-    Logger.error(f"Error in create document for case_id {case_id}")
+    Logger.error(f"Error in create document for case_id {case_id} "
+                 f"and {filename}")
     Logger.error(e)
     raise HTTPException(
         status_code=500,

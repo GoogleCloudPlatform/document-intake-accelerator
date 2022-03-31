@@ -1,15 +1,13 @@
-
 # Project name
 PROJECT_NAME = "claims-processing-dev"
 
 # Attributes not required from specialized parser raw json
 NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles", "textChanges", "revisions",
-                                                    "pages.image"]
+                                                            "pages.image"]
 
 # GCS temp folder to store async form parser output
 GCS_OP_URI = "gs://async_form_parser"
 FORM_PARSER_OP_TEMP_FOLDER = "temp"
-
 
 """
 
@@ -21,27 +19,30 @@ Create state wise mapping if it form parser, and one doc type mapping if it is s
 """
 
 MAPPING_DICT = {
-   "unemployment_form_arizona": {
+    "unemployment_form_arizona": {
         "default_entities": {
-              "Social Security Number" : ["Social Security Number"],
-              "Primary Phone": ["Employee Primary Phone"],
-              "First Name": ["Employee First Name"],
-              "Middle Initial": ["Employee Middle Initial"],
-              "Last Name": ["Employee Last Name"],
-              "Mailing Address (No., Street, Apt., P.O. Box)": ["Employee Mailing Address (No., Street, Apt., P.O.Box)"],
-              "Residential Address (If different from mailing address)": ["Employee Residential Address (If diifferent from mailing address)"],
-              "E-MAIL Address (Optional but Encouraged)": ["Employee E-MAIL Address (Optional but Encouraged)"],
-              "Gender": ["Employee Gender"],
-              "Race": ["Employee Race"],
-              "Ethnicity": ["Employee Ethnicity"],
-              "Language": ["Employee Language"],
-              "Provide a brief description of your primary occupation": ["Provide a brief description of your primary occupation"],
-              "Company's Name ": ["Company's Name"],
-              "Mailing Address (No., Street, Apt., P.O. Box, City)": ["Employer Mailing Address (No., Street, Apt., P.O.Box, City)"],
-              "Employer's Phone No": ["Employer's Phone No."],
-              "Claimant's Signature" : ["Claimant's Signature"]
-              }
-   },
+            "Social Security Number": ["Social Security Number"],
+            "Primary Phone": ["Employee Primary Phone"],
+            "First Name": ["Employee First Name"],
+            "Middle Initial": ["Employee Middle Initial"],
+            "Last Name": ["Employee Last Name"],
+            "Mailing Address (No., Street, Apt., P.O. Box)": ["Employee Mailing Address (No., Street, Apt., P.O.Box)"],
+            "Residential Address (If different from mailing address)": [
+                "Employee Residential Address (If diifferent from mailing address)"],
+            "E-MAIL Address (Optional but Encouraged)": ["Employee E-MAIL Address (Optional but Encouraged)"],
+            "Gender": ["Employee Gender"],
+            "Race": ["Employee Race"],
+            "Ethnicity": ["Employee Ethnicity"],
+            "Language": ["Employee Language"],
+            "Provide a brief description of your primary occupation": [
+                "Provide a brief description of your primary occupation"],
+            "Company's Name ": ["Company's Name"],
+            "Mailing Address (No., Street, Apt., P.O. Box, City)": [
+                "Employer Mailing Address (No., Street, Apt., P.O.Box, City)"],
+            "Employer's Phone No": ["Employer's Phone No."],
+            "Claimant's Signature": ["Claimant's Signature"]
+        }
+    },
     "unemployment_form_arkansas": {
         "default_entities": {
             "TODAY'S DATE": ["TODAY'S DATE"],
@@ -66,18 +67,36 @@ MAPPING_DICT = {
             "E-Mail Address": ["Employee E-Mail Address"]
         }
     },
-   "driving_licence": {
-          "default_entities":{
-                        "Document Id" : ["DLN"],
-                        "Expiration Date": ["EXP"],
-                        "Date Of Birth": ["DOB"],
-                        "Family Name": ["LN"],
-                        "Given Names": ["FN"],
-                        "Issue Date": ["ISS"],
-                        "Address": ["Address"],
-                        },
-          "derived_entities": {"SEX": {"rule": "SEX.*?(?<!\w)(F|M)(?!\w)"}}
-   },
+    "unemployment_form_california": {
+        "default_entities": {
+            "Name of issuing State/entity": ["Name of issuing Stata/entity"],
+            "Driver License Number": ["Driver License Number"],
+            "Race": ["Employee Race"],
+            "Ethnicity": ["Employee Ethnicity"],
+            "Language": ["Employee Language"],
+            "22. Employer name": ["Longest Employer name"],
+            "Years": ["Years worked for longest employer"],
+            "Months": ["Months worked for longest employer"]
+        },
+        "derived_entities":
+            {
+                "What is your birth date?": {"rule": "What is your birth date\?\n\d\.(.*?)\((mm/dd/yyyy)"},
+                "What is your gender?": {"rule": "What is your gender\?\n\d\.(.*?)\n\d"},
+                "Expiration Date (EXP)": {"rule": "\sAlien Registration Number \(A#\)\n3\)\s(\d{4}-\d{2}-\d{2})\n"}}
+    },
+
+    "driving_licence": {
+        "default_entities": {
+            "Document Id": ["DLN"],
+            "Expiration Date": ["EXP"],
+            "Date Of Birth": ["DOB"],
+            "Family Name": ["LN"],
+            "Given Names": ["FN"],
+            "Issue Date": ["ISS"],
+            "Address": ["Address"],
+        },
+        "derived_entities": {"SEX": {"rule": "SEX.*?(?<!\w)(F|M)(?!\w)"}}
+    },
     "pay_stub": {
         "default_entities": {
             "employee_address": ["EMPLOYER ADDRESS"],
