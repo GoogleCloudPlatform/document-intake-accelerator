@@ -37,7 +37,8 @@ async def create_document(case_id: str, filename: str, context: str):
     document.save()
     return {"status": "Success", "uid": document.uid}
   except Exception as e:
-    Logger.error(f"Error in create document for case_id {case_id} and {filename}")
+    Logger.error(f"Error in create document for case_id {case_id} "
+                 f"and {filename}")
     Logger.error(e)
     raise HTTPException(
         status_code=500,
