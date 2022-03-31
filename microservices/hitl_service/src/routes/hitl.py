@@ -282,7 +282,8 @@ async def get_unclassified():
     Logger.error(e)
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
-    raise HTTPException(status_code=500, detail="Error")
+    raise HTTPException(status_code=500,
+      detail="Error during getting unclassified documents")
 
 
 def update_classification_status(case_id: str,
@@ -330,6 +331,8 @@ def call_process_task(case_id: str, uid: str, document_class: str,
   }
 
   base_url = "http://upload-service/upload_service/v1/process_task"
+  print("params for process task",data)
+  Logger.info(f"Params for process task {data}")
   #response = requests.post(base_url,json=data)
   #return response
   return {"status": "success"}
