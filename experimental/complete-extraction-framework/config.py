@@ -94,6 +94,29 @@ MAPPING_DICT = {
             "E-Mail Address": ["Employee E-Mail Address"]
         }
     },
+    "unemployment_form_illinois": {
+        "default_entities": {
+            "Claimant ID": ["Claimant ID"],
+            "SSN": ["SSN"],
+            "First Name": ["Employee First Name"],
+            "MI": ["Employee MI"],
+            "Last Name": ["Employee Last Name"],
+            "Date of Birth: (mm/dd/yyyy)": ["Date of Birth: (mm/dd/yyyy)"],
+            "E-Mail Address": ["Employee E-Mail Address"],
+            "Driver's License Number": ["Driving Licence Number"],
+            "Primary Telephone": ["Employee Mailing Primary Telephone"],
+            "Employer Name": ["Employer Name"],
+            "Expiration Date": ["Expiration Date"],
+            "Document Type": ["Document Type"],
+            "Gender": ["Employee Gender"],
+            "Ethnicity": ["Employee Ethinicity"],
+            "Company Phone": ["Company Phone"],
+            "For this period of employment, what date did you start": ["For this period of employment, what date did you start?"],
+            "Last date worked":["Last date worked"],
+            "CLAIMANT SIGNATURE": ["CLAIMANT SIGNATURE"],
+            "DATE": ["DATE"]
+        }
+    },
     "driver_license": {
         "default_entities": {
             "Document Id": ["DLN"],
