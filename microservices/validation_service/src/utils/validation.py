@@ -42,7 +42,7 @@ def get_values(documentlabel,cid,uid):
   '''
   path=PATH
   data=read_json(path)
-  merge_query= f"and cid ='{cid}' and uid='{uid}'"
+  merge_query= f"and case_id ='{cid}' and uid='{uid}'"
   validation_score = get_scoring(data,merge_query,documentlabel)
   return validation_score
 
