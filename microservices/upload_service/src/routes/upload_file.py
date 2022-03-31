@@ -3,7 +3,7 @@
 import uuid
 import requests
 import traceback
-from fastapi import APIRouter, UploadFile, File, HTTPException, status, Response
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from typing import Optional, List
 from schemas.input_data import InputData
@@ -16,8 +16,7 @@ import datetime
 
 # pylint: disable = broad-except ,literal-comparison
 router = APIRouter()
-SUCCESS_RESPONSE = {"status": "Success"}
-FAILED_RESPONSE = {"status": "Failed"}
+
 
 
 @router.post("/upload_files")
@@ -121,7 +120,7 @@ async def upload_file(
 
   except Exception as e:
     Logger.error(e)
-    err = traceback.format_exc().replace('\n', ' ')
+    err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
     raise HTTPException(
         status_code=500, detail="Error "

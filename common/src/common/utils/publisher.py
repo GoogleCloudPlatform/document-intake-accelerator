@@ -1,3 +1,5 @@
+""" Publishes the messages to pubsub """
+
 import json
 from google.cloud import pubsub_v1
 
@@ -12,9 +14,7 @@ topic_path = publisher.topic_path(project_id, topic_id)
 def publish_document(message_dict):
   # print("inside publisher")
   message_json = json.dumps(message_dict)
-  message_json = message_json.encode('utf-8')
+  message_json = message_json.encode("utf-8")
   future = publisher.publish(topic_path, message_json)
-  print("IN publisher")
-  print(future.result())
-  print(type(future.result()))
   return future.result()
+

@@ -73,4 +73,3 @@ def extract_entities(gcs_url, doc_class, context):
   }]
   document_extraction_confidence = 0.9
   return final_extracted_entities, document_extraction_confidence
-  # return {}
