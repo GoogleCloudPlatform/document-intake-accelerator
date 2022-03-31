@@ -117,6 +117,20 @@ MAPPING_DICT = {
             "DATE": ["DATE"]
         }
     },
+    "claims_form_arizona": {
+        "default_entities": {
+            "Social Security Number": ["Social Security Number"],
+            "Name": ["Employee Name"],
+            "Week Ending Date": ["Week Ending Date"],
+            "What were your gross earnings before deductions?": ["What were your gross earnings before deductions?"],
+            "What was your last day of work?": ["What was your last day of work?"],
+            "Claimant's Signature": ["Claimant's Signature "]
+      },
+        "table_entities": {
+
+        }
+    },
+
     "driver_license": {
         "default_entities": {
             "Document Id": ["DLN"],
@@ -140,9 +154,10 @@ MAPPING_DICT = {
             "start_date": ["PAY PERIOD(FROM)"]
 
         },
-        "derived_entities":
-            {"EMPLOYER NAME": {"rule": "([a-zA-Z ]*)\d*.*"},
-             "RATE": {"rule": "Regular\n(.*?)\n"},
-             "HOURS": {"rule": "Regular\n.*?\n(.*?)\n"}}
+        "derived_entities": {
+          "EMPLOYER NAME": {"rule": "([a-zA-Z ]*)\d*.*"},
+          "RATE": {"rule": "Regular\n(.*?)\n"},
+          "HOURS": {"rule": "Regular\n.*?\n(.*?)\n"}
+          }
     }
 }
