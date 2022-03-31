@@ -10,6 +10,7 @@ import datetime
 import requests
 import fireo
 from google.cloud import storage
+import traceback
 
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
@@ -22,6 +23,7 @@ async def report_data():
             the database
           Returns:
               200 : fetches all the data from database
+              500 : If any error occurs
     """
   doc_list = []
   try:
@@ -36,6 +38,8 @@ async def report_data():
   except Exception as e:
     print(e)
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500, detail="Error in fetching documents") from e
 
@@ -46,6 +50,7 @@ async def get_document(uid: str):
         Args : uid - Unique ID for every document
         Returns:
           200 : Fetches a single document from database
+          500 : If any error occurs
     """
   try:
     doc = Document.find_by_uid(uid)
@@ -65,6 +70,8 @@ async def get_document(uid: str):
   except Exception as e:
     print(e)
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500, detail="Error in fetching documents") from e
 
@@ -107,6 +114,8 @@ async def get_queue(hitl_status: str):
   except Exception as e:
     print(e)
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500, detail="Error during fetching from Firestore") from e
 
@@ -133,6 +142,8 @@ async def update_entity(uid: str, updated_doc: dict):
   except Exception as e:
     print(e)
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500, detail="Failed to update entity") from e
 
@@ -175,6 +186,8 @@ async def update_hitl_status(uid: str,
   except Exception as e:
     print(e)
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500, detail="Failed to update hitl status") from e
 
@@ -185,6 +198,7 @@ async def fetch_file(case_id: str, uid: str, download: Optional[bool] = False):
   Fetches and returns the file from GCS bucket
   Args : case_id : str, uid : str
   Returns 200: returns the file and displays it
+  Returns 404: Document not found
   Returns 500: If something fails
   """
   try:
@@ -218,6 +232,8 @@ async def fetch_file(case_id: str, uid: str, download: Optional[bool] = False):
   except FileNotFoundError as e:
     print(e)
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=404, detail="Requested file not found") from e
 
@@ -225,6 +241,8 @@ async def fetch_file(case_id: str, uid: str, download: Optional[bool] = False):
     #return Response(content=None,media_type="application/pdf")
     print(e)
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500,
         detail="Couldn't fetch the requested file.\
@@ -262,6 +280,8 @@ async def get_unclassified():
   except Exception as e:
     print(e)
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(status_code=500,detail="Error")
 
 
@@ -374,11 +394,15 @@ async def update_hitl_classification(case_id: str, uid: str, document_class: str
   except HTTPException as e:
     print(e)
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise e
 
   except Exception as e:
     print(e)
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500,
         detail="Couldn't update the classification.\
