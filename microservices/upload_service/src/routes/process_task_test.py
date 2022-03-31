@@ -1,6 +1,7 @@
 """
-  Tests for validation endpoints
+  Tests for process_task endpoint
 """
+import json
 import os
 # disabling pylint rules that conflict with pytest fixtures
 # pylint: disable=unused-argument,redefined-outer-name,unused-import
@@ -10,7 +11,7 @@ from common.testing.firestore_emulator import firestore_emulator, clean_firestor
 from common.models import Document
 
 # assigning url
-API_URL = "http://localhost:8080/validation_service/v1/validation/"
+API_URL = "http://localhost:8889/upload_service/v1/process_task"
 
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
@@ -18,31 +19,43 @@ SUCCESS_RESPONSE = {"status": "Success"}
 
 
 def test_process_task_api(client_with_emulator):
-  """Test case to check the validation endpoint"""
+  """Test case to check the test_process_task_api endpoint"""
   doc = Document()
-  doc.case_id = "5-ui"
-  doc.uid = "aSCh3o6BxjPEqjMAQhtC"
-  doc.document_class = "driving_license"
+  doc.case_id = "test_id_33"
+  doc.uid = "GswfEO1i4P79UaeJV9kO"
   doc.save()
-  url = f"{API_URL}validation_api?case_id=5-ui&uid=aSCh3o6BxjPEqjMAQhtC&" \
-    "doc_class=driving_license"
-  with mock.patch("routes.validation.update_validation_status"):
-    with mock.patch("routes.validation.get_values"):
-      with mock.patch("routes.validation.Logger"):
-        response = client_with_emulator.post(url)
-  assert response.status_code == 200, "Status 200"
+  data = {
+    "case_id": "test_id_33",
+    "uid": "GswfEO1i4P79UaeJV9kO",
+    "gcs_url": "gs://document-upload-test/test_id_33/GswfEO1i4P79UaeJV9kO/Copy of Arkansas-form-1.pdf"
+  }
+  with mock.patch("routes.process_task.get_classification"):
+    with mock.patch("routes.process_task.get_extraction_score"):
+      with mock.patch("routes.process_task.get_validation_score"):
+        with mock.patch("routes.process_task.get_matching_score"):
+          with mock.patch("routes.process_task.update_autoapproval_status"):
+            with mock.patch("routes.process_task.Logger"):
+              response = client_with_emulator.post(
+                API_URL, json=data)
+  assert response.status_code == 202, "Status 202"
 
 
-def test_validation_api_invalid_doc_class(client_with_emulator):
-  """Test case to check the validation endpoint
-  when invalid document class is provided"""
-  doc = Document()
-  doc.case_id = "5-ui"
-  doc.uid = "aSCh3o6BxjPEqjMAQhtC"
-  doc.save()
-  url = f"{API_URL}validation_api?case_id=5-ui&uid=aSCh3o6BxjPEqjMAQhtC&"\
-    "doc_class=invalid_class"
-  with mock.patch("routes.validation.update_validation_status"):
-    with mock.patch("routes.validation.Logger"):
-      response = client_with_emulator.post(url)
-  assert response.status_code == 500, "Status 500"
+def test_process_task_api_invalid_doc(client_with_emulator):
+  """Test case to check the test_process_task_api endpoint"""
+  
+  data = {
+    "case_id": "test_id_33",
+    "uid": "GswfEO1i4P79UaeJV9kO",
+    "gcs_url": "gs://document-upload-test/test_id_33/GswfEO1i4P79UaeJV9kO/Copy of Arkansas-form-1.pdf"
+  }
+  with mock.patch("routes.process_task.get_classification"):
+    with mock.patch("routes.process_task.get_extraction_score"):
+      with mock.patch("routes.process_task.get_validation_score"):
+        with mock.patch("routes.process_task.get_matching_score"):
+          with mock.patch("routes.process_task.update_autoapproval_status"):
+            with mock.patch("routes.process_task.Logger"):
+              response = client_with_emulator.post(
+                API_URL, json=data)
+  assert response.status_code == 404, "Status 404"
+
+
