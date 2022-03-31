@@ -5,7 +5,6 @@ from google.cloud.storage import Blob
 from google.cloud import storage
 
 
-
 def upload_file(case_id, uid, file):
   client = storage.Client()
   bucket = client.get_bucket(BUCKET_NAME)

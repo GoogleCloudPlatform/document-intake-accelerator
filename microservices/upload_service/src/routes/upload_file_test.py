@@ -7,6 +7,7 @@ from unittest import mock
 # pylint: disable=unused-argument,redefined-outer-name,unused-import,consider-using-with
 from testing.fastapi_fixtures import client_with_emulator
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
+from common.models import Document
 
 # assigning url
 api_url = "http://localhost:8080/upload_service/v1/"
@@ -21,6 +22,14 @@ TESTDATA_FILENAME2 = os.path.join(
 
 TESTDATA_FILENAME3 = os.path.join(
     os.path.dirname(__file__), "..", "testing", "Arkansa-claim-2.pdf")
+
+
+def creat_mock_data():
+  doc = Document()
+  doc.case_id = "test123"
+  doc.uid = "aSCh3o6BxjPEqjMAQhtC"
+  doc.save()
+  return doc.uid
 
 
 def test_upload_json_without_case_id_positive(client_with_emulator):
@@ -98,101 +107,17 @@ def test_upload_json_negative(client_with_emulator):
 
 def test_upload_one_pdf_positive(client_with_emulator):
   payload = {}
+  mock_uid = creat_mock_data()
   files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
                                                   "rb"), "application/pdf"))]
   with mock.patch("routes.upload_file.Logger"):
-    with mock.patch("routes.upload_file.create_document"):
-      with mock.patch("routes.upload_file.publish_document"):
+    with mock.patch(
+        "routes.upload_file.create_document", return_value=mock_uid):
+      # with mock.patch("routes.upload_file.publish_document"):
+      with mock.patch("routes.upload_file.call_process_task"):
         response = client_with_emulator.post(
             f"{api_url}upload_files"
             f"?context=arkansas&case_id=test123",
-            files=files,
-            data=payload)
-        print(response.text)
-  assert response.status_code == 200
-
-
-def test_upload_files_pdf_positive(client_with_emulator):
-  payload = {}
-  files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
-                                                  "rb"), "application/pdf")),
-           ("files", ("Arkansas-form-1.pdf", open(TESTDATA_FILENAME3,
-                                                  "rb"), "application/pdf"))]
-  with mock.patch("routes.upload_file.Logger"):
-    with mock.patch("routes.upload_file.create_document"):
-      with mock.patch("routes.upload_file.publish_document"):
-        response = client_with_emulator.post(
-            f"{api_url}upload_files"
-            f"?context=arkansas&case_id=test123",
-            files=files,
-            data=payload)
-        print(response.text)
-  assert response.status_code == 200
-
-
-def test_upload_files_not_pdf_file(client_with_emulator):
-  payload = {}
-  files = [("files", ("arkansas-driver-form-5.png",
-                      open(TESTDATA_FILENAME1, "rb"), "application/png"))]
-
-  with mock.patch("routes.upload_file.Logger"):
-    with mock.patch("routes.upload_file.create_document"):
-      with mock.patch("routes.upload_file.publish_document"):
-        response = client_with_emulator.post(
-            f"{api_url}upload_files"
-            f"?context=arkansas&case_id=test123",
-            files=files,
-            data=payload)
-        print(response.text)
-  assert response.status_code == 422
-
-
-def test_upload_files_negative(client_with_emulator):
-  payload = {}
-  files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
-                                                  "rb"), "application/pdf"))]
-
-  with mock.patch("routes.upload_file.Logger"):
-    with mock.patch("routes.upload_file.create_document", return_value=4):
-      with mock.patch("routes.upload_file.ug.upload_file", return_value="fail"):
-        with mock.patch("routes.upload_file.publish_document"):
-          response = client_with_emulator.post(
-              f"{api_url}upload_files"
-              f"?context=arkansas&case_id=test123",
-              files=files,
-              data=payload)
-          print(response.text)
-  assert response.status_code == 500
-
-
-def test_upload_one_file_without_case_id(client_with_emulator):
-  payload = {}
-  files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
-                                                  "rb"), "application/pdf"))]
-  with mock.patch("routes.upload_file.Logger"):
-    with mock.patch("routes.upload_file.create_document"):
-      with mock.patch("routes.upload_file.publish_document"):
-        response = client_with_emulator.post(
-            f"{api_url}upload_files"
-            f"?context=arkansas",
-            files=files,
-            data=payload)
-        print(response.text)
-  assert response.status_code == 200
-
-
-def test_upload_multiple_file_without_case_id(client_with_emulator):
-  payload = {}
-  files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
-                                                  "rb"), "application/pdf")),
-           ("files", ("Arkansas-form-1.pdf", open(TESTDATA_FILENAME3,
-                                                  "rb"), "application/pdf"))]
-  with mock.patch("routes.upload_file.Logger"):
-    with mock.patch("routes.upload_file.create_document"):
-      with mock.patch("routes.upload_file.publish_document"):
-        response = client_with_emulator.post(
-            f"{api_url}upload_files"
-            f"?context=arkansas",
             files=files,
             data=payload)
         print(response.text)
