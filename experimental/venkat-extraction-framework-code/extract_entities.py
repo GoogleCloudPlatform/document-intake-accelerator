@@ -332,9 +332,9 @@ if __name__ == "__main__":
     # API Integration will start from here
 
     # Extract API Provides label and document
-    doc_type = "pay_stub"
+    doc_type = "unemployment_form"
     state = "arizona"
-    gcs_doc_path = "gs://adp_paystubs/arizona-paystub-form-10 (1).pdf"
+    gcs_doc_path = "gs://async_form_parser/input/Arizona1-latest.pdf"
     # gcs_doc_path = "gs://async_form_parser/input/illinois-driver-form-20.pdf"
 
     extract_entities(gcs_doc_path, doc_type, state)
