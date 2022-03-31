@@ -331,7 +331,7 @@ def call_process_task(case_id: str, uid: str, document_class: str,
   }
 
   base_url = "http://upload-service/upload_service/v1/process_task"
-  print("params for process task",data)
+  print("params for process task",base_url,data)
   Logger.info(f"Params for process task {data}")
   #response = requests.post(base_url,json=data)
   #return response
