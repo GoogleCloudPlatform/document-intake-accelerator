@@ -2,8 +2,7 @@
 import copy
 import json
 from .logging_handler import Logger
-from common.config import PROJECT_ID, DATABASE_PREFIX
-
+from common.config import PROJECT_ID, DATABASE_PREFIX ,BIGQUERY_DB
 
 def stream_claim_to_bigquery(client, claim_dict, operation, timestamp):
   table_id = f"{PROJECT_ID}.{DATABASE_PREFIX}rules_engine.claims"
@@ -41,3 +40,35 @@ def delete_claim_in_bigquery(client, claim_id, timestamp):
   elif isinstance(errors, list):
     error = errors[0].get("errors")
     Logger.error(f"Encountered errors while inserting rows: {error}")
+
+def stream_document_to_bigquery(client, case_id ,uid,
+  document_class , document_type, entites):
+  """
+    Function insert's data in Bigquery database
+    Args :
+      entity : string format of enties and values
+      case_id : str
+      uid : str
+      document_class : str
+      document_type: str
+    output :
+      if successfully executed : returns []
+      if fails : returns error
+  """
+  table_id = f"{PROJECT_ID}.{DATABASE_PREFIX}{BIGQUERY_DB}"
+  rows_to_insert= [
+    {"case_id":case_id,
+    "uid":uid,
+    "document_class":document_class ,
+    "document_type":document_type,
+    "entities":entites}
+  ]
+  errors = client.insert_rows_json(table_id, rows_to_insert)
+  if errors == []:
+    Logger.info(f"New rows have been added for "
+                f"case_id {case_id} and {uid}")
+  elif isinstance(errors, list):
+    error = errors[0].get("errors")
+    Logger.error(f"Encountered errors while inserting rows "
+                 f"for case_id {case_id} and uid {uid}: {error}")
+  return errors

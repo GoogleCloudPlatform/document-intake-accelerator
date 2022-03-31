@@ -8,7 +8,7 @@ import datetime
 from datetime import datetime
 from post_processing_config import str_to_num_dict, num_to_str_dict, clean_value_dict, lower_to_upper_list, \
     upper_to_lower_list, clean_space_list, date_format_dict, convert_to_string, convert_to_number
-from common.utils.logging_handler import Logger
+# from common.utils.logging_handler import Logger
 
 
 def listToString(string_list):
@@ -34,7 +34,7 @@ def string_to_number(value):
         value: Input string
     Output:
         value: Returns corrected string'''
-    if value=="null":
+    if value==None:
         pass
     else:
         # convert input string to list
@@ -66,7 +66,7 @@ def number_to_string(value):
     Output:
         value: Returns corrected string
     '''
-    if value=="null":
+    if value==None:
         pass
     else:
         # convert input string to list
@@ -99,7 +99,7 @@ def upper_to_lower(value):
         value: Input string
     Output:
         corrected_value: converted string'''
-    if value=="null":
+    if value==None:
         corrected_value=value
     else:
         # convert to lower case
@@ -113,7 +113,7 @@ def lower_to_upper(value):
         value: Input string
     Output:
         corrected_value: converted string'''
-    if value=="null":
+    if value==None:
         corrected_value=value
         
     else:
@@ -121,7 +121,20 @@ def lower_to_upper(value):
         corrected_value = value.upper()
     return corrected_value
 
-
+def strip_value(value):
+    '''Function for default cleaning of values to remove space at end and begining
+    and '\n' at end
+    Input:
+         value: Input string
+    Output:
+         corrected_value: corrected string without noise'''
+    if value==None:
+        corrected_value=value
+    else:
+        corrected_value = value.strip()
+        corrected_value = corrected_value.replace("\n", ' ')
+    return corrected_value
+    
 def clean_value(value, noise):
     '''Function to clean a extracted value
     Input:
@@ -129,7 +142,7 @@ def clean_value(value, noise):
          noise: Noise in the input string
     Output:
          corrected_value: corrected string without noise'''
-    if value=="null":
+    if value==None:
         corrected_value=value
     else:
         # replace noise in string
@@ -143,7 +156,7 @@ def clean_multiple_space(value):
          value: Input string
     Output:
          corrected_value: corrected string removing extra spaces'''
-    if value=="null":
+    if value==None:
         corrected_value=value
     else:
         # create a pattern for extra space
@@ -161,7 +174,7 @@ def get_date_in_format(input_date_format, output_date_format, value):
          value: Input date string
     Output:
          new_date: date in new format'''
-    if value=="null":
+    if value==None:
         new_date=value
     else:
         try:
@@ -268,6 +281,11 @@ def correction_script(corrected_dict, template):
                     corrected_value = string_to_number(v)
                     # modify the input dictionary to the corrected value
                     corrected_dict[k] = corrected_value
+        # check for template type
+        if template == 'default_clean':
+            corrected_value = strip_value(v)
+            # modify the input dictionary to the corrected value
+            corrected_dict[k] = corrected_value
     # return corrected_dict
     return corrected_dict
 
@@ -301,10 +319,12 @@ def data_transformation(input_dict):
             # check for date format
             corrected_dict = correction_script(corrected_dict, 'date_format')
             # correct input dictionary
+            corrected_dict = correction_script(corrected_dict, 'default_clean')
+            # correct input dictionary
             temp_dict[index] = corrected_dict
         return input_dict, temp_dict
     except Exception as e:
-            Logger.error(e)
+            # Logger.error(e)
             return None,None
     
 
