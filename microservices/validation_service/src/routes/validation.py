@@ -26,7 +26,7 @@ async def validation(case_id: str, uid: str, doc_class: str):
   status = "fail"
   try:
     validation_score = get_values(doc_class, case_id, uid)
-    if validation_score:
+    if validation_score is not None:
       status = "success"
     update_validation_status(case_id, uid, validation_score, status)
     Logger.info(
