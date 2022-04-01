@@ -84,6 +84,7 @@ async def extraction(case_id: str, uid: str, doc_class: str,
     update_extraction_status(case_id, uid, "fail", None, None)
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(f"Extraction failed for case_id {case_id} and uid {uid}")
+    Logger.error(e)
     Logger.error(err)
     response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     response.body = "Extraction failed for case_id {case_id} " \

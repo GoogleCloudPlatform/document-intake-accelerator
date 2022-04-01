@@ -13,5 +13,8 @@
     "Rule_1": "Select JSON_QUERY(entities,'$.dob') as dob from `claims-processing-dev.data_extraction.entities` where DATE(JSON_VALUE(entities,'$.dob')) < date_add(current_date,interval 0  month)",
     "Rule_2": "Select JSON_QUERY(entities,'$.age') as age from `claims-processing-dev.data_extraction.entities` where cast(JSON_VALUE(entities,'$.age') as STRING) < cast(55 as STRING)",
     "Rule_3": "Select JSON_QUERY(entities,'$.license_id') as license_id from `claims-processing-dev.data_extraction.entities` where REGEXP_CONTAINS(JSON_VALUE(entities,'$.license_id'), r'[a-z]{4}-[0-9]{4}')"
+  },
+  "claim_form": {
+    "Rule_1": "Select JSON_QUERY(entities,'$.work_end_date') as work_end_date from `claims-processing-dev.data_extraction.entities` where DATE(JSON_VALUE(entities,'$.work_end_date')) < date_add(current_date,interval 0  month)"
   }
 }
