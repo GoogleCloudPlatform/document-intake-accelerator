@@ -139,6 +139,36 @@ MAPPING_DICT = {
     }
   },
 
+  "claim_form_arkansas": {
+        "default_entities": {
+            "SIGNATURE": ["signature"],
+            "NAME ": ["name"],
+            "SSN": ["ssn"],
+            "street_or_box_no": ["employer_address","mailing address"],
+            "CITY": ["mailing_city","employer_city"],
+            "STATE": ["mailing_state","employer_state"],
+            "ZIP CODE": ["employer_zip","mailing_zip"],
+            "LAST DAY WORKED ": ["work_end_date"],
+            "PHONE NO": ["phone_no"],
+            "DATE BEGAN WORK ": ["work_start_date"],
+            "EMPLOYER'S NAME AND ADDRESS" :["employee_info"]
+  
+            }
+    },
+
+   "utility_bill":{
+        "default_entities":{
+                        "receiver_name" : ["name"],
+                        "supplier_address": ["address"],
+                        "due_date": ["due_date"],
+                        "invoice_date": ["invoice_date"],
+                        "supplier_account_number": ["account_no"],
+                        }
+
+
+
+   },
+
   "driver_license": {
     "default_entities": {
       "Document Id": ["DLN"],
