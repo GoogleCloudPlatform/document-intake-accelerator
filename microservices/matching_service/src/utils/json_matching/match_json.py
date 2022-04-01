@@ -136,11 +136,20 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
         if u_key == i_dict['entity']:
           i_dict['matching_score'] = final_score
           out_sd_dict.append(i_dict)
+        else:
+          i_dict['matching_score'] = None
+          
 
     avg_matching_score = {'Avg Matching Score': round(sum(matched), 2)}
-    out_sd_dict.append(avg_matching_score)
+    supporting_json_obj.append(avg_matching_score)
 
-    return out_sd_dict
+    return supporting_json_obj
+
+
+    # avg_matching_score = {'Avg Matching Score': round(sum(matched), 2)}
+    # out_sd_dict.append(avg_matching_score)
+
+    # return out_sd_dict
 
   except Exception as e:
     Logger.error(e)
