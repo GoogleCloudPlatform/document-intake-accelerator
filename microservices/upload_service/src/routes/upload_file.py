@@ -27,7 +27,7 @@ async def upload_file(
     files: List[UploadFile] = File(...),
     case_id: Optional[str] = None,
     comment: Optional[str] = None,
-    
+
 ):
   """Uploads files to the GCS bucket and Save the record in the database
 
@@ -95,9 +95,9 @@ async def upload_file(
       }
       document.system_status = [system_status]
       document.update()
-    
 
-    
+
+
     background_tasks.add_task(run_pipeline,case_id,uid,document.url)
     Logger.info(f"Files with case id {case_id} uploaded"
                   f" successfully")

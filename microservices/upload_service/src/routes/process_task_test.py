@@ -1,7 +1,6 @@
 """
   Tests for process_task endpoint
 """
-import json
 import os
 # disabling pylint rules that conflict with pytest fixtures
 # pylint: disable=unused-argument,redefined-outer-name,unused-import
@@ -57,5 +56,3 @@ def test_process_task_api_invalid_doc(client_with_emulator):
               response = client_with_emulator.post(
                 API_URL, json=data)
   assert response.status_code == 404, "Status 404"
-
-

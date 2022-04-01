@@ -1,10 +1,7 @@
 """ Process task api endpoint """
 import traceback
-import time
-from urllib import response
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Response, status
 from fastapi.concurrency import run_in_threadpool
-from typing import Optional, List
 from common.models import Document
 from models.process_task import ProcessTask
 import requests
@@ -53,8 +50,8 @@ def run_pipeline(case_id: str, uid: str, gcs_url: str, isHitl: bool = False
         print(
           "===============classification successful======================", cl_result.json())
         Logger.info("Classification successful")
-        document_type = cl_result.json().get('doc_type')
-        document_class = cl_result.json().get('doc_class')
+        document_type = cl_result.json().get("doc_type")
+        document_class = cl_result.json().get("doc_class")
         Logger.info(
           f"Classification successful:document_type:{document_type},\
              document_class:{document_class}")
