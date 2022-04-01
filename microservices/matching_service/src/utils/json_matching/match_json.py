@@ -138,7 +138,6 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
           out_sd_dict.append(i_dict)
         else:
           i_dict['matching_score'] = None
-          
 
     avg_matching_score = {'Avg Matching Score': round(sum(matched), 2)}
     supporting_json_obj.append(avg_matching_score)
