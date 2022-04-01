@@ -103,22 +103,3 @@ def test_upload_json_negative(client_with_emulator):
               "dob": "7 Feb 1997"
           })
   assert response.status_code == 422
-
-
-def test_upload_one_pdf_positive(client_with_emulator):
-  payload = {}
-  mock_uid = creat_mock_data()
-  files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
-                                                  "rb"), "application/pdf"))]
-  with mock.patch("routes.upload_file.Logger"):
-    with mock.patch(
-        "routes.upload_file.create_document", return_value=mock_uid):
-      # with mock.patch("routes.upload_file.publish_document"):
-      with mock.patch("routes.upload_file.call_process_task"):
-        response = client_with_emulator.post(
-            f"{api_url}upload_files"
-            f"?context=arkansas&case_id=test123",
-            files=files,
-            data=payload)
-        print(response.text)
-  assert response.status_code == 200
