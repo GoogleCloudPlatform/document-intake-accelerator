@@ -24,7 +24,6 @@ def get_matching_score(af_dict: dict, sd_dict: dict):
   """
   print("===============AF======",af_dict["entities"])
   print("===============SD======",sd_dict["entities"])
-  
   matching = compare_json(af_dict["entities"], sd_dict["entities"],
                           sd_dict["document_class"], af_dict["document_class"],
                           af_dict["context"])
