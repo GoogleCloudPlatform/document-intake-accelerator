@@ -4,7 +4,7 @@ depending on the 3 different scores
 """
 import json
 from google.cloud import storage
-from commmon.utils.logging_handler import Logger
+from common.utils.logging_handler import Logger
 
 
 def read_json(path):
@@ -76,7 +76,7 @@ def get_values(
           Logger.info(f"Status :{status}")
           return status, flag
         else:
-          status = "Reject"
+          status = 'Rejected'
           Logger.info(f"Status :{status}")
 
           return status, flag
@@ -98,7 +98,7 @@ def get_values(
           Logger.info(f"Status :{status}")
           return status, flag
         else:
-          status = "Reject"
+          status = 'Rejected'
           Logger.info(f"Status :{status}")
 
           return status, flag

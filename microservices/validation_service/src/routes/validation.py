@@ -1,4 +1,5 @@
 """ Validation endpoints """
+import traceback
 import requests
 from fastapi import APIRouter, HTTPException
 from common.utils.logging_handler import Logger
@@ -25,7 +26,7 @@ async def validation(case_id: str, uid: str, doc_class: str):
   status = "fail"
   try:
     validation_score = get_values(doc_class, case_id, uid)
-    if validation_score:
+    if validation_score is not None:
       status = "success"
     update_validation_status(case_id, uid, validation_score, status)
     Logger.info(
@@ -33,10 +34,11 @@ async def validation(case_id: str, uid: str, doc_class: str):
       f" doc_class:{doc_class} is {validation_score}")
     return {
       "status": status,
-      "score": f"{validation_score}"
+      "score": validation_score
     }
   except Exception as error:
-    Logger.error(error)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     update_validation_status(case_id, uid, None, status)
     raise HTTPException(
       status_code=500, detail="Failed to update validation score")from error
