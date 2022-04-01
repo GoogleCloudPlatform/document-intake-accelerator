@@ -22,10 +22,13 @@ def get_matching_score(af_dict: dict, sd_dict: dict):
           sd_dict: Dictionary of Application form
     Returns: Updated supporting document entity and avg matching score
   """
+  print("===============AF======",af_dict["entities"])
+  print("===============SD======",sd_dict["entities"])
   matching = compare_json(af_dict["entities"], sd_dict["entities"],
                           sd_dict["document_class"], af_dict["document_class"],
                           af_dict["context"])
   Logger.info(matching)
+  print("========Matching OP========",matching)
   if matching:
     return (matching[:len(matching) - 1], matching[-1]["Avg Matching Score"])
   else:
