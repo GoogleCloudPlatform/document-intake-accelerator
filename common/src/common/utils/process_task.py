@@ -42,6 +42,17 @@ def run_pipeline(case_id: str, uid: str, gcs_url: str, isHitl: bool = False
       print("===extract_res,extract_res.status_code,document_type====",
           extract_res, extract_res.status_code, document_type)
       if extract_res.status_code is 200 and document_type == "application_form":
+        extraction_score = extract_res.json().get("score")
+        autoapproval_status = get_values(
+                validation_score, extraction_score, matching_score,
+                document_class, document_type)
+        Logger.info(
+          f"autoapproval_status for application:{autoapproval_status}")
+        print("===========autoapproval status===========",
+            autoapproval_status)
+        update_autoapproval_status(
+          case_id, uid, "success", autoapproval_status[0],
+            autoapproval_status[1])
         print(
           "===============Extraction successful for application_form======================")
       elif extract_res.status_code == 200 and document_type == "supporting_documents":
