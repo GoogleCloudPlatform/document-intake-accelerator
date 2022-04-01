@@ -6,39 +6,14 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks, Response, status
 from fastapi.concurrency import run_in_threadpool
 from typing import Optional, List
 from common.models import Document
-from models.process_task import ProcessTask
 import requests
 from common.utils.logging_handler import Logger
-from utils.autoapproval import get_values
+from common.utils.autoapproval import get_values
+
 
 # pylint: disable = broad-except
-router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
-
-
-@router.post("/process_task", status_code=status.HTTP_202_ACCEPTED)
-async def process_task(payload: ProcessTask, background_task: BackgroundTasks
-, response: Response):
-  """Runs the Pipeline to process the document"""
-  Logger.info("=======Process task called===========================")
-  payload = payload.dict()
-  case_id = payload.get("case_id")
-  uid = payload.get("uid")
-  gcs_url = payload.get("gcs_url")
-  isHitl = payload.get("isHitl")
-  document_class = payload.get("document_class")
-  document_type = payload.get("document_type")
-
-  doc = await run_in_threadpool(get_document, case_id, uid)
-  if not doc:
-    raise HTTPException(status_code=404, detail="Document not found")
-  background_task.add_task(run_pipeline, case_id, uid,
-               gcs_url, isHitl, document_class, document_type)
-
-  return {"message": "Processing your document"}
-
-
 def run_pipeline(case_id: str, uid: str, gcs_url: str, isHitl: bool = False
 , document_class: str = "", document_type: str = ""):
   validation_score = None
