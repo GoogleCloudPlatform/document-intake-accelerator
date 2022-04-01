@@ -174,8 +174,16 @@ def entities_extraction(parser_data, required_entities, doc_type):
 
     return entity_dict
 
-
 def standard_entity_mapping(parser_extracted_entity_json):
+    """
+    Map standard entities to parsed entities
+
+    Args:
+        parser_extracted_entity_json (_type_): _description_
+
+    Returns:
+    """
+
     # convert extracted json to pandas dataframe
     df_json = pd.DataFrame.from_dict(parser_extracted_entity_json)
     # read entity standardization csv
@@ -263,7 +271,7 @@ def standard_entity_mapping(parser_extracted_entity_json):
                                              entities_extraction_dict]
             return extracted_entities_final_json
 
-   
+
 
 
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_parser_text):
@@ -294,14 +302,14 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
     # for duplicate entities
     for each_ocr_key, each_ocr_val in default_entities.items():
         idx_list = df.index[df['key'] == each_ocr_key].tolist()
-        
+
 
         # loop for matched records of mapping dictionary
         for idx, each_val in enumerate(each_ocr_val):
-           
+
             if idx_list:
                 try:
-                    
+
                     # creating response
                     temp_dict = {"entity": each_val, "value": df['value'][idx_list[idx]],
                                  "extraction_confidence": df['value_confidence'][idx_list[idx]],
@@ -314,7 +322,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
                                    }
                 except Exception as e:
                     print('Key not found in parser output')
-                 
+
                     temp_dict = {"entity": each_val, "value": None,
                                  "extraction_confidence": None,
                                  "manual_extraction": False,
@@ -462,7 +470,7 @@ def extract_form_fields(doc_element: dict, document: dict):
     confidence = doc_element.confidence
     coordinate=doc_element.bounding_poly.normalized_vertices
     return response, confidence,coordinate
-    
+
 
 
 def extraction_accuracy_calc(total_entities_list):

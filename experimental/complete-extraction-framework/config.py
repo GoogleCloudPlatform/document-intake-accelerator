@@ -134,8 +134,34 @@ MAPPING_DICT = {
       "What was your last day of work?": ["What was your last day of work?"],
       "Claimant's Signature": ["Claimant's Signature "]
     },
-    "table_entities": {
-
+    "table_entities":
+    {
+      # 1. get header info from user and search that table
+      # 2. name of entity row and col no
+      # 3. map OCR to Col A
+      # range of page_num or table_num starts from 0 to n-1
+      # 'page_num': 0,
+      # 'table_num': 0,
+      # proper header name to be provided so that it does not match with other table
+      # headers.
+      'header': ['Date', 'Name of Employer', 'Website URL'],
+      "max_rows": 3, # -1 for all rows
+      # if 1 all columns will de extracted
+      # if -1 check for specific columns
+      "all_columns": -1,
+      # if -1 uses column name
+      "use_column_index": -1,
+      # to use this feature make the colum
+      "column_index": [0, 1, 3],
+      "entity_extraction": [{"col": 0, "row_no": 1},
+                            {"col": 1, "row_no": 2},
+                            {"col": 2, "row_no": 3},
+                            {"col": 3, "row_no": 4},
+                            {"col": 4, "row_no": 1},
+                            {"col": 3, "row_no": 1},
+                            {"col": 2, "row_no": 2},
+                            {"col": 0, "row_no": 4},
+                            ]
     }
   },
 
@@ -152,7 +178,7 @@ MAPPING_DICT = {
             "PHONE NO": ["phone_no"],
             "DATE BEGAN WORK ": ["work_start_date"],
             "EMPLOYER'S NAME AND ADDRESS" :["employee_info"]
-  
+
             }
     },
 
