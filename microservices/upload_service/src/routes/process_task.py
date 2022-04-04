@@ -75,7 +75,7 @@ def run_pipeline(case_id: str, uid: str, gcs_url: str, isHitl: bool = False
             autoapproval_status)
         update_autoapproval_status(
           case_id, uid, "success", autoapproval_status[0],
-            autoapproval_status[1])
+            "yes")
         print(
           "===============Extraction successful for application_form======================",autoapproval_status)
       elif extract_res.status_code == 200 and document_type == "supporting_documents":
@@ -110,7 +110,7 @@ def run_pipeline(case_id: str, uid: str, gcs_url: str, isHitl: bool = False
                   autoapproval_status)
               update_autoapproval_status(
                 case_id, uid, "success", autoapproval_status[0],
-                 autoapproval_status[1])
+                 "yes")
             except Exception as e:
               err = traceback.format_exc().replace('\n', ' ')
               Logger.error(f"Error in Autoapproval: {err}")
