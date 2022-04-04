@@ -174,7 +174,7 @@ def entities_extraction(parser_data, required_entities, doc_type):
 
     return entity_dict
 
-def standard_entity_mapping(parser_extracted_entity_json):
+#def standard_entity_mapping(parser_extracted_entity_json):
     """
     Map standard entities to parsed entities
 
@@ -270,6 +270,63 @@ def standard_entity_mapping(parser_extracted_entity_json):
             extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
                                              entities_extraction_dict]
             return extracted_entities_final_json
+#
+def standard_entity_mapping(desired_entities_list):
+    """
+    map entitiy with standard entity
+    """
+    # convert extracted json to pandas dataframe
+    df_json = pd.DataFrame.from_dict(desired_entities_list)
+
+    # read entity standardization csv
+    entity_standardization = os.path.join(
+        os.path.dirname(__file__), ".", "entity-standardization.csv")
+    entities_standardization_csv = pd.read_csv(entity_standardization)
+    entities_standardization_csv.dropna(how='all', inplace=True)
+
+    # Keep first record incase of duplicate entities
+
+    entities_standardization_csv.drop_duplicates(subset=['entity'], keep="first", inplace=True)
+
+    entities_standardization_csv.reset_index(drop=True)
+
+    # # filter records based on doc and state
+    # entities_standardization_csv = entities_standardization_csv[entities_standardization_csv["document_type"]==doc_state]
+
+    # Create a dictionary from the look up dataframe/excel which has the key col and the value col
+    dict_lookup = dict(
+        zip(entities_standardization_csv['entity'], entities_standardization_csv['standard_entity_name']))
+    # Get( all the entity (key column) from the json as a list
+    key_list = list(df_json['entity'])
+    # Replace the value by creating a list by looking up the value and assign to json entity
+    df_json['entity'] = [dict_lookup[item] for item in key_list]
+    # convert datatype from object to int for column 'extraction_confidence'
+    df_json['extraction_confidence'] = pd.to_numeric(df_json['extraction_confidence'], errors='coerce')
+
+    group_by_columns = ['value', 'extraction_confidence', 'manual_extraction', 'corrected_value']
+    df_conc = df_json.groupby('entity')[group_by_columns[0]].apply(
+        lambda x: '/'.join([v for v in x if v]) if check_int(x) else ' '.join(v for v in x if v)).reset_index()
+
+
+    df_av = df_json.groupby(['entity'])[group_by_columns[1]].mean().reset_index().round(2)
+
+    # taking mode for categorical variables
+    df_manual_extraction = df_json.groupby(['entity'])[group_by_columns[2]].agg(pd.Series.mode).reset_index()
+    print("======================================")
+    print(df_json)
+    df_corrected_value = df_json.groupby(['entity'])[group_by_columns[3]].mean().reset_index().round(2)
+
+    dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value]
+
+    df_final = reduce(lambda left, right: pd.merge(left, right, on='entity'), dfs)
+
+    df_final = df_final.replace(r'^\s*$', np.nan, regex=True)
+
+    df_final = df_final.replace({np.nan: None})
+
+    extracted_entities_final_json = df_final.to_dict("records")
+
+    return extracted_entities_final_json
 
 
 
@@ -494,6 +551,33 @@ def extraction_accuracy_calc(total_entities_list):
     extraction_accuracy = round(sum(entity_accuracy_list) / len(entity_accuracy_list), 3)
 
     return extraction_accuracy
+
+def standard_entity_state_form(form: str, state: str, col: str = 'entity'):
+    """This function use Entity Standardization CSV file to load
+    all the standard entity for a state corresponding to a particular
+    form along with a mapping column to which entities to be mapped.
+
+    Usage: input form and state in lower case as shown:
+        form = unemployment_form
+        state = arizona
+        standard_entity_state_form(form, state)
+
+    Args:
+        form (str): form type as per Entity Standardization csv file
+        state (str): state type as per Entity Standardization csv file
+    """
+    entity_standardization = os.path.join(
+        os.path.dirname(__file__), "Entity Standardization.csv")
+    standard_entity_df = pd.read_csv(entity_standardization)
+    standard_entity_df.dropna(how='all', inplace=True)
+    if state:
+        doc_type = f'{form}_{state}'
+    else:
+        doc_type = form
+    # select all the rows belong to a state and form type
+    standard_enitity_df = standard_entity_df.loc[
+        standard_entity_df['document_type'] == doc_type, [col]]
+    return standard_enitity_df
 
 
 if __name__ == "__main__":

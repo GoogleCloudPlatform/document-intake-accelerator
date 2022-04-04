@@ -3,10 +3,9 @@
 Extract data from a table present in a form
 """
 
+import os
 import pandas as pd
 import json
-from utils_functions import standard_entity_mapping
-
 class TabelExtractor:
 	"""
 	Extract data from a table present in the form
@@ -19,11 +18,11 @@ class TabelExtractor:
 
 		with open(json_path, encoding='utf-8') as f_obj:
 			self.data = json.load(f_obj)
-
 		self.table_attributes()
 
 	def extract_table_body_without_header(self):
 		"""
+		find rows
 		"""
 		# for _, page in self.tables_page_wise.items():
 		# 		for _, table in page.items():
@@ -81,47 +80,12 @@ class TabelExtractor:
 		else:
 			return "No data in json"
 
-	# def extract_data(self, df, column_names: list, tot_rows: int = -1) -> list:
-	# 	"""
-	# 	Extract the data based on the columns
+	def user_header_standard_entity_extraction(self, header):
+		"""
 
-	# 	Args:
-	# 			df (pandas): table dataframe
-	# 			column_names (list): list of column names
-	# 			tot_rows (int): max rows to be extracted
-	# 	Return:
-	# 		list of dict with row wise data for each columns
-	# 	"""
-	# 	if tot_rows < 0:
-	# 		tot_rows = len(df)-1
-
-	# 	out_df = df.iloc[:tot_rows, column_names]
-	# 	return out_df.to_dict('records')
-
-	# def extract_table_entities(self, table_entities, json_path):
-	# 	"""
-	# 	A forms table's data is extracted in the json format and is being
-	# 	filtered out based on the user input present.
-
-	# 	Args:
-	# 			table_entities (dict): user input to be used to filter out the json
-	# 			json_path (_type_): json file path for data extraction
-	# 	"""
-	# 	_, df = parse_table_parser_json(json_path)
-
-	# 	tot_rows = table_entities['max_rows']
-
-	# 	if table_entities.get('all_columns'):
-	# 		columns = df.columns
-
-	# 	elif table_entities.get('use_column_index'):
-	# 		all_columns = df.columns
-	# 		columns = [all_columns[i] for i in table_entities['column_index']]
-	# 	else:
-	# 		columns_list = table_entities.get('column_names')
-	# 		columns = [i['name'] for i in columns_list]
-
-	# 	return extract_data(df, columns, tot_rows)
+		Args:
+				header (_type_): _description_
+		"""
 
 	def get_text(self, el, data):
 		"""Convert text offset indexes into text snippets."""
@@ -153,6 +117,7 @@ class TabelExtractor:
 		Returns:
 			out(list): extracted entities
 		"""
+
 		if table_entities["isheader"]:
 			header = table_entities["header"]
 
@@ -174,36 +139,48 @@ class TabelExtractor:
 
 			# if table found extract the entities
 			table_df = table["body_data"]
+			entities_count = {}
 			try:
 				for col_row in table_entities["entity_extraction"]:
 					row, col = col_row["row_no"], col_row["col"]
+					if row >= len(table_df) or col >= len(columns):
+						continue
+					entity_name = columns[col]
 					entity_val = table_df.iloc[row][col]
 					entity_val = " ".join(entity_val.split())
-					data = {'entity': columns[col],
+					if entity_name in entities_count:
+						entities_count[entity_name] += 1
+					else:
+						entities_count[entity_name] = 1
+					standard_entity_name = f'{entity_name} (employer {entities_count[entity_name]})'
+
+
+					data = {'entity': standard_entity_name,
 									'value': entity_val,
 									'row': row
 									}
 					out.append(data)
-			except:
-				return out
+			except Exception as e:
+				print(e)
 			return out
 		else:
-			return self.extract_table_body()
+			return self.extract_table_body_without_header()
 
 if __name__ == '__main__':
 	t = TabelExtractor('/users/sumitvaise/Downloads/res_0.json')
-	table_entities = {'header': ['Date', 'Name of Employer/Company/ Union and Address (City, State and Zip Code)',
-										 'Website URL or Name of person contacted',
-										 'Method (In person, Internet, mail)',
-										 'Type of work sought', 'Action taken on the date of contact'],
+	table_entities = {'header': ['Date',
+										'Name of Employer/Company/ Union and Address (City, State and Zip Code)',
+										'Website URL or Name of person contacted',
+										'Method (In person, Internet, mail)',
+										'Type of work sought', 'Action taken on the date of contact'],
 							      "entity_extraction": [{"col": 0, "row_no": 1},
 																					{"col": 0, "row_no": 2},
 																					{"col": 2, "row_no": 3},
-																					{"col": 3, "row_no": 4},
+																					{"col": 3, "row_no": 3},
 																					{"col": 4, "row_no": 1},
 																					{"col": 3, "row_no": 1},
 																					{"col": 2, "row_no": 2},
-																					{"col": 0, "row_no": 4},
+																					{"col": 0, "row_no": 3},
                             							],
 										"isheader": True
     }
