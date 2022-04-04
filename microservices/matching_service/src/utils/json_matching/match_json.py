@@ -135,20 +135,18 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
       for i_dict in supporting_json_obj:
         if u_key == i_dict['entity']:
           i_dict['matching_score'] = final_score
-          out_sd_dict.append(i_dict)
-        else:
-          i_dict['matching_score'] = None
+          break
 
+        else:
+          # if matching_score key is not found that means no matching score has
+          # been assigned earlier and in else case we put None to the keys
+          # that are not specified by the user.
+          if not 'matching_score' in i_dict:
+            i_dict['matching_score'] = None
     avg_matching_score = {'Avg Matching Score': round(sum(matched), 2)}
     supporting_json_obj.append(avg_matching_score)
 
     return supporting_json_obj
-
-
-    # avg_matching_score = {'Avg Matching Score': round(sum(matched), 2)}
-    # out_sd_dict.append(avg_matching_score)
-
-    # return out_sd_dict
 
   except Exception as e:
     Logger.error(e)
