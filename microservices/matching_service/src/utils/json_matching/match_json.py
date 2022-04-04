@@ -65,7 +65,7 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
     support_doc_type = sd_doc_type.lower()
     app_doc_type = af_doc_type.lower()
     state = context.lower()
-    out_sd_dict = []
+    #out_sd_dict = []
     # Both JSON should be available for comparison
 
     # run the comparison for = total keys in the supporting docs
