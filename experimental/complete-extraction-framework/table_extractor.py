@@ -22,6 +22,22 @@ class TabelExtractor:
 
 		self.table_attributes()
 
+	def extract_table_body_without_header(self):
+		"""
+		"""
+		# for _, page in self.tables_page_wise.items():
+		# 		for _, table in page.items():
+		# 			table_df = table["body_data"]
+		# 			try:
+		# 				entity_val = table_df.iloc[row][col]
+		# 				entity_val = " ".join(entity_val.split())
+		# 				data = {'entity': columns[col],
+		# 								'value': entity_val,
+		# 								'row': row
+		# 								}
+		# 				out.append(data)
+		pass
+
 	def table_attributes(self):
 		"""
 		This function obtains information regarding all the tables.
@@ -49,6 +65,7 @@ class TabelExtractor:
 						  "header": bool(columns),
 							}
 							# extract row wise data
+							# table_info = self.extract_table_body(table, table_info, table_num, columns)
 							row_datas = []
 							try:
 								for _, row in enumerate(table["bodyRows"]):
@@ -59,7 +76,7 @@ class TabelExtractor:
 								table_info[table_num]['body_data'] = pd.DataFrame(row_datas, columns=columns)
 							except Exception as e:
 								print(e)
-								return "Table Emplty !!!"
+								return "Table Empty !!!"
 					self.tables_page_wise[pg_num] = table_info
 		else:
 			return "No data in json"
@@ -131,47 +148,47 @@ class TabelExtractor:
 		Extract data from table based on user specific inputs for a table.
 
 		Args:
-			table_entites (list): user specified table parameters
+			table_entities (list): user specified table parameters
 
 		Returns:
 			out(list): extracted entities
 		"""
+		if table_entities["isheader"]:
+			header = table_entities["header"]
 
-		header = table_entities["header"]
+			out = []
+			table_found = False
 
-		out = []
-		table_found = False
+			# check header to find the table
+			for _, page in self.tables_page_wise.items():
+				for _, table in page.items():
+					columns = table["columns"]
+					# compare user provided header with table headers
+					if header == columns:
+						table_found = True
+						break
 
-		# check header to find the table
-		for _, page in self.tables_page_wise.items():
-			for _, table in page.items():
-				columns = table["columns"]
-				# compare user provided header with table headers
-				if header == columns:
-					table_found = True
-					break
+			if not table_found:
+				print("Table not found")
+				return None
 
-		if not table_found:
-			print("Table not found")
-			return None
-
-		# if table found extract the entities
-		table_df = table["body_data"]
-		try:
-			for col_row in table_entities["entity_extraction"]:
-				row, col = col_row["row_no"], col_row["col"]
-				entity_val = table_df.iloc[row][col]
-				entity_val = " ".join(entity_val.split())
-				data = {'entity': columns[col],
-								'value': entity_val,
-								'row': row
-								}
-				out.append(data)
-		except:
+			# if table found extract the entities
+			table_df = table["body_data"]
+			try:
+				for col_row in table_entities["entity_extraction"]:
+					row, col = col_row["row_no"], col_row["col"]
+					entity_val = table_df.iloc[row][col]
+					entity_val = " ".join(entity_val.split())
+					data = {'entity': columns[col],
+									'value': entity_val,
+									'row': row
+									}
+					out.append(data)
+			except:
+				return out
 			return out
-
-
-		return out
+		else:
+			return self.extract_table_body()
 
 if __name__ == '__main__':
 	t = TabelExtractor('/users/sumitvaise/Downloads/res_0.json')
@@ -180,14 +197,15 @@ if __name__ == '__main__':
 										 'Method (In person, Internet, mail)',
 										 'Type of work sought', 'Action taken on the date of contact'],
 							      "entity_extraction": [{"col": 0, "row_no": 1},
-																					{"col": 1, "row_no": 2},
+																					{"col": 0, "row_no": 2},
 																					{"col": 2, "row_no": 3},
 																					{"col": 3, "row_no": 4},
 																					{"col": 4, "row_no": 1},
 																					{"col": 3, "row_no": 1},
 																					{"col": 2, "row_no": 2},
 																					{"col": 0, "row_no": 4},
-                            							]
+                            							],
+										"isheader": True
     }
 	print(t.get_entities(table_entities))
 

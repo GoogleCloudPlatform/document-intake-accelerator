@@ -147,6 +147,7 @@ MAPPING_DICT = {
       # headers.
       # value of row and col should not be greater than the range of rows
       # and cols in the table
+      "isheader": True,
       "header": ["Date", "Name of Employer/Company/ Union and Address (City, State and Zip Code)",
 								 "Website URL or Name of person contacted",
 								 "Method (In person, Internet, mail)",
