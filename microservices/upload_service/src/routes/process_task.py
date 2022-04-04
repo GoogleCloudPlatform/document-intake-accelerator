@@ -1,6 +1,6 @@
 """ Process task api endpoint """
 import traceback
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Response, status
+from fastapi import APIRouter, HTTPException, BackgroundTasks, status
 from fastapi.concurrency import run_in_threadpool
 from common.models import Document
 from models.process_task import ProcessTask
@@ -96,7 +96,7 @@ def run_pipeline(case_id: str, uid: str, gcs_url: str, is_hitl: bool = False
             Logger.error(err)
             Logger.error("Matching FAILED")
         else:
-          err = traceback.format_exc().replace('\n', ' ')
+          err = traceback.format_exc().replace("\n", " ")
           Logger.error(err)
           Logger.error("Validation FAILED")
 
@@ -155,7 +155,7 @@ def update_autoapproval_status(case_id: str, uid: str, a_status: str,
     "/v1/update_autoapproved_status"
   req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
     f"&status={a_status}&autoapproved_status={autoapproved_status}"\
-      "&is_autoapproved={is_autoapproved}"
+      f"&is_autoapproved={is_autoapproved}"
   response = requests.post(req_url)
   return response
 
