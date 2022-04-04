@@ -61,11 +61,23 @@ def run_pipeline(case_id: str, uid: str, gcs_url: str, isHitl: bool = False
           document_type, document_class)
       extract_res = get_extraction_score(
         case_id, uid, gcs_url, document_class)
+      
       print("===extract_res,extract_res.status_code,document_type====",
           extract_res, extract_res.status_code, document_type)
       if extract_res.status_code is 200 and document_type == "application_form":
+        extraction_score = extract_res.json().get("score")
+        autoapproval_status = get_values(
+                validation_score, extraction_score, matching_score,
+                document_class, document_type)
+        Logger.info(
+          f"autoapproval_status for application:{autoapproval_status}")
+        print("===========autoapproval status===========",
+            autoapproval_status)
+        update_autoapproval_status(
+          case_id, uid, "success", autoapproval_status[0],
+            autoapproval_status[1])
         print(
-          "===============Extraction successful for application_form======================")
+          "===============Extraction successful for application_form======================",autoapproval_status)
       elif extract_res.status_code == 200 and document_type == "supporting_documents":
         extraction_score = extract_res.json().get("score")
         print("===============Extraction successful for supporting_document======================",
