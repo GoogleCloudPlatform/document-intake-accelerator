@@ -23,7 +23,7 @@ async def process_task(payload: ProcessTask, background_task: BackgroundTasks
   case_id = payload.get("case_id")
   uid = payload.get("uid")
   gcs_url = payload.get("gcs_url")
-  isHitl = payload.get("isHitl")
+  is_hitl = payload.get("is_hitl")
   document_class = payload.get("document_class")
   document_type = payload.get("document_type")
 
@@ -31,18 +31,18 @@ async def process_task(payload: ProcessTask, background_task: BackgroundTasks
   if not doc:
     raise HTTPException(status_code=404, detail="Document not found")
   background_task.add_task(run_pipeline, case_id, uid,
-               gcs_url, isHitl, document_class, document_type)
+               gcs_url, is_hitl, document_class, document_type)
 
   return {"message": "Processing your document"}
 
 
-def run_pipeline(case_id: str, uid: str, gcs_url: str, isHitl: bool = False
+def run_pipeline(case_id: str, uid: str, gcs_url: str, is_hitl: bool = False
 , document_class: str = "", document_type: str = ""):
   validation_score = None
   extraction_score = None
   matching_score = None
   try:
-    if not isHitl:
+    if not is_hitl:
       cl_result = get_classification(case_id, uid, gcs_url)
       print("====================classification_status===================",
           cl_result.json(), cl_result.status_code)
@@ -56,7 +56,7 @@ def run_pipeline(case_id: str, uid: str, gcs_url: str, isHitl: bool = False
           f"Classification successful:document_type:{document_type},\
              document_class:{document_class}")
 
-    if isHitl or cl_result.status_code == 200:
+    if is_hitl or cl_result.status_code == 200:
       print("===============Start Extraction for======================",
           document_type, document_class)
       extract_res = get_extraction_score(
