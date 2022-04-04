@@ -9,6 +9,6 @@ class ProcessTask(BaseModel):
   case_id: str
   uid: str
   gcs_url: str
-  isHitl: bool = False
+  is_hitl: bool = False
   document_class: str = ""
   document_type: str=""
