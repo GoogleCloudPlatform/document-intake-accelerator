@@ -51,8 +51,7 @@ def run_pipeline(case_id: str, uid: str, gcs_url: str, is_hitl: bool = False
              document_class:{document_class}")
 
     if is_hitl or cl_result.status_code == 200:
-      extract_res = get_extraction_score(
-        case_id, uid, gcs_url, document_class)
+      extract_res = get_extraction_score(case_id, uid, gcs_url, document_class)
       if extract_res.status_code == 200 and \
         document_type == "application_form":
         extraction_score = extract_res.json().get("score")
