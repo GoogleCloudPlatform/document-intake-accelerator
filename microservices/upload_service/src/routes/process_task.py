@@ -8,7 +8,8 @@ import requests
 from common.utils.logging_handler import Logger
 from utils.autoapproval import get_values
 
-# pylint: disable = broad-except,ungrouped-imports
+# pylint: disable = broad-except
+# pylint: disable = ungrouped-imports
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
