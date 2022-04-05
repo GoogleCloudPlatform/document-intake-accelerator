@@ -5,11 +5,12 @@ from fastapi.concurrency import run_in_threadpool
 from common.models import Document
 from models.process_task import ProcessTask
 import requests
+# pylint: disable = ungrouped-imports
 from common.utils.logging_handler import Logger
 from utils.autoapproval import get_values
 
 # pylint: disable = broad-except
-# pylint: disable = ungrouped-imports
+
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
