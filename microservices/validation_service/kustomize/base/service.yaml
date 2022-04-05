@@ -6,6 +6,7 @@ metadata:
     app: validation-service
 spec:
   type: LoadBalancer
+  loadBalancerIP: 104.198.48.116
   ports:
   - port: 80
     protocol: TCP

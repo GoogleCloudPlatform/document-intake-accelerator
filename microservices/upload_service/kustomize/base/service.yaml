@@ -6,6 +6,7 @@ metadata:
     app: upload-service
 spec:
   type: LoadBalancer
+  loadBalancerIP: 34.66.3.198
   ports:
   - port: 80
     protocol: TCP
