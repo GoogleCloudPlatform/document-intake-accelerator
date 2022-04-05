@@ -218,8 +218,11 @@ def test_update_hitl_classification_api(client_with_emulator):
 
   mockresponse = Mock()
   mockresponse.status_code = 200
+  
+  process_mockresponse = Mock()
+  process_mockresponse.status_code = 202
   with patch(
-      "routes.hitl.call_process_task", return_value={"status": "success"}):
+      "routes.hitl.call_process_task", return_value=process_mockresponse):
     with patch(
         "routes.hitl.update_classification_status", return_value=mockresponse):
       response = client_with_emulator.post(
@@ -246,8 +249,11 @@ def test_update_hitl_classification_api_invalid_doc_type(client_with_emulator):
 
   mockresponse = Mock()
   mockresponse.status_code = 400
+
+  process_mockresponse = Mock()
+  process_mockresponse.status_code = 202
   with patch(
-      "routes.hitl.call_process_task", return_value={"status": "success"}):
+      "routes.hitl.call_process_task", return_value=process_mockresponse):
     with patch(
         "routes.hitl.update_classification_status", return_value=mockresponse):
       response = client_with_emulator.post(

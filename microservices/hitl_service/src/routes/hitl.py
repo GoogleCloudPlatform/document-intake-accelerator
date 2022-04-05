@@ -326,7 +326,7 @@ def call_process_task(case_id: str, uid: str, document_class: str,
       "case_id": case_id,
       "uid": uid,
       "gcs_url": gcs_uri,
-      "isHitl": True,
+      "is_hitl": True,
       "document_class": document_class,
       "document_type": document_type
   }
@@ -334,8 +334,8 @@ def call_process_task(case_id: str, uid: str, document_class: str,
   base_url = "http://upload-service/upload_service/v1/process_task"
   print("params for process task",base_url,data)
   Logger.info(f"Params for process task {data}")
-  #response = requests.post(base_url,json=data)
-  #return response
+  response = requests.post(base_url,json=data)
+  return response
   return {"status": "success"}
 
 
@@ -394,7 +394,7 @@ async def update_hitl_classification(case_id: str, uid: str,
     Logger.info("Starting Process task from hitl classification")
     res = call_process_task(case_id, uid, document_class, document_type,
                             doc.url)
-    if res["status"].lower() == "success":
+    if res.status_code == 202:
       return {
           "status": "success",
           "message": "Process task api has been started successfully"
