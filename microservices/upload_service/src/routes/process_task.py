@@ -8,7 +8,7 @@ import requests
 from common.utils.logging_handler import Logger
 from utils.autoapproval import get_values
 
-# pylint: disable = broad-except
+# pylint: disable = broad-except,ungrouped-imports
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
@@ -113,7 +113,7 @@ def run_pipeline(case_id: str, uid: str, gcs_url: str, is_hitl: bool = False
   except Exception as e:
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
-    raise HTTPException(status_code=500, detail=e)
+    raise HTTPException(status_code=500, detail=e) from e
 
 
 def get_classification(case_id: str, uid: str, gcs_url: str):
