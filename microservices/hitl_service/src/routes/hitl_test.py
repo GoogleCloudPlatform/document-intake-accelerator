@@ -218,7 +218,7 @@ def test_update_hitl_classification_api(client_with_emulator):
 
   mockresponse = Mock()
   mockresponse.status_code = 200
-  
+
   process_mockresponse = Mock()
   process_mockresponse.status_code = 202
   with patch(

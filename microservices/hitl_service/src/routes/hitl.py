@@ -336,7 +336,6 @@ def call_process_task(case_id: str, uid: str, document_class: str,
   Logger.info(f"Params for process task {data}")
   response = requests.post(base_url,json=data)
   return response
-  return {"status": "success"}
 
 
 @router.post("/update_hitl_classification")
