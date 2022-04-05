@@ -95,8 +95,6 @@ async def upload_file(
       document.update()
 
 
-
-    
     Logger.info(f"Files with case id {case_id} uploaded"
                   f" successfully")
     return {
