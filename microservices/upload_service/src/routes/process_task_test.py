@@ -26,7 +26,8 @@ def test_process_task_api(client_with_emulator):
   data = {
     "case_id": "test_id_33",
     "uid": "GswfEO1i4P79UaeJV9kO",
-    "gcs_url": "gs://document-upload-test/test_id_33/GswfEO1i4P79UaeJV9kO/Copy of Arkansas-form-1.pdf"
+    "gcs_url": "gs://document-upload-test/test_id_33/GswfEO1i4P79UaeJV9kO/"\
+      "Copy of Arkansas-form-1.pdf"
   }
   with mock.patch("routes.process_task.get_classification"):
     with mock.patch("routes.process_task.get_extraction_score"):
@@ -41,11 +42,11 @@ def test_process_task_api(client_with_emulator):
 
 def test_process_task_api_invalid_doc(client_with_emulator):
   """Test case to check the test_process_task_api endpoint"""
-  
   data = {
     "case_id": "test_id_33",
     "uid": "GswfEO1i4P79UaeJV9kO",
-    "gcs_url": "gs://document-upload-test/test_id_33/GswfEO1i4P79UaeJV9kO/Copy of Arkansas-form-1.pdf"
+    "gcs_url": "gs://document-upload-test/test_id_33/GswfEO1i4P79UaeJV9kO/"\
+      "Copy of Arkansas-form-1.pdf"
   }
   with mock.patch("routes.process_task.get_classification"):
     with mock.patch("routes.process_task.get_extraction_score"):

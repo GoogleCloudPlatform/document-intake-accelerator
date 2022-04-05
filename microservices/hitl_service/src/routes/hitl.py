@@ -166,6 +166,7 @@ async def update_hitl_status(uid: str,
       )["hitl_status"] is not None else []
       existing_hitl.append(hitl_status)
       doc.hitl_status = existing_hitl
+      doc.is_autoapproved = "no"
       doc.update()
     return {"status": "Success"}
 

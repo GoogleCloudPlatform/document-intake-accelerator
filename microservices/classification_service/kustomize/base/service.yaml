@@ -5,7 +5,8 @@ metadata:
   labels:
     app: classification-service
 spec:
-  type: NodePort
+  type: LoadBalancer
+  loadBalancerIP: 34.70.6.129
   ports:
   - port: 80
     protocol: TCP

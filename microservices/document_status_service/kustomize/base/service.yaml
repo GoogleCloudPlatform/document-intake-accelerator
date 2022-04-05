@@ -5,7 +5,8 @@ metadata:
   labels:
     app: document-status-service
 spec:
-  type: NodePort
+  type: LoadBalancer
+  loadBalancerIP: 104.155.159.86
   ports:
   - port: 80
     protocol: TCP

@@ -5,7 +5,8 @@ metadata:
   labels:
     app: extraction-service
 spec:
-  type: NodePort
+  type: LoadBalancer
+  loadBalancerIP: 35.184.79.135
   ports:
   - port: 80
     protocol: TCP
