@@ -48,12 +48,15 @@ def run_pipeline(case_id: str, uid: str, gcs_url: str, is_hitl: bool = False
         document_class = cl_result.json().get("doc_class")
         Logger.info(
           f"Classification successful:document_type:{document_type},\
-             document_class:{document_class}")
+             document_class:{document_class}.")
 
     if is_hitl or cl_result.status_code == 200:
-      extract_res = get_extraction_score(case_id, uid, gcs_url, document_class)
+      extract_res = get_extraction_score(case_id, uid,document_class)
+      print("========extract_res======",extract_res.json())
       if extract_res.status_code == 200 and \
         document_type == "application_form":
+        print("====Extraction successful for application_form.==========")
+        Logger.info("Extraction successful for application_form.")
         extraction_score = extract_res.json().get("score")
         autoapproval_status = get_values(
                 validation_score, extraction_score, matching_score,
@@ -64,12 +67,18 @@ def run_pipeline(case_id: str, uid: str, gcs_url: str, is_hitl: bool = False
           case_id, uid, "success", autoapproval_status[0],"yes")
       elif extract_res.status_code == 200 and \
         document_type == "supporting_documents":
+        print("====Extraction successful for application_form.==========")
+        Logger.info("Extraction successful for supporting_documents.")
         extraction_score = extract_res.json().get("score")
         validation_res = get_validation_score(case_id, uid, document_class)
         if validation_res.status_code == 200:
+          print("====Validation successful==========")
+          Logger.info("Validation successful.")
           validation_score = validation_res.json().get("score")
           matching_res = get_matching_score(case_id, uid)
           if matching_res.status_code == 200:
+            print("====Matching successful==========")
+            Logger.info("Matching successful.")
             matching_score = matching_res.json().get("score")
             try:
               Logger.info(f"extraction_score:{extraction_score}")
@@ -101,7 +110,6 @@ def run_pipeline(case_id: str, uid: str, gcs_url: str, is_hitl: bool = False
 
     else:
       Logger.error("Classification FAILED.")
-    return SUCCESS_RESPONSE
   except Exception as e:
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
