@@ -11,7 +11,7 @@ import utils.upload_file_gcs_bucket as ug
 from common.utils.logging_handler import Logger
 from common.utils.process_task import run_pipeline
 from common.models import Document
-# from common.utils.publisher import publish_document
+from common.utils.publisher import publish_document
 from common.config import BUCKET_NAME
 import datetime
 
@@ -78,15 +78,14 @@ async def upload_file(
             "in uploading document in gcs bucket")
       Logger.info(f"File with case_id {case_id} and uid {uid}"
                   f" uploaded successfullly in GCS bucket")
-      # pubsub_msg = f"batch moved to bucket name{case_id}{uid}"
-      # message_dict = {'message': pubsub_msg,'gcs_url':
-      # gcs_url, 'caseid': case_id ,"uid":uid }
-      # future_result = publish_document(message_dict)
-
+      
       #Update the document upload as success in DB
       document = Document.find_by_uid(uid)
+      print("uid is ",uid)
+      print("Document is ",document)
       gcs_base_url = f"gs://{BUCKET_NAME}"
-      document.url = f"{gcs_base_url}/{case_id}/{document.uid}/{file.filename}"
+      document.url = f"{gcs_base_url}/{case_id}/{uid}/{file.filename}"
+      
       system_status = {
           "stage": "uploaded",
           "status": "success",
@@ -96,11 +95,15 @@ async def upload_file(
       document.system_status = [system_status]
       document.update()
 
+      pubsub_msg = f"batch moved to bucket name{case_id}{uid}"
+      message_dict = {'message': pubsub_msg,'gcs_url':
+      document.url, 'caseid': case_id ,"uid":uid ,"context":context}
+      publish_document(message_dict)
 
 
-    background_tasks.add_task(run_pipeline,case_id,uid,document.url)
-    Logger.info(f"Files with case id {case_id} uploaded"
-                  f" successfully")
+    # background_tasks.add_task(run_pipeline,case_id,uid,document.url)
+    # Logger.info(f"Files with case id {case_id} uploaded"
+    #               f" successfully")
     return {
         "status": f"Files with case id {case_id} uploaded"
                   f"successfully, the document"
