@@ -252,7 +252,8 @@ def standard_entity_mapping(desired_entities_list):
 
     # taking mode for categorical variables
     df_manual_extraction = df_json.groupby(['entity'])[group_by_columns[2]].agg(pd.Series.mode).reset_index()
-
+    print("======================================")
+    print(df_json)
     df_corrected_value = df_json.groupby(['entity'])[group_by_columns[3]].mean().reset_index().round(2)
 
     dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value]
@@ -382,16 +383,6 @@ def clean_form_parser_keys(text):
     """
 
     # removing special characters from beginning and end of a string
-    # if len(text):
-    #     text = text.strip()
-    #     text = text.replace("\n", ' ')
-    #     text = re.sub(r"^\W+", "", text)
-    #     last_word = text[-1]
-    #     text = re.sub(r"\W+$", "", text)
-    #     if last_word in [")", "]"]:
-    #         text += last_word
-    #
-    # return text
     try:
         if len(text):
             text = text.strip()

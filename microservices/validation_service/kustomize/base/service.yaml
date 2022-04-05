@@ -5,7 +5,8 @@ metadata:
   labels:
     app: validation-service
 spec:
-  type: NodePort
+  type: LoadBalancer
+  loadBalancerIP: 104.198.48.116
   ports:
   - port: 80
     protocol: TCP

@@ -3,12 +3,13 @@
 import uuid
 import requests
 import traceback
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.concurrency import run_in_threadpool
 from typing import Optional, List
 from schemas.input_data import InputData
 import utils.upload_file_gcs_bucket as ug
 from common.utils.logging_handler import Logger
+from common.utils.process_task import run_pipeline
 from common.models import Document
 # from common.utils.publisher import publish_document
 from common.config import BUCKET_NAME
@@ -21,10 +22,12 @@ router = APIRouter()
 
 @router.post("/upload_files")
 async def upload_file(
+    background_tasks:BackgroundTasks,
     context: str,
     files: List[UploadFile] = File(...),
     case_id: Optional[str] = None,
     comment: Optional[str] = None,
+
 ):
   """Uploads files to the GCS bucket and Save the record in the database
 
@@ -92,6 +95,12 @@ async def upload_file(
       }
       document.system_status = [system_status]
       document.update()
+
+
+
+    background_tasks.add_task(run_pipeline,case_id,uid,document.url)
+    Logger.info(f"Files with case id {case_id} uploaded"
+                  f" successfully")
     return {
         "status": f"Files with case id {case_id} uploaded"
                   f"successfully, the document"
@@ -99,7 +108,6 @@ async def upload_file(
         "case_id": case_id,
         "uid_list": uid_list,
     }
-    # response = call_process_task(case_id ,uid ,document.url)
     # if response.status_code == 202:
     #   Logger.info(f"Files with case id {case_id} uploaded"
     #               f" successfully")
@@ -157,9 +165,10 @@ async def upload_data_json(input_data: InputData):
     return {"status": status, "input_data": input_data, "case_id": case_id}
   except Exception as e:
     Logger.error(e)
-    raise HTTPException(
-        status_code=500, detail="Error "
-        "in uploading document") from e
+    raise HTTPException(status_code=500, detail="Error "
+                                    "in uploading document")from e
+
+
 
 
 def create_document_from_data(case_id, document_type, document_class, context,
@@ -183,21 +192,3 @@ def create_document(case_id, filename, context):
   response = response.json()
   uid = response["uid"]
   return uid
-
-
-def call_process_task(case_id: str, uid: str, gcs_url: str):
-  """
-    Starts the process task API after document is uploaded
-  """
-
-  data = {
-      "case_id": case_id,
-      "uid": uid,
-      "gcs_url": gcs_url,
-  }
-
-  req_url = "http://upload-service/upload_service/v1/process_task"
-  response = requests.post(req_url, json=data)
-  response.status_code = 202
-  return response
-  # return {"status": "success"}

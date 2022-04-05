@@ -181,6 +181,7 @@ async def update_hitl_status(uid: str,
     if doc:
       # create a list push the latest status and update doc
       doc.hitl_status = fireo.ListUnion([hitl_status])
+      doc.is_autoapproved = "no"
       doc.update()
     return {"status": "Success"}
 

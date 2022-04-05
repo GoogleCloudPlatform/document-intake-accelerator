@@ -38,6 +38,7 @@ async def extraction(case_id: str, uid: str, doc_class: str,
     #Call ML model to extract entities from document
     extraction_output = await run_in_threadpool(extract_entities,
                               gcs_url, doc_class, context)
+    
     #check if the output of extract entity function is
     #touple containing list of dictionaries and extraction score
     is_tuple = isinstance(extraction_output, tuple)
