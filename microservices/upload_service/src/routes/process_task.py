@@ -8,6 +8,7 @@ import requests
 # pylint: disable = ungrouped-imports
 from common.utils.logging_handler import Logger
 from utils.autoapproval import get_values
+from typing import List,Dict
 
 # pylint: disable = broad-except
 
@@ -16,102 +17,161 @@ SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
 
 
+
 @router.post("/process_task", status_code=status.HTTP_202_ACCEPTED)
-async def process_task(payload: ProcessTask, background_task: BackgroundTasks):
+async def process_task(payload: ProcessTask, background_task: BackgroundTasks,is_hitl:bool=False):
   """Runs the Pipeline to process the document"""
   payload = payload.dict()
-  case_id = payload.get("case_id")
-  uid = payload.get("uid")
-  gcs_url = payload.get("gcs_url")
-  is_hitl = payload.get("is_hitl")
-  document_class = payload.get("document_class")
-  document_type = payload.get("document_type")
-
-  doc = await run_in_threadpool(get_document, case_id, uid)
-  if not doc:
-    raise HTTPException(status_code=404, detail="Document not found")
-  background_task.add_task(run_pipeline, case_id, uid,
-               gcs_url, is_hitl, document_class, document_type)
+  
+  background_task.add_task(run_pipeline, payload,is_hitl)
 
   return {"message": "Processing your document"}
 
 
-def run_pipeline(case_id: str, uid: str, gcs_url: str, is_hitl: bool = False
-, document_class: str = "", document_type: str = ""):
+def run_pipeline(payload:List[Dict],is_hitl:bool):
   validation_score = None
   extraction_score = None
   matching_score = None
+  applications = []
+  supporting_docs = []
+  print("======configs=======",payload.get("configs"))
+  print("======payload.get(configs)[0]=======",payload.get("configs")[0],type(payload.get("configs")[0]))
+  print("======document_type=======",payload.get("configs")[0].get("document_type"))
+  if is_hitl: 
+    if payload.get("configs")[0].get("document_type") == "application_form":
+      print("=======application_form=======")
+      applications = applications.append(payload.get("configs")[0])
+    elif payload.get("configs")[0].get("document_type") == "supporting_documents":
+      supporting_docs = supporting_docs.append(payload.get("configs")[0])
+    print(f"is_hitl: {is_hitl} Application form: {applications} and supporting_docs:{supporting_docs}")
+    Logger.info(f"Application form: {applications} and supporting_docs:{supporting_docs}")
+  
   try:
     if not is_hitl:
-      cl_result = get_classification(case_id, uid, gcs_url)
-      if cl_result.status_code == 200:
-        Logger.info("Classification successful")
-        document_type = cl_result.json().get("doc_type")
-        document_class = cl_result.json().get("doc_class")
-        Logger.info(
-          f"Classification successful:document_type:{document_type},\
-             document_class:{document_class}.")
+      result=filter_documents(payload.get("configs"))
+      applications = result[0]
+      supporting_docs = result[1]
+      print(f"Application form: {applications} and supporting_docs:{supporting_docs}")
+      Logger.info(f"Application form: {applications} and supporting_docs:{supporting_docs}")
 
-    if is_hitl or cl_result.status_code == 200:
-      extract_res = get_extraction_score(case_id, uid,document_class)
-      print("========extract_res======",extract_res.json())
-      if extract_res.status_code == 200 and \
-        document_type == "application_form":
-        print("====Extraction successful for application_form.==========")
-        Logger.info("Extraction successful for application_form.")
-        extraction_score = extract_res.json().get("score")
-        autoapproval_status = get_values(
+      if is_hitl or applications or supporting_docs:
+        for app in applications:
+          case_id = app.get("case_id")
+          uid = app.get("uid")
+          document_class = app.get("document_class")
+          document_type = "application_form"
+          extract_res = get_extraction_score(case_id, uid,document_class)
+          Logger.info("Extraction successful for application_form.")
+          extraction_score = extract_res.json().get("score")
+          autoapproval_status = get_values(
+                  validation_score, extraction_score, matching_score,
+                  document_class, document_type)
+          Logger.info(
+            f"autoapproval_status for application:{autoapproval_status}")
+          update_autoapproval_status(
+            case_id, uid, "success", autoapproval_status[0],"yes")
+
+        for sup_doc in supporting_docs:
+          case_id = sup_doc.get("case_id")
+          uid = sup_doc.get("uid")
+          document_class = sup_doc.get("document_class")
+          document_type = "supporting_documents"
+          extract_res = get_extraction_score(case_id, uid,document_class)
+          if extract_res.status_code == 200:
+            Logger.info("Extraction successful for supporting_documents.")
+            extraction_score = extract_res.json().get("score")
+            validation_res = get_validation_score(case_id, uid, document_class)
+            if validation_res.status_code == 200:
+              print("====Validation successful==========")
+              Logger.info("Validation successful.")
+              validation_score = validation_res.json().get("score")
+              matching_res = get_matching_score(case_id, uid)
+              if matching_res.status_code == 200:
+                print("====Matching successful==========")
+                Logger.info("Matching successful.")
+                matching_score = matching_res.json().get("score")
+                autoapproval_status = get_values(
                 validation_score, extraction_score, matching_score,
                 document_class, document_type)
-        Logger.info(
-          f"autoapproval_status for application:{autoapproval_status}")
-        update_autoapproval_status(
-          case_id, uid, "success", autoapproval_status[0],"yes")
-      elif extract_res.status_code == 200 and \
-        document_type == "supporting_documents":
-        print("====Extraction successful for application_form.==========")
-        Logger.info("Extraction successful for supporting_documents.")
-        extraction_score = extract_res.json().get("score")
-        validation_res = get_validation_score(case_id, uid, document_class)
-        if validation_res.status_code == 200:
-          print("====Validation successful==========")
-          Logger.info("Validation successful.")
-          validation_score = validation_res.json().get("score")
-          matching_res = get_matching_score(case_id, uid)
-          if matching_res.status_code == 200:
-            print("====Matching successful==========")
-            Logger.info("Matching successful.")
-            matching_score = matching_res.json().get("score")
-            try:
-              Logger.info(f"extraction_score:{extraction_score}")
-              Logger.info(f"validation_score:{validation_score}")
-              Logger.info(f"matching_score:{matching_score}")
-              autoapproval_status = get_values(
-                validation_score, extraction_score, matching_score,
-                document_class, document_type)
-              Logger.info(
-                f"autoapproval_status:{autoapproval_status}")
-              update_autoapproval_status(
-                case_id, uid, "success", autoapproval_status[0],"yes")
-            except Exception as e:
-              Logger.error(e)
+                Logger.info(
+                  f"autoapproval_status:{autoapproval_status}")
+                update_autoapproval_status(
+                  case_id, uid, "success", autoapproval_status[0],"yes")
+              else:
+                err = traceback.format_exc().replace("\n", " ")
+                Logger.error(err)
+                Logger.error(f"Matching FAILED for {uid}")
+            else:
               err = traceback.format_exc().replace("\n", " ")
-              Logger.error(f"Error in Autoapproval: {err}")
-              update_autoapproval_status(
-                case_id, uid, "fail", None, None)
-
-            Logger.info("Process task executed SUCCESSFULLY.")
+              Logger.error(err)
+              Logger.error(f"Validation FAILED for {uid}")
           else:
-            err = traceback.format_exc().replace("\n", " ")
-            Logger.error(err)
-            Logger.error("Matching FAILED")
-        else:
-          err = traceback.format_exc().replace("\n", " ")
-          Logger.error(err)
-          Logger.error("Validation FAILED")
+              err = traceback.format_exc().replace("\n", " ")
+              Logger.error(err)
+              Logger.error(f"Extraction FAILED for {uid}")
 
-    else:
-      Logger.error("Classification FAILED.")
+      Logger.info("Process task executed SUCCESSFULLY.")
+
+    # if is_hitl or cl_result.status_code == 200:
+    #   extract_res = get_extraction_score(case_id, uid,document_class)
+    #   print("========extract_res======",extract_res.json())
+    #   if extract_res.status_code == 200 and \
+    #     document_type == "application_form":
+    #     print("====Extraction successful for application_form.==========")
+    #     Logger.info("Extraction successful for application_form.")
+    #     extraction_score = extract_res.json().get("score")
+    #     autoapproval_status = get_values(
+    #             validation_score, extraction_score, matching_score,
+    #             document_class, document_type)
+    #     Logger.info(
+    #       f"autoapproval_status for application:{autoapproval_status}")
+    #     update_autoapproval_status(
+    #       case_id, uid, "success", autoapproval_status[0],"yes")
+    #   elif extract_res.status_code == 200 and \
+    #     document_type == "supporting_documents":
+    #     print("====Extraction successful for application_form.==========")
+    #     Logger.info("Extraction successful for supporting_documents.")
+    #     extraction_score = extract_res.json().get("score")
+    #     validation_res = get_validation_score(case_id, uid, document_class)
+    #     if validation_res.status_code == 200:
+    #       print("====Validation successful==========")
+    #       Logger.info("Validation successful.")
+    #       validation_score = validation_res.json().get("score")
+    #       matching_res = get_matching_score(case_id, uid)
+    #       if matching_res.status_code == 200:
+    #         print("====Matching successful==========")
+    #         Logger.info("Matching successful.")
+    #         matching_score = matching_res.json().get("score")
+    #         try:
+    #           Logger.info(f"extraction_score:{extraction_score}")
+    #           Logger.info(f"validation_score:{validation_score}")
+    #           Logger.info(f"matching_score:{matching_score}")
+    #           autoapproval_status = get_values(
+    #             validation_score, extraction_score, matching_score,
+    #             document_class, document_type)
+    #           Logger.info(
+    #             f"autoapproval_status:{autoapproval_status}")
+    #           update_autoapproval_status(
+    #             case_id, uid, "success", autoapproval_status[0],"yes")
+    #         except Exception as e:
+    #           Logger.error(e)
+    #           err = traceback.format_exc().replace("\n", " ")
+    #           Logger.error(f"Error in Autoapproval: {err}")
+    #           update_autoapproval_status(
+    #             case_id, uid, "fail", None, None)
+
+    #         Logger.info("Process task executed SUCCESSFULLY.")
+    #       else:
+    #         err = traceback.format_exc().replace("\n", " ")
+    #         Logger.error(err)
+    #         Logger.error("Matching FAILED")
+    #     else:
+    #       err = traceback.format_exc().replace("\n", " ")
+    #       Logger.error(err)
+    #       Logger.error("Validation FAILED")
+
+    # else:
+    #   Logger.error("Classification FAILED.")
   except Exception as e:
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
@@ -174,3 +234,32 @@ def get_document(case_id: str, uid: str):
   doc = Document.collection.filter(
     "case_id", "==", case_id).filter("uid", "==", uid).get()
   return doc
+
+
+def filter_documents(configs:List[Dict]):
+  """Filters the supporting documents and application form"""
+  supporting_docs=[]
+  application_form=[]
+  for config in configs:
+    case_id = config.get("case_id")
+    uid = config.get("uid")
+    gcs_url = config.get("gcs_url")
+    cl_result = get_classification(case_id, uid, gcs_url)
+    if cl_result.status_code == 200:
+      document_type = cl_result.json().get("doc_type")
+      document_class = cl_result.json().get("doc_class")
+      Logger.info(
+        f"Classification successful for {uid}:document_type:{document_type},\
+            document_class:{document_class}.")
+
+      if document_type=="application_form":
+        config["document_class"]=document_class
+        application_form.append(config)
+      elif document_type == "supporting_documents":
+        config["document_class"]=document_class
+        supporting_docs.append(config)
+    else:
+      err = traceback.format_exc().replace("\n", " ")
+      Logger.error(err)
+      Logger.error(f"Validation FAILED for {uid}")  
+  return application_form,supporting_docs

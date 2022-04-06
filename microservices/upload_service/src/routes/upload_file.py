@@ -49,6 +49,7 @@ async def upload_file(
   if case_id is None:
     case_id = str(uuid.uuid1())
   uid_list = []
+  message_list=[]
   try:
     for file in files:
       #create a record in database for uploaded document
@@ -70,6 +71,7 @@ async def upload_file(
         }
         document.system_status = [system_status]
         document.update()
+        
         raise HTTPException(
             status_code=500,
             detail="Error "
@@ -90,10 +92,16 @@ async def upload_file(
       }
       document.system_status = [system_status]
       document.update()
-      pubsub_msg = f"batch moved to bucket name{case_id}{uid}"
-      message_dict = {"message": pubsub_msg,"gcs_url":
-      document.url, "caseid": case_id ,"uid":uid ,"context":context}
-      publish_document(message_dict)
+      message_list.append({
+          "case_id":case_id,
+          "uid":uid,
+          "gcs_url": document.url,
+          "context":context
+        })
+    print(message_list)
+    pubsub_msg = f"batch for {case_id} moved to bucket"
+    message_dict = {"message": pubsub_msg,"message_list":message_list}
+    publish_document(message_dict)
     # background_tasks.add_task(run_pipeline,case_id,uid,document.url)
     # Logger.info(f"Files with case id {case_id} uploaded"
     #               f" successfully")
