@@ -3,9 +3,11 @@ This script has all the common and re-usable functions required for extraction f
 
 """
 
+from functools import reduce
 import os
 import re
 import json
+import numpy as np
 import pandas as pd
 from google.cloud import storage
 
@@ -270,7 +272,30 @@ def entities_extraction(parser_data, required_entities, doc_type):
             extracted_entities_final_json = [{k: v for k, v in d.items() if k != 'index'} for d in
                                              entities_extraction_dict]
             return extracted_entities_final_json
-#
+
+
+def check_int(d):
+	"""
+	This function check given string is integer
+	Parameters
+	----------
+	d: input string
+
+	Returns: True/False
+	-------
+
+	"""
+
+	count = 0
+
+	for i in d:
+			if i and i.isdigit():
+					count = count + 1
+	if count >= 2:
+			return True
+	else:
+			return False
+
 def standard_entity_mapping(desired_entities_list):
     """
     map entitiy with standard entity
@@ -280,7 +305,7 @@ def standard_entity_mapping(desired_entities_list):
 
     # read entity standardization csv
     entity_standardization = os.path.join(
-        os.path.dirname(__file__), ".", "entity-standardization.csv")
+        os.path.dirname(__file__), ".", "Entity Standardization.csv")
     entities_standardization_csv = pd.read_csv(entity_standardization)
     entities_standardization_csv.dropna(how='all', inplace=True)
 

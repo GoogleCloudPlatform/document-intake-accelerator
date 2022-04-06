@@ -136,31 +136,25 @@ MAPPING_DICT = {
     },
     "table_entities":
     {
-      # 1. get header info from user and search that table
-      # 2. name of entity row and col no
-      # 3. map OCR to Col A
-      # range of page_num or table_num starts from 0 to n-1
-      # 'page_num': 0,
-      # 'table_num': 0,
-      # proper header name to be provided so that it does not match
-      #  with other table
-      # headers.
-      # value of row and col should not be greater than the range of rows
-      # and cols in the table
       "isheader": True,
-      "header": ["Date", "Name of Employer/Company/ Union and Address (City, State and Zip Code)",
+      # if table and page number is unknown mark the variables to 0
+      "table_num": 0, "page_num": 0,
+      "headers": ["Date", "Name of Employer/Company/ Union and Address (City, State and Zip Code)",
 								 "Website URL or Name of person contacted",
 								 "Method (In person, Internet, mail)",
 								 "Type of work sought", "Action taken on the date of contact"],
-      "entity_extraction": [{"col": 0, "row_no": 1},
-                            {"col": 1, "row_no": 2},
-                            {"col": 2, "row_no": 3},
-                            {"col": 3, "row_no": 4},
-                            {"col": 4, "row_no": 1},
-                            {"col": 3, "row_no": 1},
-                            {"col": 2, "row_no": 2},
-                            {"col": 0, "row_no": 4},
-                          ],
+                 # entity name will be constructed based on the col number provided
+                 # for an employer
+                 "entity_extraction": [
+                  {"entity_suffix": f"(employer 1)", "col": 0, "row_no": 1},
+                  {"entity_suffix": f"(employer 2)", "col": 0, "row_no": 2},
+                  {"entity_suffix": f"(employer 1)", "col": 2, "row_no": 2},
+                  {"entity_suffix": f"(employer 1)", "col": 3, "row_no": 1},
+                  {"entity_suffix": f"(employer 1)", "col": 4, "row_no": 1},
+                  {"entity_suffix": f"(employer 2)", "col": 3, "row_no": 2},
+                  {"entity_suffix": f"(employer 2)", "col": 2, "row_no": 3},
+                  {"entity_suffix": f"(employer 3)", "col": 0, "row_no": 3},
+                ],
 
       "max_rows": 3, # -1 for all rows
       # if 1 all columns will de extracted

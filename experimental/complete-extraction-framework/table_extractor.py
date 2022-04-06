@@ -3,10 +3,9 @@
 Extract data from a table present in a form
 """
 
-import os
-import pandas as pd
 import json
-class TabelExtractor:
+from utils_functions import standard_entity_mapping
+class TableExtractor:
 	"""
 	Extract data from a table present in the form
 	"""
@@ -14,28 +13,12 @@ class TabelExtractor:
 	def __init__(self, json_path):
 
 		self.json_path = json_path
-		self.tables_page_wise = {}
+		# master_dict --> page_num > tables > table_num > table data
+		self.master_dict = {}
 
 		with open(json_path, encoding='utf-8') as f_obj:
 			self.data = json.load(f_obj)
 		self.table_attributes()
-
-	def extract_table_body_without_header(self):
-		"""
-		find rows
-		"""
-		# for _, page in self.tables_page_wise.items():
-		# 		for _, table in page.items():
-		# 			table_df = table["body_data"]
-		# 			try:
-		# 				entity_val = table_df.iloc[row][col]
-		# 				entity_val = " ".join(entity_val.split())
-		# 				data = {'entity': columns[col],
-		# 								'value': entity_val,
-		# 								'row': row
-		# 								}
-		# 				out.append(data)
-		pass
 
 	def table_attributes(self):
 		"""
@@ -47,6 +30,8 @@ class TabelExtractor:
 		if "pages" in self.data.keys():
 			# Iterate over pages
 			for pg_num, page in enumerate(self.data["pages"]):
+
+				page_data = {}
 				if "tables" in page.keys():
 
 					# Iterate over tables
@@ -54,40 +39,39 @@ class TabelExtractor:
 
 						# extract header(columns)
 						for _, hrow in enumerate(table["headerRows"]):
-							table_data = [
-								self.get_text(cell["layout"], self.data) for cell in hrow["cells"]
+							header_row = [
+								TableExtractor.get_text(cell["layout"], self.data) for cell in hrow["cells"]
 							]
-							columns = [" ".join(val.split()) for val in table_data]
-
-							table_info[table_num] = {
-							"columns": columns, "tot_cols": len(columns),
-						  "header": bool(columns),
-							}
-							# extract row wise data
-							# table_info = self.extract_table_body(table, table_info, table_num, columns)
-							row_datas = []
+							columns = [" ".join(val[0].split()) for val in header_row]
+							table_data = {"headers": columns}
+							col_data = {}
 							try:
-								for _, row in enumerate(table["bodyRows"]):
-									body_row_data = [
-											self.get_text(cell["layout"], self.data) for cell in row["cells"]
+								for row_num, row in enumerate(table["bodyRows"]):
+									row_data = [
+											TableExtractor.get_text(cell["layout"], self.data) for cell in row["cells"]
 									]
-									row_datas.append(body_row_data)
-								table_info[table_num]['body_data'] = pd.DataFrame(row_datas, columns=columns)
+									for i_col in range(len(header_row)):
+										entity_val, conf, coordinates = row_data[i_col]
+										col_data[i_col] = {
+											"value": entity_val,
+											"extraction_confidence": conf,
+											"entity_coordinates": coordinates,
+											"manual_extraction": False,
+											"corrected_value": 0
+										}
+									table_data[row_num] = {"rows": col_data}
+
 							except Exception as e:
 								print(e)
 								return "Table Empty !!!"
-					self.tables_page_wise[pg_num] = table_info
+
+						page_data[table_num] = table_data
+					self.master_dict[pg_num] = page_data
 		else:
 			return "No data in json"
 
-	def user_header_standard_entity_extraction(self, header):
-		"""
-
-		Args:
-				header (_type_): _description_
-		"""
-
-	def get_text(self, el, data):
+	@staticmethod
+	def get_text(el, data):
 		"""Convert text offset indexes into text snippets."""
 		text = ""
 		# Span over the textSegments
@@ -105,7 +89,42 @@ class TabelExtractor:
 					else:
 							end_index = 0
 					text += data["text"][int(start_index) : int(end_index)]
-		return text
+					cell_conf = el["confidence"]
+					cell_coordinates = el["boundingPoly"]["normalizedVertices"]
+		return (text, cell_conf, cell_coordinates)
+
+	@staticmethod
+	def compare_lists(master_list, sub_list):
+		"""Compare two list and return the avg match percentage
+
+		Args:
+				list1 (list): list with items
+				list2 (list): list with items
+		"""
+		x = lambda x: x in master_list
+
+		matched = list(filter(x, sub_list))
+		return len(matched)/len(master_list)
+
+	@staticmethod
+	def get_table_using_header(page, inp_header):
+		"""uses the page info to extract the table
+
+		Args:
+				page (dict): dict that contains a table info
+				inp_header (list): list of column names to match with the header of a table
+		"""
+
+		for pg_num in page:
+			for table_num in page[pg_num]:
+				table_dict = page[pg_num][table_num]
+				table_header = table_dict["headers"]
+				if TableExtractor.compare_lists(table_header, inp_header) >= 0.75:
+					return table_dict
+				else:
+					continue
+
+		return None
 
 	def get_entities(self, table_entities):
 		"""
@@ -119,71 +138,77 @@ class TabelExtractor:
 		"""
 
 		if table_entities["isheader"]:
-			header = table_entities["header"]
+			inp_header = table_entities["header"]
+			if isinstance(table_entities["table_num"], int):
+				table_num = table_entities["table_num"]
+			else:
+				table_num = 0
+			if isinstance(table_entities["page_num"], int):
+				page_num = table_entities["table_num"]
+			else:
+				page_num = 0
+
+
+			if table_num > 0 and page_num > 0:
+				table_dict = self.master_dict[page_num][table_num]
+				if TableExtractor.compare_lists(table_dict["headers"], inp_header)< 0.75:
+					return "Table does not match with the headers provided"
+
+
+			# if no table and page info provided. Iterate over all the pages to find the table
+			# based on header
+			elif page_num == 0 and table_num == 0:
+				table_dict = TableExtractor.get_table_using_header(self.master_dict, inp_header)
+			elif page_num > 0 and table_num == 0:
+				if not page_num in self.master_dict:
+					return "page not found"
+				page_dict = self.master_dict[page_num]
+				table_dict = TableExtractor.get_table_using_header(page_dict, inp_header)
+			else:
+				return "Operation cannot be performed. Check your config"
 
 			out = []
-			table_found = False
+			table_header = table_dict["headers"]
+			for user_inp in table_entities["entity_extraction"]:
+				entity_data = {}
+				suffix, row, col = user_inp["entity_suffix"], user_inp["row_no"], user_inp["col"]
+				row_dict = table_dict[row]["rows"]
+				entity_name = f"{table_header[col]} {suffix}"
+				entity_data = row_dict[col]
+				entity_data["entity"] = entity_name
 
-			# check header to find the table
-			for _, page in self.tables_page_wise.items():
-				for _, table in page.items():
-					columns = table["columns"]
-					# compare user provided header with table headers
-					if header == columns:
-						table_found = True
-						break
-
-			if not table_found:
-				print("Table not found")
-				return None
-
-			# if table found extract the entities
-			table_df = table["body_data"]
-			entities_count = {}
-			try:
-				for col_row in table_entities["entity_extraction"]:
-					row, col = col_row["row_no"], col_row["col"]
-					if row >= len(table_df) or col >= len(columns):
-						continue
-					entity_name = columns[col]
-					entity_val = table_df.iloc[row][col]
-					entity_val = " ".join(entity_val.split())
-					if entity_name in entities_count:
-						entities_count[entity_name] += 1
-					else:
-						entities_count[entity_name] = 1
-					standard_entity_name = f'{entity_name} (employer {entities_count[entity_name]})'
-
-
-					data = {'entity': standard_entity_name,
-									'value': entity_val,
-									'row': row
-									}
-					out.append(data)
-			except Exception as e:
-				print(e)
+				out.append(entity_data)
 			return out
 		else:
-			return self.extract_table_body_without_header()
+			return "No header present in the table. Table not extracted."
 
 if __name__ == '__main__':
-	t = TabelExtractor('/users/sumitvaise/Downloads/res_0.json')
-	table_entities = {'header': ['Date',
-										'Name of Employer/Company/ Union and Address (City, State and Zip Code)',
-										'Website URL or Name of person contacted',
-										'Method (In person, Internet, mail)',
-										'Type of work sought', 'Action taken on the date of contact'],
-							      "entity_extraction": [{"col": 0, "row_no": 1},
-																					{"col": 0, "row_no": 2},
-																					{"col": 2, "row_no": 3},
-																					{"col": 3, "row_no": 3},
-																					{"col": 4, "row_no": 1},
-																					{"col": 3, "row_no": 1},
-																					{"col": 2, "row_no": 2},
-																					{"col": 0, "row_no": 3},
-                            							],
+	t = TableExtractor('/users/sumitvaise/Downloads/res_0.json')
+	headers = ['Date',
+						'Name of Employer/Company/ Union and Address (City, State and Zip Code)',
+						'Website URL or Name of person contacted',
+						'Method (In person, Internet, mail)',
+						'Type of work sought', 'Action taken on the date of contact']
+	table_entities = {'header': headers,
+										"table_num": 0, "page_num": 0,
+							    "entity_extraction": [
+                  {"entity_suffix": f"(employer 1)", "col": 0, "row_no": 1},
+                  {"entity_suffix": f"(employer 2)", "col": 0, "row_no": 2},
+                  {"entity_suffix": f"(employer 1)", "col": 2, "row_no": 2},
+                  {"entity_suffix": f"(employer 1)", "col": 3, "row_no": 1},
+                  {"entity_suffix": f"(employer 1)", "col": 4, "row_no": 1},
+                  {"entity_suffix": f"(employer 2)", "col": 3, "row_no": 2},
+                  {"entity_suffix": f"(employer 2)", "col": 2, "row_no": 3},
+                  {"entity_suffix": f"(employer 3)", "col": 0, "row_no": 3},
+                ],
 										"isheader": True
     }
-	print(t.get_entities(table_entities))
-
+	out = t.get_entities(table_entities)
+	standard_entity_mapping(out)
+# [{'entity': 'Date (employer 1)', 'value': '2022-02-11', 'row': 1,
+# 	'extracted_conf': "", "manual_extraction": False, "key_cord":[],
+# 	"entity_cord": [], 'page_num':"", "table_num": "", "page_width":"",
+# 	"page_height":""},
+# 	{'entity': 'Date (employer 2)', 'value': '2022-02-11', 'row': 2}
+# ]
 
