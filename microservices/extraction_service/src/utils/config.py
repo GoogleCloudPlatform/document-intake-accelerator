@@ -2,19 +2,24 @@
 PROJECT_NAME = "claims-processing-dev"
 
 # Attributes not required from specialized parser raw json
-NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles", "textChanges", "revisions",
-                                                            "pages.image"]
+NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles",
+ "textChanges", "revisions","pages.image"]
 
 # GCS temp folder to store async form parser output
 GCS_OP_URI = "gs://async_form_parser"
 FORM_PARSER_OP_TEMP_FOLDER = "temp"
 
+
+
 """
 
 This is Document and state mapping dict
 Default entities sections have entities that are coming from parser
-Derived section have information of entities which are not extracted from parser and need to extract them by using pattern
-Create state wise mapping if it form parser, and one doc type mapping if it is specialized parser
+Derived section have information of entities which are not extracted from
+parser and need to extract them by using pattern
+
+Create state wise mapping if it form parser, and one doc type mapping
+if it is specialized parser
 
 """
 
@@ -60,13 +65,13 @@ MAPPING_DICT = {
       "Months": ["Months worked for longest employer"]
     },
     "derived_entities":
-      {
-        "What is your birth date?": {
-          "rule": "What is your birth date\?\n\d\.(.*?)\((mm/dd/yyyy)"},
-        "What is your gender?": {
-          "rule": "What is your gender\?\n\d\.(.*?)\n\d"},
-        "Expiration Date (EXP)": {
-          "rule": "\sAlien Registration Number \(A#\)\n3\)\s(\d{4}-\d{2}-\d{2})\n"}}
+    {
+      "What is your birth date?": {
+        "rule": "What is your birth date\?\n\d\.(.*?)\((mm/dd/yyyy)"},
+      "What is your gender?": {
+        "rule": "What is your gender\?\n\d\.(.*?)\n\d"},
+    "Expiration Date (EXP)": {
+    "rule": "\sAlien Registration Number \(A#\)\n3\)\s(\d{4}-\d{2}-\d{2})\n"}}
   },
 
   "unemployment_form_arkansas": {
@@ -137,7 +142,7 @@ MAPPING_DICT = {
     }
   },
 
-  "claim_form_arkansas": {
+  "claims_form_arkansas": {
         "default_entities": {
             "SIGNATURE": ["signature"],
             "NAME ": ["name"],
@@ -150,7 +155,7 @@ MAPPING_DICT = {
             "PHONE NO": ["phone_no"],
             "DATE BEGAN WORK ": ["work_start_date"],
             "EMPLOYER'S NAME AND ADDRESS" :["employee_info"]
-  
+
             }
     },
 
@@ -167,7 +172,7 @@ MAPPING_DICT = {
 
    },
 
-  "driver_license": {
+  "driving_licence": {
     "default_entities": {
       "Document Id": ["DLN"],
       "Expiration Date": ["EXP"],
