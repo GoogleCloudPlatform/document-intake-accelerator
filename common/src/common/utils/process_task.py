@@ -1,7 +1,6 @@
 """ Process task api endpoint """
 import traceback
-from fastapi import APIRouter, HTTPException, BackgroundTasks, status
-from fastapi.concurrency import run_in_threadpool
+from fastapi import APIRouter, HTTPException
 from common.models import Document
 import requests
 # pylint: disable = ungrouped-imports
@@ -40,9 +39,11 @@ def run_pipeline(payload: List[Dict], is_hitl: bool=False):
       applications = result[0]
       supporting_docs = result[1]
       print(
-        f"Application form:{applications} and supporting_docs:{supporting_docs}")
+        f"Application form:{applications} and"\
+          f" supporting_docs:{supporting_docs}")
       Logger.info(
-        f"Application form:{applications} and supporting_docs:{supporting_docs}")
+        f"Application form:{applications} and"\
+          f" supporting_docs:{supporting_docs}")
 
     if is_hitl or applications or supporting_docs:
       for app in applications:

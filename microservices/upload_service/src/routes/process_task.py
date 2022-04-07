@@ -18,7 +18,8 @@ FAILED_RESPONSE = {"status": "Failed"}
 
 
 @router.post("/process_task", status_code=status.HTTP_202_ACCEPTED)
-async def process_task(payload: ProcessTask, background_task: BackgroundTasks, is_hitl: bool = False):
+async def process_task(payload: ProcessTask, 
+background_task: BackgroundTasks, is_hitl: bool = False):
   """Runs the Pipeline to process the document"""
   payload = payload.dict()
 
@@ -52,9 +53,11 @@ def run_pipeline(payload: List[Dict], is_hitl: bool):
       applications = result[0]
       supporting_docs = result[1]
       print(
-        f"Application form:{applications} and supporting_docs:{supporting_docs}")
+        f"Application form:{applications} and"\
+        f" supporting_docs:{supporting_docs}")
       Logger.info(
-        f"Application form:{applications} and supporting_docs:{supporting_docs}")
+        f"Application form:{applications} and "\
+          f"supporting_docs:{supporting_docs}")
 
     if is_hitl or applications or supporting_docs:
       for app in applications:

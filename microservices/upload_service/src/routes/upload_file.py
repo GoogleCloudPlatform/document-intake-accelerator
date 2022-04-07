@@ -10,7 +10,7 @@ from schemas.input_data import InputData
 import utils.upload_file_gcs_bucket as ug
 from common.utils.logging_handler import Logger
 from common.models import Document
-from common.utils.publisher import publish_document
+# from common.utils.publisher import publish_document
 from common.utils.process_task import run_pipeline
 from common.config import BUCKET_NAME
 import datetime
@@ -73,7 +73,7 @@ async def upload_file(
         }
         document.system_status = [system_status]
         document.update()
-        
+
         raise HTTPException(
             status_code=500,
             detail="Error "
