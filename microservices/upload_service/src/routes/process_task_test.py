@@ -31,13 +31,15 @@ def test_process_task_api(client_with_emulator):
     {
       "case_id": "case_arkansas_2001",
       "uid": "y13FLMQW4bYnHLa5t8dg",
-      "gcs_url": "gs://document-upload-test/case_arkansas_2001/y13FLMQW4bYnHLa5t8dg/Copy of Arkansas-form-1.pdf",
+      "gcs_url": "gs://document-upload-test/case_arkansas_2001/"\
+      "y13FLMQW4bYnHLa5t8dg/Copy of Arkansas-form-1.pdf",
       "context": "arkansas"
     },
     {
       "case_id": "case_arkansas_2001",
       "uid": "wZSrLgChiIR8NfWQkju5",
-      "gcs_url": "gs://document-upload-test/case_arkansas_2001/wZSrLgChiIR8NfWQkju5/DL-arkansas-1.pdf",
+      "gcs_url": "gs://document-upload-test/case_arkansas_2001/"\
+      "wZSrLgChiIR8NfWQkju5/DL-arkansas-1.pdf",
       "context": "arkansas"
     }
   ]

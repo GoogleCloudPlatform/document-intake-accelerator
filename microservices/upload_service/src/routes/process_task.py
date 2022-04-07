@@ -1,7 +1,6 @@
 """ Process task api endpoint """
 import traceback
 from fastapi import APIRouter, HTTPException, BackgroundTasks, status
-from fastapi.concurrency import run_in_threadpool
 from common.models import Document
 from models.process_task import ProcessTask
 import requests
@@ -18,7 +17,7 @@ FAILED_RESPONSE = {"status": "Failed"}
 
 
 @router.post("/process_task", status_code=status.HTTP_202_ACCEPTED)
-async def process_task(payload: ProcessTask, 
+async def process_task(payload: ProcessTask,
 background_task: BackgroundTasks, is_hitl: bool = False):
   """Runs the Pipeline to process the document"""
   payload = payload.dict()
