@@ -20,17 +20,17 @@ requires:
   configs: [upload-service]
   activeProfiles:  *dev_and_custom_backends
 
-- path: ./microservices/classification_service
-  configs: [classification-service]
-  activeProfiles:  *dev_and_custom_backends
-
-- path: ./microservices/extraction_service
-  configs: [ extraction-service ]
-  activeProfiles: *dev_and_custom_backends
-
-- path: ./microservices/validation_service
-  configs: [validation-service]
-  activeProfiles:  *dev_and_custom_backends
+#- path: ./microservices/classification_service
+#  configs: [classification-service]
+#  activeProfiles:  *dev_and_custom_backends
+#
+#- path: ./microservices/extraction_service
+#  configs: [ extraction-service ]
+#  activeProfiles: *dev_and_custom_backends
+#
+#- path: ./microservices/validation_service
+#  configs: [validation-service]
+#  activeProfiles:  *dev_and_custom_backends
 
 - path: ./microservices/hitl_service
   configs: [hitl-service]
@@ -40,9 +40,9 @@ requires:
   configs: [document-status-service]
   activeProfiles:  *dev_and_custom_backends
 
-- path: ./microservices/matching_service
-  configs: [matching-service]
-  activeProfiles:  *dev_and_custom_backends
+#- path: ./microservices/matching_service
+#  configs: [matching-service]
+#  activeProfiles:  *dev_and_custom_backends
 
 profiles:
 - name: custom
