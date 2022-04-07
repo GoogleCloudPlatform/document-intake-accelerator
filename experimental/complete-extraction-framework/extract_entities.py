@@ -245,14 +245,15 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
     #    json.dump(extracted_entity_list, outfile, indent=4)
 
     # mappping dictionary of document type and state
-    mapping_dict = MAPPING_DICT[state]
+    doc_state = doc_type + "_" + state
+    mapping_dict = MAPPING_DICT[doc_state]
 
     # Extract desired entites from form parser
     form_parser_entities_list = form_parser_entities_mapping(extracted_entity_list, mapping_dict, form_parser_text)
 
     # Save extract desired entities only
-   # with open("{}.json".format(os.path.join(extracted_entities, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
-    #    json.dump(form_parser_entities_list, outfile, indent=4)
+    with open("{}.json".format(os.path.join(extracted_entities, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
+       json.dump(form_parser_entities_list, outfile, indent=4)
 
     return form_parser_entities_list
 
@@ -286,7 +287,7 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
         if parser_information:
             parser_name = parser_information["parser_name"]
             if parser_name == "FormParser":
-                desired_entities_list = form_parser_extraction(parser_information, gcs_doc_path, doc_type, state, 300)
+                desired_entities_list,flag = form_parser_extraction(parser_information, gcs_doc_path, doc_type, state, 300)
             else:
                 desired_entities_list = specialized_parser_extraction(parser_information, gcs_doc_path, doc_type)
 
@@ -298,12 +299,12 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
             input_dict = get_json_format_for_processing(standardized_extracted_entities)
             input_dict, output_dict = data_transformation(input_dict)
             final_extracted_entities = correct_json_format_for_db(output_dict, standardized_extracted_entities)
-           # with open("{}.json".format(os.path.join(mapped_extracted_entities, gcs_doc_path.split('/')[-1][:-4])),
-            #          "w") as outfile:
-             #   json.dump(final_extracted_entities, outfile, indent=4)
+            with open("{}.json".format(os.path.join(mapped_extracted_entities, gcs_doc_path.split('/')[-1][:-4])),
+                     "w") as outfile:
+               json.dump(final_extracted_entities, outfile, indent=4)
 
             # extraction accuracy calculation
-            document_extraction_confidence = extraction_accuracy_calc(final_extracted_entities)
+            document_extraction_confidence = extraction_accuracy_calc(final_extracted_entities,flag)
         else:
             # Parser not available
             print('parser not available for this document')
@@ -312,23 +313,25 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
 
 
 if __name__ == "__main__":
-   # extracted_entities = "C:\\Users\\Ajay Sharma\\Documents\\DOCAI\\Parsers\\Arkansas\\Final Json\\Clean"
-   mapped_extracted_entities = "/home/jupyter/extraction_framework/parsers_output"
+   extracted_entities = "C:\\Users\\Kshitij Phulare\\Downloads\\noisy"
+
+   parser_op = "C:\\Users\\Kshitij Phulare\\Downloads\\without_noisy"
+   mapped_extracted_entities = "C:\\Users\\Kshitij Phulare\\Downloads\\without_op"
    # parser_op = "C:\Users\Daisy Das\Desktop\parser_output\parser_output"
    form_parser_raw_json_folder = "."
    # gcs_doc_path = "gs://gs://async_form_parser/input/Arkansas application form.pdf"
 
-   #os.environ[
-   #   'GOOGLE_APPLICATION_CREDENTIALS'] = "C:\\Users\\Ajay Sharma\\Documents\\DOCAI\\claims-processing-dev-1c8ccc031fa7.json"
+   os.environ[
+        'GOOGLE_APPLICATION_CREDENTIALS'] = "C:\\Users\\Kshitij Phulare\\Downloads\\claims-processing-dev-a07894631cd2.json"
 
    # API Integration will start from here
 
    # Extract API Provides label and document
    doc_type = "unemployment_form"
-   state = "arkansas"
-   gcs_doc_path = "gs://async_form_parser/input/Copy of Arkansas-form-5.pdf"
+   state = "arizona"
+   gcs_doc_path = "gs://async_form_parser/input/Copy of Arizona2.pdf"
 
-   extract_entities(gcs_doc_path, doc_type, state)
+   extract_entities(gcs_doc_path, doc_type, state)  
 
    # use this code for looping in gcs folder
 """

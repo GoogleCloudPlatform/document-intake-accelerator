@@ -39,7 +39,7 @@ def pattern_based_entities(parser_data, pattern):
     return op
 
 
-def default_entities_extraction(parser_entities, default_entities):
+def default_entities_extraction(parser_entities, default_entities,doc_type):
     """
     This function extracted default entities
 
@@ -78,6 +78,16 @@ def default_entities_extraction(parser_entities, default_entities):
                                                      "manual_extraction": False,
                                                      "corrected_value": None}
 
+    if doc_type == 'utility_bill':
+        if "supplier_address" in parser_entities_dict:
+            if parser_entities_dict['supplier_address'][0] == '':
+                if 'receiver_address' in parser_entities_dict.keys() and parser_entities_dict['receiver_address'][0]!='':
+                    entity_dict['address']['value'] = parser_entities_dict['receiver_address'][0]
+                else:
+                    if "service_address" in parser_entities_dict:
+                            entity_dict['address']['value'] = parser_entities_dict['service_address'][0]
+
+  
     return entity_dict
 
 
@@ -176,7 +186,7 @@ def entities_extraction(parser_data, required_entities, doc_type):
     derived_entities = required_entities.get("derived_entities")
 
     # Extract default entities
-    entity_dict = default_entities_extraction(parser_entities, default_entities)
+    entity_dict = default_entities_extraction(parser_entities, default_entities,doc_type)
 
     # if any derived entities then extract them
     if derived_entities:
