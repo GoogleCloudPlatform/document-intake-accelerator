@@ -1,12 +1,11 @@
 """ Process task api endpoint """
 import traceback
-from fastapi import APIRouter, HTTPException, BackgroundTasks, status
+from fastapi import APIRouter, HTTPException
 from common.models import Document
-from models.process_task import ProcessTask
 import requests
 # pylint: disable = ungrouped-imports
 from common.utils.logging_handler import Logger
-from utils.autoapproval import get_values
+from common.utils.autoapproval import get_values
 from typing import List, Dict
 
 # pylint: disable = broad-except
@@ -15,19 +14,7 @@ router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
 
-
-@router.post("/process_task", status_code=status.HTTP_202_ACCEPTED)
-async def process_task(payload: ProcessTask,
-background_task: BackgroundTasks, is_hitl: bool = False):
-  """Runs the Pipeline to process the document"""
-  payload = payload.dict()
-
-  background_task.add_task(run_pipeline, payload, is_hitl)
-
-  return {"message": "Processing your document"}
-
-
-def run_pipeline(payload: List[Dict], is_hitl: bool):
+def run_pipeline(payload: List[Dict], is_hitl: bool=False):
   validation_score = None
   extraction_score = None
   matching_score = None
@@ -53,10 +40,10 @@ def run_pipeline(payload: List[Dict], is_hitl: bool):
       supporting_docs = result[1]
       print(
         f"Application form:{applications} and"\
-        f" supporting_docs:{supporting_docs}")
+          f" supporting_docs:{supporting_docs}")
       Logger.info(
-        f"Application form:{applications} and "\
-          f"supporting_docs:{supporting_docs}")
+        f"Application form:{applications} and"\
+          f" supporting_docs:{supporting_docs}")
 
     if is_hitl or applications or supporting_docs:
       for app in applications:

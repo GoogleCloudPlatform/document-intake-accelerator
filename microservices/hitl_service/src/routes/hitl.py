@@ -326,15 +326,14 @@ def call_process_task(case_id: str, uid: str, document_class: str,
       "case_id": case_id,
       "uid": uid,
       "gcs_url": gcs_uri,
-      "is_hitl": True,
       "document_class": document_class,
       "document_type": document_type
   }
-
-  base_url = "http://upload-service/upload_service/v1/process_task"
-  print("params for process task",base_url,data)
-  Logger.info(f"Params for process task {data}")
-  response = requests.post(base_url,json=data)
+  payload = {"configs":[data]}
+  base_url = "http://upload-service/upload_service/v1/process_task?is_hitl=true"
+  print("params for process task",base_url,payload)
+  Logger.info(f"Params for process task {payload}")
+  response = requests.post(base_url,json=payload)
   return response
 
 
