@@ -3,13 +3,13 @@ PROJECT_NAME = "claims-processing-dev"
 
 # Attributes not required from specialized parser raw json
 NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles",
- "textChanges", "revisions","pages.image"]
+                                                            "textChanges",
+                                                            "revisions",
+                                                            "pages.image"]
 
 # GCS temp folder to store async form parser output
 GCS_OP_URI = "gs://async_form_parser"
 FORM_PARSER_OP_TEMP_FOLDER = "temp"
-
-
 
 """
 
@@ -43,7 +43,7 @@ MAPPING_DICT = {
         "Employer Mailing Address (No., Street, Apt., P.O.Box, City)"],
       "Date": ["Date"],
       "City": ["Employee Residence City", "Employee City"],
-      "State": ["Employee State", "Employee Residence State","Employer State"],
+      "State": ["Employee State", "Employee Residence State", "Employer State"],
       "Employer's Phone No.": ["Employer's Phone No."],
       "Claimant's Signature": ["Claimant's Signature"],
       "Company's Name ": ["Company's Name"],
@@ -65,13 +65,13 @@ MAPPING_DICT = {
       "Months": ["Months worked for longest employer"]
     },
     "derived_entities":
-    {
-      "What is your birth date?": {
-        "rule": "What is your birth date\?\n\d\.(.*?)\((mm/dd/yyyy)"},
-      "What is your gender?": {
-        "rule": "What is your gender\?\n\d\.(.*?)\n\d"},
-    "Expiration Date (EXP)": {
-    "rule": "\sAlien Registration Number \(A#\)\n3\)\s(\d{4}-\d{2}-\d{2})\n"}}
+      {
+        "What is your birth date?": {
+          "rule": "What is your birth date\?\n\d\.(.*?)\((mm/dd/yyyy)"},
+        "What is your gender?": {
+          "rule": "What is your gender\?\n\d\.(.*?)\n\d"},
+        "Expiration Date (EXP)": {
+          "rule": "\sAlien Registration Number \(A#\)\n3\)\s(\d{4}-\d{2}-\d{2})\n"}}
   },
 
   "unemployment_form_arkansas": {
@@ -143,34 +143,33 @@ MAPPING_DICT = {
   },
 
   "claims_form_arkansas": {
-        "default_entities": {
-            "SIGNATURE": ["signature"],
-            "NAME ": ["name"],
-            "SSN": ["ssn"],
-            "street_or_box_no": ["employer_address","mailing address"],
-            "CITY": ["mailing_city","employer_city"],
-            "STATE": ["mailing_state","employer_state"],
-            "ZIP CODE": ["employer_zip","mailing_zip"],
-            "LAST DAY WORKED ": ["work_end_date"],
-            "PHONE NO": ["phone_no"],
-            "DATE BEGAN WORK ": ["work_start_date"],
-            "EMPLOYER'S NAME AND ADDRESS" :["employee_info"]
+    "default_entities": {
+      "SIGNATURE": ["SIGNATURE"],
+      "NAME ": ["CLAIMANT NAME", "EMPLOYEE NAME"],
+      "EMPLOYER NAME": ["EMPLOYER NAME"],
+      "SSN": ["SSN"],
+      "STREET OR BOX NO": ["EMPLOYEE STREET OR BOX NO.",
+                           "EMPLOYER STREET OR BOX NO."],
+      "CITY": ["EMPLOYEE CITY", "EMPLOYER CITY"],
+      "STATE": ["EMPLOYEE STATE", "EMPLOYER STATE"],
+      "ZIP CODE": ["EMPLOYEE ZIP CODE", "EMPLOYER ZIP CODE"],
+      "LAST DAY WORKED ": ["LAST DAY WORK"],
+      "PHONE NO": ["EMPLOYEE PHONE NO."],
+      "DATE BEGAN WORK": ["DATE BEGAN WORK"],
+      "EMPLOYER'S NAME AND ADDRESS": ["EMPLOYER'S NAME AND ADDRESS"]
 
-            }
-    },
+    }
+  },
 
-   "utility_bill":{
-        "default_entities":{
-                        "receiver_name" : ["name"],
-                        "supplier_address": ["address"],
-                        "due_date": ["due_date"],
-                        "invoice_date": ["invoice_date"],
-                        "supplier_account_number": ["account_no"],
-                        }
-
-
-
-   },
+  "utility_bill": {
+    "default_entities": {
+      "receiver_name": ["name"],
+      "supplier_address": ["reciever address"],
+      "due_date": ["due date"],
+      "invoice_date": ["Invoice date"],
+      "supplier_account_number": ["Account no"],
+    }
+  },
 
   "driving_licence": {
     "default_entities": {

@@ -78,14 +78,14 @@ def default_entities_extraction(parser_entities, default_entities,doc_type):
                                                      "manual_extraction": False,
                                                      "corrected_value": None}
 
-    if doc_type == 'utility_bill':
-        if "supplier_address" in parser_entities_dict:
-            if parser_entities_dict['supplier_address'][0] == '':
-                if 'receiver_address' in parser_entities_dict.keys() and parser_entities_dict['receiver_address'][0]!='':
-                    entity_dict['address']['value'] = parser_entities_dict['receiver_address'][0]
-                else:
-                    if "service_address" in parser_entities_dict:
-                            entity_dict['address']['value'] = parser_entities_dict['service_address'][0]
+    # if doc_type == 'utility_bill':
+    #     if "supplier_address" in parser_entities_dict:
+    #         if parser_entities_dict['supplier_address'][0] == '':
+    #             if 'receiver_address' in parser_entities_dict.keys() and parser_entities_dict['receiver_address'][0]!='':
+    #                 entity_dict['address']['value'] = parser_entities_dict['receiver_address'][0]
+    #             else:
+    #                 if "service_address" in parser_entities_dict:
+    #                         entity_dict['address']['value'] = parser_entities_dict['service_address'][0]
 
   
     return entity_dict
