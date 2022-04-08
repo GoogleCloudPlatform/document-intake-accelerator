@@ -157,11 +157,8 @@ MAPPING_DICT = {
                 ],
   },
 
-<<<<<<< HEAD
   "claims_form_arkansas": {
-=======
       "claims_form_arkansas": {
->>>>>>> 88d93248df9857675b62ce87506195cfc881ce2d
         "default_entities": {
             "SIGNATURE": ["SIGNATURE"],
             "NAME ": ["CLAIMANT NAME","EMPLOYEE NAME"],
@@ -221,4 +218,4 @@ MAPPING_DICT = {
        "HOURS": {"rule": "Regular\n.*?\n(.*?)\n"}}
   }
 }
-}
+}}
