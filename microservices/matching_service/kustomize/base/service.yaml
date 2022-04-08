@@ -5,7 +5,7 @@ metadata:
   labels:
     app: matching-service
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
   - port: 80
     protocol: TCP
