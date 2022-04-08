@@ -97,7 +97,7 @@ async def upload_file(
           "uid":uid,
           "gcs_url": document.url,
           "context":context
-        })
+          })
     #Pushing message to pubsub 
     print(message_list)
     pubsub_msg = f"batch for {case_id} moved to bucket"
