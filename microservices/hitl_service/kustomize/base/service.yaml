@@ -5,8 +5,8 @@ metadata:
   labels:
     app: hitl-service
 spec:
-  type: ClusterIP
-    #loadBalancerIP: 35.224.197.56
+  type: LoadBalancer
+  loadBalancerIP: 35.224.197.56
   ports:
   - port: 80
     protocol: TCP
