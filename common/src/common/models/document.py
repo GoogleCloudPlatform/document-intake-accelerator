@@ -3,7 +3,7 @@ Document Status object in the ORM
 """
 import os
 from common.models import BaseModel
-from fireo.fields import TextField,ListField ,NumberField
+from fireo.fields import TextField,ListField ,NumberField, BooleanField
 
 DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
@@ -26,10 +26,11 @@ class Document(BaseModel):
   matching_score = NumberField()
   auto_approval = TextField()
   is_autoapproved =  TextField()
+  is_hitl_classified = BooleanField()
 
   class Meta:
     ignore_none_field = False
-    collection_name = DATABASE_PREFIX+ "stestdocument"
+    collection_name = DATABASE_PREFIX+ "document_process_task"
 
   @classmethod
   def find_by_uid(cls, uuid):

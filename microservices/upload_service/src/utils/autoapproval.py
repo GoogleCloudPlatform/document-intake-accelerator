@@ -76,7 +76,7 @@ def get_values(
           Logger.info(f"Status :{status}")
           return status, flag
         else:
-          status = 'Rejected'
+          status = "Rejected"
           Logger.info(f"Status :{status}")
 
           return status, flag
@@ -98,7 +98,7 @@ def get_values(
           Logger.info(f"Status :{status}")
           return status, flag
         else:
-          status = 'Rejected'
+          status = "Rejected"
           Logger.info(f"Status :{status}")
 
           return status, flag
