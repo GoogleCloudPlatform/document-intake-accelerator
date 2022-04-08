@@ -6,8 +6,8 @@ metadata:
   labels:
     app: upload-service
 spec:
-  type: LoadBalancer
-  loadBalancerIP: 34.68.97.195
+  type: ClusterIP
+    #loadBalancerIP: 34.68.97.195
   ports:
   - port: 80
     protocol: TCP
