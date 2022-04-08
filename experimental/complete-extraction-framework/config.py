@@ -155,18 +155,9 @@ MAPPING_DICT = {
                   {"entity_suffix": f"(employer 2)", "col": 2, "row_no": 3},
                   {"entity_suffix": f"(employer 3)", "col": 0, "row_no": 3},
                 ],
-
-      "max_rows": 3, # -1 for all rows
-      # if 1 all columns will de extracted
-      # if -1 check for specific columns
-      "all_columns": -1,
-      # if -1 uses column name
-      "use_column_index": -1,
-      # to use this feature make the colum
-      "column_index": [0, 1, 3]
   },
 
-  "claim_form_arkansas": {
+  "claims_form_arkansas": {
         "default_entities": {
             "SIGNATURE": ["signature"],
             "NAME ": ["name"],
@@ -225,4 +216,5 @@ MAPPING_DICT = {
        "RATE": {"rule": "Regular\n(.*?)\n"},
        "HOURS": {"rule": "Regular\n.*?\n(.*?)\n"}}
   }
+}
 }

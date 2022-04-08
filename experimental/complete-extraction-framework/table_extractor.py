@@ -4,7 +4,6 @@ Extract data from a table present in a form
 """
 
 import json
-from utils_functions import standard_entity_mapping
 class TableExtractor:
 	"""
 	Extract data from a table present in the form
@@ -42,7 +41,12 @@ class TableExtractor:
 							header_row = [
 								TableExtractor.get_text(cell["layout"], self.data) for cell in hrow["cells"]
 							]
-							columns = [" ".join(val[0].split()) for val in header_row]
+							columns = []
+							for val, conf, cord in header_row:
+								if val is None:
+									columns.append(val, conf, cord)
+								else:
+									columns.append((" ".join(val.split()), conf, cord))
 							table_data = {"headers": columns}
 							col_data = {}
 							try:
@@ -55,7 +59,7 @@ class TableExtractor:
 										col_data[i_col] = {
 											"value": entity_val,
 											"extraction_confidence": conf,
-											"entity_coordinates": coordinates,
+											"key_coordinates": coordinates,
 											"manual_extraction": False,
 											"corrected_value": 0
 										}
@@ -91,6 +95,8 @@ class TableExtractor:
 					text += data["text"][int(start_index) : int(end_index)]
 					cell_conf = el["confidence"]
 					cell_coordinates = el["boundingPoly"]["normalizedVertices"]
+		if text in ("", None):
+			text = None
 		return (text, cell_conf, cell_coordinates)
 
 	@staticmethod
@@ -118,9 +124,9 @@ class TableExtractor:
 		for pg_num in page:
 			for table_num in page[pg_num]:
 				table_dict = page[pg_num][table_num]
-				table_header = table_dict["headers"]
+				table_header = [val[0] for val in table_dict["headers"]]
 				if TableExtractor.compare_lists(table_header, inp_header) >= 0.75:
-					return table_dict
+					return table_dict, table_header
 				else:
 					continue
 
@@ -138,7 +144,7 @@ class TableExtractor:
 		"""
 
 		if table_entities["isheader"]:
-			inp_header = table_entities["header"]
+			inp_header = table_entities["headers"]
 			if isinstance(table_entities["table_num"], int):
 				table_num = table_entities["table_num"]
 			else:
@@ -151,29 +157,32 @@ class TableExtractor:
 
 			if table_num > 0 and page_num > 0:
 				table_dict = self.master_dict[page_num][table_num]
-				if TableExtractor.compare_lists(table_dict["headers"], inp_header)< 0.75:
+				columns = [val[0] for val in table_dict["headers"]]
+				if TableExtractor.compare_lists(columns, inp_header) < 0.75:
 					return "Table does not match with the headers provided"
 
 
 			# if no table and page info provided. Iterate over all the pages to find the table
 			# based on header
 			elif page_num == 0 and table_num == 0:
-				table_dict = TableExtractor.get_table_using_header(self.master_dict, inp_header)
+				table_dict, columns = TableExtractor.get_table_using_header(self.master_dict, inp_header)
 			elif page_num > 0 and table_num == 0:
 				if not page_num in self.master_dict:
 					return "page not found"
 				page_dict = self.master_dict[page_num]
-				table_dict = TableExtractor.get_table_using_header(page_dict, inp_header)
+				table_dict, columns = TableExtractor.get_table_using_header(page_dict, inp_header)
 			else:
 				return "Operation cannot be performed. Check your config"
 
 			out = []
-			table_header = table_dict["headers"]
+
 			for user_inp in table_entities["entity_extraction"]:
 				entity_data = {}
 				suffix, row, col = user_inp["entity_suffix"], user_inp["row_no"], user_inp["col"]
 				row_dict = table_dict[row]["rows"]
-				entity_name = f"{table_header[col]} {suffix}"
+				if suffix in (None, ""):
+					suffix = ""
+				entity_name = f"{columns[col]} {suffix}"
 				entity_data = row_dict[col]
 				entity_data["entity"] = entity_name
 
@@ -204,11 +213,5 @@ if __name__ == '__main__':
 										"isheader": True
     }
 	out = t.get_entities(table_entities)
-	standard_entity_mapping(out)
-# [{'entity': 'Date (employer 1)', 'value': '2022-02-11', 'row': 1,
-# 	'extracted_conf': "", "manual_extraction": False, "key_cord":[],
-# 	"entity_cord": [], 'page_num':"", "table_num": "", "page_width":"",
-# 	"page_height":""},
-# 	{'entity': 'Date (employer 2)', 'value': '2022-02-11', 'row': 2}
-# ]
+	# standard_entity_mapping(out)
 

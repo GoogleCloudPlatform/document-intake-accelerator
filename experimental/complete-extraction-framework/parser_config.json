@@ -29,6 +29,11 @@
     "parser_name": "BankStatementParser",
     "location": "us",
     "processor_id": "32d7348f7955ed3f"
+  },
+  "claims_form": {
+    "parser_name": "FormParser",
+    "location": "us",
+    "processor_id": "58d7348f7955db9c"
   }
 }
 
