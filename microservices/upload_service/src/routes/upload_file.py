@@ -3,7 +3,7 @@
 import uuid
 import requests
 import traceback
-from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from typing import Optional, List
 from schemas.input_data import InputData
@@ -11,7 +11,6 @@ import utils.upload_file_gcs_bucket as ug
 from common.utils.logging_handler import Logger
 from common.models import Document
 from common.utils.publisher import publish_document
-from common.utils.process_task import run_pipeline
 from common.config import BUCKET_NAME
 import datetime
 
@@ -22,7 +21,6 @@ router = APIRouter()
 
 @router.post("/upload_files")
 async def upload_file(
-    background_tasks:BackgroundTasks,
     context: str,
     files: List[UploadFile] = File(...),
     case_id: Optional[str] = None,
@@ -106,8 +104,6 @@ async def upload_file(
     message_dict = {"message": pubsub_msg,"message_list":message_list}
     publish_document(message_dict)
     Logger.info(f"Files with case id {case_id} uploaded"
-                  f" successfully")
-    Logger.info(f"Pubsub message: {data} uploaded"
                   f" successfully")
     return {
         "status": f"Files with case id {case_id} uploaded"
