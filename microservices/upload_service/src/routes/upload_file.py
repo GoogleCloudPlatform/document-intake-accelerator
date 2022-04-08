@@ -3,15 +3,14 @@
 import uuid
 import requests
 import traceback
-from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from typing import Optional, List
 from schemas.input_data import InputData
 import utils.upload_file_gcs_bucket as ug
 from common.utils.logging_handler import Logger
 from common.models import Document
-# from common.utils.publisher import publish_document
-from common.utils.process_task import run_pipeline
+from common.utils.publisher import publish_document
 from common.config import BUCKET_NAME
 import datetime
 
@@ -22,7 +21,6 @@ router = APIRouter()
 
 @router.post("/upload_files")
 async def upload_file(
-    background_tasks:BackgroundTasks,
     context: str,
     files: List[UploadFile] = File(...),
     case_id: Optional[str] = None,
@@ -99,15 +97,11 @@ async def upload_file(
           "uid":uid,
           "gcs_url": document.url,
           "context":context
-        })
-    print(message_list)
-    # pubsub_msg = f"batch for {case_id} moved to bucket"
-    # message_dict = {"message": pubsub_msg,"message_list":message_list}
-    # publish_document(message_dict)
-    data = {"configs":message_list}
-    background_tasks.add_task(run_pipeline,data)
-    Logger.info(f"Files with case id {case_id} uploaded"
-                  f" successfully")
+          })
+    # Pushing Message To Pubsub
+    pubsub_msg = f"batch for {case_id} moved to bucket"
+    message_dict = {"message": pubsub_msg,"message_list":message_list}
+    publish_document(message_dict)
     Logger.info(f"Files with case id {case_id} uploaded"
                   f" successfully")
     return {
@@ -117,24 +111,6 @@ async def upload_file(
         "case_id": case_id,
         "uid_list": uid_list,
     }
-    # if response.status_code == 202:
-    #   Logger.info(f"Files with case id {case_id} uploaded"
-    #               f" successfully")
-    #   return {
-    #       "status": f"Files with case id {case_id} uploaded"
-    #                 f"successfully, the document"
-    #                 f" will be processed in sometime ",
-    #       "case_id": case_id,
-    #       "uid_list": uid_list,
-    #   }
-    # else:
-    #   return {
-    #     "status": f"Files with case id {case_id} uploaded"
-    #               f"successfully,Error in calling process task ",
-    #     "case_id": case_id,
-    #     "uid_list": uid_list,
-    #   }
-
   except Exception as e:
     Logger.error(e)
     err = traceback.format_exc().replace("\n", " ")
