@@ -52,8 +52,8 @@ clean_space_list = ['name']
 # dictionary to update date format.
 # The dictionary key values are the key field names and the dictionary values
 # are list of two input items. first item is input_date_format and second item is output date format.
-date_format_dict = {'dob': ['%Y-%m-%d', '%y/%m/%d']}
-
+# date_format_dict = {'dob': ['%Y-%m-%d', '%y/%m/%d']}
+date_format_dict = {'dob': ['%Y-%m-%d', '%Y-%m-%d']}
 # list of key fields for which extracted values are needed to be corrected to string
 # will be based on num_to_str_dict
 convert_to_string = ['name']

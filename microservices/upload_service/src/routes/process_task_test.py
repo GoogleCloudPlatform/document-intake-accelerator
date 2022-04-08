@@ -20,40 +20,38 @@ SUCCESS_RESPONSE = {"status": "Success"}
 def test_process_task_api(client_with_emulator):
   """Test case to check the test_process_task_api endpoint"""
   doc = Document()
-  doc.case_id = "test_id_33"
-  doc.uid = "GswfEO1i4P79UaeJV9kO"
+  doc.case_id = "case_arkansas_2001"
+  doc.uid = "y13FLMQW4bYnHLa5t8dg"
   doc.save()
-  data = {
-    "case_id": "test_id_33",
-    "uid": "GswfEO1i4P79UaeJV9kO",
-    "gcs_url": "gs://document-upload-test/test_id_33/GswfEO1i4P79UaeJV9kO/"\
-      "Copy of Arkansas-form-1.pdf"
-  }
+  doc.case_id = "case_arkansas_2001"
+  doc.uid = "wZSrLgChiIR8NfWQkju5"
+  doc.save()
+  data={
+  "configs": [
+    {
+      "case_id": "case_arkansas_2001",
+      "uid": "y13FLMQW4bYnHLa5t8dg",
+      "gcs_url": "gs://document-upload-test/case_arkansas_2001/"\
+      "y13FLMQW4bYnHLa5t8dg/Copy of Arkansas-form-1.pdf",
+      "context": "arkansas"
+    },
+    {
+      "case_id": "case_arkansas_2001",
+      "uid": "wZSrLgChiIR8NfWQkju5",
+      "gcs_url": "gs://document-upload-test/case_arkansas_2001/"\
+      "wZSrLgChiIR8NfWQkju5/DL-arkansas-1.pdf",
+      "context": "arkansas"
+    }
+  ]
+}
   with mock.patch("routes.process_task.get_classification"):
     with mock.patch("routes.process_task.get_extraction_score"):
       with mock.patch("routes.process_task.get_validation_score"):
         with mock.patch("routes.process_task.get_matching_score"):
           with mock.patch("routes.process_task.update_autoapproval_status"):
             with mock.patch("routes.process_task.Logger"):
-              response = client_with_emulator.post(
-                API_URL, json=data)
+              with mock.patch("routes.process_task.filter_documents"):
+                response = client_with_emulator.post(
+                  API_URL, json=data)
   assert response.status_code == 202, "Status 202"
 
-
-def test_process_task_api_invalid_doc(client_with_emulator):
-  """Test case to check the test_process_task_api endpoint"""
-  data = {
-    "case_id": "test_id_33",
-    "uid": "GswfEO1i4P79UaeJV9kO",
-    "gcs_url": "gs://document-upload-test/test_id_33/GswfEO1i4P79UaeJV9kO/"\
-      "Copy of Arkansas-form-1.pdf"
-  }
-  with mock.patch("routes.process_task.get_classification"):
-    with mock.patch("routes.process_task.get_extraction_score"):
-      with mock.patch("routes.process_task.get_validation_score"):
-        with mock.patch("routes.process_task.get_matching_score"):
-          with mock.patch("routes.process_task.update_autoapproval_status"):
-            with mock.patch("routes.process_task.Logger"):
-              response = client_with_emulator.post(
-                API_URL, json=data)
-  assert response.status_code == 404, "Status 404"

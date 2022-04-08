@@ -50,6 +50,7 @@ async def update_classification_status(
     case_id: str,
     uid: str,
     status: str,
+    is_hitl: Optional[bool] = False,
     document_class: Optional[str] = None,
     document_type: Optional[str] = None,
 ):
@@ -78,7 +79,9 @@ async def update_classification_status(
       #update  the document type and document class
       document.document_class = document_class
       document.document_type = document_type
+      document.is_hitl_classified = is_hitl
       system_status = {
+          "is_hitl" : is_hitl,
           "stage": "classification",
           "status": "success",
           "timestamp": str(datetime.datetime.utcnow())
@@ -102,7 +105,7 @@ async def update_classification_status(
     else:
       system_status = {
           "stage": "classification",
-          "status": "fail",
+          "status": status,
           "timestamp": str(datetime.datetime.utcnow())
       }
       document.system_status = fireo.ListUnion([system_status])
