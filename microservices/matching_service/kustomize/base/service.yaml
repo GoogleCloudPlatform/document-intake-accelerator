@@ -5,8 +5,7 @@ metadata:
   labels:
     app: matching-service
 spec:
-  type: LoadBalancer
-  loadBalancerIP: 35.224.90.131
+  type: NodePort
   ports:
   - port: 80
     protocol: TCP
