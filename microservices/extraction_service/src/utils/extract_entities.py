@@ -327,10 +327,10 @@ if __name__ == "__main__":
   # gcs_doc_path = "gs://async_form_parser/input/Arkansas-form.pdf"
   gcs_doc_path = "gs://adp_paystubs/arizona-paystub-form-10 (1).pdf"
   extract_entities(gcs_doc_path, doc_type, state)
-
+  """
+  print("use this code for looping in gcs folder")
+  """
   # use this code for looping in gcs folder
-  """
-  """
   gcs_output_uri = "gs://async_form_parser"
   gcs_output_uri_prefix = "input"
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
