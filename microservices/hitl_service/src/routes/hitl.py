@@ -9,7 +9,9 @@ import datetime
 import requests
 import fireo
 import traceback
-
+from models.SearchPayload import SearchPayload
+from config import DB_KEYS
+from config import ENTITY_KEYS
 # disabling for linting to pass
 # pylint: disable = broad-except
 
@@ -26,14 +28,16 @@ async def report_data():
               200 : fetches all the data from database
               500 : If any error occurs
     """
-  doc_list = []
+  docs_list = []
   try:
     #Fetching only active documents
-    docs = Document.collection.filter("active", "==", "active").fetch()
-    for d in docs:
-      doc_list.append(d.to_dict())
+    docs_list = list(
+        map(lambda x: x.to_dict(),
+            Document.collection.filter(active="active").fetch()))
+    docs_list = sorted(
+        docs_list, key=lambda i: i["upload_timestamp"], reverse=True)
     response = {"status": "Success"}
-    response["data"] = doc_list
+    response["data"] = docs_list
     return response
 
   except Exception as e:
@@ -107,6 +111,9 @@ async def get_queue(hitl_status: str):
           status_class = doc_dict["auto_approval"].lower()
       if status_class == hitl_status.lower():
         result_queue.append(doc_dict)
+
+    result_queue = sorted(
+        result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
 
     response = {"status": "Success"}
     response["data"] = result_queue
@@ -260,21 +267,16 @@ async def get_unclassified():
     500 : If there is any error during fetching from firestore
   """
   try:
-    docs = list(Document.collection.filter("active", "==", "active").fetch())
+    docs = list(Document.collection.filter(active="active").fetch())
     result_queue = []
     for d in docs:
       doc_dict = d.to_dict()
       print("document", doc_dict)
       system_trail = doc_dict["system_status"]
       print("system trail", system_trail)
-      if system_trail:
-        in_consideration = None
-        for status in system_trail:
-          if status["stage"].lower() == "classification":
-            in_consideration = status
-        if in_consideration:
-          if in_consideration["status"].lower() != "success":
-            result_queue.append(doc_dict)
+      if system_trail[-1]["stage"].lower() == "classification":
+        if system_trail[-1]["status"].lower() != "success":
+          result_queue.append(d)
     response = {"status": "success"}
     response["data"] = result_queue
     return response
@@ -283,8 +285,9 @@ async def get_unclassified():
     Logger.error(e)
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
-    raise HTTPException(status_code=500,
-      detail="Error during getting unclassified documents") from e
+    raise HTTPException(
+        status_code=500,
+        detail="Error during getting unclassified documents") from e
 
 
 def update_classification_status(case_id: str,
@@ -317,7 +320,7 @@ def update_classification_status(case_id: str,
 
 
 def call_process_task(case_id: str, uid: str, document_class: str,
-                      document_type: str, gcs_uri: str):
+                      document_type: str, gcs_uri: str, context: str):
   """
     Starts the process task API after hitl classification
   """
@@ -328,13 +331,14 @@ def call_process_task(case_id: str, uid: str, document_class: str,
       "gcs_url": gcs_uri,
       "is_hitl": True,
       "document_class": document_class,
-      "document_type": document_type
+      "document_type": document_type,
+      "context": context
   }
-
+  payload = {"configs": [data]}
   base_url = "http://upload-service/upload_service/v1/process_task"
-  print("params for process task",base_url,data)
+  print("params for process task", base_url, data)
   Logger.info(f"Params for process task {data}")
-  response = requests.post(base_url,json=data)
+  response = requests.post(base_url, json=payload)
   return response
 
 
@@ -392,7 +396,7 @@ async def update_hitl_classification(case_id: str, uid: str,
     #Call Process task
     Logger.info("Starting Process task from hitl classification")
     res = call_process_task(case_id, uid, document_class, document_type,
-                            doc.url)
+                            doc.url, doc.context)
     if res.status_code == 202:
       return {
           "status": "success",
@@ -415,3 +419,144 @@ async def update_hitl_classification(case_id: str, uid: str,
         status_code=500,
         detail="Couldn't update the classification.\
           Try checking if the case_id and uid are correct") from e
+
+
+def compare_value(entity, term, entity_key):
+  if entity["entity"] == entity_key:
+
+    if type(term) is str:
+      if entity["corrected_value"] is not None:
+        if type(entity["corrected_value"]) is str:
+          return term.lower() in entity["corrected_value"].lower()
+        else:
+          return False
+
+      else:
+        if entity["value"] is not None:
+          if type(entity["value"]) is str:
+            return term.lower() in entity["value"].lower()
+          else:
+            return False
+        else:
+          return False
+
+    else:
+      if entity["corrected_value"] is not None:
+        return term == entity["corrected_value"]
+
+      else:
+        if entity["value"] is not None:
+          return term == entity["value"]
+        else:
+          return False
+
+  else:
+    return False
+
+
+@router.post("/search")
+async def search(search_term: SearchPayload):
+  """
+  Searches for documents that include the search term in the keys
+  present in config
+  Args :search_term : SearchPayload
+  Returns 200: searches and returns the list of documents
+  Returns 400: Invalid Parameters
+  Returns 422: Filter key is not filterable(Not present in Config)
+  Returns 500: If something fails
+  """
+
+  try:
+    filter_key = search_term.filter_key
+    filter_value = search_term.filter_value
+    term = search_term.term
+    limit_start = search_term.limit_start
+    limit_end = search_term.limit_end
+
+    docs_list = []
+
+    if filter_key is not None and filter_value is not None:
+      if type(filter_key) is not str:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid Parameter type.\
+              Filter key should be of type string")
+      if filter_key in DB_KEYS:
+        docs_list = list(
+            map(
+                lambda x: x.to_dict(),
+                Document.collection.filter(active="active").filter(
+                    filter_key, "==", filter_value).fetch()))
+        print(docs_list[0:2])
+        docs_list = sorted(
+            docs_list, key=lambda i: i["upload_timestamp"], reverse=True)
+        if term is None:
+          if limit_start is not None and limit_end is not None:
+            if type(limit_start) is not int or type(limit_end) is not int:
+              raise HTTPException(
+                  status_code=400,
+                  detail="Invalid Parameter type.\
+                    Limit start and end should be of type int")
+            docs_list = docs_list[limit_start:limit_end]
+          return {"status": "success", "len": len(docs_list), "data": docs_list}
+      else:
+        raise HTTPException(
+            status_code=422, detail="Entered key is not filterable")
+
+    elif term is None:
+      raise HTTPException(status_code=400, detail="Search term not found")
+
+    else:
+      docs_list = list(
+          map(lambda x: x.to_dict(),
+              Document.collection.filter(active="active").fetch()))
+      docs_list = sorted(
+          docs_list, key=lambda i: i["upload_timestamp"], reverse=True)
+    resultset = []
+
+    for doc in docs_list:
+      for db_key in DB_KEYS:
+        if doc in resultset:
+          break
+        if doc[db_key] is not None:
+          if type(term) is str and type(doc[db_key]) is str:
+            if term.lower() in doc[db_key].lower():
+              resultset.append(doc)
+              break
+          else:
+            if term == doc[db_key]:
+              resultset.append(doc)
+              break
+
+      entities = doc.get("entities", None)
+      if doc in resultset or entities is None:
+        continue
+      for entity_key in ENTITY_KEYS:
+        temp = [
+            doc for entity in entities
+            if compare_value(entity, term, entity_key)
+        ]
+        if len(temp) > 0:
+          resultset.extend(temp)
+          temp.clear()
+          break
+
+    if limit_start is not None and limit_end is not None:
+      resultset = resultset[limit_start:limit_end]
+
+    return {"status": "success", "len": len(resultset), "data": resultset}
+
+  except HTTPException as e:
+    print(e)
+    Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
+    raise e
+
+  except Exception as e:
+    print(e)
+    Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
+    raise HTTPException(
+        status_code=400, detail="Error occurred in search") from e
