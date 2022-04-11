@@ -328,7 +328,9 @@ if __name__ == "__main__":
   gcs_doc_path = "gs://adp_paystubs/arizona-paystub-form-10 (1).pdf"
   extract_entities(gcs_doc_path, doc_type, state)
   """
+
   print("use this code for looping in gcs folder")
+
   """
   # use this code for looping in gcs folder
   gcs_output_uri = "gs://async_form_parser"
