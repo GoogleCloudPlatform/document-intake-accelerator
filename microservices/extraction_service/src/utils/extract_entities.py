@@ -20,12 +20,14 @@ from .utils_functions import entities_extraction, download_pdf_gcs,\
     extract_form_fields, del_gcs_folder, \
     form_parser_entities_mapping, extraction_accuracy_calc, \
     clean_form_parser_keys, standard_entity_mapping
-from .config import *
+from .config import PROJECT_NAME, \
+  NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE,\
+  GCS_OP_URI, FORM_PARSER_OP_TEMP_FOLDER, MAPPING_DICT
 import warnings
 parser_config = os.path.join(
     os.path.dirname(__file__), ".", "parser_config.json")
 
-warnings.simplefilter(action='ignore')
+warnings.simplefilter(action="ignore")
 
 def specialized_parser_extraction(parser_details: dict,
                                   gcs_doc_path: str, doc_type: str):
@@ -63,7 +65,8 @@ def specialized_parser_extraction(parser_details: dict,
      gcs_uri=gcs_doc_path
   )
 
-  document = {"content": blob.download_as_bytes(), "mime_type": "application/pdf"}
+  document = {"content": blob.download_as_bytes(),
+              "mime_type": "application/pdf"}
   # Configure the process request
   request = {"name": name, "raw_document": document}
   # send request to parser
@@ -126,9 +129,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   location = parser_details["location"]
   processor_id = parser_details["processor_id"]
   #parser_name = parser_details["parser_name"]
-
-  # These variables will be removed later
-  project_id = PROJECT_NAME  # later read this variable from project config files
+  project_id = PROJECT_NAME
 
   opts = {}
 
@@ -149,7 +150,8 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   gcs_documents = documentai.GcsDocuments(
     documents=[{"gcs_uri": gcs_doc_path, "mime_type": "application/pdf"}]
   )
-  input_config = documentai.BatchDocumentsInputConfig(gcs_documents=gcs_documents)
+  input_config = documentai.BatchDocumentsInputConfig\
+      (gcs_documents=gcs_documents)
   # Temp op folder location
   output_config = documentai.DocumentOutputConfig(
     gcs_output_config={"gcs_uri": destination_uri}
@@ -159,7 +161,8 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
   # request for Doc AI
   request = documentai.types.document_processor_service.BatchProcessRequest(
-    name=name, input_documents=input_config, document_output_config=output_config,
+    name=name, input_documents=input_config,
+      document_output_config=output_config,
   )
   operation = client.batch_process_documents(request)
   # Wait for the operation to finish
@@ -188,7 +191,8 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
       blob_as_bytes = blob.download_as_bytes()
       # saving the parser response to the folder, remove this while integration
       # parser_json_fname = "temp.json"
-      # parser_json_fname = os.path.join(parser_json_folder, 'res_{}.json'.format(i))
+      # parser_json_fname = \
+          # os.path.join(parser_json_folder, 'res_{}.json'.format(i))
       # with open(parser_json_fname, "wb") as file_obj:
       #     blob.download_to_file(file_obj)
 
@@ -228,8 +232,8 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   doc_state = doc_type+"_"+state
   mapping_dict = MAPPING_DICT[doc_state]
   # Extract desired entites from form parser
-  form_parser_entities_list = form_parser_entities_mapping(extracted_entity_list,
-                                            mapping_dict, form_parser_text)
+  form_parser_entities_list = form_parser_entities_mapping(
+      extracted_entity_list,mapping_dict, form_parser_text)
 
   # Save extract desired entities only
   # with open("{}.json".format(os.path.join(extracted_entities,
@@ -251,35 +255,36 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
 
   Returns
   -------
-    List of dicts having entity, value, confidence and manual_extraction information.
+    List of dicts having entity, value, confidence and
+           manual_extraction information.
     Extraction accuracy
   """
 
   # parser_config_json = "parser_config.json"
   parser_config_json = parser_config
   # read parser details from configuration json file
-  with open(parser_config_json, 'r') as j:
+  with open(parser_config_json, "r") as j:
     parsers_info = json.loads(j.read())
     parser_information = parsers_info.get(doc_type)
     # if parser present then do extraction else update the status
     if parser_information:
       parser_name = parser_information["parser_name"]
       if parser_name == "FormParser":
-        desired_entities_list = form_parser_extraction(parser_information,
-                                    gcs_doc_path, doc_type, state, 300)
+        desired_entities_list = form_parser_extraction(
+            parser_information,gcs_doc_path, doc_type, state, 300)
       else:
-        desired_entities_list = specialized_parser_extraction(parser_information,
-                                    gcs_doc_path, doc_type)
+        desired_entities_list = specialized_parser_extraction(
+            parser_information,gcs_doc_path, doc_type)
 
       # calling standard entity mapping function to standardize the entities
-      final_extracted_entities = standard_entity_mapping(desired_entities_list,
-                                                         parser_name)
+      final_extracted_entities = standard_entity_mapping(
+          desired_entities_list,parser_name)
       # calling post processing utility function
       # input json is the extracted json file after your mapping script
       input_dict = get_json_format_for_processing(final_extracted_entities)
       input_dict, output_dict = data_transformation(input_dict)
-      final_extracted_entities = correct_json_format_for_db(output_dict,
-                                                            final_extracted_entities)
+      final_extracted_entities = correct_json_format_for_db(
+          output_dict,final_extracted_entities)
       # with open("{}.json".format(os.path.join(mapped_extracted_entities,
       #         gcs_doc_path.split('/')[-1][:-4])),
       #           "w") as outfile:
@@ -310,7 +315,7 @@ if __name__ == "__main__":
   #     "gs://gs://async_form_parser/input/Arkansas application form.pdf"
 
   os.environ[
-    'GOOGLE_APPLICATION_CREDENTIALS'] = \
+    "GOOGLE_APPLICATION_CREDENTIALS"] = \
    "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/" \
    "claims-processing-dev-a07894631cd2.json"
 
