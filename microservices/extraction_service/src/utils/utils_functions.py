@@ -39,7 +39,7 @@ def pattern_based_entities(parser_data, pattern):
     return op
 
 
-def default_entities_extraction(parser_entities, default_entities):
+def default_entities_extraction(parser_entities, default_entities,doc_type):
     """
     This function extracted default entities
 
@@ -78,6 +78,16 @@ def default_entities_extraction(parser_entities, default_entities):
                                                      "manual_extraction": False,
                                                      "corrected_value": None}
 
+    # if doc_type == 'utility_bill':
+    #     if "supplier_address" in parser_entities_dict:
+    #         if parser_entities_dict['supplier_address'][0] == '':
+    #             if 'receiver_address' in parser_entities_dict.keys() and parser_entities_dict['receiver_address'][0]!='':
+    #                 entity_dict['address']['value'] = parser_entities_dict['receiver_address'][0]
+    #             else:
+    #                 if "service_address" in parser_entities_dict:
+    #                         entity_dict['address']['value'] = parser_entities_dict['service_address'][0]
+
+  
     return entity_dict
 
 
@@ -143,7 +153,13 @@ def derived_entities_extraction(parser_data, derived_entities):
         derived_entities_extracted_dict[key] = {"entity": key, "value": pattern_op,
                                                 "extraction_confidence": None,
                                                 "manual_extraction": True,
-                                                "corrected_value": None}
+                                                "corrected_value": None,
+                                                "value_coordinates": None,
+                                                "key_coordinates": None,
+                                                "page_no": None,
+                                                "page_width": None,
+                                                "page_height": None
+                                                }
 
     return derived_entities_extracted_dict
 
@@ -170,7 +186,7 @@ def entities_extraction(parser_data, required_entities, doc_type):
     derived_entities = required_entities.get("derived_entities")
 
     # Extract default entities
-    entity_dict = default_entities_extraction(parser_entities, default_entities)
+    entity_dict = default_entities_extraction(parser_entities, default_entities,doc_type)
 
     # if any derived entities then extract them
     if derived_entities:
@@ -179,6 +195,7 @@ def entities_extraction(parser_data, required_entities, doc_type):
         entity_dict.update(derived_entities_extracted_dict)
 
     return entity_dict
+
 
 def check_int(d):
     """
@@ -193,22 +210,58 @@ def check_int(d):
     """
 
     count = 0
-
+    date_val = ""
     for i in d:
         if i and i.isdigit():
             count = count + 1
-    if count >= 2:
+            date_val += str(i)
+
+    if count >= 2 and len(date_val) < 17:
         return True
     else:
         return False
 
-def standard_entity_mapping(desired_entities_list):
+
+def consolidate_coordinates(d):
+    """
+    This function create co-ordinates for groupby entities
+    Parameters
+    ----------
+    d: entity co-ordinates list
+
+    Returns: List of co-ordinates
+    -------
+    """
+
+    entities_cooridnates = []
+
+    if len(d)>1:
+        for i in d:
+            if i:
+                entities_cooridnates.append(i)
+        if entities_cooridnates:
+            final_coordinates = [entities_cooridnates[0][0], entities_cooridnates[0][1], entities_cooridnates[-1][6],
+                                 entities_cooridnates[0][1], entities_cooridnates[0][0], entities_cooridnates[-1][7],
+                                 entities_cooridnates[-1][6], entities_cooridnates[-1][7]]
+        else:
+            final_coordinates = None
+
+        return [float(i) for i in final_coordinates]
+    else:
+        if d.values[0]:
+            return [float(i) for i in d.values[0]]
+        else:
+            return None
+
+
+def standard_entity_mapping(desired_entities_list, parser_name):
     """
     This function changes entity name to standard names and also
                 create consolidated entities like name and date
     Parameters
     ----------
     desired_entities_list: List of default and derived entities
+    parser_name: name of the parser
 
     Returns: Standard entities list
     -------
@@ -243,20 +296,36 @@ def standard_entity_mapping(desired_entities_list):
     # convert datatype from object to int for column 'extraction_confidence'
     df_json['extraction_confidence'] = pd.to_numeric(df_json['extraction_confidence'], errors='coerce')
 
-    group_by_columns = ['value', 'extraction_confidence', 'manual_extraction', 'corrected_value']
+    group_by_columns = ['value', 'extraction_confidence', 'manual_extraction', 'corrected_value', 'page_no',
+                        'page_width', 'page_height', 'key_coordinates', 'value_coordinates']
+
     df_conc = df_json.groupby('entity')[group_by_columns[0]].apply(
         lambda x: '/'.join([v for v in x if v]) if check_int(x) else ' '.join(v for v in x if v)).reset_index()
-
 
     df_av = df_json.groupby(['entity'])[group_by_columns[1]].mean().reset_index().round(2)
 
     # taking mode for categorical variables
     df_manual_extraction = df_json.groupby(['entity'])[group_by_columns[2]].agg(pd.Series.mode).reset_index()
-    print("======================================")
-    print(df_json)
+
     df_corrected_value = df_json.groupby(['entity'])[group_by_columns[3]].mean().reset_index().round(2)
 
-    dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value]
+    if parser_name == "FormParser":
+        df_page_no = df_json.groupby(['entity'])[group_by_columns[4]].mean().reset_index().round(2)
+        df_page_width = df_json.groupby(['entity'])[group_by_columns[5]].mean().reset_index().round(2)
+        df_page_height = df_json.groupby(['entity'])[group_by_columns[6]].mean().reset_index().round(2)
+
+        # co-ordinate consolidation
+
+        df_key_coordinates = df_json.groupby('entity')[group_by_columns[7]].apply(
+            lambda x: consolidate_coordinates(x)).reset_index()
+
+        df_value_coordinates = df_json.groupby('entity')[group_by_columns[8]].apply(
+            lambda x: consolidate_coordinates(x)).reset_index()
+
+        dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value, df_page_no, df_page_width, df_page_height,
+           df_key_coordinates, df_value_coordinates]
+    else:
+        dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value]
 
     df_final = reduce(lambda left, right: pd.merge(left, right, on='entity'), dfs)
 
@@ -302,26 +371,45 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
 
             if idx_list:
                 try:
+
                     # creating response
                     temp_dict = {"entity": each_val, "value": df['value'][idx_list[idx]],
-                                 "extraction_confidence": df['value_confidence'][idx_list[idx]],
+                                 "extraction_confidence": float(df['value_confidence'][idx_list[idx]]),
                                  "manual_extraction": False,
-                                 "corrected_value": None}
+                                 "corrected_value": None,
+                                 "value_coordinates": [float(i) for i in df['value_coordinates'][idx_list[idx]]],
+                                 "key_coordinates": [float(i) for i in df['key_coordinates'][idx_list[idx]]],
+                                 "page_no": int(df['page_no'][idx_list[idx]]),
+                                 "page_width": int(df['page_width'][idx_list[idx]]),
+                                 "page_height": int(df['page_height'][idx_list[idx]])
+                                 }
                 except Exception as e:
                     print('Key not found in parser output')
+
                     temp_dict = {"entity": each_val, "value": None,
                                  "extraction_confidence": None,
                                  "manual_extraction": False,
-                                 "corrected_value": None}
+                                 "corrected_value": None,
+                                 "value_coordinates": None,
+                                 "key_coordinates": None,
+                                 "page_no": None,
+                                 "page_width": None,
+                                 "page_height": None
+                                 }
 
                 required_entities_list.append(temp_dict)
             else:
                 # filling null value if parser didn't extract
-
                 temp_dict = {"entity": each_val, "value": None,
                              "extraction_confidence": None,
                              "manual_extraction": False,
-                             "corrected_value": None}
+                             "corrected_value": None,
+                             "value_coordinates": None,
+                             "key_coordinates": None,
+                             "page_no": None,
+                             "page_width": None,
+                             "page_height": None
+                             }
                 required_entities_list.append(temp_dict)
 
     if derived_entities:
@@ -417,7 +505,7 @@ def del_gcs_folder(bucket, folder):
     for blob in blobs:
         blob.delete()
 
-    print("Delete successful")
+    # print("Delete successful")
 
 
 def extract_form_fields(doc_element: dict, document: dict):
@@ -432,10 +520,10 @@ def extract_form_fields(doc_element: dict, document: dict):
 
     Returns: Entity name and Confidence
     -------
-
     """
 
     response = ""
+    list_of_coordidnates = []
     # If a text segment spans several lines, it will
     # be stored in different text segments.
     for segment in doc_element.text_anchor.text_segments:
@@ -447,7 +535,20 @@ def extract_form_fields(doc_element: dict, document: dict):
         end_index = int(segment.end_index)
         response += document.text[start_index:end_index]
     confidence = doc_element.confidence
-    return response, confidence
+    coordinate = list([doc_element.bounding_poly.normalized_vertices])
+    # print("coordinate", coordinate)
+    # print("type", type(coordinate))
+
+    for item in coordinate:
+        # print("item", item)
+        # print("type", type(item))
+        for xy_coordinate in item:
+            # print("xy_coordinate", xy_coordinate)
+            # print("x", xy_coordinate.x)
+
+            list_of_coordidnates.append(float(round(xy_coordinate.x, 4)))
+            list_of_coordidnates.append(float(round(xy_coordinate.y, 4)))
+    return response, confidence, list_of_coordidnates
 
 
 def extraction_accuracy_calc(total_entities_list):

@@ -134,40 +134,67 @@ MAPPING_DICT = {
       "What was your last day of work?": ["What was your last day of work?"],
       "Claimant's Signature": ["Claimant's Signature "]
     },
-    "table_entities": {
+    "table_entities":
+    {
+      "isheader": True,
+      # if table and page number is unknown mark the variables to 0
+      "table_num": 0, "page_num": 0,
+      "headers": ["Date", "Name of Employer/Company/ Union and Address (City, State and Zip Code)",
+								 "Website URL or Name of person contacted",
+								 "Method (In person, Internet, mail)",
+								 "Type of work sought", "Action taken on the date of contact"],
+                 # entity name will be constructed based on the col number provided
+                 # for an employer
+                 "entity_extraction": [
+                  {"entity_suffix": f"(employer 1)", "col": 0, "row_no": 1},
+                  {"entity_suffix": f"(employer 2)", "col": 0, "row_no": 2},
+                  {"entity_suffix": f"(employer 1)", "col": 2, "row_no": 2},
+                  {"entity_suffix": f"(employer 1)", "col": 3, "row_no": 1},
+                  {"entity_suffix": f"(employer 1)", "col": 4, "row_no": 1},
+                  {"entity_suffix": f"(employer 2)", "col": 3, "row_no": 2},
+                  {"entity_suffix": f"(employer 2)", "col": 2, "row_no": 3},
+                  {"entity_suffix": f"(employer 3)", "col": 0, "row_no": 3},
+                ],
 
-    }
+      "max_rows": 3, # -1 for all rows
+      # if 1 all columns will de extracted
+      # if -1 check for specific columns
+      "all_columns": -1,
+      # if -1 uses column name
+      "use_column_index": -1,
+      # to use this feature make the colum
+      "column_index": [0, 1, 3]
   },
 
-  "claim_form_arkansas": {
+      "claims_form_arkansas": {
         "default_entities": {
-            "SIGNATURE": ["signature"],
-            "NAME ": ["name"],
-            "SSN": ["ssn"],
-            "street_or_box_no": ["employer_address","mailing address"],
-            "CITY": ["mailing_city","employer_city"],
-            "STATE": ["mailing_state","employer_state"],
-            "ZIP CODE": ["employer_zip","mailing_zip"],
-            "LAST DAY WORKED ": ["work_end_date"],
-            "PHONE NO": ["phone_no"],
-            "DATE BEGAN WORK ": ["work_start_date"],
-            "EMPLOYER'S NAME AND ADDRESS" :["employee_info"]
-  
+            "SIGNATURE": ["SIGNATURE"],
+            "NAME ": ["CLAIMANT NAME","EMPLOYEE NAME"],
+            "EMPLOYER NAME" : ["EMPLOYER NAME"],
+            "SSN": ["SSN"],
+            "STREET OR BOX NO": ["EMPLOYEE STREET OR BOX NO.","EMPLOYER STREET OR BOX NO."],
+            "CITY": ["EMPLOYEE CITY","EMPLOYER CITY"],
+            "STATE": ["EMPLOYEE STATE","EMPLOYER STATE"],
+            "ZIP CODE": ["EMPLOYEE ZIP CODE","EMPLOYER ZIP CODE"],
+            "LAST DAY WORKED ": ["LAST DAY WORK"],
+            "PHONE NO": ["EMPLOYEE PHONE NO."],
+            "DATE BEGAN WORK": ["DATE BEGAN WORK"],
+            "EMPLOYER'S NAME AND ADDRESS" :["EMPLOYER'S NAME AND ADDRESS"]
+
             }
     },
 
    "utility_bill":{
         "default_entities":{
                         "receiver_name" : ["name"],
-                        "supplier_address": ["address"],
-                        "due_date": ["due_date"],
-                        "invoice_date": ["invoice_date"],
-                        "supplier_account_number": ["account_no"],
+                        "supplier_address": ["reciever address"],
+                        "due_date": ["due date"],
+                        "invoice_date": ["Invoice date"],
+                        "supplier_account_number": ["Account no"],
                         }
-
-
-
    },
+
+
 
   "driver_license": {
     "default_entities": {

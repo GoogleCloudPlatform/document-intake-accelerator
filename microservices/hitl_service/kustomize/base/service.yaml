@@ -6,7 +6,7 @@ metadata:
     app: hitl-service
 spec:
   type: LoadBalancer
-  loadBalancerIP: 35.238.35.3
+  loadBalancerIP: 35.224.197.56
   ports:
   - port: 80
     protocol: TCP
