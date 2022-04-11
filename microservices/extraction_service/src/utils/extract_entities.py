@@ -9,10 +9,9 @@ import json
 import os
 import re
 import proto
-import random
+# import random
 from google.cloud import documentai_v1 as documentai
 from google.cloud import storage
-
 from .change_json_format import get_json_format_for_processing, \
     correct_json_format_for_db
 from .correct_key_value import data_transformation
@@ -185,7 +184,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   # if not os.path.exists(parser_json_folder):
   #     os.mkdir(parser_json_folder)
   # browse through output jsons
-  for i, blob in enumerate(blob_list):
+  for blob in blob_list:
     # If JSON file, download the contents of this blob as a bytes object.
     if ".json" in blob.name:
       blob_as_bytes = blob.download_as_bytes()
@@ -263,7 +262,7 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
   # parser_config_json = "parser_config.json"
   parser_config_json = parser_config
   # read parser details from configuration json file
-  with open(parser_config_json, "r") as j:
+  with open(parser_config_json, "r", encoding="utf-8") as j:
     parsers_info = json.loads(j.read())
     parser_information = parsers_info.get(doc_type)
     # if parser present then do extraction else update the status
@@ -298,11 +297,11 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
       return final_extracted_entities, document_extraction_confidence
     else:
       # Parser not available
-      print('parser not available for this document')
+      print("parser not available for this document")
       return None
 
 if __name__ == "__main__":
-
+  """
   extracted_entities = \
    "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/pay-stub"
   mapped_extracted_entities = \
@@ -330,21 +329,17 @@ if __name__ == "__main__":
   extract_entities(gcs_doc_path, doc_type, state)
 
   # use this code for looping in gcs folder
-
+  """
   """
   gcs_output_uri = "gs://async_form_parser"
   gcs_output_uri_prefix = "input"
-    
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
-    
   match = re.match(r"gs://([^/]+)/(.+)", destination_uri)
   output_bucket = match.group(1)
   prefix = match.group(2)
-    
   storage_client = storage.Client()
   bucket = storage_client.get_bucket(output_bucket)
   blob_list = list(bucket.list_blobs(prefix=prefix))
-    
   for i, blob in enumerate(blob_list):
     if ".pdf" in blob.name:
       gcs_doc_path = gcs_output_uri + '/' + blob.name
