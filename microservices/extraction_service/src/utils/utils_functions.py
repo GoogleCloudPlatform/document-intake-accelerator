@@ -247,52 +247,52 @@ def standard_entity_mapping(desired_entities_list, parser_name):
   entity_standardization = os.path.join(
         os.path.dirname(__file__), ".", "entity-standardization.csv")
   entities_standardization_csv = pd.read_csv(entity_standardization)
-  entities_standardization_csv.dropna(how='all', inplace=True)
+  entities_standardization_csv.dropna(how="all", inplace=True)
 
   # Keep first record incase of duplicate entities
-  entities_standardization_csv.drop_duplicates(subset=['entity']
+  entities_standardization_csv.drop_duplicates(subset=["entity"]
                                                , keep="first", inplace=True)
   entities_standardization_csv.reset_index(drop=True)
 
   # Create a dictionary from the look up dataframe/excel which has
   # the key col and the value col
   dict_lookup = dict(
-        zip(entities_standardization_csv['entity'],
-            entities_standardization_csv['standard_entity_name']))
+        zip(entities_standardization_csv["entity"],
+            entities_standardization_csv["standard_entity_name"]))
   # Get( all the entity (key column) from the json as a list
-  key_list = list(df_json['entity'])
+  key_list = list(df_json["entity"])
   # Replace the value by creating a list by looking up the value and assign
   # to json entity
-  df_json['entity'] = [dict_lookup[item] for item in key_list]
-  # convert datatype from object to int for column 'extraction_confidence'
-  df_json['extraction_confidence'] = pd.to_numeric(df_json['extraction_confidence'],
-                                                   errors='coerce')
-  group_by_columns = ['value', 'extraction_confidence', 'manual_extraction',
-                      'corrected_value', 'page_no',
-                        'page_width', 'page_height', 'key_coordinates',
-                      'value_coordinates']
-  df_conc = df_json.groupby('entity')[group_by_columns[0]].apply(
-        lambda x: '/'.join([v for v in x if v]) if check_int(x)
-        else ' '.join(v for v in x if v)).reset_index()
+  df_json["entity"] = [dict_lookup[item] for item in key_list]
+  # convert datatype from object to int for column "extraction_confidence"
+  df_json["extraction_confidence"] = pd.to_numeric\
+      (df_json["extraction_confidence"],errors="coerce")
+  group_by_columns = ["value", "extraction_confidence", "manual_extraction",
+                      "corrected_value", "page_no",
+                        "page_width", "page_height", "key_coordinates",
+                      "value_coordinates"]
+  df_conc = df_json.groupby("entity")[group_by_columns[0]].apply(
+        lambda x: "/".join([v for v in x if v]) if check_int(x)
+        else " ".join(v for v in x if v)).reset_index()
 
-  df_av = df_json.groupby(['entity'])[group_by_columns[1]].mean().\
+  df_av = df_json.groupby(["entity"])[group_by_columns[1]].mean().\
       reset_index().round(2)
   # taking mode for categorical variables
-  df_manual_extraction = df_json.groupby(['entity'])[group_by_columns[2]]\
+  df_manual_extraction = df_json.groupby(["entity"])[group_by_columns[2]]\
       .agg(pd.Series.mode).reset_index()
-  df_corrected_value = df_json.groupby(['entity'])[group_by_columns[3]]\
+  df_corrected_value = df_json.groupby(["entity"])[group_by_columns[3]]\
       .mean().reset_index().round(2)
   if parser_name == "FormParser":
-    df_page_no = df_json.groupby(['entity'])[group_by_columns[4]].mean()\
+    df_page_no = df_json.groupby(["entity"])[group_by_columns[4]].mean()\
         .reset_index().round(2)
-    df_page_width = df_json.groupby(['entity'])[group_by_columns[5]].mean()\
+    df_page_width = df_json.groupby(["entity"])[group_by_columns[5]].mean()\
         .reset_index().round(2)
-    df_page_height = df_json.groupby(['entity'])[group_by_columns[6]].mean()\
+    df_page_height = df_json.groupby(["entity"])[group_by_columns[6]].mean()\
         .reset_index().round(2)
     # co-ordinate consolidation
-    df_key_coordinates = df_json.groupby('entity')[group_by_columns[7]].apply(
+    df_key_coordinates = df_json.groupby("entity")[group_by_columns[7]].apply(
         lambda x: consolidate_coordinates(x)).reset_index()
-    df_value_coordinates = df_json.groupby('entity')[group_by_columns[8]].apply(
+    df_value_coordinates = df_json.groupby("entity")[group_by_columns[8]].apply(
         lambda x: consolidate_coordinates(x)).reset_index()
     dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value,
            df_page_no, df_page_width, df_page_height,
@@ -300,8 +300,8 @@ def standard_entity_mapping(desired_entities_list, parser_name):
   else:
     dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value]
 
-  df_final = reduce(lambda left, right: pd.merge(left, right, on='entity'), dfs)
-  df_final = df_final.replace(r'^\s*$', np.nan, regex=True)
+  df_final = reduce(lambda left, right: pd.merge(left, right, on="entity"), dfs)
+  df_final = df_final.replace(r"^\s*$", np.nan, regex=True)
   df_final = df_final.replace({np.nan: None})
   extracted_entities_final_json = df_final.to_dict("records")
   return extracted_entities_final_json
@@ -329,25 +329,28 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   required_entities_list = []
   # loop through one by one deafult entities mentioned in the config file
   for each_ocr_key, each_ocr_val in default_entities.items():
-    idx_list = df.index[df['key'] == each_ocr_key].tolist()
+    idx_list = df.index[df["key"] == each_ocr_key].tolist()
     # loop for matched records of mapping dictionary
     for idx, each_val in enumerate(each_ocr_val):
       if idx_list:
         try:
           # creating response
           temp_dict = \
-            {"entity": each_val, "value": df['value'][idx_list[idx]],
-             "extraction_confidence": float(df['value_confidence'][idx_list[idx]]),
+            {"entity": each_val, "value": df["value"][idx_list[idx]],
+             "extraction_confidence": float(df["value_confidence"]
+                                            [idx_list[idx]]),
              "manual_extraction": False,
              "corrected_value": None,
-             "value_coordinates": [float(i) for i in df['value_coordinates'][idx_list[idx]]],
-             "key_coordinates": [float(i) for i in df['key_coordinates'][idx_list[idx]]],
-             "page_no": int(df['page_no'][idx_list[idx]]),
-             "page_width": int(df['page_width'][idx_list[idx]]),
-             "page_height": int(df['page_height'][idx_list[idx]])
+             "value_coordinates": [float(i) for i in df["value_coordinates"]
+                                             [idx_list[idx]]],
+             "key_coordinates": [float(i) for i in df["key_coordinates"]
+                                           [idx_list[idx]]],
+             "page_no": int(df["page_no"][idx_list[idx]]),
+             "page_width": int(df["page_width"][idx_list[idx]]),
+             "page_height": int(df["page_height"][idx_list[idx]])
              }
         except Exception as e:
-          print('Key not found in parser output')
+          print("Key not found in parser output")
           temp_dict = {"entity": each_val, "value": None,
                                  "extraction_confidence": None,
                                  "manual_extraction": False,
@@ -400,14 +403,14 @@ def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None,
             filename ABC.txt
             then file_to_download = Y/ABC.txt
     Return:
-        pdf_path (str): pdf file path that is downloaded from the bucket and stored
-                in local
+        pdf_path (str): pdf file path that is downloaded from the
+                bucket and stored in local
   """
   if bucket_name is None:
-    bucket_name = gcs_uri.split('/')[2]
+    bucket_name = gcs_uri.split("/")[2]
   # if file to download is not provided it can be extracted from the GCS URI
   if file_to_download is None and gcs_uri is not None:
-    file_to_download = '/'.join(gcs_uri.split('/')[3:])
+    file_to_download = "/".join(gcs_uri.split("/")[3:])
   storage_client = storage.Client()
   bucket = storage_client.get_bucket(bucket_name)
   blob = bucket.blob(file_to_download)
@@ -431,7 +434,7 @@ def clean_form_parser_keys(text):
   try:
     if len(text):
       text = text.strip()
-      text = text.replace("\n", ' ')
+      text = text.replace("\n", " ")
       text = re.sub(r"^\W+", "", text)
       last_word = text[-1]
       text = re.sub(r"\W+$", "", text)
@@ -516,9 +519,11 @@ def extraction_accuracy_calc(total_entities_list):
   entity_accuracy_list = [each_entity.get("extraction_confidence") if
                           each_entity.get("extraction_confidence") else 0
                         for each_entity in
-                        total_entities_list if not each_entity.get("manual_extraction")]
+                        total_entities_list if not each_entity.
+          get("manual_extraction")]
 
-  extraction_accuracy = round(sum(entity_accuracy_list) / len(entity_accuracy_list), 3)
+  extraction_accuracy = round(sum(entity_accuracy_list) /
+                              len(entity_accuracy_list), 3)
 
   return extraction_accuracy
 
@@ -551,7 +556,7 @@ if __name__ == "__main__":
     json_files = os.listdir(parser_json)
 
     for each_json in json_files:
-        with open(os.path.join(parser_json, each_json), 'r') as j:
+        with open(os.path.join(parser_json, each_json), "r") as j:
             data = json.loads(j.read())
             print(each_json)
 
@@ -559,11 +564,11 @@ if __name__ == "__main__":
 
             # save extracted entities json
             with open("{}.json".format(os.path.join(extracted_entities, 
-            each_json.split('.')[0])), "w") as outfile:
+            each_json.split(".")[0])), "w") as outfile:
                 json.dump(entity_dict, outfile, indent=4)
 
     download_pdf_gcs(
-        gcs_uri='gs://async_form_parser/input/arizona-driver-form-13.pdf'
+        gcs_uri="gs://async_form_parser/input/arizona-driver-form-13.pdf"
     )
 
     total_entities_list = [
