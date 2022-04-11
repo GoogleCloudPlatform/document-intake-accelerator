@@ -1,14 +1,14 @@
 """
   Tests for hitl endpoints
 """
+# disabling pylint rules that conflict with pytest fixtures
+# pylint: disable=unused-argument,redefined-outer-name,unused-import
 import os
 import json
 from unittest.mock import Mock, patch
 from testing.fastapi_fixtures import client_with_emulator
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
 from common.models.document import Document
-# disabling pylint rules that conflict with pytest fixtures
-# pylint: disable=unused-argument,redefined-outer-name,unused-import
 
 # assigning url
 api_url = "http://localhost:8080/hitl_service/v1/"
