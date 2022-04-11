@@ -15,9 +15,9 @@ from common.utils.logging_handler import Logger
 def listToString(string_list):
   '''Function to join a list of string characters to a single string
   Input:
-    string_list: list of string characters
+   string_list: list of string characters
   Output:
-    str1: concatenated string
+   str1: concatenated string
   '''
 
   # initialize an empty string
