@@ -4,12 +4,12 @@
 import os
 import json
 from unittest.mock import Mock, patch
-from models.SearchPayload import SearchPayload
-# disabling pylint rules that conflict with pytest fixtures
-# pylint: disable=unused-argument,redefined-outer-name,unused-import
 from testing.fastapi_fixtures import client_with_emulator
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
 from common.models.document import Document
+# disabling pylint rules that conflict with pytest fixtures
+# pylint: disable=unused-argument,redefined-outer-name,unused-import
+
 # assigning url
 api_url = "http://localhost:8080/hitl_service/v1/"
 
@@ -87,7 +87,8 @@ def test_update_hitl_status_api(client_with_emulator):
   d.save()
   with patch("routes.hitl.Logger"):
     response = client_with_emulator.post(
-        f"{api_url}update_hitl_status?uid=u123&status=approved&user=Jon&comment="
+        f"{api_url}update_hitl_status?"\
+          f"uid=u123&status=approved&user=Jon&comment="
     )
     assert response.status_code == 200
 
@@ -117,7 +118,8 @@ def test_update_hitl_status_api_invalid_status(client_with_emulator):
   d.save()
   with patch("routes.hitl.Logger"):
     response = client_with_emulator.post(
-        f"{api_url}update_hitl_status?uid=u123&status=accepted&user=Jon&comment="
+        f"{api_url}update_hitl_status?"\
+          f"uid=u123&status=accepted&user=Jon&comment="
     )
     assert response.status_code == 400
 
@@ -178,7 +180,8 @@ def test_fetch_api_download(client_with_emulator):
   """Test case to check the fetch_file hitl endpoint"""
   with patch("routes.hitl.Logger"):
     response = client_with_emulator.get(
-        f"{api_url}fetch_file?case_id= wwe&uid=CS2EeDc2Gl0OAkdZ4rWK&download=true"
+        f"{api_url}fetch_file?"\
+          f"case_id= wwe&uid=CS2EeDc2Gl0OAkdZ4rWK&download=true"
     )
     assert response.status_code == 200
 
@@ -287,7 +290,6 @@ def test_search_db_key(client_with_emulator):
   d.case_id = "case_arkansas_1"
   d.save()
 
-  search.term = "case_"
   search_term = {"term": "case_"}
 
   with patch("routes.hitl.Logger"):

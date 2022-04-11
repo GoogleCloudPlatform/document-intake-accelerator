@@ -9,7 +9,7 @@ import datetime
 import requests
 import fireo
 import traceback
-from models.SearchPayload import SearchPayload
+from models.search_payload import SearchPayload
 from config import DB_KEYS
 from config import ENTITY_KEYS
 # disabling for linting to pass
@@ -423,16 +423,16 @@ async def update_hitl_classification(case_id: str, uid: str,
 def compare_value(entity, term, entity_key):
   if entity["entity"] == entity_key:
 
-    if type(term) is str:
+    if isinstance(term,str):
       if entity["corrected_value"] is not None:
-        if type(entity["corrected_value"]) is str:
+        if isinstance(entity["corrected_value"],str):
           return term.lower() in entity["corrected_value"].lower()
         else:
           return False
 
       else:
         if entity["value"] is not None:
-          if type(entity["value"]) is str:
+          if isinstance(entity["value"],str):
             return term.lower() in entity["value"].lower()
           else:
             return False
@@ -475,7 +475,7 @@ async def search(search_term: SearchPayload):
     docs_list = []
 
     if filter_key is not None and filter_value is not None:
-      if type(filter_key) is not str:
+      if isinstance(filter_key,str):
         raise HTTPException(
             status_code=400,
             detail="Invalid Parameter type.\
@@ -491,7 +491,7 @@ async def search(search_term: SearchPayload):
             docs_list, key=lambda i: i["upload_timestamp"], reverse=True)
         if term is None:
           if limit_start is not None and limit_end is not None:
-            if type(limit_start) is not int or type(limit_end) is not int:
+            if isinstance(limit_start,int) or isinstance(limit_end,int):
               raise HTTPException(
                   status_code=400,
                   detail="Invalid Parameter type.\
@@ -518,7 +518,7 @@ async def search(search_term: SearchPayload):
         if doc in resultset:
           break
         if doc[db_key] is not None:
-          if type(term) is str and type(doc[db_key]) is str:
+          if isinstance(term,str) and isinstance(doc[db_key],str):
             if term.lower() in doc[db_key].lower():
               resultset.append(doc)
               break
