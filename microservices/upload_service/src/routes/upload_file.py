@@ -11,7 +11,8 @@ import utils.upload_file_gcs_bucket as ug
 from common.utils.logging_handler import Logger
 from common.models import Document
 # from common.utils.publisher import publish_document
-from common.utils.process_task import run_pipeline
+# from common.utils.process_task import run_pipeline
+from routes.process_task import run_pipeline
 from common.config import BUCKET_NAME
 import datetime
 
@@ -105,9 +106,7 @@ async def upload_file(
     # message_dict = {"message": pubsub_msg,"message_list":message_list}
     # publish_document(message_dict)
     data = {"configs":message_list}
-    background_tasks.add_task(run_pipeline,data)
-    Logger.info(f"Files with case id {case_id} uploaded"
-                  f" successfully")
+    background_tasks.add_task(run_pipeline,data,False,False)
     Logger.info(f"Files with case id {case_id} uploaded"
                   f" successfully")
     return {
