@@ -289,9 +289,9 @@ def standard_entity_mapping(desired_entities_list, parser_name):
         .reset_index().round(2)
     # co-ordinate consolidation
     df_key_coordinates = df_json.groupby("entity")[group_by_columns[7]].apply(
-        lambda x: consolidate_coordinates(x)).reset_index()
+      consolidate_coordinates).reset_index()
     df_value_coordinates = df_json.groupby("entity")[group_by_columns[8]].apply(
-        lambda x: consolidate_coordinates(x)).reset_index()
+      consolidate_coordinates).reset_index()
     dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value,
            df_page_no, df_page_width, df_page_height,
        df_key_coordinates, df_value_coordinates]
