@@ -44,11 +44,11 @@ def test_process_task_api(client_with_emulator):
     }
   ]
 }
-  with mock.patch("routes.process_task.get_classification"):
-    with mock.patch("routes.process_task.get_extraction_score"):
-      with mock.patch("routes.process_task.get_validation_score"):
-        with mock.patch("routes.process_task.get_matching_score"):
-          with mock.patch("routes.process_task.update_autoapproval_status"):
+  with mock.patch("utils.process_task_helpers.get_classification"):
+    with mock.patch("utils.process_task_helpers.get_extraction_score"):
+      with mock.patch("utils.process_task_helpers.get_validation_score"):
+        with mock.patch("utils.process_task_helpers.get_matching_score"):
+          with mock.patch("utils.process_task_helpers.update_autoapproval_status"):
             with mock.patch("routes.process_task.Logger"):
                 response = client_with_emulator.post(
                   API_URL, json=data)
@@ -75,11 +75,11 @@ def test_process_task_api_is_hitl(client_with_emulator):
   ]
 }
   url = f"{API_URL}?is_hitl=true"
-  with mock.patch("routes.process_task.get_classification"):
-    with mock.patch("routes.process_task.get_extraction_score"):
-      with mock.patch("routes.process_task.get_validation_score"):
-        with mock.patch("routes.process_task.get_matching_score"):
-          with mock.patch("routes.process_task.update_autoapproval_status"):
+  with mock.patch("utils.process_task_helpers.get_classification"):
+    with mock.patch("utils.process_task_helpers.get_extraction_score"):
+      with mock.patch("utils.process_task_helpers.get_validation_score"):
+        with mock.patch("utils.process_task_helpers.get_matching_score"):
+          with mock.patch("utils.process_task_helpers.update_autoapproval_status"):
             with mock.patch("routes.process_task.Logger"):
                 response = client_with_emulator.post(
                   url, json=data)
@@ -103,11 +103,11 @@ def test_process_task_api_is_reassign(client_with_emulator):
   ]
 }
   url = f"{API_URL}?is_reassign=true"
-  with mock.patch("routes.process_task.get_classification"):
-    with mock.patch("routes.process_task.get_extraction_score"):
-      with mock.patch("routes.process_task.get_validation_score"):
-        with mock.patch("routes.process_task.get_matching_score"):
-          with mock.patch("routes.process_task.update_autoapproval_status"):
+  with mock.patch("utils.process_task_helpers.get_classification"):
+    with mock.patch("utils.process_task_helpers.get_extraction_score"):
+      with mock.patch("utils.process_task_helpers.get_validation_score"):
+        with mock.patch("utils.process_task_helpers.get_matching_score"):
+          with mock.patch("utils.process_task_helpers.update_autoapproval_status"):
             with mock.patch("routes.process_task.Logger"):
                 response = client_with_emulator.post(
                   url, json=data)
