@@ -12,7 +12,7 @@ from common.utils.logging_handler import Logger
 from common.models import Document
 # from common.utils.publisher import publish_document
 # from common.utils.process_task import run_pipeline
-from utils.process_task_helpers import run_pipeline
+from routes.process_task_copy import run_pipeline,filter_documents,get_supporting_docs
 from common.config import BUCKET_NAME
 import datetime
 
@@ -102,10 +102,28 @@ async def upload_file(
           "context":context
         })
     print(message_list)
+    # classify the documents 
+    # result = await run_in_threadpool(filter_documents,message_list)
+    result = filter_documents(message_list)
+    applications = result[0]
+    supporting_docs = result[1]
+    # When new application form is uploaded
+    if not supporting_docs:
+      case_id = applications[0].get("case_id")
+      # get all the supporting documents corresponding to the case-id
+      # to re-trigger the process task
+      # supporting_docs = await run_in_threadpool(get_supporting_docs,case_id)
+      supporting_docs = get_supporting_docs(case_id)
+    data = {
+      "applications":applications,
+      "supporting_docs": supporting_docs
+    }
+    # when pushing to git un-comment pubsub code
     # pubsub_msg = f"batch for {case_id} moved to bucket"
-    # message_dict = {"message": pubsub_msg,"message_list":message_list}
+    # message_dict = {"message": pubsub_msg,"message_list": data}
     # publish_document(message_dict)
-    data = {"configs":message_list}
+
+    # to test on local use this
     background_tasks.add_task(run_pipeline,data,False,False)
     Logger.info(f"Files with case id {case_id} uploaded"
                   f" successfully")
@@ -116,23 +134,7 @@ async def upload_file(
         "case_id": case_id,
         "uid_list": uid_list,
     }
-    # if response.status_code == 202:
-    #   Logger.info(f"Files with case id {case_id} uploaded"
-    #               f" successfully")
-    #   return {
-    #       "status": f"Files with case id {case_id} uploaded"
-    #                 f"successfully, the document"
-    #                 f" will be processed in sometime ",
-    #       "case_id": case_id,
-    #       "uid_list": uid_list,
-    #   }
-    # else:
-    #   return {
-    #     "status": f"Files with case id {case_id} uploaded"
-    #               f"successfully,Error in calling process task ",
-    #     "case_id": case_id,
-    #     "uid_list": uid_list,
-    #   }
+    
 
   except Exception as e:
     Logger.error(e)
