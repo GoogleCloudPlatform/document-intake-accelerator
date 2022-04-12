@@ -64,7 +64,7 @@ MAPPING_DICT = {
         "What is your gender?": {
           "rule": "What is your gender\?\n\d\.(.*?)\n\d"},
         "Expiration Date (EXP)": {
-          "rule": "\sAlien Registration Number \(A#\)\n3\)\s(\d{4}-\d{2}-\d{2})\n"}}
+  "rule": "\sAlien Registration Number \(A#\)\n3\)\s(\d{4}-\d{2}-\d{2})\n"}}
   },
 
   "unemployment_form_arkansas": {

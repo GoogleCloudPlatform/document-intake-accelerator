@@ -474,7 +474,7 @@ def strip_value(value):
     corrected_value = value
   else:
     corrected_value = value.strip()
-    corrected_value = corrected_value.replace("\n", ' ')
+    corrected_value = corrected_value.replace("\n", " ")
   return corrected_value
 
 
