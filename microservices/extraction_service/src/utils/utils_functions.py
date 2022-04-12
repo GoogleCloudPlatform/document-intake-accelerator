@@ -188,11 +188,9 @@ def check_int(d):
       count = count + 1
       date_val += str(i)
 
-  if (count >= 2) and (len(date_val) < 17):
-    flag = True
-  else:
-    flag = False
+  flag = ((count >= 2) and (len(date_val) < 17))
   return flag
+
 
 def consolidate_coordinates(d):
   """
