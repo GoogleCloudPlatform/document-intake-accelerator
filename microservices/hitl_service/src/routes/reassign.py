@@ -139,7 +139,8 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     print("--------firestore db ----------------",
           context,requests)
     # status_process_task =
-    call_process_task(new_case_id,uid,document_class,document_type,updated_url,context)
+    call_process_task(new_case_id,uid,document_class,
+    document_type,updated_url,context)
     if update_bq == []:
       Logger.info(
           f"ressign case_id from {old_case_id} to {new_case_id} is successfull")
