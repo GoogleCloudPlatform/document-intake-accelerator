@@ -334,7 +334,7 @@ if __name__ == "__main__":
    state = "arizona"
    gcs_doc_path = "gs://claim_form_arizona/input/Copy of Arizona_claim1.pdf"
 
-   extract_entities(gcs_doc_path, doc_type, state)
+   print(extract_entities(gcs_doc_path, doc_type, state))
 
    # use this code for looping in gcs folder
 """
