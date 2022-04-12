@@ -18,7 +18,7 @@ from .correct_key_value import data_transformation
 from .utils_functions import entities_extraction, download_pdf_gcs,\
     extract_form_fields, del_gcs_folder, \
     form_parser_entities_mapping, extraction_accuracy_calc, \
-    clean_form_parser_keys, standard_entity_mapping
+    clean_form_parser_keys, standard_entity_mapping, strip_value
 from .config import PROJECT_NAME, \
   NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE,\
   GCS_OP_URI, FORM_PARSER_OP_TEMP_FOLDER, MAPPING_DICT
@@ -205,8 +205,9 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
               extract_form_fields(form_field.field_name, document)
           field_value, field_value_confidence, value_coordinates = \
               extract_form_fields(form_field.field_value, document)
-          # noise removal from keys
+          # noise removal from keys and values
           field_name = clean_form_parser_keys(field_name)
+          field_value = strip_value(field_value)
           temp_dict = {"key": field_name, "key_coordinates":field_coordinates,
                     "value": field_value,
                      "value_coordinates": value_coordinates,
@@ -300,51 +301,3 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
       print("parser not available for this document")
       return None
 
-
-if __name__ == "__main__":
-  """
-  extracted_entities = \
-   "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/pay-stub"
-  mapped_extracted_entities = \
-   "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/pay-stub"
-  parser_op = \
-    "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/pay-stub"
-  form_parser_raw_json_folder = \
-    "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/pay-stub"
-  # gcs_doc_path = \
-  #     "gs://gs://async_form_parser/input/Arkansas application form.pdf"
-
-  os.environ[
-    "GOOGLE_APPLICATION_CREDENTIALS"] = \
-   "/home/venkatakrishna/Documents/Q/projects/doc-ai-test/" \
-   "claims-processing-dev-a07894631cd2.json"
-
-  # API Integration will start from here
-
-  # Extract API Provides label and document
-  doc_type = "pay_stub"
-  state = "arkansas"
-  # gcs_doc_path = "gs://async_form_parser/input/Arizona2-latest.pdf"
-  # gcs_doc_path = "gs://async_form_parser/input/Arkansas-form.pdf"
-  gcs_doc_path = "gs://adp_paystubs/arizona-paystub-form-10 (1).pdf"
-  extract_entities(gcs_doc_path, doc_type, state)
-  """
-
-  print("use this code for looping in gcs folder")
-
-  """
-  # use this code for looping in gcs folder
-  gcs_output_uri = "gs://async_form_parser"
-  gcs_output_uri_prefix = "input"
-  destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
-  match = re.match(r"gs://([^/]+)/(.+)", destination_uri)
-  output_bucket = match.group(1)
-  prefix = match.group(2)
-  storage_client = storage.Client()
-  bucket = storage_client.get_bucket(output_bucket)
-  blob_list = list(bucket.list_blobs(prefix=prefix))
-  for i, blob in enumerate(blob_list):
-    if ".pdf" in blob.name:
-      gcs_doc_path = gcs_output_uri + '/' + blob.name
-      extract_entities(gcs_doc_path, doc_type, state)
-  """

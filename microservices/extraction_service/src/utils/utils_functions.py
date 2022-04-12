@@ -21,7 +21,7 @@ def pattern_based_entities(parser_data, pattern):
   """
 
   text = parser_data["text"]
-  pattern = re.compile(r"{"+pattern+"}", flags=re.DOTALL)
+  pattern = re.compile(pattern, flags=re.DOTALL)
   # match as per pattern
   matched_text = re.search(pattern, text)
   if matched_text:
@@ -184,9 +184,9 @@ def check_int(d):
   count = 0
   date_val = ""
   for i in d:
-    if i and i.isdigit():
+    if i and (i.strip()).isdigit():
       count = count + 1
-      date_val += str(i)
+      date_val += str(i.strip())
 
   flag = ((count >= 2) and (len(date_val) < 17))
   return flag
@@ -270,8 +270,8 @@ def standard_entity_mapping(desired_entities_list, parser_name):
                         "page_width", "page_height", "key_coordinates",
                       "value_coordinates"]
   df_conc = df_json.groupby("entity")[group_by_columns[0]].apply(
-        lambda x: "/".join([v for v in x if v]) if check_int(x)
-        else " ".join(v for v in x if v)).reset_index()
+        lambda x: "/".join([v.strip() for v in x if v]) if check_int(x)
+        else " ".join([v.strip() for v in x if v])).reset_index()
 
   df_av = df_json.groupby(["entity"])[group_by_columns[1]].mean().\
       reset_index().round(2)
@@ -463,6 +463,20 @@ def del_gcs_folder(bucket, folder):
 
   # print("Delete successful")
 
+def strip_value(value):
+  '''Function for default cleaning of values to remove space at end and begining
+  and '\n' at end
+  Input:
+       value: Input string
+  Output:
+       corrected_value: corrected string without noise'''
+  if value is None:
+    corrected_value = value
+  else:
+    corrected_value = value.strip()
+    corrected_value = corrected_value.replace("\n", ' ')
+  return corrected_value
+
 
 def extract_form_fields(doc_element: dict, document: dict):
   """
@@ -524,66 +538,3 @@ def extraction_accuracy_calc(total_entities_list):
                               len(entity_accuracy_list), 3)
 
   return extraction_accuracy
-
-
-if __name__ == "__main__":
-
-  print("un comment this to run in local")
-
-  """
-    # these variables are used to run in local environment
-
-    parser_json = "utility-docs/parser-json/without-noisy"
-    extracted_entities = "utility-docs/extracted-entities/without-noisy"
-
-    required_entities = {
-        "default_entities": ["Family Name", "Given Names", "Document Id",
-                "Expiration Date", "Date Of Birth",
-                             "Issue Date",
-                             "Address"],
-        "derived_entities": {"Name": {"rule": ["Given Names", "Family Name"]},
-         "Sex": {"rule": "pattern"}}
-    }
-
-    required_entities = {
-        "default_entities": ["invoice_id", "invoice_date", "due_date",
-        "receiver_name", "service_address","total_tax_amount",
-                             "supplier_account_number"]
-    }
-
-    json_files = os.listdir(parser_json)
-
-    for each_json in json_files:
-        with open(os.path.join(parser_json, each_json), "r") as j:
-            data = json.loads(j.read())
-            print(each_json)
-
-            entity_dict = entities_extraction(data, required_entities)
-
-            # save extracted entities json
-            with open("{}.json".format(os.path.join(extracted_entities,
-            each_json.split(".")[0])), "w") as outfile:
-                json.dump(entity_dict, outfile, indent=4)
-
-    download_pdf_gcs(
-        gcs_uri="gs://async_form_parser/input/arizona-driver-form-13.pdf"
-    )
-
-    total_entities_list = [
-        {
-            "entity": "Social Security Number",
-            "value": None,
-            "extraction_confidence": 1,
-            "manual_extraction": False,
-            "corrected_value": None
-        },
-        {
-            "entity": "Date",
-            "value": None,
-            "extraction_confidence": None,
-            "manual_extraction": False,
-            "corrected_value": None
-        }
-    ]
-    extraction_accuracy_calc(total_entities_list)
-  """
