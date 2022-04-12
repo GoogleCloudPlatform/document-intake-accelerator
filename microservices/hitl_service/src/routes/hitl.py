@@ -115,8 +115,11 @@ async def get_queue(hitl_status: str):
               #if last hitl trail is reassigned and doc type is supporting
               # then consider ML status as the document must have gone
               # through the pipeline again
-              if doc_dict["auto_approval"]:
-                status_class = doc_dict["auto_approval"].lower()
+              if doc_dict["system_status"][-1]["stage"].lower(
+              ) == "auto_approval" and doc_dict["system_status"][-1][
+                  "status"].lower() == "success":
+                if doc_dict["auto_approval"]:
+                  status_class = doc_dict["auto_approval"].lower()
       else:
         if doc_dict["auto_approval"]:
           status_class = doc_dict["auto_approval"].lower()
