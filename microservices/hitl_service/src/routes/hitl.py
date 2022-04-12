@@ -111,9 +111,9 @@ async def get_queue(hitl_status: str):
         #if status is reassigned check if document type is supporting
         elif hitl_trail[-1]["status"].lower() == "reassigned":
           if doc_dict["document_type"]:
-            if doc_dict["document_type"].lower()  == "supporting_documents":
-              #if last hitl trail is reassigned and doc type is supporting 
-              # then consider ML status as the document must have gone 
+            if doc_dict["document_type"].lower() == "supporting_documents":
+              #if last hitl trail is reassigned and doc type is supporting
+              # then consider ML status as the document must have gone
               # through the pipeline again
               if doc_dict["auto_approval"]:
                 status_class = doc_dict["auto_approval"].lower()
