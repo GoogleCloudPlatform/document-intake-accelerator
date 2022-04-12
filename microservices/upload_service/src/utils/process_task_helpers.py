@@ -2,7 +2,6 @@
 import requests
 import traceback
 from fastapi import HTTPException
-from common.models import Document
 from common.utils.logging_handler import Logger
 from utils.autoapproval import get_values
 from typing import List, Dict
