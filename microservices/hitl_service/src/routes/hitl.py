@@ -104,8 +104,19 @@ async def get_queue(hitl_status: str):
 
       #Preference for hitl_status
       #if hitl_status trail is not present autoapproval status is considered
+      status_class = None
       if hitl_trail:
-        status_class = hitl_trail[-1]["status"].lower()
+        if hitl_trail[-1]["status"].lower() != "reassigned":
+          status_class = hitl_trail[-1]["status"].lower()
+        #if status is reassigned check if document type is supporting
+        elif hitl_trail[-1]["status"].lower() == "reassigned":
+          if doc_dict["document_type"]:
+            if doc_dict["document_type"].lower()  == "supporting_documents":
+              #if last hitl trail is reassigned and doc type is supporting 
+              # then consider ML status as the document must have gone 
+              # through the pipeline again
+              if doc_dict["auto_approval"]:
+                status_class = doc_dict["auto_approval"].lower()
       else:
         if doc_dict["auto_approval"]:
           status_class = doc_dict["auto_approval"].lower()
@@ -271,12 +282,10 @@ async def get_unclassified():
     result_queue = []
     for d in docs:
       doc_dict = d.to_dict()
-      print("document", doc_dict)
       system_trail = doc_dict["system_status"]
-      print("system trail", system_trail)
       if system_trail[-1]["stage"].lower() == "classification":
         if system_trail[-1]["status"].lower() != "success":
-          result_queue.append(d)
+          result_queue.append(doc_dict)
     response = {"status": "success"}
     response["data"] = result_queue
     return response
