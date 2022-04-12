@@ -347,7 +347,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
              "page_width": int(df["page_width"][idx_list[idx]]),
              "page_height": int(df["page_height"][idx_list[idx]])
              }
-        except Exception as e:
+        except KeyError:
           print("Key not found in parser output")
           temp_dict = {"entity": each_val, "value": None,
                                  "extraction_confidence": None,
@@ -438,7 +438,7 @@ def clean_form_parser_keys(text):
       text = re.sub(r"\W+$", "", text)
     if last_word in [")", "]"]:
       text += last_word
-  except:
+  except IndexError:
     print("Exception occurred while processing")
   return text
 
