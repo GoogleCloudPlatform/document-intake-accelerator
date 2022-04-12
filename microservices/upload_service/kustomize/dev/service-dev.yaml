@@ -2,13 +2,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: upload-service
-  annotations:
-    networking.gke.io/load-balancer-type: "Internal"
   labels:
     app: upload-service
 spec:
   type: LoadBalancer
-    #loadBalancerIP: 34.68.97.195
+  loadBalancerIP: 34.68.97.195
   ports:
   - port: 80
     protocol: TCP
