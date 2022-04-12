@@ -9,3 +9,5 @@ class Reassign(BaseModel):
   old_case_id: str
   uid: str
   new_case_id: str
+  user : str
+  comment : str
