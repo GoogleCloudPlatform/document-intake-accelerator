@@ -2,15 +2,13 @@
   Tests for hitl endpoints
 """
 import os
-import json
-from unittest.mock import Mock, patch
 # disabling pylint rules that conflict with pytest fixtures
 # pylint: disable=unused-argument,redefined-outer-name,unused-import
 from testing.fastapi_fixtures import client_with_emulator
 from testing.test_config import supporting_document_data, application_document_data
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
 from unittest import mock
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from common.models.document import Document
 # assigning url
 api_url = "http://localhost:8080/hitl_service/v1/"
@@ -136,3 +134,4 @@ def test_same_old_and_new_case_id(client_with_emulator):
               f"{api_url}reassign_case_id", json=data)
     print(response)
   assert response.status_code == 404
+
