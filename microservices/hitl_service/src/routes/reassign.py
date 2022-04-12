@@ -139,7 +139,8 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     print("--------firestore db ----------------",
           context,requests)
     # status_process_task =
-    # call_process_task(new_case_id,uid,updated_url,context)
+    call_process_task(new_case_id,uid,document_class,
+    document_type,updated_url,context)
     if update_bq == []:
       Logger.info(
           f"ressign case_id from {old_case_id} to {new_case_id} is successfull")
@@ -157,7 +158,7 @@ async def reassign_case_id(reassign: Reassign, response: Response):
 
 
 def call_process_task(case_id: str, uid: str, document_class: str,
-                      document_type: str, gcs_uri: str):
+                      document_type: str, gcs_uri: str,context: str):
   """
     Starts the process task API after reassign
   """
@@ -165,6 +166,7 @@ def call_process_task(case_id: str, uid: str, document_class: str,
   data = {
       "case_id": case_id,
       "uid": uid,
+      "context":context,
       "gcs_url": gcs_uri,
       "document_class": document_class,
       "document_type": document_type
@@ -174,8 +176,6 @@ def call_process_task(case_id: str, uid: str, document_class: str,
             "/v1/process_task?is_reassign=true"
   print("params for process task", base_url, payload)
   Logger.info(f"Params for process task {payload}")
-  # response = requests.post(base_url,json=payload)
-  response = ""
-  response.status_code = status.HTTP_202_ACCEPTED
+  response = requests.post(base_url,json=payload)
   return response
 
