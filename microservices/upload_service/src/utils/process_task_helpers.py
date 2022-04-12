@@ -1,3 +1,4 @@
+"""Helper functions to execute the pipeline"""
 import requests
 import traceback
 from fastapi import HTTPException
@@ -7,7 +8,12 @@ from utils.autoapproval import get_values
 from typing import List, Dict
 
 def run_pipeline(payload: List[Dict], is_hitl: bool,is_reassign:bool):
-  
+  """Runs the entire pipeline
+    Args:
+    payload (ProcessTask): Consist of configs required to run the pipeline
+    is_hitl : It is used to run the pipeline for unclassifed documents
+    is_reassign : It is used to run the pipeline for reassigned document
+  """
   Logger.info(f"Processing the documents: {payload}")
   try:
     extraction_score = None
@@ -39,7 +45,7 @@ def run_pipeline(payload: List[Dict], is_hitl: bool,is_reassign:bool):
             extraction_score=extract_documents(doc,document_type="supporting_documents")
             print("Reassigned flow")
             Logger.info("Executing pipeline for reassign scenario.")
-          validate_match_approve(doc,extraction_score)   
+          validate_match_approve(doc,extraction_score)
   except Exception as e:
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
@@ -170,7 +176,7 @@ def validate_match_approve(sup_doc:Dict,extraction_score):
       update_autoapproval(document_class, document_type,case_id,uid,
 validation_score, extraction_score, matching_score)
     else:
-      Logger.error(f"Matching FAILED for {uid}") 
+      Logger.error(f"Matching FAILED for {uid}")
   else:
     Logger.error(f"Extraction FAILED for {uid}")
   return validation_score,matching_score
@@ -204,36 +210,3 @@ def get_documents(payload:List[Dict]):
        and supporting_docs:{supporting_docs}")
 
   return applications,supporting_docs
-
-def check_if_application_already_exist(applications:List[Dict]):
-  """Checks if the application with the case_id already exist"""
-  print("=======application already exist=========")
-  for app in applications:
-    case_id = app.get("case_id")
-    doc = Document.collection.filter("case_id", "==", case_id).filter("document_type", "==", "application_form").fetch()
-    print(doc)
-    for d in doc:
-      print("application form doc: ",d.active)
-    # if doc:
-    #   doc.active = "inactive"
-    #   doc.update()
-  return doc
-
-def get_supporting_docs(case_id):
-  """Get the supporting documents associated with the particular case_id"""
-  docs = Document.collection.filter("case_id", "==", case_id).filter("document_type", "==", "supporting_documents").fetch()
-  supporting_docs = []
-  print("=========Getting all supporting documents===========")
-  print(docs)
-  for doc in docs:
-    data = {
-      "case_id" : doc.case_id,
-      "uid" :doc.uid,
-      "gcs_url": doc.url,
-      "context" : doc.context,
-      "document_type" : doc.document_type,
-      "document_class" : doc.document_class
-    }
-    supporting_docs.append(data)
-  print(supporting_docs)
-  return supporting_docs

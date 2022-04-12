@@ -18,13 +18,12 @@ background_task: BackgroundTasks, is_hitl: bool = False, is_reassign:bool = Fals
   Args:
     payload (ProcessTask): Consist of configs required to run the pipeline
     background_task : It is used to run the ML tasks in the background
-    is-hitl : It is used to run the pipeline for unclassifed documents
+    is_hitl : It is used to run the pipeline for unclassifed documents
     is_reassign : It is used to run the pipeline for reassigned document
   Returns:
     202 : Documents are being processed
     422 : Invalid json provided
     """
-  """Runs the Pipeline to process the document"""
   payload = payload.dict()
   Logger.info(f"Processing the documents : {payload}")
   # Run the pipeline in the background
