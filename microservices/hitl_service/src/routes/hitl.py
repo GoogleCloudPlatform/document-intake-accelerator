@@ -333,7 +333,7 @@ def call_process_task(case_id: str, uid: str, document_class: str,
       "document_type": document_type,
       "context": context
   }
-  payload = {"configs":[data]}
+  payload = {"configs": [data]}
   base_url = "http://upload-service/upload_service/v1/process_task"
   print("params for process task", base_url, payload)
   Logger.info(f"Params for process task {payload}")
@@ -423,16 +423,16 @@ async def update_hitl_classification(case_id: str, uid: str,
 def compare_value(entity, term, entity_key):
   if entity["entity"] == entity_key:
 
-    if isinstance(term,str):
+    if isinstance(term, str):
       if entity["corrected_value"] is not None:
-        if isinstance(entity["corrected_value"],str):
+        if isinstance(entity["corrected_value"], str):
           return term.lower() in entity["corrected_value"].lower()
         else:
           return False
 
       else:
         if entity["value"] is not None:
-          if isinstance(entity["value"],str):
+          if isinstance(entity["value"], str):
             return term.lower() in entity["value"].lower()
           else:
             return False
@@ -475,7 +475,7 @@ async def search(search_term: SearchPayload):
     docs_list = []
 
     if filter_key is not None and filter_value is not None:
-      if isinstance(filter_key,str):
+      if not isinstance(filter_key, str):
         raise HTTPException(
             status_code=400,
             detail="Invalid Parameter type.\
@@ -486,18 +486,18 @@ async def search(search_term: SearchPayload):
                 lambda x: x.to_dict(),
                 Document.collection.filter(active="active").filter(
                     filter_key, "==", filter_value).fetch()))
-        print(docs_list[0:2])
         docs_list = sorted(
             docs_list, key=lambda i: i["upload_timestamp"], reverse=True)
         if term is None:
           if limit_start is not None and limit_end is not None:
-            if isinstance(limit_start,int) or isinstance(limit_end,int):
+            if not isinstance(limit_start, int) or not isinstance(
+                limit_end, int):
               raise HTTPException(
                   status_code=400,
                   detail="Invalid Parameter type.\
                     Limit start and end should be of type int")
             docs_list = docs_list[limit_start:limit_end]
-          return {"status": "success", "len": len(docs_list), "data": docs_list}
+          return {"status": "success","len": len(docs_list),"data": docs_list}
       else:
         raise HTTPException(
             status_code=422, detail="Entered key is not filterable")
@@ -518,7 +518,7 @@ async def search(search_term: SearchPayload):
         if doc in resultset:
           break
         if doc[db_key] is not None:
-          if isinstance(term,str) and isinstance(doc[db_key],str):
+          if isinstance(term, str) and isinstance(doc[db_key], str):
             if term.lower() in doc[db_key].lower():
               resultset.append(doc)
               break
