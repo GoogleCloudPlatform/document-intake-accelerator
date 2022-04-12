@@ -2,10 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: hitl-service
+  annotations:
+    networking.gke.io/load-balancer-type: "Internal"
   labels:
     app: hitl-service
 spec:
-  type: NodePort
+  type: LoadBalancer
+    #loadBalancerIP: 35.224.197.56
   ports:
   - port: 80
     protocol: TCP

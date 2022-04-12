@@ -9,7 +9,8 @@ from common.utils.logging_handler import Logger
 from concurrent.futures import ThreadPoolExecutor
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Request
-from routes import hitl
+from routes import hitl ,reassign
+
 
 
 app = FastAPI(title="HITL Service API")
@@ -53,6 +54,7 @@ def health_check():
 api = FastAPI(title="HITL Service API", version="latest")
 
 api.include_router(hitl.router)
+api.include_router(reassign.router)
 
 app.mount("/hitl_service/v1", api)
 
