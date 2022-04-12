@@ -136,8 +136,10 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     update_bq = stream_document_to_bigquery(client, new_case_id, uid,
                                 document_class, document_type,
                               entities_for_bq)
-    print("--------firestore db ----------------", context,requests)
-    # status_process_task = call_process_task(new_case_id,uid,updated_url,context)
+    print("--------firestore db ----------------",
+          context,requests)
+    # status_process_task =
+    # call_process_task(new_case_id,uid,updated_url,context)
     if update_bq == []:
       Logger.info(
           f"ressign case_id from {old_case_id} to {new_case_id} is successfull")
