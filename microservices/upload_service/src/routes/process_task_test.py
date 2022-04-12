@@ -3,7 +3,7 @@
 """
 import os
 # disabling pylint rules that conflict with pytest fixtures
-# pylint: disable=unused-argument,redefined-outer-name,unused-import
+# pylint: disable=unused-argument,redefined-outer-name,unused-import,line-too-long
 from unittest import mock
 from testing.fastapi_fixtures import client_with_emulator
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
@@ -50,7 +50,7 @@ def test_process_task_api(client_with_emulator):
         with mock.patch("utils.process_task_helpers.get_matching_score"):
           with mock.patch("utils.process_task_helpers.update_autoapproval_status"):
             with mock.patch("routes.process_task.Logger"):
-                response = client_with_emulator.post(
+              response = client_with_emulator.post(
                   API_URL, json=data)
   assert response.status_code == 202, "Status 202"
 
@@ -81,7 +81,7 @@ def test_process_task_api_is_hitl(client_with_emulator):
         with mock.patch("utils.process_task_helpers.get_matching_score"):
           with mock.patch("utils.process_task_helpers.update_autoapproval_status"):
             with mock.patch("routes.process_task.Logger"):
-                response = client_with_emulator.post(
+              response = client_with_emulator.post(
                   url, json=data)
   assert response.status_code == 202, "Status 202"
 
@@ -109,6 +109,6 @@ def test_process_task_api_is_reassign(client_with_emulator):
         with mock.patch("utils.process_task_helpers.get_matching_score"):
           with mock.patch("utils.process_task_helpers.update_autoapproval_status"):
             with mock.patch("routes.process_task.Logger"):
-                response = client_with_emulator.post(
+              response = client_with_emulator.post(
                   url, json=data)
   assert response.status_code == 202, "Status 202"

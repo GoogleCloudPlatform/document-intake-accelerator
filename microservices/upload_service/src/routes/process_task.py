@@ -12,7 +12,8 @@ FAILED_RESPONSE = {"status": "Failed"}
 
 @router.post("/process_task", status_code=status.HTTP_202_ACCEPTED)
 async def process_task(payload: ProcessTask,
-background_task: BackgroundTasks, is_hitl: bool = False, is_reassign:bool = False):
+background_task: BackgroundTasks, is_hitl: bool = False,
+is_reassign:bool = False):
   """Process task runs the ML pipeline
 
   Args:

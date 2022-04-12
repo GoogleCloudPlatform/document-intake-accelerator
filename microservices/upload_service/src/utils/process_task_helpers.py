@@ -36,13 +36,15 @@ def run_pipeline(payload: List[Dict], is_hitl: bool,is_reassign:bool):
       # extract the application first
       if applications:
         for doc in applications:
-          extraction_score=extract_documents(doc,document_type="application_form")
+          extraction_score=extract_documents(doc,
+          document_type="application_form")
       # extract,validate and match supporting documents
       if supporting_docs:
         for doc in supporting_docs:
           # In case of reassign extraction is not required
           if not is_reassign:
-            extraction_score=extract_documents(doc,document_type="supporting_documents")
+            extraction_score=extract_documents(doc,
+            document_type="supporting_documents")
             print("Reassigned flow")
             Logger.info("Executing pipeline for reassign scenario.")
           validate_match_approve(doc,extraction_score)
