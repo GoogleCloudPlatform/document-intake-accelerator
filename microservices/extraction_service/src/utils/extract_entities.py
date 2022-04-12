@@ -300,6 +300,7 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
       print("parser not available for this document")
       return None
 
+
 if __name__ == "__main__":
   """
   extracted_entities = \

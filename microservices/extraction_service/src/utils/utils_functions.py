@@ -4,7 +4,6 @@ required for extraction framework
 """
 import os
 import re
-import json
 import pandas as pd
 import numpy as np
 from functools import reduce
@@ -22,7 +21,7 @@ def pattern_based_entities(parser_data, pattern):
   """
 
   text = parser_data["text"]
-  pattern = re.compile(r"{}".format(pattern), flags=re.DOTALL)
+  pattern = re.compile(r"{"+pattern+"}", flags=re.DOTALL)
   # match as per pattern
   matched_text = re.search(pattern, text)
   if matched_text:
@@ -42,7 +41,7 @@ def default_entities_extraction(parser_entities, default_entities,doc_type):
    Returns : Default entites dict
    -------
   """
-
+  print(doc_type)
   parser_entities_dict = {}
 
   # retrieve parser given entities
@@ -56,8 +55,8 @@ def default_entities_extraction(parser_entities, default_entities,doc_type):
   entity_dict = {}
 
   # create default entities
-  for key in default_entities.keys():
-    if key in parser_entities_dict.keys():
+  for key in default_entities:
+    if key in parser_entities_dict:
       entity_dict[default_entities[key][0]] = {
                  "entity": default_entities[key][0],
                  "value": parser_entities_dict[key][0],
@@ -182,17 +181,18 @@ def check_int(d):
     Returns: True/False
     -------
   """
-
   count = 0
   date_val = ""
   for i in d:
     if i and i.isdigit():
       count = count + 1
       date_val += str(i)
-  if count >= 2 and len(date_val) < 17:
-    return True
+
+  if (count >= 2) and (len(date_val) < 17):
+    flag = True
   else:
-    return False
+    flag = False
+  return flag
 
 def consolidate_coordinates(d):
   """
@@ -441,7 +441,7 @@ def clean_form_parser_keys(text):
     if last_word in [")", "]"]:
       text += last_word
   except:
-    pass
+    print("Exception occurred while processing")
   return text
 
 def del_gcs_folder(bucket, folder):
@@ -539,7 +539,7 @@ if __name__ == "__main__":
     extracted_entities = "utility-docs/extracted-entities/without-noisy"
 
     required_entities = {
-        "default_entities": ["Family Name", "Given Names", "Document Id", 
+        "default_entities": ["Family Name", "Given Names", "Document Id",
                 "Expiration Date", "Date Of Birth",
                              "Issue Date",
                              "Address"],
@@ -548,8 +548,8 @@ if __name__ == "__main__":
     }
 
     required_entities = {
-        "default_entities": ["invoice_id", "invoice_date", "due_date", "receiver_name",
-         "service_address","total_tax_amount",
+        "default_entities": ["invoice_id", "invoice_date", "due_date",
+        "receiver_name", "service_address","total_tax_amount",
                              "supplier_account_number"]
     }
 
@@ -563,7 +563,7 @@ if __name__ == "__main__":
             entity_dict = entities_extraction(data, required_entities)
 
             # save extracted entities json
-            with open("{}.json".format(os.path.join(extracted_entities, 
+            with open("{}.json".format(os.path.join(extracted_entities,
             each_json.split(".")[0])), "w") as outfile:
                 json.dump(entity_dict, outfile, indent=4)
 
@@ -587,6 +587,5 @@ if __name__ == "__main__":
             "corrected_value": None
         }
     ]
-
     extraction_accuracy_calc(total_entities_list)
   """
