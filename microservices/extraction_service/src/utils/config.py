@@ -174,7 +174,7 @@ MAPPING_DICT = {
       "Issue Date": ["ISS"],
       "Address": ["Address"],
     },
-    "derived_entities": {"SEX": {"rule": "r'SEX.*?(?<!\w)(F|M)(?!\w)"}}
+    "derived_entities": {"SEX": {"rule": "SEX.*?(?<!\w)(F|M)(?!\w)"}}
   },
 
   "pay_stub": {
