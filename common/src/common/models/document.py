@@ -27,6 +27,7 @@ class Document(BaseModel):
   auto_approval = TextField()
   is_autoapproved =  TextField()
   is_hitl_classified = BooleanField()
+  external_case_id = TextField()
 
   class Meta:
     ignore_none_field = False
