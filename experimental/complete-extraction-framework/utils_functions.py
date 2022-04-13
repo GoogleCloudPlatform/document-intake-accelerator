@@ -391,35 +391,34 @@ def standard_entity_mapping(desired_entities_list):
 
     return extracted_entities_final_json
 
-
-def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_parser_text):
+def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_parser_text, parser_json_fname):
     """
     Form parser entity mapping function
-
     Parameters
     ----------
     form_parser_entity_list: Extracted form parser entities before mapping
     mapping_dict: Mapping dictionary have info of default, derived entities along with desired keys
-
     Returns: required entities - list of dicts having entity, value, confidence and manual_extraction information
     -------
-
     """
 
     # extract entities information from config files
     default_entities = mapping_dict.get("default_entities")
 
     derived_entities = mapping_dict.get("derived_entities")
+    table_entities = mapping_dict.get("table_entities")
     flag = check_duplicate_keys(default_entities,form_parser_entity_list)
 
     df = pd.DataFrame(form_parser_entity_list)
+    print(df['value_coordinates'])
 
     required_entities_list = []
 
     # loop through one by one deafult entities mentioned in the config file
+    # for duplicate entities
     for each_ocr_key, each_ocr_val in default_entities.items():
-
         idx_list = df.index[df['key'] == each_ocr_key].tolist()
+
 
         # loop for matched records of mapping dictionary
         for idx, each_val in enumerate(each_ocr_val):
@@ -429,28 +428,26 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
 
                     # creating response
                     temp_dict = {"entity": each_val, "value": df['value'][idx_list[idx]],
-                                 "extraction_confidence": float(df['value_confidence'][idx_list[idx]]),
+                                 "extraction_confidence": df['value_confidence'][idx_list[idx]],
                                  "manual_extraction": False,
-                                 "corrected_value": None,
-                                 "value_coordinates": [float(i) for i in df['value_coordinates'][idx_list[idx]]],
-                                 "key_coordinates": [float(i) for i in df['key_coordinates'][idx_list[idx]]],
-                                 "page_no": int(df['page_no'][idx_list[idx]]),
-                                 "page_width": int(df['page_width'][idx_list[idx]]),
-                                 "page_height": int(df['page_height'][idx_list[idx]])
-                                 }
+                                  "value_coordinates":df['value_coordinates'][idx_list[idx]],
+                                 "key_coordinates":df['key_coordinates'][idx_list[idx]],
+                                 "page_no":df['page_no'][idx_list[idx]],
+                                  "page_width":df['page_width'][idx_list[idx]],
+                                 "page_height":df['page_height'][idx_list[idx]]
+                                   }
                 except Exception as e:
                     print('Key not found in parser output')
 
                     temp_dict = {"entity": each_val, "value": None,
                                  "extraction_confidence": None,
                                  "manual_extraction": False,
-                                 "corrected_value": None,
-                                 "value_coordinates": None,
-                                 "key_coordinates": None,
-                                 "page_no": None,
-                                 "page_width": None,
-                                 "page_height": None
-                                 }
+                                  "value_coordinates":None,
+                                 "key_coordinates":None,
+                                 "page_no":None,
+                                  "page_width":None,
+                                 "page_height":None
+                                }
 
                 required_entities_list.append(temp_dict)
             else:
@@ -458,13 +455,12 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
                 temp_dict = {"entity": each_val, "value": None,
                              "extraction_confidence": None,
                              "manual_extraction": False,
-                             "corrected_value": None,
-                             "value_coordinates": None,
-                             "key_coordinates": None,
-                             "page_no": None,
-                             "page_width": None,
-                             "page_height": None
-                             }
+                              "value_coordinates":None,
+                              "key_coordinates":None,
+                              "page_no":None,
+                              "page_width":None,
+                              "page_height":None
+                            }
                 required_entities_list.append(temp_dict)
 
     if derived_entities:
@@ -474,6 +470,10 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
         derived_entities_op_dict = derived_entities_extraction(parser_data, derived_entities)
         required_entities_list.extend(list(derived_entities_op_dict.values()))
 
+    if table_entities:
+        table_extract_obj = TableExtractor(parser_json_fname)
+        table_response = table_extract_obj.get_entities(table_entities)
+        required_entities_list.extend(table_response)
     return required_entities_list,flag
 
 
