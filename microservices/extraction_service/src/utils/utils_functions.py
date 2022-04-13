@@ -33,8 +33,8 @@ def pattern_based_entities(parser_data, pattern):
 def update_confidence(dupp,without_noise):
   for key in dupp.keys():
     for i in without_noise:
-      if i['key'] == key:
-        i['value_confidence'] =-1.0
+      if i["key"] == key:
+        i["value_confidence"] =-1.0
   return without_noise
 
 def check_duplicate_keys(dictme,without_noise):
@@ -48,14 +48,14 @@ def check_duplicate_keys(dictme,without_noise):
   for j,k in dupp.items():
     count=0
     for i in without_noise:
-      if i['key'] == j:
-         count = count + 1
+      if i["key"] == j:
+        count = count + 1
     #remove this later
     count=0
     if count!=k:
       without_noise=update_confidence(dupp,without_noise)
       return False
-  
+
 
   return True
 
@@ -99,17 +99,17 @@ def default_entities_extraction(parser_entities, default_entities,doc_type):
                  "extraction_confidence": None,
                  "manual_extraction": False,
                  "corrected_value": None}
-  if doc_type == 'utility_bill':
+  if doc_type == "utility_bill":
     if "supplier_address" in parser_entities_dict:
-      if parser_entities_dict['supplier_address'][0] == '':
-        if 'receiver_address' in parser_entities_dict.keys() \
-        and parser_entities_dict['receiver_address'][0]!='':
-          entity_dict['reciever address']['value'] = \
-          parser_entities_dict['receiver_address'][0]
+      if parser_entities_dict["supplier_address"][0] == "":
+        if "receiver_address" in parser_entities_dict \
+        and parser_entities_dict["receiver_address"][0]!="":
+          entity_dict["reciever address"]["value"] = \
+          parser_entities_dict["receiver_address"][0]
         else:
           if "service_address" in parser_entities_dict:
-              entity_dict['reciever address']['value'] = \
-              parser_entities_dict['service_address'][0]
+            entity_dict["reciever address"]["value"] = \
+            parser_entities_dict["service_address"][0]
   return entity_dict
 
 
@@ -571,7 +571,7 @@ def extraction_accuracy_calc(total_entities_list,flag=True):
     -------
   """
   # get fields extraction accuracy
-  if flag == False:
+  if flag is False:
     extraction_accuracy = -1.0
     return extraction_accuracy
   entity_accuracy_list = [each_entity.get("extraction_confidence") if
