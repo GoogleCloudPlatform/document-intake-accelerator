@@ -35,12 +35,12 @@ MAPPING_DICT = {
       "Mailing Address (No., Street, Apt., P.O. Box, City)": [
         "Employer Mailing Address (No., Street, Apt., P.O.Box, City)"],
       "Date": ["Date"],
-      "City": ["Employee Residence City", "Employee City"],
+      "City": ["Employee City","Employee Residence City"],
       "State": ["Employee State", "Employee Residence State", "Employer State"],
       "Employer's Phone No.": ["Employer's Phone No."],
       "Claimant's Signature": ["Claimant's Signature"],
       "Company's Name ": ["Company's Name"],
-      "ZIP": ["Employee Residence ZIP", "Employee ZIP", "Employer ZIP"],
+      "ZIP": ["Employee ZIP","Employee Residence ZIP", "Employer ZIP"],
       "Month": ["Employee DOB Month", "Month (Last Day of Work)"],
       "Day": ["Employee DOB Day", "Day (Last Day of Work)"],
       "Year": ["Employee DOB Year", "Year (Last Day of Work)"]
