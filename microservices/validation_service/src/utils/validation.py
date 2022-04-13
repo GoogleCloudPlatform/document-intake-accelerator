@@ -7,7 +7,7 @@ import pandas as pd
 from google.cloud import bigquery
 from google.cloud import storage
 from common.config import PATH,VALIDATION_TABLE
-from common.db_client import bq_client
+# from common.db_client import bq_client
 from common.utils.logging_handler import Logger
 
 bigquery_client = bq_client()
@@ -48,7 +48,7 @@ def get_values(documentlabel,cid,uid):
   data=read_json(path)
   merge_query= f"and case_id ='{cid}' and uid='{uid}'"
   validation_score = get_scoring(data,merge_query,documentlabel)
-  Logger.info(f"Validation completed for document with case id {case_id}"
+  Logger.info(f"Validation completed for document with case id {cid}"
                 f"and uid {uid}")
 
   return validation_score
