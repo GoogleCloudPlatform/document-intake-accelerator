@@ -146,7 +146,6 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     # status_process_task =
     response_process_task = call_process_task(new_case_id,uid,document_class,
     document_type,updated_url,context)
-    print("response of process task", response_process_task.status_code , update_bq)
     if update_bq == [] and response_process_task.status_code == 202:
       Logger.info(
           f"ressign case_id from {old_case_id} to {new_case_id} is successfull")

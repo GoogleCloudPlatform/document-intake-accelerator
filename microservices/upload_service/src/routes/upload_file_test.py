@@ -110,7 +110,8 @@ def test_upload_one_pdf_positive(client_with_emulator):
   files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
                                                   "rb"), "application/pdf"))]
   with mock.patch("routes.upload_file.Logger"):
-    with mock.patch("routes.upload_file.create_document",return_value = mock_uid):
+    with mock.patch("routes.upload_file.create_document",
+                    return_value = mock_uid):
       with mock.patch("routes.upload_file.publish_document"):
         response = client_with_emulator.post(
             f"{api_url}upload_files"
@@ -142,7 +143,8 @@ def test_upload_one_pdf_without_case_id_positive(client_with_emulator):
   files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
                                                   "rb"), "application/pdf"))]
   with mock.patch("routes.upload_file.Logger"):
-    with mock.patch("routes.upload_file.create_document",return_value = mock_uid):
+    with mock.patch("routes.upload_file.create_document",
+                    return_value = mock_uid):
       with mock.patch("routes.upload_file.publish_document"):
         response = client_with_emulator.post(
             f"{api_url}upload_files"
@@ -156,8 +158,9 @@ def test_upload_multiple_pdf_without_case_id_positive(client_with_emulator):
   payload = {}
   mock_uid =  creat_mock_data()
   files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
-                                                  "rb"), "application/pdf")),
-           ("files", ("Arkansas-form-1.pdf", open(TESTDATA_FILENAME3,"rb"), "application/pdf"))]
+                                     "rb"), "application/pdf")),
+    ("files", ("Arkansas-form-1.pdf", open(TESTDATA_FILENAME3,"rb"),
+                      "application/pdf"))]
 
   with mock.patch("routes.upload_file.Logger"):
     with mock.patch("routes.upload_file.create_document",return_value = mock_uid):
@@ -174,12 +177,14 @@ def test_upload_multiple_pdf_without_case_id_positive(client_with_emulator):
 def test_upload_multiple_pdf_with_case_id_positive(client_with_emulator):
   payload = {}
   mock_uid = creat_mock_data()
-  files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
-                                                  "rb"), "application/pdf")),
-           ("files", ("Arkansas-form-1.pdf", open(TESTDATA_FILENAME3, "rb"), "application/pdf"))]
+  files = [("files",("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
+                                        "rb"), "application/pdf")),
+           ("files",("Arkansas-form-1.pdf", open(TESTDATA_FILENAME3, "rb"),
+                      "application/pdf"))]
 
   with mock.patch("routes.upload_file.Logger"):
-    with mock.patch("routes.upload_file.create_document", return_value=mock_uid):
+    with mock.patch("routes.upload_file.create_document",
+                    return_value=mock_uid):
       with mock.patch("routes.upload_file.publish_document"):
         response = client_with_emulator.post(
           f"{api_url}upload_files"
@@ -193,13 +198,16 @@ def test_upload_multiple_pdf_negative(client_with_emulator):
   payload = {}
   mock_uid = creat_mock_data()
   files = [("files", ("Arkansa-claim-2.pdf", open(TESTDATA_FILENAME2,
-                                                  "rb"), "application/pdf")),
-           ("files", ("Arkansas-form-1.pdf", open(TESTDATA_FILENAME3, "rb"), "application/pdf"))]
+                                          "rb"), "application/pdf")),
+           ("files", ("Arkansas-form-1.pdf", open(TESTDATA_FILENAME3, "rb"),
+                "application/pdf"))]
 
   with mock.patch("routes.upload_file.Logger"):
-    with mock.patch("routes.upload_file.create_document", return_value=mock_uid):
+    with mock.patch("routes.upload_file.create_document",
+                    return_value=mock_uid):
       with mock.patch("routes.upload_file.publish_document"):
-        with mock.patch("routes.upload_file.ug.upload_file",return_value = "fail"):
+        with mock.patch("routes.upload_file.ug.upload_file",
+                        return_value = "fail"):
           response = client_with_emulator.post(
             f"{api_url}upload_files"
             f"?context=arkansas&case_id=test123",
@@ -207,3 +215,4 @@ def test_upload_multiple_pdf_negative(client_with_emulator):
             data=payload)
           print(response.text)
   assert response.status_code == 500
+

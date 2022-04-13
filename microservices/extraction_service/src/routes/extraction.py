@@ -17,7 +17,8 @@ router = APIRouter()
 
 
 @router.post("/extraction_api")
-async def extraction(case_id: str, uid: str, doc_class: str, document_type :str,context : str,
+async def extraction(case_id: str, uid: str, doc_class: str,
+                     document_type :str,context : str,
                      response: Response):
   """extracts the document with given case id and uid
         Args:

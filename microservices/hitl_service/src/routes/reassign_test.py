@@ -87,8 +87,9 @@ def test_document_reassign_positive(client_with_emulator):
       with mock.patch("routes.reassign.format_data_for_bq"):
         with mock.patch(
             "routes.reassign.stream_document_to_bigquery", return_value=[]):
-            with mock.patch("routes.reassign.call_process_task",return_value=mockresponse):
-                response = client_with_emulator.post(
+          with mock.patch("routes.reassign.call_process_task",
+                            return_value=mockresponse):
+            response = client_with_emulator.post(
                   f"{api_url}reassign_case_id", json=data)
     print(response)
   assert response.status_code == 200
