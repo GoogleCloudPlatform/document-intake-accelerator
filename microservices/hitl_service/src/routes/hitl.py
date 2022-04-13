@@ -98,24 +98,38 @@ async def get_queue(hitl_status: str):
     docs = list(Document.collection.filter(active="active").fetch())
     result_queue = []
     for d in docs:
-      status_class = ""
       doc_dict = d.to_dict()
       hitl_trail = doc_dict["hitl_status"]
 
-      #Preference for hitl_status
-      #if hitl_status trail is not present autoapproval status is considered
+      current_status = None
+      system_status = doc_dict["system_status"]
+
+      #Check the latest action hitl or system
+      #If the last step of system status is autoapproval
+      # consider autoapproval status
+      # elif last update was to hitl consider hitl
       if hitl_trail:
-        status_class = hitl_trail[-1]["status"].lower()
+        last_hitl_status = hitl_trail[-1]
+        last_system_status = system_status[-1]
+        if last_system_status["timestamp"] > last_hitl_status["timestamp"]:
+          if last_system_status["stage"].lower() == "auto_approval"\
+             and last_system_status["status"].lower() == "success":
+            current_status = doc_dict["auto_approval"].lower()
+
+        else:
+          if last_hitl_status["status"].lower() != "reassigned":
+            current_status = last_hitl_status["status"].lower()
       else:
         if doc_dict["auto_approval"]:
-          status_class = doc_dict["auto_approval"].lower()
-      if status_class == hitl_status.lower():
+          current_status = doc_dict["auto_approval"].lower()
+      if current_status == hitl_status:
         result_queue.append(doc_dict)
 
     result_queue = sorted(
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
 
     response = {"status": "Success"}
+    response["len"] = len(result_queue)
     response["data"] = result_queue
     return response
 
@@ -271,12 +285,10 @@ async def get_unclassified():
     result_queue = []
     for d in docs:
       doc_dict = d.to_dict()
-      print("document", doc_dict)
       system_trail = doc_dict["system_status"]
-      print("system trail", system_trail)
       if system_trail[-1]["stage"].lower() == "classification":
         if system_trail[-1]["status"].lower() != "success":
-          result_queue.append(d)
+          result_queue.append(doc_dict)
     response = {"status": "success"}
     response["data"] = result_queue
     return response
