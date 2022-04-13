@@ -130,9 +130,27 @@ MAPPING_DICT = {
       "What was your last day of work?": ["What was your last day of work?"],
       "Claimant's Signature": ["Claimant's Signature "]
     },
-    "table_entities": {
-
-    }
+    "table_entities":
+    {
+      "isheader": True,
+      # if table and page number is unknown mark the variables to 0
+      "table_num": 0, "page_num": 0,
+      "headers": ["Date", "Name of Employer/Company/ Union and Address (City, State and Zip Code)",
+								 "Website URL or Name of person contacted",
+								 "Method (In person, Internet, mail)",
+								 "Type of work sought", "Action taken on the date of contact"],
+                 # entity name will be constructed based on the col number provided
+                 # for an employer
+                 "entity_extraction": [
+                  {"entity_suffix": f"(employer 1)", "col": 0, "row_no": 1},
+                  {"entity_suffix": f"(employer 2)", "col": 0, "row_no": 2},
+                  {"entity_suffix": f"(employer 1)", "col": 2, "row_no": 2},
+                  {"entity_suffix": f"(employer 1)", "col": 3, "row_no": 1},
+                  {"entity_suffix": f"(employer 1)", "col": 4, "row_no": 1},
+                  {"entity_suffix": f"(employer 2)", "col": 3, "row_no": 2},
+                  {"entity_suffix": f"(employer 2)", "col": 2, "row_no": 3},
+                  {"entity_suffix": f"(employer 3)", "col": 0, "row_no": 3},
+                ],
   },
 
   "claims_form_arkansas": {
@@ -193,4 +211,5 @@ MAPPING_DICT = {
        "RATE": {"rule": "Regular\n(.*?)\n"},
        "HOURS": {"rule": "Regular\n.*?\n(.*?)\n"}}
   }
+}
 }

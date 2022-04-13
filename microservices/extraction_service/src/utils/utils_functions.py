@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 from functools import reduce
 from google.cloud import storage
+from .table_extractor import TableExtractor
 
 def pattern_based_entities(parser_data, pattern):
   """
@@ -306,7 +307,7 @@ def standard_entity_mapping(desired_entities_list, parser_name):
 
 
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
-                                 form_parser_text):
+                                 form_parser_text, parser_json_fname):
   """
     Form parser entity mapping function
 
@@ -323,6 +324,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   # extract entities information from config files
   default_entities = mapping_dict.get("default_entities")
   derived_entities = mapping_dict.get("derived_entities")
+  table_entities = mapping_dict.get("table_entities")
   df = pd.DataFrame(form_parser_entity_list)
   required_entities_list = []
   # loop through one by one deafult entities mentioned in the config file
@@ -382,6 +384,11 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
     derived_entities_op_dict = derived_entities_extraction(parser_data,
                                                            derived_entities)
     required_entities_list.extend(list(derived_entities_op_dict.values()))
+
+  if table_entities:
+    table_extract_obj = TableExtractor(parser_json_fname)
+    table_response = table_extract_obj.get_entities(table_entities)
+    required_entities_list.extend(table_response)
 
   return required_entities_list
 
