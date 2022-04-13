@@ -44,7 +44,7 @@ def add_keys(docs_list:list):
 
       if doc["hitl_status"]:
         last_hitl_status = doc["hitl_status"][-1]
-          
+
         if system_status[-1]["timestamp"] > last_hitl_status["timestamp"]:
           if system_status[-1]["stage"].lower() == "auto_approval":
             if system_status[-1]["status"].lower() == "success":
@@ -72,7 +72,7 @@ def add_keys(docs_list:list):
           current_status = in_progress
         else:
           current_status = failed
-      
+
     doc["ml_status"] = ml_status
     doc["current_status"] = current_status
     doc["status_last_updated_by"] = status_last_updated_by
