@@ -63,11 +63,13 @@ def get_classification(case_id: str, uid: str, gcs_url: str):
   return response
 
 
-def get_extraction_score(case_id: str, uid: str, document_class: str):
+def get_extraction_score(case_id: str, uid: str, document_class: str,
+                         document_type:str,context : str):
   """Call the Extraction API and get the extraction score"""
   base_url = "http://extraction-service/extraction_service/v1/extraction_api"
   req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
-    f"&doc_class={document_class}"
+    f"&doc_class={document_class}&document_type={document_type}" \
+            f"&context={context}"
   response = requests.post(req_url)
   return response
 
@@ -140,7 +142,10 @@ def extract_documents(doc:Dict,document_type):
   case_id = doc.get("case_id")
   uid = doc.get("uid")
   document_class = doc.get("document_class")
-  extract_res = get_extraction_score(case_id, uid, document_class)
+  document_type =  doc.get("document_type")
+  context =  doc.get("context")
+  extract_res = get_extraction_score(case_id, uid, document_class,
+                                     document_type,context)
   if extract_res.status_code == 200:
     Logger.info(f"Extraction successful for {document_type}")
     extraction_score = extract_res.json().get("score")

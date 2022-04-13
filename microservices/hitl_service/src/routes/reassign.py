@@ -54,6 +54,9 @@ async def reassign_case_id(reassign: Reassign, response: Response):
       response.body = f"The  existing case_id {old_case_id}and new " \
                   f"case_id {new_case_id} is" \
                   f" same enter different case_id"
+      return {"message":response.body}
+
+
 
     document = Document.find_by_uid(uid)
     #If document with given uid does not exist send 404
@@ -64,7 +67,7 @@ async def reassign_case_id(reassign: Reassign, response: Response):
       response.status_code = status.HTTP_404_NOT_FOUND
       response.body = f"document to be reassigned with case_id {old_case_id} " \
                       f"and uid {uid} does not exist in database"
-      return response
+      return {"message":response.body}
 
     #if given document with old case_id is application and cannot be
     # reassigned send user response that this file is not acceptable
@@ -75,10 +78,11 @@ async def reassign_case_id(reassign: Reassign, response: Response):
       response.status_code = status.HTTP_406_NOT_ACCEPTABLE
       response.body =f"document to be reassigned with case_id {old_case_id}" \
                   f" and uid {uid} is application form and cannot be reassigned"
-      return response
+      return {"message": response.body}
     new_case_id_document  = Document.collection.filter(case_id=new_case_id).\
       filter(document_type ="application_form").get()
-
+    print("After new case_id check")
+    print(new_case_id_document)
     #application with new case case_id does not exist in db
     #send 404 not found error
     if not new_case_id_document:
@@ -88,7 +92,8 @@ async def reassign_case_id(reassign: Reassign, response: Response):
       response.body = f"Application with case_id {new_case_id}" \
       f" does not exist in database to reassigne supporting doc " \
       f"{old_case_id} and uid {uid}"
-      return response
+      return {"message":response.body}
+
     client = bq_client()
     gcs_source_url = document.url
     document_class = document.document_class
@@ -115,7 +120,8 @@ async def reassign_case_id(reassign: Reassign, response: Response):
       response.body = f"Error in copying files in " \
      f"gcs bucket from source folder {old_case_id},destination" \
           f" {new_case_id} "
-      return response
+      return {"message": response.body}
+    print("----------Updating firestore-----------")
     #Update Firestore databse
     document.case_id = new_case_id
     updated_url = prefix_name + destination_blob_name
@@ -130,25 +136,26 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     }
     document.hitl_status = fireo.ListUnion([hitl_audit_trail])
     document.update()
-
+    print("updating bigquery")
     #Update Bigquery database
     entities_for_bq = format_data_for_bq(entities)
     update_bq = stream_document_to_bigquery(client, new_case_id, uid,
                                 document_class, document_type,
                               entities_for_bq)
-    print("--------firestore db ----------------",
-          context,requests)
+    print("--------firestore db ----------------")
     # status_process_task =
-    call_process_task(new_case_id,uid,document_class,
+    response_process_task = call_process_task(new_case_id,uid,document_class,
     document_type,updated_url,context)
-    if update_bq == []:
+    if update_bq == [] and response_process_task.status_code == 202:
       Logger.info(
           f"ressign case_id from {old_case_id} to {new_case_id} is successfull")
       return {"status": "success", "url": document.url}
     else:
+      print("inside else")
       response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
       response.body = "Error in updating bigquery database"
   except Exception as e:
+    print("Inside except")
     Logger.error(e)
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
