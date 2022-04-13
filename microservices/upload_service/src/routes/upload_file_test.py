@@ -163,7 +163,8 @@ def test_upload_multiple_pdf_without_case_id_positive(client_with_emulator):
                       "application/pdf"))]
 
   with mock.patch("routes.upload_file.Logger"):
-    with mock.patch("routes.upload_file.create_document",return_value = mock_uid):
+    with mock.patch("routes.upload_file.create_document",
+                    return_value = mock_uid):
       with mock.patch("routes.upload_file.publish_document"):
         response = client_with_emulator.post(
             f"{api_url}upload_files"
