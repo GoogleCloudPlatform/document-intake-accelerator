@@ -38,8 +38,36 @@ def pattern_based_entities(parser_data, pattern):
         op = None
     return op
 
+def update_confidence(dupp,without_noise):
+    for key in dupp.keys():
+        for i in without_noise:
+            if i['key'] == key:
+                i['value_confidence'] =-1.0
+    return without_noise
 
-def default_entities_extraction(parser_entities, default_entities):
+def check_duplicate_keys(dictme,without_noise):
+    #dictme is the mapping dictionary
+    #without_noise is the raw dictionary which comes from Form parser
+    dupp={}
+    for j,k in dictme.items():
+        # print(j,k)
+        # print(len(k))
+        if len(k) > 1:
+            dupp[j] = len(k)
+    for j,k in dupp.items():
+        count=0
+        for i in without_noise:
+            if i['key'] == j:
+               count = count + 1
+        count=0
+        if count!=k:
+            without_noise=update_confidence(dupp,without_noise)
+            return False
+    
+
+    return True
+
+def default_entities_extraction(parser_entities, default_entities,doc_type):
     """
     This function extracted default entities
 
@@ -70,12 +98,22 @@ def default_entities_extraction(parser_entities, default_entities):
             entity_dict[default_entities[key][0]] = {"entity": default_entities[key][0],
                                                      "value": parser_entities_dict[key][0],
                                                      "extraction_confidence": parser_entities_dict[key][1],
-                                                     "manual_extraction": False}
+                                                     "manual_extraction": False,
+                                                     "corrected_value": None}
         else:
             entity_dict[default_entities[key][0]] = {"entity": default_entities[key][0], "value": None,
                                                      "extraction_confidence": None,
-                                                     "manual_extraction": False}
+                                                     "manual_extraction": False,
+                                                     "corrected_value": None}
 
+    if doc_type == 'utility_bill':
+        if "supplier_address" in parser_entities_dict:
+            if parser_entities_dict['supplier_address'][0] == '':
+                if 'receiver_address' in parser_entities_dict.keys() and parser_entities_dict['receiver_address'][0]!='':
+                    entity_dict['reciever address']['value'] = parser_entities_dict['receiver_address'][0]
+                else:
+                    if "service_address" in parser_entities_dict:
+                            entity_dict['reciever address']['value'] = parser_entities_dict['service_address'][0]
     return entity_dict
 
 
@@ -353,21 +391,15 @@ def standard_entity_mapping(desired_entities_list):
 
     return extracted_entities_final_json
 
-
-
-
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_parser_text, parser_json_fname):
     """
     Form parser entity mapping function
-
     Parameters
     ----------
     form_parser_entity_list: Extracted form parser entities before mapping
     mapping_dict: Mapping dictionary have info of default, derived entities along with desired keys
-
     Returns: required entities - list of dicts having entity, value, confidence and manual_extraction information
     -------
-
     """
 
     # extract entities information from config files
@@ -375,6 +407,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
 
     derived_entities = mapping_dict.get("derived_entities")
     table_entities = mapping_dict.get("table_entities")
+    flag = check_duplicate_keys(default_entities,form_parser_entity_list)
 
     df = pd.DataFrame(form_parser_entity_list)
     print(df['value_coordinates'])
@@ -441,7 +474,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict, form_par
         table_extract_obj = TableExtractor(parser_json_fname)
         table_response = table_extract_obj.get_entities(table_entities)
         required_entities_list.extend(table_response)
-    return required_entities_list
+    return required_entities_list,flag
 
 
 def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None, output_filename=None) -> str:
@@ -560,12 +593,12 @@ def extract_form_fields(doc_element: dict, document: dict):
 
 
 
-def extraction_accuracy_calc(total_entities_list):
+def extraction_accuracy_calc(total_entities_list,flag=True):
     """
 
     This function is to calculate document extraction accuracy
     Parameters
-    ----------
+    ----------      
     total_entities_list: Total extracted list of dict
 
     Returns : Extraction score
@@ -574,6 +607,9 @@ def extraction_accuracy_calc(total_entities_list):
     """
 
     # get fields extraction accuracy
+    if flag == False:
+        extraction_accuracy = -1.0
+        return extraction_accuracy
     entity_accuracy_list = [each_entity.get("extraction_confidence") if each_entity.get("extraction_confidence") else 0
                             for each_entity in
                             total_entities_list if not each_entity.get("manual_extraction")]
@@ -581,6 +617,7 @@ def extraction_accuracy_calc(total_entities_list):
     extraction_accuracy = round(sum(entity_accuracy_list) / len(entity_accuracy_list), 3)
 
     return extraction_accuracy
+
 
 def standard_entity_state_form(form: str, state: str, col: str = 'entity'):
     """This function use Entity Standardization CSV file to load

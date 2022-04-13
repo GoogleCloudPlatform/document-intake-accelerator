@@ -232,15 +232,15 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   doc_state = doc_type+"_"+state
   mapping_dict = MAPPING_DICT[doc_state]
   # Extract desired entites from form parser
-  form_parser_entities_list = form_parser_entities_mapping(
-      extracted_entity_list,mapping_dict, form_parser_text)
+  form_parser_entities_list,flag = form_parser_entities_mapping(
+    extracted_entity_list, mapping_dict, form_parser_text)
 
   # Save extract desired entities only
   # with open("{}.json".format(os.path.join(extracted_entities,
   #         gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
   #     json.dump(form_parser_entities_list, outfile, indent=4)
 
-  return form_parser_entities_list
+  return form_parser_entities_list,flag
 
 
 def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
@@ -270,9 +270,10 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
     if parser_information:
       parser_name = parser_information["parser_name"]
       if parser_name == "FormParser":
-        desired_entities_list = form_parser_extraction(
+        desired_entities_list,flag = form_parser_extraction(
             parser_information,gcs_doc_path, doc_type, state, 300)
       else:
+        flag=True
         desired_entities_list = specialized_parser_extraction(
             parser_information,gcs_doc_path, doc_type)
 
@@ -292,7 +293,7 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
 
       # extraction accuracy calculation
       document_extraction_confidence = extraction_accuracy_calc\
-          (final_extracted_entities)
+          (final_extracted_entities,flag)
       print(final_extracted_entities)
       print(document_extraction_confidence)
       return final_extracted_entities, document_extraction_confidence
@@ -300,4 +301,3 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
       # Parser not available
       print("parser not available for this document")
       return None
-
