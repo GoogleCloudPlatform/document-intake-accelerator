@@ -205,7 +205,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
             blob_as_bytes = blob.download_as_bytes()
 
             # saving the parser response to the folder, remove this while integration
-            parser_json_fname = os.path.join(parser_json_folder, 'res_{}.json'.format(i))
+            parser_json_fname = os.path.join(parser_json_folder, f"res_{i}.json")
             with open(parser_json_fname, "wb") as file_obj:
                 blob.download_to_file(file_obj)
 
@@ -237,23 +237,28 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str, doc_type: st
         else:
             print(f"Skipping non-supported file type {blob.name}")
 
-    # delete temp folder
-    del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
 
     # Save extracted entities json, can be removed from pipeline
    # with open("{}.json".format(os.path.join(parser_op, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
     #    json.dump(extracted_entity_list, outfile, indent=4)
 
+    # mapping dictionary of document type and state
+    doc_state = doc_type+"_"+state
     # mappping dictionary of document type and state
     doc_state = doc_type + "_" + state
     mapping_dict = MAPPING_DICT[doc_state]
 
     # Extract desired entites from form parser
-    form_parser_entities_list = form_parser_entities_mapping(extracted_entity_list, mapping_dict, form_parser_text)
+    form_parser_entities_list = form_parser_entities_mapping(extracted_entity_list, mapping_dict,
+                                                            form_parser_text, parser_json_fname)
 
     # Save extract desired entities only
-    with open("{}.json".format(os.path.join(extracted_entities, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
-       json.dump(form_parser_entities_list, outfile, indent=4)
+   # with open("{}.json".format(os.path.join(extracted_entities, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
+    #    json.dump(form_parser_entities_list, outfile, indent=4)
+    # delete temp folder
+    del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
+    # with open("{}.json".format(os.path.join(extracted_entities, gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
+    #    json.dump(form_parser_entities_list, outfile, indent=4)
 
     return form_parser_entities_list
 
@@ -275,7 +280,7 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
         Extraction accuracy
     """
 
-    parser_config_json = "parser_config.json"
+    parser_config_json = "/Users/sumitvaise/DOCAI/claims-processing/experimental/complete-extraction-framework/parser_config.json"
 
     # read parser details from configuration json file
     with open(parser_config_json, 'r') as j:
@@ -287,7 +292,7 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
         if parser_information:
             parser_name = parser_information["parser_name"]
             if parser_name == "FormParser":
-                desired_entities_list,flag = form_parser_extraction(parser_information, gcs_doc_path, doc_type, state, 300)
+                desired_entities_list = form_parser_extraction(parser_information, gcs_doc_path, doc_type, state, 300)
             else:
                 desired_entities_list = specialized_parser_extraction(parser_information, gcs_doc_path, doc_type)
 
@@ -299,12 +304,12 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
             input_dict = get_json_format_for_processing(standardized_extracted_entities)
             input_dict, output_dict = data_transformation(input_dict)
             final_extracted_entities = correct_json_format_for_db(output_dict, standardized_extracted_entities)
-            with open("{}.json".format(os.path.join(mapped_extracted_entities, gcs_doc_path.split('/')[-1][:-4])),
-                     "w") as outfile:
-               json.dump(final_extracted_entities, outfile, indent=4)
+            # with open("{}.json".format(os.path.join(mapped_extracted_entities, gcs_doc_path.split('/')[-1][:-4])),
+            #          "w") as outfile:
+            #    json.dump(final_extracted_entities, outfile, indent=4)
 
             # extraction accuracy calculation
-            document_extraction_confidence = extraction_accuracy_calc(final_extracted_entities,flag)
+            document_extraction_confidence = extraction_accuracy_calc(final_extracted_entities)
         else:
             # Parser not available
             print('parser not available for this document')
@@ -313,25 +318,23 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
 
 
 if __name__ == "__main__":
-   extracted_entities = "C:\\Users\\Kshitij Phulare\\Downloads\\noisy"
-
-   parser_op = "C:\\Users\\Kshitij Phulare\\Downloads\\without_noisy"
-   mapped_extracted_entities = "C:\\Users\\Kshitij Phulare\\Downloads\\without_op"
+   # extracted_entities = "C:\\Users\\Ajay Sharma\\Documents\\DOCAI\\Parsers\\Arkansas\\Final Json\\Clean"
+   mapped_extracted_entities = "."
    # parser_op = "C:\Users\Daisy Das\Desktop\parser_output\parser_output"
    form_parser_raw_json_folder = "."
    # gcs_doc_path = "gs://gs://async_form_parser/input/Arkansas application form.pdf"
 
    os.environ[
-        'GOOGLE_APPLICATION_CREDENTIALS'] = "C:\\Users\\Kshitij Phulare\\Downloads\\claims-processing-dev-a07894631cd2.json"
+     'GOOGLE_APPLICATION_CREDENTIALS'] = "/Users/sumitvaise/Downloads/claims-processing-dev-58abd8292d88.json"
 
    # API Integration will start from here
 
    # Extract API Provides label and document
-   doc_type = "unemployment_form"
+   doc_type = "claims_form"
    state = "arizona"
-   gcs_doc_path = "gs://async_form_parser/input/Copy of Arizona2.pdf"
+   gcs_doc_path = "gs://claim_form_arizona/input/Copy of Arizona_claim1.pdf"
 
-   extract_entities(gcs_doc_path, doc_type, state)  
+   print(extract_entities(gcs_doc_path, doc_type, state))
 
    # use this code for looping in gcs folder
 """
