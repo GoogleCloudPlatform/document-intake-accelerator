@@ -4,13 +4,12 @@ This Script is Used to Calculate the Validation Score
 
 import json
 import pandas as pd
-# from google.cloud import bigquery
+from google.cloud import bigquery
 from google.cloud import storage
 from common.config import PATH,VALIDATION_TABLE
-from common.db_client import bq_client
 from common.utils.logging_handler import Logger
 
-bigquery_client = bq_client()
+bigquery_client = bigquery.Client()
 
 
 def read_json(path):
