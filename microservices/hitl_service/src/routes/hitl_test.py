@@ -56,7 +56,11 @@ def test_get_queue_api(client_with_emulator):
 
   d = Document()
   d.hitl_status = [{"status": "approved", "user": "Adam", "timestamp": "12.00"}]
-  d.system_status = [{"stage":"auto_approval","status":"success","timestamp":"11.57"}]
+  d.system_status = [{
+      "stage": "auto_approval",
+      "status": "success",
+      "timestamp": "11.57"
+  }]
   d.auto_approval = "Rejected"
   d.active = "active"
   d.save()
