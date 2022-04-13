@@ -98,38 +98,38 @@ async def get_queue(hitl_status: str):
     docs = list(Document.collection.filter(active="active").fetch())
     result_queue = []
     for d in docs:
-      status_class = ""
       doc_dict = d.to_dict()
       hitl_trail = doc_dict["hitl_status"]
 
-      #Preference for hitl_status
-      #if hitl_status trail is not present autoapproval status is considered
-      status_class = None
+      current_status = None
+      system_status = doc_dict["system_status"]
+
+      #Check the latest action hitl or system
+      #If the last step of system status is autoapproval
+      # consider autoapproval status
+      # elif last update was to hitl consider hitl
       if hitl_trail:
-        if hitl_trail[-1]["status"].lower() != "reassigned":
-          status_class = hitl_trail[-1]["status"].lower()
-        #if status is reassigned check if document type is supporting
-        elif hitl_trail[-1]["status"].lower() == "reassigned":
-          if doc_dict["document_type"]:
-            if doc_dict["document_type"].lower() == "supporting_documents":
-              #if last hitl trail is reassigned and doc type is supporting
-              # then consider ML status as the document must have gone
-              # through the pipeline again
-              if doc_dict["system_status"][-1]["stage"].lower(
-              ) == "auto_approval" and doc_dict["system_status"][-1][
-                  "status"].lower() == "success":
-                if doc_dict["auto_approval"]:
-                  status_class = doc_dict["auto_approval"].lower()
+        last_hitl_status = hitl_trail[-1]
+        last_system_status = system_status[-1]
+        if last_system_status["timestamp"] > last_hitl_status["timestamp"]:
+          if last_system_status["stage"].lower() == "auto_approval"\
+             and last_system_status["status"].lower() == "success":
+            current_status = doc_dict["auto_approval"].lower()
+
+        else:
+          if last_hitl_status["status"].lower() != "reassigned":
+            current_status = last_hitl_status["status"].lower()
       else:
         if doc_dict["auto_approval"]:
-          status_class = doc_dict["auto_approval"].lower()
-      if status_class == hitl_status.lower():
+          current_status = doc_dict["auto_approval"].lower()
+      if current_status == hitl_status:
         result_queue.append(doc_dict)
 
     result_queue = sorted(
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
 
     response = {"status": "Success"}
+    response["len"] = len(result_queue)
     response["data"] = result_queue
     return response
 
