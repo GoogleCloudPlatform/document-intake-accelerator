@@ -142,7 +142,6 @@ def extract_documents(doc:Dict,document_type):
   case_id = doc.get("case_id")
   uid = doc.get("uid")
   document_class = doc.get("document_class")
-  document_type =  doc.get("document_type")
   context =  doc.get("context")
   extract_res = get_extraction_score(case_id, uid, document_class,
                                      document_type,context)
