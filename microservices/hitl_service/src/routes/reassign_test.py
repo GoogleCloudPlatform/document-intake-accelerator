@@ -81,17 +81,15 @@ def test_document_reassign_positive(client_with_emulator):
       "comment": "reassign the application form"
   }
   mockresponse = Mock()
-  mockresponse.status_code = 201
+  mockresponse.status_code = 202
   with mock.patch("routes.reassign.Logger"):
     with mock.patch("routes.reassign.copy_blob", return_value="success"):
-      with mock.patch(
-          "routes.reassign.stream_document_to_bigquery", return_value=[]):
-        with mock.patch("routes.reassign.format_data_for_bq"):
-          with mock.patch(
-              "routes.reassign.call_process_task",
-              return_value=mockresponse.status_code):
-            response = client_with_emulator.post(
-                f"{api_url}reassign_case_id", json=data)
+      with mock.patch("routes.reassign.format_data_for_bq"):
+        with mock.patch(
+            "routes.reassign.stream_document_to_bigquery", return_value=[]):
+            with mock.patch("routes.reassign.call_process_task",return_value=mockresponse):
+                response = client_with_emulator.post(
+                  f"{api_url}reassign_case_id", json=data)
     print(response)
   assert response.status_code == 200
 
@@ -133,5 +131,5 @@ def test_same_old_and_new_case_id(client_with_emulator):
           response = client_with_emulator.post(
               f"{api_url}reassign_case_id", json=data)
     print(response)
-  assert response.status_code == 404
+  assert response.status_code == 400
 

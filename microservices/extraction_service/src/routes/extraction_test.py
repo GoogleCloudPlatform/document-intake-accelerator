@@ -52,7 +52,7 @@ def test_extraction_api_success(client_with_emulator):
               return_value=mockresponse):
             response = client_with_emulator.post(
                 f"{api_url}extraction_api?case_id=123A&uid=aSCh3o"
-                f"6BxjPEqjMAQhtC&doc_class=driving_license")
+                f"6BxjPEqjMAQhtC&doc_class=driving_license&document_type=supporting_documents&context=arkansas")
             print(response)
   assert response.status_code == 200
 
@@ -74,7 +74,7 @@ def test_extraction_api_parser_not_available(client_with_emulator):
           with mock.patch("routes.extraction.update_extraction_status"):
             response = client_with_emulator.post(
                 f"{api_url}extraction_api?case_id=123A&"
-                f"uid=aSCh3o6BxjPEqjMAQhtC&doc_class=driving_license")
+                f"uid=aSCh3o6BxjPEqjMAQhtC&doc_class=driving_license&document_type=supporting_documents&context=arkansas")
             print(response)
             assert response.status_code == 404
 
@@ -95,5 +95,5 @@ def test_extraction_api_fail(client_with_emulator):
           with mock.patch("routes.extraction.update_extraction_status"):
             response = client_with_emulator.post(
                 f"{api_url}extraction_api?case_id=123A"
-                f"&uid=aSCh3o6BxjPEqjMAQhtC&doc_class=driving_license")
+                f"&uid=aSCh3o6BxjPEqjMAQhtC&doc_class=driving_license&document_type=supporting_documents&context=arkansas")
             assert response.status_code == 500

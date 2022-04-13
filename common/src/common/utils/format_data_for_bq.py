@@ -12,11 +12,14 @@ def format_data_for_bq(entity):
     entity : list of dictionaries
     output : string format of enties and values
   """
-  new_list = []
-  for i in entity:
-    entity_dict = {}
-    entity_dict[i.get("entity")] = i.get("value")
-    new_list.append(entity_dict)
-  res= dict(ChainMap(*new_list))
-  new_json = json.dumps(res)
-  return new_json
+  if entity is not None:
+    new_list = []
+    for i in entity:
+      entity_dict = {}
+      entity_dict[i.get("entity")] = i.get("value")
+      new_list.append(entity_dict)
+    res= dict(ChainMap(*new_list))
+    new_json = json.dumps(res)
+    return new_json
+  else:
+    return None
