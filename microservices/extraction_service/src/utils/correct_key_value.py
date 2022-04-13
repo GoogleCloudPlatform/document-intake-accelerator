@@ -36,7 +36,7 @@ def string_to_number(value):
   Output:
     value: Returns corrected string
   '''
-  if value==None:
+  if value is None:
     pass
   else:
     # convert input string to list
@@ -68,7 +68,7 @@ def number_to_string(value):
     Output:
      value: Returns corrected string
   '''
-  if value==None:
+  if value is None:
     pass
   else:
     # convert input string to list
@@ -100,7 +100,7 @@ def upper_to_lower(value):
     Output:
       corrected_value: converted string
   '''
-  if value==None:
+  if value is None:
     corrected_value=value
   else:
     # convert to lower case
@@ -115,7 +115,7 @@ def lower_to_upper(value):
     Output:
       corrected_value: converted string
   '''
-  if value==None:
+  if value is None:
     corrected_value=value
   else:
     # convert to upper case
@@ -130,11 +130,11 @@ def clean_value(value, noise):
     Output:
        corrected_value: corrected string without noise
   '''
-  if value==None:
+  if value is None:
     corrected_value=value
   else:
     # replace noise in string
-    corrected_value = value.replace(noise, '')
+    corrected_value = value.replace(noise, "")
   return corrected_value
 
 
@@ -145,13 +145,13 @@ def clean_multiple_space(value):
   Output:
     corrected_value: corrected string removing extra spaces
   '''
-  if value==None:
+  if value is None:
     corrected_value=value
   else:
     # create a pattern for extra space
     pattern = re.compile(r"\s+")
     # replace the pattern with single space in the string
-    corrected_value = re.sub(pattern, ' ', value)
+    corrected_value = re.sub(pattern, " ", value)
   return corrected_value
 
 
@@ -164,7 +164,7 @@ def get_date_in_format(input_date_format, output_date_format, value):
     Output:
       new_date: date in new format
   '''
-  if value==None:
+  if value is None:
     new_date=value
   else:
     try:
@@ -187,7 +187,7 @@ def correction_script(corrected_dict, template):
   # traverse through the input dictionary
   for k, v in corrected_dict.items():
     # check for template type
-    if template == 'clean_value':
+    if template == "clean_value":
       # check for keys in template
       for key in clean_value_dict.keys():
         # if keys are matched
@@ -197,7 +197,7 @@ def correction_script(corrected_dict, template):
           # copy input value
           input_value = v
           # iterate through all noise value
-          for index, i in enumerate(noise):
+          for _, i in enumerate(noise):
             # call clean_value function
             corrected_value = clean_value(input_value, i)
             input_value = corrected_value
@@ -205,7 +205,7 @@ def correction_script(corrected_dict, template):
           corrected_dict[k] = corrected_value
 
     # check for template type
-    if template == 'lower_to_upper':
+    if template == "lower_to_upper":
       # check for keys in template
       for item in lower_to_upper_list:
         # if keys are matched
@@ -216,7 +216,7 @@ def correction_script(corrected_dict, template):
           corrected_dict[k] = corrected_value
 
     # check for template type
-    if template == 'upper_to_lower':
+    if template == "upper_to_lower":
       # check for keys in template
       for item in upper_to_lower_list:
         # if keys are matched
@@ -227,7 +227,7 @@ def correction_script(corrected_dict, template):
           corrected_dict[k] = corrected_value
 
     # check for template type
-    if template == 'clean_multiple_space':
+    if template == "clean_multiple_space":
       # check for keys in template
       for item in clean_space_list:
         # if keys are matched
@@ -238,7 +238,7 @@ def correction_script(corrected_dict, template):
           corrected_dict[k] = corrected_value
 
     # check for template type
-    if template == 'date_format':
+    if template == "date_format":
       # check for keys in template
       for key in date_format_dict.keys():
         # if keys are matched
@@ -252,7 +252,7 @@ def correction_script(corrected_dict, template):
           corrected_dict[k] = corrected_value
 
     # check for template type
-    if template == 'convert_to_string':
+    if template == "convert_to_string":
       # check for keys in template
       for item in convert_to_string:
         # if keys are matched
@@ -263,7 +263,7 @@ def correction_script(corrected_dict, template):
           corrected_dict[k] = corrected_value
 
     # check for template type
-    if template == 'convert_to_number':
+    if template == "convert_to_number":
       # check for keys in template
       for item in convert_to_number:
         # if keys are matched
@@ -293,19 +293,19 @@ def data_transformation(input_dict):
       # get input dictionary
       corrected_dict = input_item.copy()
       # check for string
-      corrected_dict = correction_script(corrected_dict, 'convert_to_string')
+      corrected_dict = correction_script(corrected_dict, "convert_to_string")
       # check for number
-      corrected_dict = correction_script(corrected_dict, 'convert_to_number')
+      corrected_dict = correction_script(corrected_dict, "convert_to_number")
       # check for noise
-      corrected_dict = correction_script(corrected_dict, 'clean_value')
+      corrected_dict = correction_script(corrected_dict, "clean_value")
       # check for upper to lower
-      corrected_dict = correction_script(corrected_dict, 'upper_to_lower')
+      corrected_dict = correction_script(corrected_dict, "upper_to_lower")
       # check for lower to upper
-      corrected_dict = correction_script(corrected_dict, 'lower_to_upper')
+      corrected_dict = correction_script(corrected_dict, "lower_to_upper")
       # check for multiple spaces
-      corrected_dict = correction_script(corrected_dict, 'clean_multiple_space')
+      corrected_dict = correction_script(corrected_dict, "clean_multiple_space")
       # check for date format
-      corrected_dict = correction_script(corrected_dict, 'date_format')
+      corrected_dict = correction_script(corrected_dict, "date_format")
       # correct input dictionary
       temp_dict[index] = corrected_dict
     return input_dict, temp_dict
