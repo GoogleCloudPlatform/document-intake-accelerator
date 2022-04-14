@@ -6,8 +6,7 @@ parser and need to extract them by using pattern
 Create state wise mapping if it form parser, and one doc type mapping
 if it is specialized parser
 """
-# Project name
-PROJECT_NAME = "claims-processing-dev"
+
 # Attributes not required from specialized parser raw json
 NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles",
                                                             "textChanges",
@@ -15,7 +14,7 @@ NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles",
                                                             "pages.image"]
 # GCS temp folder to store async form parser output
 GCS_OP_URI = "gs://async_form_parser"
-FORM_PARSER_OP_TEMP_FOLDER = "temp7"
+# Mapping dict
 MAPPING_DICT = {
   "unemployment_form_arizona": {
     "default_entities": {
