@@ -406,7 +406,8 @@ def call_process_task(case_id: str, uid: str, document_class: str,
       "context": context
   }
   payload = {"configs": [data]}
-  base_url = "http://upload-service/upload_service/v1/process_task"
+  base_url = f"http://upload-service/upload_service/v1/process_task"\
+    f"?is_hitl={True}"
   print("params for process task", base_url, payload)
   Logger.info(f"Params for process task {payload}")
   response = requests.post(base_url, json=payload)
