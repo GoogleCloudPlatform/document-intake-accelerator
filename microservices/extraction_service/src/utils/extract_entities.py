@@ -20,9 +20,10 @@ from .utils_functions import entities_extraction, download_pdf_gcs,\
     extract_form_fields, del_gcs_folder, \
     form_parser_entities_mapping, extraction_accuracy_calc, \
     clean_form_parser_keys, standard_entity_mapping, strip_value
-from .config import PROJECT_NAME, \
+from .config import \
   NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE,\
   GCS_OP_URI, MAPPING_DICT
+from common.config import PROJECT_ID
 import warnings
 parser_config = os.path.join(
     os.path.dirname(__file__), ".", "parser_config.json")
@@ -53,7 +54,7 @@ def specialized_parser_extraction(parser_details: dict,
   location = parser_details["location"]
   processor_id = parser_details["processor_id"]
   #parser_name = parser_details["parser_name"]
-  project_id = PROJECT_NAME
+  project_id = PROJECT_ID
   opts = {}
   if location == "eu":
     opts = {"api_endpoint": "eu-documentai.googleapis.com"}
@@ -129,7 +130,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   location = parser_details["location"]
   processor_id = parser_details["processor_id"]
   #parser_name = parser_details["parser_name"]
-  project_id = PROJECT_NAME
+  project_id = PROJECT_ID
 
   opts = {}
 

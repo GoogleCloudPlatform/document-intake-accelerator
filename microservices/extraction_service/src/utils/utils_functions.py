@@ -372,9 +372,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   for each_ocr_key, each_ocr_val in default_entities.items():
     try:
       idx_list = df.index[df["key"] == each_ocr_key].tolist()
-    except KeyError:
-      idx_list = []
-    except Exception:
+    except:
       idx_list = []
     # loop for matched records of mapping dictionary
     for idx, each_val in enumerate(each_ocr_val):
@@ -395,20 +393,8 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
              "page_width": int(df["page_width"][idx_list[idx]]),
              "page_height": int(df["page_height"][idx_list[idx]])
              }
-        except KeyError:
-          print("Key not found in parser output")
-          temp_dict = {"entity": each_val, "value": None,
-                                 "extraction_confidence": None,
-                                 "manual_extraction": False,
-                                 "corrected_value": None,
-                                 "value_coordinates": None,
-                                 "key_coordinates": None,
-                                 "page_no": None,
-                                 "page_width": None,
-                                 "page_height": None
-                                 }
-        except Exception as e:
-          print("Catching generic exception")
+        except:
+          print("If key doesn't present in response")
           temp_dict = {"entity": each_val, "value": None,
                        "extraction_confidence": None,
                        "manual_extraction": False,
@@ -498,7 +484,7 @@ def clean_form_parser_keys(text):
       text = re.sub(r"\W+$", "", text)
     if last_word in [")", "]"]:
       text += last_word
-  except IndexError:
+  except:
     print("Exception occurred while processing")
   return text
 
