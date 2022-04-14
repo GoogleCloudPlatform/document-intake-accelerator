@@ -9,7 +9,8 @@ import json
 import os
 import re
 import proto
-# import random
+import random
+import string
 from google.cloud import documentai_v1 as documentai
 from google.cloud import storage
 from .change_json_format import get_json_format_for_processing, \
@@ -21,7 +22,7 @@ from .utils_functions import entities_extraction, download_pdf_gcs,\
     clean_form_parser_keys, standard_entity_mapping, strip_value
 from .config import PROJECT_NAME, \
   NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE,\
-  GCS_OP_URI, FORM_PARSER_OP_TEMP_FOLDER, MAPPING_DICT
+  GCS_OP_URI, MAPPING_DICT
 import warnings
 parser_config = os.path.join(
     os.path.dirname(__file__), ".", "parser_config.json")
@@ -141,7 +142,9 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   # call create gcs bucket function to create bucket,
   # folder will be created automatically not the bucket
   gcs_output_uri = GCS_OP_URI
-  gcs_output_uri_prefix = FORM_PARSER_OP_TEMP_FOLDER
+  letters = string.ascii_lowercase
+  temp_folder = ''.join(random.choice(letters) for i in range(10))
+  gcs_output_uri_prefix = "temp_"+temp_folder
   # temp folder location
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
   # delete temp folder
