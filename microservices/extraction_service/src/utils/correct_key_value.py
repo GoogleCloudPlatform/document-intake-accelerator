@@ -12,7 +12,7 @@ from .post_processing_config import str_to_num_dict, num_to_str_dict, \
   convert_to_string, convert_to_number
 from common.utils.logging_handler import Logger
 
-def listToString(string_list):
+def list_to_string(string_list):
   '''Function to join a list of string characters to a single string
   Input:
    string_list: list of string characters
@@ -20,12 +20,7 @@ def listToString(string_list):
    str1: concatenated string
   '''
 
-  # initialize an empty string
-  str1 = ""
-  # traverse in the string
-  for ele in string_list:
-    str1 += ele
-    # return string
+  str1 = ''.join(string_list)
   return str1
 
 
@@ -36,7 +31,7 @@ def string_to_number(value):
   Output:
     value: Returns corrected string
   '''
-  if value==None:
+  if value is None:
     pass
   else:
     # convert input string to list
@@ -57,7 +52,7 @@ def string_to_number(value):
             string[index] = v.upper()
 
     # concatenate list to string
-    value = listToString(string)
+    value = list_to_string(string)
   return value
 
 
@@ -68,7 +63,7 @@ def number_to_string(value):
     Output:
      value: Returns corrected string
   '''
-  if value==None:
+  if value is None:
     pass
   else:
     # convert input string to list
@@ -89,7 +84,7 @@ def number_to_string(value):
             # correct the value
             string[index] = v.upper()
     # concatenate list to string
-    value = listToString(string)
+    value = list_to_string(string)
   return value
 
 
@@ -100,7 +95,7 @@ def upper_to_lower(value):
     Output:
       corrected_value: converted string
   '''
-  if value==None:
+  if value is None:
     corrected_value=value
   else:
     # convert to lower case
@@ -115,7 +110,7 @@ def lower_to_upper(value):
     Output:
       corrected_value: converted string
   '''
-  if value==None:
+  if value is None:
     corrected_value=value
   else:
     # convert to upper case
@@ -130,7 +125,7 @@ def clean_value(value, noise):
     Output:
        corrected_value: corrected string without noise
   '''
-  if value==None:
+  if value is None:
     corrected_value=value
   else:
     # replace noise in string
@@ -145,11 +140,11 @@ def clean_multiple_space(value):
   Output:
     corrected_value: corrected string removing extra spaces
   '''
-  if value==None:
+  if value is None:
     corrected_value=value
   else:
     # create a pattern for extra space
-    pattern = re.compile(r"\s+")
+    pattern = re.compile(r'\s+')
     # replace the pattern with single space in the string
     corrected_value = re.sub(pattern, ' ', value)
   return corrected_value
@@ -164,14 +159,14 @@ def get_date_in_format(input_date_format, output_date_format, value):
     Output:
       new_date: date in new format
   '''
-  if value==None:
+  if value is None:
     new_date=value
   else:
     try:
       # convert existing date to new date format
       new_date = datetime.strptime(value, input_date_format)\
           .strftime(output_date_format)  # 2022-02-02
-    except:
+    except: # pylint: disable=bare-except
       # if any error in date format no change in input date
       new_date = value
   return new_date
@@ -189,7 +184,7 @@ def correction_script(corrected_dict, template):
     # check for template type
     if template == 'clean_value':
       # check for keys in template
-      for key in clean_value_dict.keys():
+      for key in clean_value_dict:
         # if keys are matched
         if k == key:
           # get the noise from the template for that key
@@ -197,7 +192,7 @@ def correction_script(corrected_dict, template):
           # copy input value
           input_value = v
           # iterate through all noise value
-          for index, i in enumerate(noise):
+          for i in noise:
             # call clean_value function
             corrected_value = clean_value(input_value, i)
             input_value = corrected_value
@@ -240,7 +235,7 @@ def correction_script(corrected_dict, template):
     # check for template type
     if template == 'date_format':
       # check for keys in template
-      for key in date_format_dict.keys():
+      for key in date_format_dict:
         # if keys are matched
         if k == key:
           # get key values from template
@@ -309,7 +304,7 @@ def data_transformation(input_dict):
       # correct input dictionary
       temp_dict[index] = corrected_dict
     return input_dict, temp_dict
-  except Exception as e:
+  except Exception as e: # pylint: disable=W0703
     Logger.error(e)
     return None,None
 
