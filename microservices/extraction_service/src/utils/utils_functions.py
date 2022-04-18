@@ -371,14 +371,9 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   # loop through one by one deafult entities mentioned in the config file
   for each_ocr_key, each_ocr_val in default_entities.items():
     try:
-      # temp_var = 0
       idx_list = df.index[df["key"] == each_ocr_key].tolist()
-      # temp_var = 1
     except: # pylint: disable=bare-except
       idx_list = []
-    # finally:
-    #   if not temp_var:
-    #     idx_list = []
     # loop for matched records of mapping dictionary
     for idx, each_val in enumerate(each_ocr_val):
       if idx_list:
@@ -398,7 +393,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
              "page_width": int(df["page_width"][idx_list[idx]]),
              "page_height": int(df["page_height"][idx_list[idx]])
              }
-        except:
+        except: # pylint: disable=bare-except
           print("If key doesn't present in response")
           temp_dict = {"entity": each_val, "value": None,
                        "extraction_confidence": None,
@@ -489,7 +484,7 @@ def clean_form_parser_keys(text):
       text = re.sub(r"\W+$", "", text)
     if last_word in [")", "]"]:
       text += last_word
-  except:
+  except: # pylint: disable=bare-except
     print("Exception occurred while processing")
   return text
 

@@ -144,7 +144,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   # folder will be created automatically not the bucket
   gcs_output_uri = GCS_OP_URI
   letters = string.ascii_lowercase
-  temp_folder = ''.join(random.choice(letters) for i in range(10))
+  temp_folder = "".join(random.choice(letters) for i in range(10))
   gcs_output_uri_prefix = "temp_"+temp_folder
   # temp folder location
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
