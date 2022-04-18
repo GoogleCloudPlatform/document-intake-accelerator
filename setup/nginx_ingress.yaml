@@ -2,6 +2,7 @@ kind: Ingress
 apiVersion: extensions/v1beta1
 metadata:
   name: nginx-ingress
+  namespace: default
   annotations:
     kubernetes.io/ingress.class: "nginx"
     cert-manager.io/issuer: "letsencrypt-prod"
@@ -13,17 +14,44 @@ metadata:
 spec:
   tls:
     - hosts:
-      - _API_DOMAIN
+      - _WEB_APP_DOMAIN
       secretName: claims-processing-dev # [TODO] Change this to anything
   rules:
-  - host: _API_DOMAIN
+  - host: _WEB_APP_DOMAIN
     http:
       paths:
       - path: /sample_service
         backend:
           serviceName: sample-service
-          servicePort: 8888
-      - path: /authentication
+          servicePort: 80
+      - path: /upload_service/v1
         backend:
-          serviceName: authentication
-          servicePort: 8889
+          serviceName: upload-service
+          servicePort: 80
+      - path: /classification_service/v1
+        backend:
+          serviceName: classification-service
+          servicePort: 80
+      - path: /validation_service/v1
+        backend:
+          serviceName: validation-service
+          servicePort: 80
+      - path: /extraction_service/v1
+        backend:
+          serviceName: extraction-service
+          servicePort: 80
+      - path: /hitl_service/v1
+        backend:
+          serviceName: hitl-service
+          servicePort: 80
+      - path: /document_status_service/v1
+        backend:
+          serviceName: document-status-service
+          servicePort: 80
+      - path: /matching_service/v1
+        backend:
+          serviceName: matching-service
+          servicePort: 80
+      - backend:
+          serviceName: adp-ui
+          servicePort: 80
