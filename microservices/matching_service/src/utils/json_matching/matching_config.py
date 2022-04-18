@@ -32,17 +32,17 @@ MATCHING_USER_KEYS_SUPPORTING_DOC = {
     # 'drivers_license': {
     #    'name': 0.16, 'dob': (0.16, '%y/%m/%d'), 'sex': 0.16, 'dl_no': 0.16},
     'driving_licence': {
-        'name': 0.16,
-        'date_last_worked': (0.16, '%Y/%m/%d'),
-        'ssn': 0.16,
-        'city': 0.16
+        'name': 0.25,
+        'dob': (0.25, '%Y/%m/%d'),
+        'dl_no': 0.25,
+        'sex': 0.25
     },
     'utility_bill': {
         'name': 0.50,
         'residential_address': 0.50
     },
     'pay_stub': {
-        'employee_name': 0.14,
+        'employee_name': 0.16,
         'ytd': 0.14,
         'rate': 0.14,
         'hours': 0.14,
@@ -51,11 +51,11 @@ MATCHING_USER_KEYS_SUPPORTING_DOC = {
         'ssn': 0.14
     },
     'claims_form': {
-        'employer_info': 0.25,
-        'work_start_date': (0.25, '%y/%m/%d'),
-        'employer_name': 0.25,
-        'employer_address': 0.25,
-        'employer_city': 0.25
+        'employer_info': 0.19,
+        'work_start_date': (0.19, '%y/%m/%d'),
+        'employer_name': 0.24,
+        'employer_address': 0.19,
+        'employer_city': 0.19
     }
 }
 
