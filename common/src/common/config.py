@@ -17,3 +17,27 @@ PATH ="gs://async_form_parser/Jsons/trial.json"
 PROJECT_ID ="claims-processing-dev"
 BIGQUERY_DB = "data_extraction.entities"
 VALIDATION_TABLE = "claims-processing-dev.data_extraction.entities"
+
+
+#Map to standardise predicted document class from classifier to
+# standard document_class values
+DOC_CLASS_STANDARDISATION_MAP = {
+  "UE": "unemployment_form",
+  "DL": "driving_licence",
+  "Claim": "claims_form",
+  "Utility": "utility_bill",
+  "PayStub": "pay_stub"
+}
+
+#List of application forms and supporting documents
+APPLICATION_FORMS = ["unemployment_form"]
+SUPPORTING_DOCS = ["driving_licence","claims_form","utility_bill","pay_stub"]
+
+#List of database keys and extracted entities that are searchable
+DB_KEYS = [
+    "active", "auto_approval", "is_autoapproved", "matching_score", "case_id",
+    "uid", "url", "context", "document_class", "document_type",
+    "upload_timestamp", "extraction_score", "is_hitl_classified"
+]
+
+ENTITY_KEYS = ["name", "dob", "residential_address", "email", "phone_no"]

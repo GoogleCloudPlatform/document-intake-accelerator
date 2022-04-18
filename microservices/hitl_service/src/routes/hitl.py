@@ -10,8 +10,7 @@ import requests
 import fireo
 import traceback
 from models.search_payload import SearchPayload
-from config import DB_KEYS
-from config import ENTITY_KEYS
+from common.config import DB_KEYS,ENTITY_KEYS
 # disabling for linting to pass
 # pylint: disable = broad-except
 
