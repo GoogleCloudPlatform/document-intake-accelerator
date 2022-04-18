@@ -20,14 +20,12 @@ def list_to_string(string_list):
   Output:
    str1: concatenated string
   '''
-
   # initialize an empty string
   str1 = ''
   # traverse in the string
   str1=str1.join(string_list)
   # return string
   return str1
-
 
 def string_to_number(value):
   ''' Function to correct a extracted integer value
@@ -173,6 +171,8 @@ def get_date_in_format(input_date_format, output_date_format, value):
           .strftime(output_date_format)  # 2022-02-02
     except ValueError as e:
       # if any error in date format no change in input date
+      Logger.error('Error occurred in the date format so '
+                   'keeping existed date only')
       new_date = value
       Logger.error(e)
   return new_date
@@ -311,6 +311,7 @@ def data_transformation(input_dict):
       temp_dict[index] = corrected_dict
     return input_dict, temp_dict
   except ValueError as e:
+    Logger.error(f'Error in the date tranformation postprocessing {e}')
     Logger.error(e)
     return None,None
 
