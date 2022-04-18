@@ -8,6 +8,7 @@ from utils.json_matching.match_json import compare_json
 # disabling for linting to pass
 # pylint: disable = broad-except
 import copy
+import traceback
 
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
@@ -86,7 +87,7 @@ async def match_document(case_id: str, uid: str):
     af_doc = Document.collection.filter(case_id=case_id).filter(
         active="active").filter(document_type="application_form").get()
 
-    if af_doc:
+    if af_doc and af_doc.entities is not None:
       Logger.info(f"Matching document with case_id {case_id}"\
         " and uid {uid} with the corresponding Application form")
 
@@ -137,9 +138,10 @@ async def match_document(case_id: str, uid: str):
     else:
       Logger.error(f"Error while matching document with case_id {case_id}"\
         f" and uid {uid}."\
-          f" Application form not found with given case_id:{case_id}")
+          f" Application form with entities not found"\
+            f" with given case_id:{case_id}")
       raise HTTPException(
-          status_code=404, detail="No supporting Application found")
+          status_code=404, detail="No supporting Application entities found")
 
   except HTTPException as e:
     dsm_status = update_matching_status(case_id, uid, "failed")
@@ -147,6 +149,8 @@ async def match_document(case_id: str, uid: str):
         f"Error while matching document with case_id {case_id} and uid {uid}")
     print(e)
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise e
 
   except Exception as e:
@@ -155,5 +159,7 @@ async def match_document(case_id: str, uid: str):
         f"Error while matching document with case_id {case_id} and uid {uid}")
     Logger.error(e)
     print(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500, detail="Matching Failed.Something went wrong") from e

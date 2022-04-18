@@ -7,7 +7,7 @@ from common.utils.logging_handler import Logger
 from utils.classification.split_and_classify import DocClassifier
 import requests
 from typing import Optional
-
+import traceback
 # disabling for linting to pass
 # pylint: disable = broad-except
 
@@ -168,11 +168,15 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
   except HTTPException as e:
     print(e)
     Logger.error(f"{e} while classification {case_id} and {uid}")
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise e
 
   except Exception as e:
     print(f"{e} while classification {case_id} and {uid}")
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     #DocumentStatus api call
     update_classification_status(case_id, uid, "failed")
     raise HTTPException(status_code=500, detail="Classification Failed") from e
