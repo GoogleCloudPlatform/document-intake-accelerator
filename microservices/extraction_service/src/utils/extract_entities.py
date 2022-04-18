@@ -9,7 +9,8 @@ import json
 import os
 import re
 import proto
-# import random
+import random
+import string
 from google.cloud import documentai_v1 as documentai
 from google.cloud import storage
 from .change_json_format import get_json_format_for_processing, \
@@ -19,9 +20,10 @@ from .utils_functions import entities_extraction, download_pdf_gcs,\
     extract_form_fields, del_gcs_folder, \
     form_parser_entities_mapping, extraction_accuracy_calc, \
     clean_form_parser_keys, standard_entity_mapping, strip_value
-from .config import PROJECT_NAME, \
+from .config import \
   NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE,\
-  GCS_OP_URI, FORM_PARSER_OP_TEMP_FOLDER, MAPPING_DICT
+  GCS_OP_URI, MAPPING_DICT
+from common.config import PROJECT_ID
 import warnings
 parser_config = os.path.join(
     os.path.dirname(__file__), ".", "parser_config.json")
@@ -52,7 +54,7 @@ def specialized_parser_extraction(parser_details: dict,
   location = parser_details["location"]
   processor_id = parser_details["processor_id"]
   #parser_name = parser_details["parser_name"]
-  project_id = PROJECT_NAME
+  project_id = PROJECT_ID
   opts = {}
   if location == "eu":
     opts = {"api_endpoint": "eu-documentai.googleapis.com"}
@@ -128,7 +130,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   location = parser_details["location"]
   processor_id = parser_details["processor_id"]
   #parser_name = parser_details["parser_name"]
-  project_id = PROJECT_NAME
+  project_id = PROJECT_ID
 
   opts = {}
 
@@ -141,7 +143,9 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   # call create gcs bucket function to create bucket,
   # folder will be created automatically not the bucket
   gcs_output_uri = GCS_OP_URI
-  gcs_output_uri_prefix = FORM_PARSER_OP_TEMP_FOLDER
+  letters = string.ascii_lowercase
+  temp_folder = ''.join(random.choice(letters) for i in range(10))
+  gcs_output_uri_prefix = "temp_"+temp_folder
   # temp folder location
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
   # delete temp folder
@@ -238,6 +242,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   # with open("{}.json".format(os.path.join(extracted_entities,
   #         gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
   #     json.dump(form_parser_entities_list, outfile, indent=4)
+
   # delete temp folder
   del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
   return form_parser_entities_list
@@ -270,9 +275,11 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
     if parser_information:
       parser_name = parser_information["parser_name"]
       if parser_name == "FormParser":
-        desired_entities_list = form_parser_extraction(
-            parser_information,gcs_doc_path, doc_type, state, 1000)
+
+        desired_entities_list,flag = form_parser_extraction(
+            parser_information,gcs_doc_path, doc_type, state, 300)
       else:
+        flag=True
         desired_entities_list = specialized_parser_extraction(
             parser_information,gcs_doc_path, doc_type)
 
@@ -292,7 +299,7 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
 
       # extraction accuracy calculation
       document_extraction_confidence = extraction_accuracy_calc\
-          (final_extracted_entities)
+          (final_extracted_entities,flag)
       print(final_extracted_entities)
       print(document_extraction_confidence)
       return final_extracted_entities, document_extraction_confidence
@@ -300,4 +307,3 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
       # Parser not available
       print("parser not available for this document")
       return None
-

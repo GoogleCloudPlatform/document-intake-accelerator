@@ -19,6 +19,67 @@ router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
 
+def add_keys(docs_list:list):
+  for doc in docs_list:
+    name = "N/A"
+    if doc["entities"]:
+      for entity in doc["entities"]:
+        if entity["entity"] == "name":
+          if entity["corrected_value"]:
+            name = entity["corrected_value"]
+          elif entity["value"]:
+            name = entity["value"]
+    doc["applicant_name"] = name.title()
+
+    in_progress = "In Progress"
+    failed = "Failed"
+
+    ml_status = "N/A"
+    current_status = "N/A"
+    status_last_updated_by = "System"
+    if doc["system_status"]:
+      system_status = doc["system_status"]
+      ml_status = ((system_status[-1]["stage"]).replace("_"," ")+\
+        " "+system_status[-1]["status"]).title()
+
+      if doc["hitl_status"]:
+        last_hitl_status = doc["hitl_status"][-1]
+
+        if system_status[-1]["timestamp"] > last_hitl_status["timestamp"]:
+          if system_status[-1]["stage"].lower() == "auto_approval":
+            if system_status[-1]["status"].lower() == "success":
+              current_status = doc["auto_approval"].title()
+            else:
+              current_status = in_progress
+          elif system_status[-1]["status"].lower() == "success":
+            current_status = in_progress
+          else:
+            current_status = failed
+        else:
+          if last_hitl_status["status"].lower() == "reassigned":
+            current_status = in_progress
+          else:
+            current_status = last_hitl_status["status"].title()
+            status_last_updated_by = last_hitl_status["user"]
+
+      else:
+        if system_status[-1]["stage"].lower() == "auto_approval":
+          if system_status[-1]["status"].lower() == "success":
+            current_status = doc["auto_approval"].title()
+          else:
+            current_status = failed
+        elif system_status[-1]["status"].lower() == "success":
+          current_status = in_progress
+        else:
+          current_status = failed
+
+    doc["ml_status"] = ml_status
+    doc["current_status"] = current_status
+    doc["status_last_updated_by"] = status_last_updated_by
+
+  return docs_list
+
+
 
 @router.get("/report_data")
 async def report_data():
@@ -36,7 +97,9 @@ async def report_data():
             Document.collection.filter(active="active").fetch()))
     docs_list = sorted(
         docs_list, key=lambda i: i["upload_timestamp"], reverse=True)
+    docs_list = add_keys(docs_list)
     response = {"status": "Success"}
+    response["len"] = len(docs_list)
     response["data"] = docs_list
     return response
 
@@ -59,17 +122,13 @@ async def get_document(uid: str):
     """
   try:
     doc = Document.find_by_uid(uid)
-    if doc:
-      print(doc)
-      print(doc.to_dict()["active"])
-
     if not doc or not doc.to_dict()["active"] == "active":
       response = {"status": "Failed"}
       response["detail"] = "No Document found with the given uid"
       return response
     response = {"status": "Success"}
-    response["data"] = doc.to_dict()
-    print(response)
+    docs = add_keys([doc.to_dict()])
+    response["data"] = docs[0]
     return response
 
   except Exception as e:
@@ -127,7 +186,7 @@ async def get_queue(hitl_status: str):
 
     result_queue = sorted(
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
-
+    result_queue = add_keys(result_queue)
     response = {"status": "Success"}
     response["len"] = len(result_queue)
     response["data"] = result_queue
@@ -290,6 +349,7 @@ async def get_unclassified():
         if system_trail[-1]["status"].lower() != "success":
           result_queue.append(doc_dict)
     response = {"status": "success"}
+    result_queue = add_keys(result_queue)
     response["data"] = result_queue
     return response
   except Exception as e:
@@ -346,7 +406,8 @@ def call_process_task(case_id: str, uid: str, document_class: str,
       "context": context
   }
   payload = {"configs": [data]}
-  base_url = "http://upload-service/upload_service/v1/process_task"
+  base_url = f"http://upload-service/upload_service/v1/process_task"\
+    f"?is_hitl={True}"
   print("params for process task", base_url, payload)
   Logger.info(f"Params for process task {payload}")
   response = requests.post(base_url, json=payload)
@@ -554,7 +615,7 @@ async def search(search_term: SearchPayload):
 
     if limit_start is not None and limit_end is not None:
       resultset = resultset[limit_start:limit_end]
-
+    resultset = add_keys(resultset)
     return {"status": "success", "len": len(resultset), "data": resultset}
 
   except HTTPException as e:

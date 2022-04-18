@@ -31,6 +31,36 @@ def pattern_based_entities(parser_data, pattern):
     op = None
   return op
 
+def update_confidence(dupp,without_noise):
+  for key in dupp.keys():
+    for i in without_noise:
+      if i["key"] == key:
+        i["value_confidence"] =-1.0
+  return without_noise
+
+def check_duplicate_keys(dictme,without_noise):
+  #dictme is the mapping dictionary
+  #without_noise is the raw dictionary which comes from Form parser
+  dupp={}
+  for j,k in dictme.items():
+    # print(j,k)
+    if len(k) > 1:
+      dupp[j] = len(k)
+  for j,k in dupp.items():
+    count=0
+    for i in without_noise:
+      if i["key"] == j:
+        count = count + 1
+    #remove this later
+    count=0
+    if count!=k:
+      without_noise=update_confidence(dupp,without_noise)
+      return False
+
+
+  return True
+
+
 
 def default_entities_extraction(parser_entities, default_entities,doc_type):
   """
@@ -70,6 +100,17 @@ def default_entities_extraction(parser_entities, default_entities,doc_type):
                  "extraction_confidence": None,
                  "manual_extraction": False,
                  "corrected_value": None}
+  if doc_type == "utility_bill":
+    if "supplier_address" in parser_entities_dict:
+      if parser_entities_dict["supplier_address"][0] == "":
+        if "receiver_address" in parser_entities_dict \
+        and parser_entities_dict["receiver_address"][0]!="":
+          entity_dict["reciever address"]["value"] = \
+          parser_entities_dict["receiver_address"][0]
+        else:
+          if "service_address" in parser_entities_dict:
+            entity_dict["reciever address"]["value"] = \
+            parser_entities_dict["service_address"][0]
   return entity_dict
 
 
@@ -325,11 +366,16 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   default_entities = mapping_dict.get("default_entities")
   derived_entities = mapping_dict.get("derived_entities")
   table_entities = mapping_dict.get("table_entities")
+  flag = check_duplicate_keys(default_entities,form_parser_entity_list)
+
   df = pd.DataFrame(form_parser_entity_list)
   required_entities_list = []
   # loop through one by one deafult entities mentioned in the config file
   for each_ocr_key, each_ocr_val in default_entities.items():
-    idx_list = df.index[df["key"] == each_ocr_key].tolist()
+    try:
+      idx_list = df.index[df["key"] == each_ocr_key].tolist()
+    except:
+      idx_list = []
     # loop for matched records of mapping dictionary
     for idx, each_val in enumerate(each_ocr_val):
       if idx_list:
@@ -349,18 +395,18 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
              "page_width": int(df["page_width"][idx_list[idx]]),
              "page_height": int(df["page_height"][idx_list[idx]])
              }
-        except KeyError:
-          print("Key not found in parser output")
+        except:
+          print("If key doesn't present in response")
           temp_dict = {"entity": each_val, "value": None,
-                                 "extraction_confidence": None,
-                                 "manual_extraction": False,
-                                 "corrected_value": None,
-                                 "value_coordinates": None,
-                                 "key_coordinates": None,
-                                 "page_no": None,
-                                 "page_width": None,
-                                 "page_height": None
-                                 }
+                       "extraction_confidence": None,
+                       "manual_extraction": False,
+                       "corrected_value": None,
+                       "value_coordinates": None,
+                       "key_coordinates": None,
+                       "page_no": None,
+                       "page_width": None,
+                       "page_height": None
+                       }
 
         required_entities_list.append(temp_dict)
       else:
@@ -445,7 +491,7 @@ def clean_form_parser_keys(text):
       text = re.sub(r"\W+$", "", text)
     if last_word in [")", "]"]:
       text += last_word
-  except IndexError:
+  except:
     print("Exception occurred while processing")
   return text
 
@@ -525,7 +571,7 @@ def extract_form_fields(doc_element: dict, document: dict):
   return response, confidence, list_of_coordidnates
 
 
-def extraction_accuracy_calc(total_entities_list):
+def extraction_accuracy_calc(total_entities_list,flag=True):
   """
     This function is to calculate document extraction accuracy
     Parameters
@@ -535,6 +581,9 @@ def extraction_accuracy_calc(total_entities_list):
     -------
   """
   # get fields extraction accuracy
+  if flag is False:
+    extraction_accuracy = -1.0
+    return extraction_accuracy
   entity_accuracy_list = [each_entity.get("extraction_confidence") if
                           each_entity.get("extraction_confidence") else 0
                         for each_entity in

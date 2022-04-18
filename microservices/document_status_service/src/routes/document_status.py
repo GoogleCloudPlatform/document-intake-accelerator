@@ -155,7 +155,7 @@ async def update_extraction_status(case_id: str,
       system_status = {
           "stage": "extraction",
           "status": "fail",
-          "timestamp": datetime.datetime.utcnow()
+          "timestamp": str(datetime.datetime.utcnow())
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()

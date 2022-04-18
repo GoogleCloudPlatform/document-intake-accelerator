@@ -1,3 +1,4 @@
+
 """
 This script is for postprocessing the extracted OCR output.
 The configuration file for the script is post_processing_config.py
@@ -12,7 +13,7 @@ from .post_processing_config import str_to_num_dict, num_to_str_dict, \
   convert_to_string, convert_to_number
 from common.utils.logging_handler import Logger
 
-def listToString(string_list):
+def list_to_string(string_list):
   '''Function to join a list of string characters to a single string
   Input:
    string_list: list of string characters
@@ -21,11 +22,10 @@ def listToString(string_list):
   '''
 
   # initialize an empty string
-  str1 = ""
+  str1 = ''
   # traverse in the string
-  for ele in string_list:
-    str1 += ele
-    # return string
+  str1=str1.join(string_list)
+  # return string
   return str1
 
 
@@ -57,7 +57,7 @@ def string_to_number(value):
             string[index] = v.upper()
 
     # concatenate list to string
-    value = listToString(string)
+    value = list_to_string(string)
   return value
 
 
@@ -89,7 +89,7 @@ def number_to_string(value):
             # correct the value
             string[index] = v.upper()
     # concatenate list to string
-    value = listToString(string)
+    value = list_to_string(string)
   return value
 
 
@@ -149,7 +149,7 @@ def clean_multiple_space(value):
     corrected_value=value
   else:
     # create a pattern for extra space
-    pattern = re.compile(r"\s+")
+    pattern = re.compile(r'\s{2,}')
     # replace the pattern with single space in the string
     corrected_value = re.sub(pattern, " ", value)
   return corrected_value
@@ -171,9 +171,10 @@ def get_date_in_format(input_date_format, output_date_format, value):
       # convert existing date to new date format
       new_date = datetime.strptime(value, input_date_format)\
           .strftime(output_date_format)  # 2022-02-02
-    except:
+    except ValueError as e:
       # if any error in date format no change in input date
       new_date = value
+      Logger.error(e)
   return new_date
 
 def correction_script(corrected_dict, template):
@@ -189,15 +190,15 @@ def correction_script(corrected_dict, template):
     # check for template type
     if template == "clean_value":
       # check for keys in template
-      for key in clean_value_dict.keys():
+      for key,noise in clean_value_dict.items():
         # if keys are matched
         if k == key:
           # get the noise from the template for that key
           noise = clean_value_dict.get(key)
           # copy input value
           input_value = v
-          # iterate through all noise value
-          for _, i in enumerate(noise):
+          # iterate th
+          for i in noise:
             # call clean_value function
             corrected_value = clean_value(input_value, i)
             input_value = corrected_value
@@ -240,7 +241,7 @@ def correction_script(corrected_dict, template):
     # check for template type
     if template == "date_format":
       # check for keys in template
-      for key in date_format_dict.keys():
+      for key,value in date_format_dict.items():
         # if keys are matched
         if k == key:
           # get key values from template
@@ -309,7 +310,7 @@ def data_transformation(input_dict):
       # correct input dictionary
       temp_dict[index] = corrected_dict
     return input_dict, temp_dict
-  except Exception as e:
+  except ValueError as e:
     Logger.error(e)
     return None,None
 

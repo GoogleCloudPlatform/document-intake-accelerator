@@ -6,8 +6,7 @@ parser and need to extract them by using pattern
 Create state wise mapping if it form parser, and one doc type mapping
 if it is specialized parser
 """
-# Project name
-PROJECT_NAME = "claims-processing-dev"
+
 # Attributes not required from specialized parser raw json
 NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles",
                                                             "textChanges",
@@ -15,7 +14,7 @@ NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles",
                                                             "pages.image"]
 # GCS temp folder to store async form parser output
 GCS_OP_URI = "gs://async_form_parser"
-FORM_PARSER_OP_TEMP_FOLDER = "temp7"
+# Mapping dict
 MAPPING_DICT = {
   "unemployment_form_arizona": {
     "default_entities": {
@@ -35,12 +34,12 @@ MAPPING_DICT = {
       "Mailing Address (No., Street, Apt., P.O. Box, City)": [
         "Employer Mailing Address (No., Street, Apt., P.O.Box, City)"],
       "Date": ["Date"],
-      "City": ["Employee Residence City", "Employee City"],
+      "City": ["Employee City","Employee Residence City"],
       "State": ["Employee State", "Employee Residence State", "Employer State"],
       "Employer's Phone No.": ["Employer's Phone No."],
       "Claimant's Signature": ["Claimant's Signature"],
       "Company's Name ": ["Company's Name"],
-      "ZIP": ["Employee Residence ZIP", "Employee ZIP", "Employer ZIP"],
+      "ZIP": ["Employee ZIP","Employee Residence ZIP", "Employer ZIP"],
       "Month": ["Employee DOB Month", "Month (Last Day of Work)"],
       "Day": ["Employee DOB Day", "Day (Last Day of Work)"],
       "Year": ["Employee DOB Year", "Year (Last Day of Work)"]
