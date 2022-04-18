@@ -374,7 +374,8 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   for each_ocr_key, each_ocr_val in default_entities.items():
     try:
       idx_list = df.index[df["key"] == each_ocr_key].tolist()
-    except:
+    except Exception as e:
+      print(e)
       idx_list = []
     # loop for matched records of mapping dictionary
     for idx, each_val in enumerate(each_ocr_val):
@@ -395,8 +396,8 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
              "page_width": int(df["page_width"][idx_list[idx]]),
              "page_height": int(df["page_height"][idx_list[idx]])
              }
-        except:
-          print("If key doesn't present in response")
+        except Exception as e:
+          print("If key doesn't present in response ", e)
           temp_dict = {"entity": each_val, "value": None,
                        "extraction_confidence": None,
                        "manual_extraction": False,
@@ -436,7 +437,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
     table_response = table_extract_obj.get_entities(table_entities)
     required_entities_list.extend(table_response)
 
-  return required_entities_list
+  return required_entities_list, flag
 
 
 def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None,
@@ -491,8 +492,8 @@ def clean_form_parser_keys(text):
       text = re.sub(r"\W+$", "", text)
     if last_word in [")", "]"]:
       text += last_word
-  except:
-    print("Exception occurred while processing")
+  except Exception as e:
+    print("Exception occurred while processing ", e)
   return text
 
 def del_gcs_folder(bucket, folder):

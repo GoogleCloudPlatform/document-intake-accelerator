@@ -135,11 +135,11 @@ MAPPING_DICT = {
       # if table and page number is unknown mark the variables to 0
       "table_num": 0, "page_num": 0,
       "headers": [
-        "Date",
-        "Name of Employer/Company/ Union and Address (City, State and Zip Code)",
-        "Website URL or Name of person contacted",
-        "Method (In person, Internet, mail)",
-        "Type of work sought", "Action taken on the date of contact"],
+      "Date",
+      "Name of Employer/Company/ Union and Address (City, State and Zip Code)",
+      "Website URL or Name of person contacted",
+      "Method (In person, Internet, mail)",
+      "Type of work sought", "Action taken on the date of contact"],
                  # entity name will be constructed based on the col number provided
                  # for an employer
                  "entity_extraction": [

@@ -22,7 +22,7 @@ def list_to_string(string_list):
   '''
 
   # initialize an empty string
-  str1 = ''
+  str1 = ""
   # traverse in the string
   str1=str1.join(string_list)
   # return string
@@ -149,7 +149,7 @@ def clean_multiple_space(value):
     corrected_value=value
   else:
     # create a pattern for extra space
-    pattern = re.compile(r'\s{2,}')
+    pattern = re.compile(r"\s{2,}")
     # replace the pattern with single space in the string
     corrected_value = re.sub(pattern, " ", value)
   return corrected_value

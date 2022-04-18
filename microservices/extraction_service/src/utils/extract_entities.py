@@ -144,12 +144,12 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   # folder will be created automatically not the bucket
   gcs_output_uri = GCS_OP_URI
   letters = string.ascii_lowercase
-  temp_folder = ''.join(random.choice(letters) for i in range(10))
+  temp_folder = "".join(random.choice(letters) for i in range(10))
   gcs_output_uri_prefix = "temp_"+temp_folder
   # temp folder location
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
   # delete temp folder
-  del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
+  # del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
   gcs_documents = documentai.GcsDocuments(
     documents=[{"gcs_uri": gcs_doc_path, "mime_type": "application/pdf"}]
   )
@@ -183,10 +183,10 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   extracted_entity_list = []
   form_parser_text = ""
   # saving form parser json, this can be removed from pipeline
-  parser_json_folder = os.path.join(form_parser_raw_json_folder,
+  parser_json_folder = os.path.join(temp_folder,
                                     gcs_doc_path.split("/")[-1][:-4])
   if not os.path.exists(parser_json_folder):
-      os.mkdir(parser_json_folder)
+    os.mkdir(parser_json_folder)
   # browse through output jsons
   for blob in blob_list:
     # If JSON file, download the contents of this blob as a bytes object.
@@ -195,9 +195,9 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
       # saving the parser response to the folder, remove this while integration
       # parser_json_fname = "temp.json"
       parser_json_fname = \
-          os.path.join(parser_json_folder, 'res_{}.json'.format(i))
+          os.path.join(parser_json_folder, "res.json")
       with open(parser_json_fname, "wb") as file_obj:
-          blob.download_to_file(file_obj)
+        blob.download_to_file(file_obj)
 
       document = documentai.types.Document.from_json(blob_as_bytes)
       # print(f"Fetched file {i + 1}")
@@ -235,7 +235,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   doc_state = doc_type+"_"+state
   mapping_dict = MAPPING_DICT[doc_state]
   # Extract desired entites from form parser
-  form_parser_entities_list = form_parser_entities_mapping(
+  form_parser_entities_list, flag = form_parser_entities_mapping(
       extracted_entity_list,mapping_dict, form_parser_text, parser_json_fname)
 
   # Save extract desired entities only
@@ -245,7 +245,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
 
   # delete temp folder
   del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
-  return form_parser_entities_list
+  return form_parser_entities_list, flag
 
 
 def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
