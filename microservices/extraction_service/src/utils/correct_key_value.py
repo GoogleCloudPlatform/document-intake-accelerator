@@ -169,8 +169,8 @@ def get_date_in_format(input_date_format, output_date_format, value):
     except: # pylint: disable=bare-except
       # if any error in date format no change in input date
       new_date = value
-      Logger.error("Error occurred in the date format so "
-                   "keeping existed date only")
+      Logger.error('Error occurred in the date format so '
+                   'keeping existed date only')
   return new_date
 
 def correction_script(corrected_dict, template):
@@ -307,7 +307,7 @@ def data_transformation(input_dict):
       temp_dict[index] = corrected_dict
     return input_dict, temp_dict
   except Exception as e: # pylint: disable=W0703
-    Logger.error(f"Error in the date tranformation postprocessing {e}")
+    Logger.error(f'Error in the date tranformation postprocessing {e}')
     return None,None
 
 # Function call
