@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 from functools import reduce
 from google.cloud import storage
+from .table_extractor import TableExtractor
 from common.utils.logging_handler import Logger
 
 def pattern_based_entities(parser_data, pattern):
@@ -351,7 +352,7 @@ def standard_entity_mapping(desired_entities_list, parser_name):
 
 
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
-                                 form_parser_text):
+                                 form_parser_text, parser_json_fname):
   """
     Form parser entity mapping function
 
@@ -368,6 +369,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   # extract entities information from config files
   default_entities = mapping_dict.get("default_entities")
   derived_entities = mapping_dict.get("derived_entities")
+  table_entities = mapping_dict.get("table_entities")
   flag = check_duplicate_keys(default_entities,form_parser_entity_list)
 
   df = pd.DataFrame(form_parser_entity_list)
@@ -397,9 +399,11 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
              "page_width": int(df["page_width"][idx_list[idx]]),
              "page_height": int(df["page_height"][idx_list[idx]])
              }
+
         except: # pylint: disable=bare-except
           Logger.info("Key not found in parser output,"
                       " so filling null value")
+
           temp_dict = {"entity": each_val, "value": None,
                        "extraction_confidence": None,
                        "manual_extraction": False,
@@ -436,7 +440,12 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
     required_entities_list.extend(list(derived_entities_op_dict.values()))
     Logger.info("Derived entities created from Form parser response")
 
-  return required_entities_list,flag
+  if table_entities:
+    table_extract_obj = TableExtractor(parser_json_fname)
+    table_response = table_extract_obj.get_entities(table_entities)
+    required_entities_list.extend(table_response)
+
+  return required_entities_list, flag
 
 
 def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None,
@@ -491,8 +500,10 @@ def clean_form_parser_keys(text):
       text = re.sub(r"\W+$", "", text)
     if last_word in [")", "]"]:
       text += last_word
+
   except: # pylint: disable=bare-except
     Logger.error("Exception occurred while cleaning keys")
+
   return text
 
 def del_gcs_folder(bucket, folder):
