@@ -2,6 +2,7 @@
 import traceback
 import requests
 from fastapi import APIRouter, HTTPException
+from typing import List, Dict
 from common.utils.logging_handler import Logger
 from utils.validation import get_values
 # disabling for linting to pass
@@ -13,7 +14,7 @@ FAILED_RESPONSE = {"status": "Failed"}
 
 
 @router.post("/validation_api")
-async def validation(case_id: str, uid: str, doc_class: str):
+async def validation(case_id: str, uid: str, doc_class: str,entities:List[Dict]):
   """ validates the document with case id , uid , doc_class
     Args:
     case_id (str): Case id of the file ,
@@ -25,10 +26,17 @@ async def validation(case_id: str, uid: str, doc_class: str):
     """
   status = "fail"
   try:
+    print("==========Inside validation API==new========================",entities)
     validation_score = get_values(doc_class, case_id, uid)
+    validation_output = (0,entities)
+    validation_score1 = validation_output[0]
+    validation_entities = validation_output[1]
+    for i in validation_entities:
+      i["validation_score"]=0
+    print("=====================validation output neww ==============",validation_entities)
     if validation_score is not None:
       status = "success"
-    update_validation_status(case_id, uid, validation_score, status)
+    update_validation_status(case_id, uid, validation_score, status,validation_entities)
     Logger.info(
       f"Validation Score for cid:{case_id}, uid: {uid},"
       f" doc_class:{doc_class} is {validation_score}")
@@ -39,13 +47,13 @@ async def validation(case_id: str, uid: str, doc_class: str):
   except Exception as error:
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
-    update_validation_status(case_id, uid, None, status)
+    update_validation_status(case_id, uid, None, status,entities)
     raise HTTPException(
       status_code=500, detail="Failed to update validation score")from error
 
 
 def update_validation_status(case_id: str, uid: str,
-               validation_score: float, status: str):
+               validation_score: float, status: str,validation_entities:List[Dict]):
   """ Call status update api to update the validation score
     Args:
     case_id (str): Case id of the file ,
@@ -60,5 +68,5 @@ def update_validation_status(case_id: str, uid: str,
     f"&validation_score={validation_score}&status={status}"
   else:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}&status={status}"
-  response = requests.post(req_url)
+  response = requests.post(req_url,json=validation_entities)
   return response

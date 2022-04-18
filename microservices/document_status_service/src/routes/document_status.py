@@ -173,7 +173,7 @@ async def update_extraction_status(case_id: str,
 async def update_validation_status(case_id: str,
                                    uid: str,
                                    status: str,
-                                   validation_score: Optional[float] = None):
+                                   validation_score: Optional[float] = None,entities = List[Dict]):
   """takes case_id , uid , validation status of validation
   service as input and updates in database
 
@@ -189,7 +189,8 @@ async def update_validation_status(case_id: str,
   try:
     document = Document.find_by_uid(uid)
     if status == "success":
-      document.validation_score = validation_score
+      document.validation_score = validation_score,
+      document.entities = entities
       system_status = {
           "stage": "validation",
           "status": "success",

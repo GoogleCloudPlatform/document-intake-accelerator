@@ -56,6 +56,7 @@ async def extraction(case_id: str, uid: str, doc_class: str,
       if db_update_status.status_code == 200 and bq_update_status == []:
         return {
             "status": "success",
+            "entities":extraction_output[0],
             "score": extraction_output[1],
             "message": f"document with case_id {case_id} ,uid_id {uid} "
                        f"successfully extracted"
