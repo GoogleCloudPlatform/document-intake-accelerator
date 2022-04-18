@@ -20,7 +20,8 @@ class TableExtractor:
   def table_attributes(self):
     """
     This function obtains information regarding all the tables.
-    For ex. total tables, table header info, table row wise data in dataframe format
+    For ex. total tables, table header info, table row wise data
+		in dataframe format
     """
 
     if "pages" in self.data.keys():
@@ -36,7 +37,8 @@ class TableExtractor:
             # extract header(columns)
             for _, hrow in enumerate(table["headerRows"]):
               header_row = [
-                TableExtractor.get_text(cell["layout"], self.data) for cell in hrow["cells"]
+                TableExtractor.get_text(
+									cell["layout"], self.data) for cell in hrow["cells"]
               ]
               columns = []
               for val, conf, cord in header_row:
@@ -49,7 +51,8 @@ class TableExtractor:
               try:
                 for row_num, row in enumerate(table["bodyRows"]):
                   row_data = [
-                      TableExtractor.get_text(cell["layout"], self.data) for cell in row["cells"]
+                      TableExtractor.get_text(
+												cell["layout"], self.data) for cell in row["cells"]
                   ]
                   for i_col in range(len(header_row)):
                     entity_val, conf, coordinates = row_data[i_col]
@@ -81,14 +84,14 @@ class TableExtractor:
         for segment in el["textAnchor"]["textSegments"]:
           # Check for startIndex. If not present = 0
           if "startIndex" in segment.keys():
-              start_index = segment["startIndex"]
+            start_index = segment["startIndex"]
           else:
-              start_index = 0
+            start_index = 0
           # Check for endIndex. If not present = 0
           if "endIndex" in segment.keys():
-              end_index = segment["endIndex"]
+            end_index = segment["endIndex"]
           else:
-              end_index = 0
+            end_index = 0
           text += data["text"][int(start_index) : int(end_index)]
           cell_conf = el["confidence"]
           cell_coordinates = el["boundingPoly"]["normalizedVertices"]
@@ -115,7 +118,8 @@ class TableExtractor:
 
     Args:
         page (dict): dict that contains a table info
-        inp_header (list): list of column names to match with the header of a table
+        inp_header (list): list of column names to
+				 match with the header of a table
     """
 
     for pg_num in page:
