@@ -151,7 +151,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   # temp folder location
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
   # delete temp folder
-  del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
+  # del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
   gcs_documents = documentai.GcsDocuments(
     documents=[{"gcs_uri": gcs_doc_path, "mime_type": "application/pdf"}]
   )
@@ -186,10 +186,10 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   extracted_entity_list = []
   form_parser_text = ""
   # saving form parser json, this can be removed from pipeline
-  # parser_json_folder = os.path.join(form_parser_raw_json_folder,
-  #                                   gcs_doc_path.split("/")[-1][:-4])
-  # if not os.path.exists(parser_json_folder):
-  #     os.mkdir(parser_json_folder)
+  parser_json_folder = os.path.join(temp_folder,
+                                    gcs_doc_path.split("/")[-1][:-4])
+  if not os.path.exists(parser_json_folder):
+    os.mkdir(parser_json_folder)
   # browse through output jsons
   for blob in blob_list:
     # If JSON file, download the contents of this blob as a bytes object.
@@ -197,10 +197,10 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
       blob_as_bytes = blob.download_as_bytes()
       # saving the parser response to the folder, remove this while integration
       # parser_json_fname = "temp.json"
-      # parser_json_fname = \
-          # os.path.join(parser_json_folder, 'res_{}.json'.format(i))
-      # with open(parser_json_fname, "wb") as file_obj:
-      #     blob.download_to_file(file_obj)
+      parser_json_fname = \
+          os.path.join(parser_json_folder, "res.json")
+      with open(parser_json_fname, "wb") as file_obj:
+        blob.download_to_file(file_obj)
 
       document = documentai.types.Document.from_json(blob_as_bytes)
       # print(f"Fetched file {i + 1}")
@@ -229,8 +229,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
       print("Extraction completed")
     else:
       print(f"Skipping non-supported file type {blob.name}")
-  # delete temp folder
-  del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
+
   # Save extracted entities json, can be removed from pipeline
   # with open("{}.json".format(os.path.join(parser_op,
   #     gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
@@ -239,13 +238,16 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   doc_state = doc_type+"_"+state
   mapping_dict = MAPPING_DICT[doc_state]
   # Extract desired entites from form parser
-  form_parser_entities_list,flag = form_parser_entities_mapping(
-    extracted_entity_list, mapping_dict, form_parser_text)
+  form_parser_entities_list, flag = form_parser_entities_mapping(
+      extracted_entity_list,mapping_dict, form_parser_text, parser_json_fname)
 
   # Save extract desired entities only
   # with open("{}.json".format(os.path.join(extracted_entities,
   #         gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
   #     json.dump(form_parser_entities_list, outfile, indent=4)
+
+  # delete temp folder
+  del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
   Logger.info("Required entities created from Form parser response")
   return form_parser_entities_list,flag
 

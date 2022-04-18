@@ -61,11 +61,11 @@ MAPPING_DICT = {
     "derived_entities":
       {
         "What is your birth date?": {
-          "rule": "What is your birth date\?\n\d\.(.*?)\((mm/dd/yyyy)"},
+          "rule": r"What is your birth date\?\n\d\.(.*?)\((mm/dd/yyyy)"},
         "What is your gender?": {
-          "rule": "What is your gender\?\n\d\.(.*?)\n\d"},
+          "rule": r"What is your gender\?\n\d\.(.*?)\n\d"},
         "Expiration Date (EXP)": {
-  "rule": "\sAlien Registration Number \(A#\)\n3\)\s(\d{4}-\d{2}-\d{2})\n"}}
+  "rule": r"\sAlien Registration Number \(A#\)\n3\)\s(\d{4}-\d{2}-\d{2})\n"}}
   },
 
   "unemployment_form_arkansas": {
@@ -131,9 +131,30 @@ MAPPING_DICT = {
       "What was your last day of work?": ["What was your last day of work?"],
       "Claimant's Signature": ["Claimant's Signature "]
     },
-    "table_entities": {
-
-    }
+    "table_entities":
+    {
+      "isheader": True,
+      # if table and page number is unknown mark the variables to 0
+      "table_num": 0, "page_num": 0,
+      "headers": [
+      "Date",
+      "Name of Employer/Company/ Union and Address (City, State and Zip Code)",
+      "Website URL or Name of person contacted",
+      "Method (In person, Internet, mail)",
+      "Type of work sought", "Action taken on the date of contact"],
+                 # entity name will be constructed based on the col
+                 # number provided
+                 # for an employer
+                 "entity_extraction": [
+                  {"entity_suffix": "(employer 1)", "col": 0, "row_no": 1},
+                  {"entity_suffix": "(employer 2)", "col": 0, "row_no": 2},
+                  {"entity_suffix": "(employer 1)", "col": 2, "row_no": 2},
+                  {"entity_suffix": "(employer 1)", "col": 3, "row_no": 1},
+                  {"entity_suffix": "(employer 1)", "col": 4, "row_no": 1},
+                  {"entity_suffix": "(employer 2)", "col": 3, "row_no": 2},
+                  {"entity_suffix": "(employer 2)", "col": 2, "row_no": 3},
+                  {"entity_suffix": "(employer 3)", "col": 0, "row_no": 3},
+                ],
   },
 
   "claims_form_arkansas": {
@@ -175,7 +196,7 @@ MAPPING_DICT = {
       "Issue Date": ["ISS"],
       "Address": ["Address"],
     },
-    "derived_entities": {"SEX": {"rule": "SEX.*?(?<!\w)(F|M)(?!\w)"}}
+    "derived_entities": {"SEX": {"rule": r"SEX.*?(?<!\w)(F|M)(?!\w)"}}
   },
 
   "pay_stub": {
@@ -190,8 +211,9 @@ MAPPING_DICT = {
 
     },
     "derived_entities":
-      {"EMPLOYER NAME": {"rule": "([a-zA-Z ]*)\d*.*"},
+      {"EMPLOYER NAME": {"rule": r"([a-zA-Z ]*)\d*.*"},
        "RATE": {"rule": "Regular\n(.*?)\n"},
        "HOURS": {"rule": "Regular\n.*?\n(.*?)\n"}}
   }
+}
 }
