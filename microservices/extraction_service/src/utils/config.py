@@ -7,6 +7,8 @@ Create state wise mapping if it form parser, and one doc type mapping
 if it is specialized parser
 """
 
+# pylint: disable=W1401
+
 # Attributes not required from specialized parser raw json
 NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles",
                                                             "textChanges",
