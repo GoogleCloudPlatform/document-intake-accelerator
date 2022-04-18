@@ -28,7 +28,7 @@ def add_keys(docs_list:list):
             name = entity["corrected_value"]
           elif entity["value"]:
             name = entity["value"]
-    doc["applicant_name"] = name.title()
+    doc["applicant_name"] = name
 
     in_progress = "In Progress"
     failed = "Failed"
