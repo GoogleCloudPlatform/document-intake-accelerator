@@ -451,7 +451,6 @@ async def update_hitl_classification(case_id: str, uid: str,
       update_classification_status(case_id, uid, "failed")
       raise HTTPException(
         status_code=422, detail="Unidentified document class found")
-      
 
     #Update DSM
     Logger.info("Updating Doc status from Hitl classification for case_id"\
