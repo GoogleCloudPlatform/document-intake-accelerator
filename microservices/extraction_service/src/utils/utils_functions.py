@@ -371,14 +371,14 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   # loop through one by one deafult entities mentioned in the config file
   for each_ocr_key, each_ocr_val in default_entities.items():
     try:
-      temp_var = 0
+      # temp_var = 0
       idx_list = df.index[df["key"] == each_ocr_key].tolist()
-      temp_var = 1
-    except KeyError:
+      # temp_var = 1
+    except: # pylint: disable=bare-except
       idx_list = []
-    finally:
-      if not temp_var:
-        idx_list = []
+    # finally:
+    #   if not temp_var:
+    #     idx_list = []
     # loop for matched records of mapping dictionary
     for idx, each_val in enumerate(each_ocr_val):
       if idx_list:
