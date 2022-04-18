@@ -3,14 +3,13 @@ from fastapi import APIRouter, HTTPException, Response
 from typing import Optional
 from common.models import Document
 from common.utils.logging_handler import Logger
-from common.config import BUCKET_NAME
+from common.config import BUCKET_NAME,DB_KEYS,ENTITY_KEYS
 from google.cloud import storage
 import datetime
 import requests
 import fireo
 import traceback
 from models.search_payload import SearchPayload
-from common.config import DB_KEYS,ENTITY_KEYS
 # disabling for linting to pass
 # pylint: disable = broad-except
 

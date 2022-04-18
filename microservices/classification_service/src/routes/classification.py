@@ -84,23 +84,17 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
   if not case_id.strip() or not uid.strip() or not gcs_url.strip():
     Logger.error("Classification failed parameters missing")
     update_classification_status(case_id, uid, "failed")
-    raise HTTPException(
-        status_code=400,
-        detail="Parameters Missing")
+    raise HTTPException(status_code=400, detail="Parameters Missing")
 
   if not gcs_url.endswith(".pdf") or not gcs_url.startswith("gs://"):
     Logger.error("Classification failed GCS path is invalid")
     update_classification_status(case_id, uid, "failed")
-    raise HTTPException(
-        status_code=400,
-        detail="GCS pdf path is incorrect")
+    raise HTTPException(status_code=400, detail="GCS pdf path is incorrect")
 
   if case_id != gcs_url.split("/")[3] or uid != gcs_url.split("/")[4]:
     Logger.error("Classification failed parameters mismatched")
     update_classification_status(case_id, uid, "failed")
-    raise HTTPException(
-        status_code=400,
-        detail="Parameters Mismatched")
+    raise HTTPException(status_code=400, detail="Parameters Mismatched")
 
   try:
 
@@ -124,10 +118,11 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
           update_classification_status(case_id, uid, "failed")
           raise HTTPException(
               status_code=500, detail="Failed to update document status")
-        raise HTTPException(status_code=422,detail="Invalid Document")
+        raise HTTPException(status_code=422, detail="Invalid Document")
 
       doc_type = None
-      doc_class = DOC_CLASS_STANDARDISATION_MAP[doc_prediction_result["predicted_class"]]
+      doc_class = DOC_CLASS_STANDARDISATION_MAP[
+          doc_prediction_result["predicted_class"]]
 
       if doc_class in APPLICATION_FORMS:
         doc_type = "application_form"
@@ -136,8 +131,8 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
       else:
         Logger.error(f"Doc class {doc_class} is not a valid doc class")
         update_classification_status(case_id, uid, "failed")
-        raise HTTPException(status_code=422,
-          detail="Unidentified document class found")
+        raise HTTPException(
+            status_code=422, detail="Unidentified document class found")
 
       SUCCESS_RESPONSE["case_id"] = doc_prediction_result["case_id"]
       SUCCESS_RESPONSE["uid"] = uid
