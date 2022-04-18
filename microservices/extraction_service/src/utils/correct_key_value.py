@@ -20,14 +20,12 @@ def list_to_string(string_list):
   Output:
    str1: concatenated string
   '''
-  
   # initialize an empty string
   str1 = ''
   # traverse in the string
   str1=str1.join(string_list)
   # return string
   return str1
-
 
 def string_to_number(value):
   ''' Function to correct a extracted integer value
