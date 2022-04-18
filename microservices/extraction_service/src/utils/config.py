@@ -140,7 +140,8 @@ MAPPING_DICT = {
       "Website URL or Name of person contacted",
       "Method (In person, Internet, mail)",
       "Type of work sought", "Action taken on the date of contact"],
-                 # entity name will be constructed based on the col number provided
+                 # entity name will be constructed based on the col
+                 # number provided
                  # for an employer
                  "entity_extraction": [
                   {"entity_suffix": "(employer 1)", "col": 0, "row_no": 1},
