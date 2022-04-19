@@ -3,32 +3,29 @@ This Script is Used to Calculate the Validation Score
 '''
 
 import json
-import requests
 import pandas as pd
 from google.cloud import storage
-from googleapiclient.errors import HttpError
 from common.config import PATH,VALIDATION_TABLE
-
 from common.utils.logging_handler import Logger
 from db_client import bq_client
 
 bigquery_client = bq_client()
 
 
-def get_final_scores(dataList,entity):
+def get_final_scores(data_list,entity):
   keys = []
-  for d in dataList:
-      keys.extend(list(d.keys()))
+  for d in data_list:
+    keys.extend(list(d.keys()))
 
-  repeating = dict()
+  repeating = {}
   for key in keys:
-         repeating[key] = keys.count(key)
-  avg = dict()
+        repeating[key] = keys.count(key)
+  avg = {}
   for key,value in repeating.items():
-      avg[key] = sum(d.get(key) for d in dataList if d.get(key) ) / value
+    avg[key] = sum(d.get(key) for d in data_list if d.get(key) ) / value
   for i in entity:
     i["validation_score"] = None
-    
+
   for j,k in avg.items():
     for i in entity:
       if i["entity"] == j:
@@ -74,7 +71,7 @@ def get_values(documentlabel,cid,uid,entity):
     data=read_json(path)
     merge_query= f"and case_id ='{cid}' and uid='{uid}'"
     validation_score,final_dict = \
-    get_scoring(data,merge_query,documentlabel,VALIDATION_TABLE,entity)
+    get_scoring(data,merge_query,documentlabel,entity)
     Logger.info(f"Validation completed for document with case id {cid}"
         f"and uid {uid}")
   except Exception as e:
@@ -91,9 +88,9 @@ def get_individual_dict(query):
     key = query.split("$.")[i].split("'")[0]
     dict1[key] = None
   return dict1
-  
-  
-def get_scoring(data,merge_query,documentlabel,VALIDATION_TABLE,entity):
+
+
+def get_scoring(data,merge_query,documentlabel,entity):
   '''
   Fire the Rules on BQ table and calculate the Validation Scores
   input:
@@ -108,19 +105,17 @@ def get_scoring(data,merge_query,documentlabel,VALIDATION_TABLE,entity):
   for i in data[documentlabel]:
     query = data[documentlabel][i] + merge_query
     query = query.replace("project_table",VALIDATION_TABLE)
-    Logger.info(f"Rule number {i} being executed."
-                f"Query is : {uid}")
     dict1=get_individual_dict(query)
     try:
-        query_results = bigquery_client.query((query))
-        df = query_results.to_dataframe()
+      query_results = bigquery_client.query((query))
+      df = query_results.to_dataframe()
     except Exception as e:
-        Logger.error(e)
-        df = pd.DataFrame()
+      Logger.error(e)
+      df = pd.DataFrame()
     df = df.drop_duplicates()
     validation_score = validation_score + len(df)
-    for key in dict1:
-        dict1[key] = len(df)
+    for key in dict1.copy():
+      dict1[key] = len(df)
     l2.append(dict1)
   validation_score = validation_score/len(data[documentlabel])
   final_dict = get_final_scores(l2,entity)
