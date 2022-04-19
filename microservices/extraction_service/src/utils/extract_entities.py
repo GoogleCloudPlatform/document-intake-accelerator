@@ -8,6 +8,7 @@ form parser functions will be called
 import json
 import os
 import re
+import shutil
 import proto
 import random
 import string
@@ -186,19 +187,17 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   extracted_entity_list = []
   form_parser_text = ""
   # saving form parser json, this can be removed from pipeline
-  parser_json_folder = os.path.join(temp_folder,
-                                    gcs_doc_path.split("/")[-1][:-4])
-  if not os.path.exists(parser_json_folder):
-    os.mkdir(parser_json_folder)
+  if not os.path.exists(temp_folder):
+    os.mkdir(temp_folder)
   # browse through output jsons
-  for blob in blob_list:
+  for i, blob in enumerate(blob_list):
     # If JSON file, download the contents of this blob as a bytes object.
     if ".json" in blob.name:
       blob_as_bytes = blob.download_as_bytes()
       # saving the parser response to the folder, remove this while integration
       # parser_json_fname = "temp.json"
       parser_json_fname = \
-          os.path.join(parser_json_folder, "res.json")
+          os.path.join(temp_folder, f"res_{i}.json")
       with open(parser_json_fname, "wb") as file_obj:
         blob.download_to_file(file_obj)
 
@@ -239,7 +238,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   mapping_dict = MAPPING_DICT[doc_state]
   # Extract desired entites from form parser
   form_parser_entities_list, flag = form_parser_entities_mapping(
-      extracted_entity_list,mapping_dict, form_parser_text, parser_json_fname)
+      extracted_entity_list,mapping_dict, form_parser_text, temp_folder)
 
   # Save extract desired entities only
   # with open("{}.json".format(os.path.join(extracted_entities,
@@ -247,6 +246,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   #     json.dump(form_parser_entities_list, outfile, indent=4)
 
   # delete temp folder
+  shutil.rmtree(temp_folder)
   del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
   Logger.info("Required entities created from Form parser response")
   return form_parser_entities_list,flag
