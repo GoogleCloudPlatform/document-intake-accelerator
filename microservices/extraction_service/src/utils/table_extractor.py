@@ -105,8 +105,8 @@ class TableExtractor:
           cell_coordinates = el["boundingPoly"]["normalizedVertices"]
           coordinates = []
           for bb_cord in cell_coordinates:
-            coordinates.append(deepcopy(bb_cord['x']))
-            coordinates.append(deepcopy(bb_cord['y']))
+            coordinates.append(deepcopy(bb_cord["x"]))
+            coordinates.append(deepcopy(bb_cord["y"]))
 
     if text in ("", None):
       text = cell_conf = coordinates = None
@@ -193,7 +193,7 @@ class TableExtractor:
         else:
           return "Operation cannot be performed. Check your config"
       except ValueError as e:
-        Logger.error("Check your config")
+        Logger.error(e)
         return None
       out = []
 
