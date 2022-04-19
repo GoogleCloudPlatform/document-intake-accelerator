@@ -19,7 +19,7 @@ def get_final_scores(data_list,entity):
 
   repeating = {}
   for key in keys:
-        repeating[key] = keys.count(key)
+    repeating[key] = keys.count(key)
   avg = {}
   for key,value in repeating.items():
     avg[key] = sum(d.get(key) for d in data_list if d.get(key) ) / value
