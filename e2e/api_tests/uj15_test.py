@@ -24,5 +24,5 @@ def test_get_document_api():
   d.save()
   uid = "e2e_test_uid"
   base_url = get_baseurl("hitl-service")
-  res = requests.get(base_url + f"/hitl_service/v1/get_document?uid={uid}")
+  res = requests.post(base_url + f"/hitl_service/v1/get_document?uid={uid}")
   assert res.status_code == 200
