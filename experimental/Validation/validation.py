@@ -7,7 +7,7 @@ import pandas as pd
 from google.cloud import storage
 from common.config import PATH,VALIDATION_TABLE
 from common.utils.logging_handler import Logger
-from db_client import bq_client
+from common.db_client import bq_client
 
 bigquery_client = bq_client()
 
