@@ -45,8 +45,17 @@ def run_pipeline(payload: List[Dict], is_hitl: bool,is_reassign:bool):
             extraction_score=extract_documents(doc,
             document_type="supporting_documents")
             print("Reassigned flow")
-            Logger.info("Executing pipeline for reassign scenario.")
-          validate_match_approve(doc,extraction_score)
+            # Logger.info("Executing pipeline for reassign scenario.")
+
+            if extraction_score :
+              print("========Inside extraction iff condition =======",extraction_score)
+              Logger.info(f"======extraction score is {extraction_score}=======")
+              validate_match_approve(doc,extraction_score)
+          else:
+            print("==================This is doc ===================================",doc)
+            extraction_score =  doc["extraction_score"]
+            print("=================For reassign the extraction score iss ,=============",extraction_score)
+            validate_match_approve(doc,extraction_score)
   except Exception as e:
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
@@ -145,6 +154,7 @@ def extract_documents(doc:Dict,document_type):
   context =  doc.get("context")
   extract_res = get_extraction_score(case_id, uid, document_class,
                                      document_type,context)
+
   if extract_res.status_code == 200:
     Logger.info(f"Extraction successful for {document_type}")
     extraction_score = extract_res.json().get("score")
@@ -158,6 +168,7 @@ def extract_documents(doc:Dict,document_type):
         case_id, uid, "success", autoapproval_status[0], "yes")
   else:
     Logger.error(f"extraction failed for {uid}")
+  # extraction_score = None
   return extraction_score
 
 def validate_match_approve(sup_doc:Dict,extraction_score):
