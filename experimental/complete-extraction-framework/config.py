@@ -63,12 +63,12 @@ MAPPING_DICT = {
     },
     "derived_entities":
       {
-        "What is your birth date?": {
-          "rule": "What is your birth date\?\n\d\.(.*?)\((mm/dd/yyyy)"},
-        "What is your gender?": {
-          "rule": "What is your gender\?\n\d\.(.*?)\n\d"},
-        "Expiration Date (EXP)": {
-          "rule": "\sAlien Registration Number \(A#\)\n3\)\s(\d{4}-\d{2}-\d{2})\n"}}
+    "What is your birth date?": {
+      "rule": "What is your birth date\?\n\d\.(.*?)\((mm/dd/yyyy)"},
+    "What is your gender?": {
+      "rule": "What is your gender\?\n\d\.(.*?)\n\d"},
+    "Expiration Date (EXP)": {
+    "rule": "\sAlien Registration Number \(A#\)\n3\)\s(\d{4}-\d{2}-\d{2})\n"}}
   },
 
   "unemployment_form_arkansas": {
@@ -139,22 +139,24 @@ MAPPING_DICT = {
       "isheader": True,
       # if table and page number is unknown mark the variables to 0
       "table_num": 0, "page_num": 0,
-      "headers": ["Date", "Name of Employer/Company/ Union and Address (City, State and Zip Code)",
-								 "Website URL or Name of person contacted",
-								 "Method (In person, Internet, mail)",
-								 "Type of work sought", "Action taken on the date of contact"],
-                 # entity name will be constructed based on the col number provided
-                 # for an employer
-                 "entity_extraction": [
-                  {"entity_suffix": f"(employer 1)", "col": 0, "row_no": 1},
-                  {"entity_suffix": f"(employer 2)", "col": 0, "row_no": 2},
-                  {"entity_suffix": f"(employer 1)", "col": 2, "row_no": 2},
-                  {"entity_suffix": f"(employer 1)", "col": 3, "row_no": 1},
-                  {"entity_suffix": f"(employer 1)", "col": 4, "row_no": 1},
-                  {"entity_suffix": f"(employer 2)", "col": 3, "row_no": 2},
-                  {"entity_suffix": f"(employer 2)", "col": 2, "row_no": 3},
-                  {"entity_suffix": f"(employer 3)", "col": 0, "row_no": 3},
-                ],
+      "headers": [
+      "Date",
+      "Name of Employer/Company/ Union and Address (City, State and Zip Code)",
+      "Website URL or Name of person contacted",
+      "Method (In person, Internet, mail)",
+      "Type of work sought", "Action taken on the date of contact"],
+      # entity name will be constructed based on the col number provided
+      # for an employer
+      "entity_extraction": [
+      {"entity_suffix": "(employer 1)", "col": 0, "row_no": 1},
+      {"entity_suffix": "(employer 2)", "col": 0, "row_no": 2},
+      {"entity_suffix": "(employer 1)", "col": 2, "row_no": 2},
+      {"entity_suffix": "(employer 1)", "col": 3, "row_no": 1},
+      {"entity_suffix": "(employer 1)", "col": 4, "row_no": 1},
+      {"entity_suffix": "(employer 2)", "col": 3, "row_no": 2},
+      {"entity_suffix": "(employer 2)", "col": 2, "row_no": 3},
+      {"entity_suffix": "(employer 3)", "col": 0, "row_no": 3},
+    ],
   },
 
   "claims_form_arkansas": {
@@ -164,7 +166,8 @@ MAPPING_DICT = {
             "NAME ": ["CLAIMANT NAME","EMPLOYEE NAME"],
             "EMPLOYER NAME" : ["EMPLOYER NAME"],
             "SSN": ["SSN"],
-            "STREET OR BOX NO": ["EMPLOYEE STREET OR BOX NO.","EMPLOYER STREET OR BOX NO."],
+            "STREET OR BOX NO": [
+              "EMPLOYEE STREET OR BOX NO.","EMPLOYER STREET OR BOX NO."],
             "CITY": ["EMPLOYEE CITY","EMPLOYER CITY"],
             "STATE": ["EMPLOYEE STATE","EMPLOYER STATE"],
             "ZIP CODE": ["EMPLOYEE ZIP CODE","EMPLOYER ZIP CODE"],
