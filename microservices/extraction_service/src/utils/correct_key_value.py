@@ -1,3 +1,4 @@
+
 """
 This script is for postprocessing the extracted OCR output.
 The configuration file for the script is post_processing_config.py
@@ -12,22 +13,19 @@ from .post_processing_config import str_to_num_dict, num_to_str_dict, \
   convert_to_string, convert_to_number
 from common.utils.logging_handler import Logger
 
-def listToString(string_list):
+def list_to_string(string_list):
   '''Function to join a list of string characters to a single string
   Input:
    string_list: list of string characters
   Output:
    str1: concatenated string
   '''
-
   # initialize an empty string
   str1 = ""
   # traverse in the string
-  for ele in string_list:
-    str1 += ele
-    # return string
+  str1=str1.join(string_list)
+  # return string
   return str1
-
 
 def string_to_number(value):
   ''' Function to correct a extracted integer value
@@ -36,7 +34,7 @@ def string_to_number(value):
   Output:
     value: Returns corrected string
   '''
-  if value==None:
+  if value is None:
     pass
   else:
     # convert input string to list
@@ -57,7 +55,7 @@ def string_to_number(value):
             string[index] = v.upper()
 
     # concatenate list to string
-    value = listToString(string)
+    value = list_to_string(string)
   return value
 
 
@@ -68,7 +66,7 @@ def number_to_string(value):
     Output:
      value: Returns corrected string
   '''
-  if value==None:
+  if value is None:
     pass
   else:
     # convert input string to list
@@ -89,7 +87,7 @@ def number_to_string(value):
             # correct the value
             string[index] = v.upper()
     # concatenate list to string
-    value = listToString(string)
+    value = list_to_string(string)
   return value
 
 
@@ -100,7 +98,7 @@ def upper_to_lower(value):
     Output:
       corrected_value: converted string
   '''
-  if value==None:
+  if value is None:
     corrected_value=value
   else:
     # convert to lower case
@@ -115,7 +113,7 @@ def lower_to_upper(value):
     Output:
       corrected_value: converted string
   '''
-  if value==None:
+  if value is None:
     corrected_value=value
   else:
     # convert to upper case
@@ -130,11 +128,11 @@ def clean_value(value, noise):
     Output:
        corrected_value: corrected string without noise
   '''
-  if value==None:
+  if value is None:
     corrected_value=value
   else:
     # replace noise in string
-    corrected_value = value.replace(noise, '')
+    corrected_value = value.replace(noise, "")
   return corrected_value
 
 
@@ -145,13 +143,13 @@ def clean_multiple_space(value):
   Output:
     corrected_value: corrected string removing extra spaces
   '''
-  if value==None:
+  if value is None:
     corrected_value=value
   else:
     # create a pattern for extra space
-    pattern = re.compile(r"\s+")
+    pattern = re.compile(r"\s{2,}")
     # replace the pattern with single space in the string
-    corrected_value = re.sub(pattern, ' ', value)
+    corrected_value = re.sub(pattern, " ", value)
   return corrected_value
 
 
@@ -164,16 +162,19 @@ def get_date_in_format(input_date_format, output_date_format, value):
     Output:
       new_date: date in new format
   '''
-  if value==None:
+  if value is None:
     new_date=value
   else:
     try:
       # convert existing date to new date format
       new_date = datetime.strptime(value, input_date_format)\
           .strftime(output_date_format)  # 2022-02-02
-    except:
+    except ValueError as e:
       # if any error in date format no change in input date
+      Logger.error("Error occurred in the date format so "
+                   "keeping existed date only")
       new_date = value
+      Logger.error(e)
   return new_date
 
 def correction_script(corrected_dict, template):
@@ -187,17 +188,17 @@ def correction_script(corrected_dict, template):
   # traverse through the input dictionary
   for k, v in corrected_dict.items():
     # check for template type
-    if template == 'clean_value':
+    if template == "clean_value":
       # check for keys in template
-      for key in clean_value_dict.keys():
+      for key,noise in clean_value_dict.items():
         # if keys are matched
         if k == key:
           # get the noise from the template for that key
           noise = clean_value_dict.get(key)
           # copy input value
           input_value = v
-          # iterate through all noise value
-          for index, i in enumerate(noise):
+          # iterate th
+          for i in noise:
             # call clean_value function
             corrected_value = clean_value(input_value, i)
             input_value = corrected_value
@@ -205,7 +206,7 @@ def correction_script(corrected_dict, template):
           corrected_dict[k] = corrected_value
 
     # check for template type
-    if template == 'lower_to_upper':
+    if template == "lower_to_upper":
       # check for keys in template
       for item in lower_to_upper_list:
         # if keys are matched
@@ -216,7 +217,7 @@ def correction_script(corrected_dict, template):
           corrected_dict[k] = corrected_value
 
     # check for template type
-    if template == 'upper_to_lower':
+    if template == "upper_to_lower":
       # check for keys in template
       for item in upper_to_lower_list:
         # if keys are matched
@@ -227,7 +228,7 @@ def correction_script(corrected_dict, template):
           corrected_dict[k] = corrected_value
 
     # check for template type
-    if template == 'clean_multiple_space':
+    if template == "clean_multiple_space":
       # check for keys in template
       for item in clean_space_list:
         # if keys are matched
@@ -238,9 +239,9 @@ def correction_script(corrected_dict, template):
           corrected_dict[k] = corrected_value
 
     # check for template type
-    if template == 'date_format':
+    if template == "date_format":
       # check for keys in template
-      for key in date_format_dict.keys():
+      for key,value in date_format_dict.items():
         # if keys are matched
         if k == key:
           # get key values from template
@@ -252,7 +253,7 @@ def correction_script(corrected_dict, template):
           corrected_dict[k] = corrected_value
 
     # check for template type
-    if template == 'convert_to_string':
+    if template == "convert_to_string":
       # check for keys in template
       for item in convert_to_string:
         # if keys are matched
@@ -263,7 +264,7 @@ def correction_script(corrected_dict, template):
           corrected_dict[k] = corrected_value
 
     # check for template type
-    if template == 'convert_to_number':
+    if template == "convert_to_number":
       # check for keys in template
       for item in convert_to_number:
         # if keys are matched
@@ -293,23 +294,24 @@ def data_transformation(input_dict):
       # get input dictionary
       corrected_dict = input_item.copy()
       # check for string
-      corrected_dict = correction_script(corrected_dict, 'convert_to_string')
+      corrected_dict = correction_script(corrected_dict, "convert_to_string")
       # check for number
-      corrected_dict = correction_script(corrected_dict, 'convert_to_number')
+      corrected_dict = correction_script(corrected_dict, "convert_to_number")
       # check for noise
-      corrected_dict = correction_script(corrected_dict, 'clean_value')
+      corrected_dict = correction_script(corrected_dict, "clean_value")
       # check for upper to lower
-      corrected_dict = correction_script(corrected_dict, 'upper_to_lower')
+      corrected_dict = correction_script(corrected_dict, "upper_to_lower")
       # check for lower to upper
-      corrected_dict = correction_script(corrected_dict, 'lower_to_upper')
+      corrected_dict = correction_script(corrected_dict, "lower_to_upper")
       # check for multiple spaces
-      corrected_dict = correction_script(corrected_dict, 'clean_multiple_space')
+      corrected_dict = correction_script(corrected_dict, "clean_multiple_space")
       # check for date format
-      corrected_dict = correction_script(corrected_dict, 'date_format')
+      corrected_dict = correction_script(corrected_dict, "date_format")
       # correct input dictionary
       temp_dict[index] = corrected_dict
     return input_dict, temp_dict
-  except Exception as e:
+  except ValueError as e:
+    Logger.error(f"Error in the date tranformation postprocessing {e}")
     Logger.error(e)
     return None,None
 

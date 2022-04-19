@@ -3,15 +3,14 @@ from fastapi import APIRouter, HTTPException, Response
 from typing import Optional
 from common.models import Document
 from common.utils.logging_handler import Logger
-from common.config import BUCKET_NAME
+from common.config import BUCKET_NAME,DB_KEYS,ENTITY_KEYS,\
+  APPLICATION_FORMS,SUPPORTING_DOCS
 from google.cloud import storage
 import datetime
 import requests
 import fireo
 import traceback
 from models.search_payload import SearchPayload
-from config import DB_KEYS
-from config import ENTITY_KEYS
 # disabling for linting to pass
 # pylint: disable = broad-except
 
@@ -29,7 +28,7 @@ def add_keys(docs_list:list):
             name = entity["corrected_value"]
           elif entity["value"]:
             name = entity["value"]
-    doc["applicant_name"] = name.title()
+    doc["applicant_name"] = name
 
     in_progress = "In Progress"
     failed = "Failed"
@@ -434,10 +433,8 @@ async def update_hitl_classification(case_id: str, uid: str,
       Logger.error("Document for hitl classification not found")
       raise HTTPException(status_code=404, detail="Document not found")
 
-    if document_class not in [
-        "unemployment_form", "driving_licence", "claims_form", "utility_bill",
-        "pay_stub"
-    ]:
+    if document_class not in APPLICATION_FORMS and \
+      document_class not in SUPPORTING_DOCS:
       Logger.error("Invalid parameter document_class")
       raise HTTPException(
           status_code=400, detail="Invalid Parameter. Document class")
@@ -445,10 +442,15 @@ async def update_hitl_classification(case_id: str, uid: str,
     Logger.info(f"Starting manual classification for case_id"\
         f" {case_id} and uid {uid}")
     document_type = None
-    if document_class.lower() == "unemployment_form":
+    if document_class.lower() in APPLICATION_FORMS:
       document_type = "application_form"
-    else:
+    elif document_class.lower() in SUPPORTING_DOCS:
       document_type = "supporting_documents"
+    else:
+      Logger.error(f"Doc class {document_class} is not a valid doc class")
+      update_classification_status(case_id, uid, "failed")
+      raise HTTPException(
+        status_code=422, detail="Unidentified document class found")
 
     #Update DSM
     Logger.info("Updating Doc status from Hitl classification for case_id"\

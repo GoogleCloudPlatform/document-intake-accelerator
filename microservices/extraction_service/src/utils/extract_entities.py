@@ -24,6 +24,7 @@ from .config import \
   NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE,\
   GCS_OP_URI, MAPPING_DICT
 from common.config import PROJECT_ID
+from common.utils.logging_handler import Logger
 import warnings
 parser_config = os.path.join(
     os.path.dirname(__file__), ".", "parser_config.json")
@@ -70,6 +71,7 @@ def specialized_parser_extraction(parser_details: dict,
               "mime_type": "application/pdf"}
   # Configure the process request
   request = {"name": name, "raw_document": document}
+  Logger.info("Specialized parser extraction api called")
   # send request to parser
   result = client.process_document(request=request)
   parser_doc_data = result.document
@@ -103,7 +105,7 @@ def specialized_parser_extraction(parser_details: dict,
   # with open("{}.json".format(os.path.join(extracted_entities,
   #     gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
   #     json.dump(specialized_parser_entity_list, outfile, indent=4)
-
+  Logger.info("Required entities created from Specialized parser response")
   return specialized_parser_entity_list
 
 
@@ -144,12 +146,12 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   # folder will be created automatically not the bucket
   gcs_output_uri = GCS_OP_URI
   letters = string.ascii_lowercase
-  temp_folder = ''.join(random.choice(letters) for i in range(10))
+  temp_folder = "".join(random.choice(letters) for i in range(10))
   gcs_output_uri_prefix = "temp_"+temp_folder
   # temp folder location
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
   # delete temp folder
-  del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
+  # del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
   gcs_documents = documentai.GcsDocuments(
     documents=[{"gcs_uri": gcs_doc_path, "mime_type": "application/pdf"}]
   )
@@ -162,6 +164,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
 
   # parser api end point
   name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
+  Logger.info("Form parser extraction api called")
   # request for Doc AI
   request = documentai.types.document_processor_service.BatchProcessRequest(
     name=name, input_documents=input_config,
@@ -183,10 +186,10 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   extracted_entity_list = []
   form_parser_text = ""
   # saving form parser json, this can be removed from pipeline
-  # parser_json_folder = os.path.join(form_parser_raw_json_folder,
-  #                                   gcs_doc_path.split("/")[-1][:-4])
-  # if not os.path.exists(parser_json_folder):
-  #     os.mkdir(parser_json_folder)
+  parser_json_folder = os.path.join(temp_folder,
+                                    gcs_doc_path.split("/")[-1][:-4])
+  if not os.path.exists(parser_json_folder):
+    os.mkdir(parser_json_folder)
   # browse through output jsons
   for blob in blob_list:
     # If JSON file, download the contents of this blob as a bytes object.
@@ -194,10 +197,10 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
       blob_as_bytes = blob.download_as_bytes()
       # saving the parser response to the folder, remove this while integration
       # parser_json_fname = "temp.json"
-      # parser_json_fname = \
-          # os.path.join(parser_json_folder, 'res_{}.json'.format(i))
-      # with open(parser_json_fname, "wb") as file_obj:
-      #     blob.download_to_file(file_obj)
+      parser_json_fname = \
+          os.path.join(parser_json_folder, "res.json")
+      with open(parser_json_fname, "wb") as file_obj:
+        blob.download_to_file(file_obj)
 
       document = documentai.types.Document.from_json(blob_as_bytes)
       # print(f"Fetched file {i + 1}")
@@ -226,8 +229,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
       print("Extraction completed")
     else:
       print(f"Skipping non-supported file type {blob.name}")
-  # delete temp folder
-  del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
+
   # Save extracted entities json, can be removed from pipeline
   # with open("{}.json".format(os.path.join(parser_op,
   #     gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
@@ -236,14 +238,17 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   doc_state = doc_type+"_"+state
   mapping_dict = MAPPING_DICT[doc_state]
   # Extract desired entites from form parser
-  form_parser_entities_list,flag = form_parser_entities_mapping(
-    extracted_entity_list, mapping_dict, form_parser_text)
+  form_parser_entities_list, flag = form_parser_entities_mapping(
+      extracted_entity_list,mapping_dict, form_parser_text, parser_json_fname)
 
   # Save extract desired entities only
   # with open("{}.json".format(os.path.join(extracted_entities,
   #         gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
   #     json.dump(form_parser_entities_list, outfile, indent=4)
 
+  # delete temp folder
+  del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
+  Logger.info("Required entities created from Form parser response")
   return form_parser_entities_list,flag
 
 
@@ -274,9 +279,13 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
     if parser_information:
       parser_name = parser_information["parser_name"]
       if parser_name == "FormParser":
+        Logger.info(f"Form parser extraction started for"
+                    f" this document:{doc_type}")
         desired_entities_list,flag = form_parser_extraction(
             parser_information,gcs_doc_path, doc_type, state, 300)
       else:
+        Logger.info(f"Specialized parser extraction "
+                    f"started for this document:{doc_type}")
         flag=True
         desired_entities_list = specialized_parser_extraction(
             parser_information,gcs_doc_path, doc_type)
@@ -298,10 +307,12 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
       # extraction accuracy calculation
       document_extraction_confidence = extraction_accuracy_calc\
           (final_extracted_entities,flag)
-      print(final_extracted_entities)
-      print(document_extraction_confidence)
+      # print(final_extracted_entities)
+      # print(document_extraction_confidence)
+      Logger.info(f"Extraction completed for this document:{doc_type}")
       return final_extracted_entities, document_extraction_confidence
     else:
       # Parser not available
-      print("parser not available for this document")
+      Logger.error(f"Parser not available for this document:{doc_type}")
+      # print("parser not available for this document")
       return None

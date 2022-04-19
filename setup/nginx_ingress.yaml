@@ -11,6 +11,7 @@ metadata:
     nginx.ingress.kubernetes.io/cors-allow-origin: "https://_WEB_APP_DOMAIN,http://localhost:4200"
     nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-body-size: 16m 
 spec:
   tls:
     - hosts:
@@ -20,9 +21,8 @@ spec:
   - host: _WEB_APP_DOMAIN
     http:
       paths:
-      - path: /sample_service
-        backend:
-          serviceName: sample-service
+      - backend:
+          serviceName: adp-ui
           servicePort: 80
       - path: /upload_service/v1
         backend:
@@ -51,7 +51,4 @@ spec:
       - path: /matching_service/v1
         backend:
           serviceName: matching-service
-          servicePort: 80
-      - backend:
-          serviceName: adp-ui
           servicePort: 80
