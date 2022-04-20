@@ -31,7 +31,7 @@ class Document(BaseModel):
 
   class Meta:
     ignore_none_field = False
-    collection_name = DATABASE_PREFIX+ "e2e_pr162_document_process_task"
+    collection_name = DATABASE_PREFIX+ "document_process_task"
 
   @classmethod
   def find_by_uid(cls, uuid):

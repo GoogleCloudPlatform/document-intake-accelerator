@@ -6,6 +6,8 @@ import fireo
 from fastapi import APIRouter, HTTPException
 from typing import Optional, List, Dict
 import datetime
+import traceback
+
 # disabling for linting to pass
 # pylint: disable = broad-except
 
@@ -40,6 +42,8 @@ async def create_document(case_id: str, filename: str, context: str):
     Logger.error(f"Error in create document for case_id {case_id} "
                  f"and {filename}")
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500,
         detail=f"Error in creating documents for case_id {case_id}") from e
@@ -115,6 +119,8 @@ async def update_classification_status(
     Logger.error(f"Error in updating classification status for "
                  f"case_id {case_id} and uid {uid}")
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500,
         detail="Error in updating classification status") from e
@@ -173,7 +179,8 @@ async def update_extraction_status(case_id: str,
 async def update_validation_status(case_id: str,
                                    uid: str,
                                    status: str,
-                                   validation_score: Optional[float] = None,entities = List[Dict]):
+                                   entities : List[Dict],
+                                   validation_score: Optional[float] = None):
   """takes case_id , uid , validation status of validation
   service as input and updates in database
 
@@ -187,10 +194,14 @@ async def update_validation_status(case_id: str,
            505 : If something fails
           """
   try:
+    print("=====Inside validation document update======",type(validation_score))
+    print("=====Inside validation document update entities======",type(entities))
     document = Document.find_by_uid(uid)
     if status == "success":
-      document.validation_score = validation_score,
+      document.validation_score = validation_score
       document.entities = entities
+      print("Insiide documentt status",validation_score,entities)
+
       system_status = {
           "stage": "validation",
           "status": "success",
@@ -211,6 +222,8 @@ async def update_validation_status(case_id: str,
     Logger.error(f"Error in updating validation status"
                  f" for case_id {case_id} and uid {uid}")
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500, detail="Error in updating"
         " validation status") from e
@@ -261,6 +274,8 @@ async def update_matching_status(case_id: str,
     Logger.error(f"Error in updating matching status for"
                  f" case_id {case_id} and uid {uid}")
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500, detail="Error in updating matching status") from e
 
@@ -333,6 +348,8 @@ async def create_documet_json_input(case_id: str, document_class: str,
   except Exception as e:
     Logger.error("Error in  creating document")
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500, detail="Error in"
         " creating the document") from e
