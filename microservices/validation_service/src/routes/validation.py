@@ -34,7 +34,8 @@ async def validation(case_id: str, uid: str, doc_class: str,
       validation_score = validation_output[0]
       validation_entities = validation_output[1]
       validation_status = "success"
-      update_validation_status(case_id, uid, validation_score, validation_status,validation_entities)
+      update_validation_status(case_id, uid, validation_score,
+                               validation_status,validation_entities)
       Logger.info(
         f"Validation Score for cid:{case_id}, uid: {uid},"
         f" doc_class:{doc_class} is {validation_score}")
@@ -62,7 +63,7 @@ async def validation(case_id: str, uid: str, doc_class: str,
 
 
 def update_validation_status(case_id: str, uid: str,
- validation_score: float, status: str,validation_entities:List[Dict]):
+ validation_score: float, validation_status: str,validation_entities:List[Dict]):
   """ Call status update api to update the validation score
     Args:
     case_id (str): Case id of the file ,
@@ -72,10 +73,10 @@ def update_validation_status(case_id: str, uid: str,
     """
   base_url = "http://document-status-service/document_status_service" \
     "/v1/update_validation_status"
-  if status == "success":
+  if validation_status == "success":
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
-    f"&validation_score={validation_score}&status={status}"
+    f"&validation_score={validation_score}&status={validation_status}"
   else:
-    req_url = f"{base_url}?case_id={case_id}&uid={uid}&status={status}"
+    req_url = f"{base_url}?case_id={case_id}&uid={uid}&status={validation_status}"
   response = requests.post(req_url,json=validation_entities)
   return response

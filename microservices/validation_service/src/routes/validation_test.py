@@ -53,21 +53,21 @@ def test_validation_api_invalid_doc_class(client_with_emulator):
   doc = Document()
   doc.case_id = "5-ui"
   doc.uid = "aSCh3o6BxjPEqjMAQhtC"
-  entities = [{'value': 'A-60544059',
-   'extraction_confidence': 0.94,
-   'manual_extraction': False,
-   'entity': 'dl_no',
-   'corrected_value': None,
-   'matching_score': None,
-   'validation_score': None},
-  {'value': '1992-04-07',
-   'entity': 'dob',
-   'corrected_value': None,
-   'extraction_confidence': 0.73,
-   'manual_extraction': False,
-   'matching_score': None,
-   'validation_score': 0.0},]
   doc.save()
+  entities = [{"value": "A-60544059",
+               "extraction_confidence": 0.94,
+               "manual_extraction": False,
+               "entity": "dl_no",
+               "corrected_value": None,
+               "matching_score": None,
+               "validation_score": None},
+              {"value": "1992-04-07",
+               "entity": "dob",
+               "corrected_value": None,
+               "extraction_confidence": 0.73,
+               "manual_extraction": False,
+               "matching_score": None,
+               "validation_score": 0.0}, ]
   url = f"{API_URL}validation_api?case_id=5-ui&uid=aSCh3o6BxjPEqjMAQhtC&"\
     "doc_class=invalid_class"
   with mock.patch("routes.validation.update_validation_status"):
