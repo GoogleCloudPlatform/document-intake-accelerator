@@ -70,11 +70,11 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
 
     # run the comparison for = total keys in the supporting docs
     app_df = pd.DataFrame(application_json_obj)
-    app_keys = list(app_df["entity"])
+    app_keys = list(app_df['entity'])
     Logger.info(app_keys)
     support_df = pd.DataFrame(supporting_json_obj)
     support_df['matching_score'] = 0.0
-    support_keys = list(support_df["entity"])
+    support_keys = list(support_df['entity'])
     Logger.info(support_keys)
     Logger.info(support_keys)
     if support_doc_type not in MATCHING_USER_KEYS_SUPPORTING_DOC:
@@ -131,7 +131,7 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
 
           final_score = wt_score
         else:
-          Logger.warning(f"Values related to keys are None: {u_key}")
+          Logger.warning(f'Values related to keys are None: {u_key}')
           final_score = 0.0
       else:
         final_score = 0.0
