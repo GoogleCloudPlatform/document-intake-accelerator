@@ -99,8 +99,8 @@ async def upload_file(
           })
     # Pushing Message To Pubsub
     pubsub_msg = f"batch for {case_id} moved to bucket"
-    # message_dict = {"message": pubsub_msg,"message_list":message_list}
-    # publish_document(message_dict)
+    message_dict = {"message": pubsub_msg,"message_list":message_list}
+    publish_document(message_dict)
     Logger.info(f"Files with case id {case_id} uploaded"
                   f" successfully")
     return {

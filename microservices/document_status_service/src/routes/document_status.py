@@ -170,6 +170,8 @@ async def update_extraction_status(case_id: str,
     Logger.error(f"Error in updating extraction status case_id {case_id} "
                  f"and uid {uid}")
     Logger.error(e)
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500, detail="Error in updating"
         " extraction status") from e
@@ -179,7 +181,7 @@ async def update_extraction_status(case_id: str,
 async def update_validation_status(case_id: str,
                                    uid: str,
                                    status: str,
-                                   entities : List[Dict],
+                                   entities : Optional[List[Dict]]=None,
                                    validation_score: Optional[float] = None):
   """takes case_id , uid , validation status of validation
   service as input and updates in database
@@ -194,14 +196,10 @@ async def update_validation_status(case_id: str,
            505 : If something fails
           """
   try:
-    print("=====Inside validation document update======",type(validation_score))
-    print("=====Inside validation document update entities======",type(entities))
     document = Document.find_by_uid(uid)
     if status == "success":
       document.validation_score = validation_score
       document.entities = entities
-      print("Insiide documentt status",validation_score,entities)
-
       system_status = {
           "stage": "validation",
           "status": "success",
@@ -305,6 +303,8 @@ async def update_autoapproved(case_id: str, uid: str, status: str,
       document.update()
     return {"status": "Success", "case_id": case_id, "uid": uid}
   except Exception as e:
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
     raise HTTPException(
         status_code=500, detail="Error in "
         "updating the autoapproval status") from e

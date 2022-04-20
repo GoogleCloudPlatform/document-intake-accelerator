@@ -83,7 +83,8 @@ def get_extraction_score(case_id: str, uid: str, document_class: str,
   return response
 
 
-def get_validation_score(case_id: str, uid: str, document_class: str,extraction_entities : List[Dict]):
+def get_validation_score(case_id: str, uid: str, document_class: str,
+                         extraction_entities : List[Dict]):
   """Call the validation API and get the validation score"""
   base_url = "http://validation-service/validation_service/v1/validation/"\
     "validation_api"
@@ -182,7 +183,8 @@ def validate_match_approve(sup_doc:Dict,extraction_score,extraction_entities):
   uid = sup_doc.get("uid")
   document_class = sup_doc.get("document_class")
   document_type = "supporting_documents"
-  validation_res = get_validation_score(case_id, uid, document_class,extraction_entities)
+  validation_res = get_validation_score(case_id, uid, document_class,
+                                extraction_entities)
   if validation_res.status_code == 200:
     print("====Validation successful==========")
     Logger.info(f"Validation successful for {uid}.")
