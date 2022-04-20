@@ -352,7 +352,7 @@ def standard_entity_mapping(desired_entities_list, parser_name):
 
 
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
-                                 form_parser_text, parser_json_fname):
+                                 form_parser_text, json_folder):
   """
     Form parser entity mapping function
 
@@ -441,9 +441,17 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
     Logger.info("Derived entities created from Form parser response")
 
   if table_entities:
-    table_extract_obj = TableExtractor(parser_json_fname)
-    table_response = table_extract_obj.get_entities(table_entities)
-    required_entities_list.extend(table_response)
+    table_response = None
+    files = os.listdir(json_folder)
+    for json_file in files:
+      json_path = os.path.join(json_folder, json_file)
+      table_extract_obj = TableExtractor(json_path)
+      table_response = table_extract_obj.get_entities(table_entities)
+      if table_response and isinstance(table_response, list):
+        required_entities_list.extend(table_response)
+        break
+    if table_response is None:
+      Logger.error("No table data found")
 
   return required_entities_list, flag
 
