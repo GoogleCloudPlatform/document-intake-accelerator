@@ -155,7 +155,7 @@ MAPPING_DICT = {
                   {"entity_suffix": "(employer 2)", "col": 2, "row_no": 3},
                   {"entity_suffix": "(employer 3)", "col": 0, "row_no": 3},
                 ],
-  },
+  }},
 
   "claims_form_arkansas": {
     "default_entities": {
@@ -215,5 +215,5 @@ MAPPING_DICT = {
        "RATE": {"rule": "Regular\n(.*?)\n"},
        "HOURS": {"rule": "Regular\n.*?\n(.*?)\n"}}
   }
-}
+
 }
