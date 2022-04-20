@@ -16,6 +16,7 @@ BUCKET_NAME ="document-upload-test"
 PATH ="gs://async_form_parser/Jsons/trial.json"
 PROJECT_ID ="claims-processing-dev"
 BIGQUERY_DB = "data_extraction.entities"
+TOPIC_ID = "claim_test"
 VALIDATION_TABLE = "claims-processing-dev.data_extraction.entities"
 
 
