@@ -166,7 +166,8 @@ async def reassign_case_id(reassign: Reassign, response: Response):
 
 
 def call_process_task(case_id: str, uid: str, document_class: str,
-                      document_type: str, gcs_uri: str,context: str,extraction_score: float):
+                      document_type: str, gcs_uri: str,context: str,
+                      extraction_score: float):
   """
     Starts the process task API after reassign
   """

@@ -44,17 +44,14 @@ def run_pipeline(payload: List[Dict], is_hitl: bool,is_reassign:bool):
           if not is_reassign:
             extraction_score=extract_documents(doc,
             document_type="supporting_documents")
-            print("Reassigned flow")
-            # Logger.info("Executing pipeline for reassign scenario.")
-
+            Logger.info(f" Executing pipeline for normal scenario {doc}")
             if extraction_score :
-              print("========Inside extraction iff condition =======",extraction_score)
-              Logger.info(f"======extraction score is {extraction_score}=======")
+              Logger.info(f"extraction score is {extraction_score},{doc}")
               validate_match_approve(doc,extraction_score)
           else:
-            print("==================This is doc ===================================",doc)
+            Logger.info(f" Executing pipeline for reassign scenario "
+                        f"{doc}")
             extraction_score =  doc["extraction_score"]
-            print("=================For reassign the extraction score iss ,=============",extraction_score)
             validate_match_approve(doc,extraction_score)
   except Exception as e:
     err = traceback.format_exc().replace("\n", " ")

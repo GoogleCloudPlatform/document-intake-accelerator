@@ -3,7 +3,6 @@
 from fastapi import APIRouter, HTTPException, status, Response
 from fastapi.concurrency import run_in_threadpool
 from common.db_client import bq_client
-from common.models import Document
 from common.utils.logging_handler import Logger
 from common.utils.stream_to_bq import stream_document_to_bigquery
 from common.utils.format_data_for_bq import format_data_for_bq
