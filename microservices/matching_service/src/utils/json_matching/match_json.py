@@ -130,6 +130,9 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
             matched.append(wt_score)
 
           final_score = wt_score
+        else:
+          Logger.warning(f"Values related to keys are None: {u_key}")
+          final_score = 0.0
       else:
         final_score = 0.0
 
