@@ -8,6 +8,8 @@ import pandas as pd
 import numpy as np
 from functools import reduce
 from google.cloud import storage
+from .table_extractor import TableExtractor
+from common.utils.logging_handler import Logger
 
 def pattern_based_entities(parser_data, pattern):
   """
@@ -203,6 +205,7 @@ def entities_extraction(parser_data, required_entities, doc_type):
   # Extract default entities
   entity_dict = default_entities_extraction(parser_entities,
                                             default_entities,doc_type)
+  Logger.info("Default entities created from Specialized parser response")
   # if any derived entities then extract them
   if derived_entities:
     # this function can be used for all docs, if derived entities
@@ -210,6 +213,7 @@ def entities_extraction(parser_data, required_entities, doc_type):
     derived_entities_extracted_dict = derived_entities_extraction\
         (parser_data, derived_entities)
     entity_dict.update(derived_entities_extracted_dict)
+    Logger.info("Derived entities created from Specialized parser response")
   return entity_dict
 
 
@@ -343,11 +347,12 @@ def standard_entity_mapping(desired_entities_list, parser_name):
   df_final = df_final.replace(r"^\s*$", np.nan, regex=True)
   df_final = df_final.replace({np.nan: None})
   extracted_entities_final_json = df_final.to_dict("records")
+  Logger.info("Entities standardization completed")
   return extracted_entities_final_json
 
 
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
-                                 form_parser_text):
+                                 form_parser_text, json_folder):
   """
     Form parser entity mapping function
 
@@ -364,6 +369,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   # extract entities information from config files
   default_entities = mapping_dict.get("default_entities")
   derived_entities = mapping_dict.get("derived_entities")
+  table_entities = mapping_dict.get("table_entities")
   flag = check_duplicate_keys(default_entities,form_parser_entity_list)
 
   df = pd.DataFrame(form_parser_entity_list)
@@ -372,7 +378,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   for each_ocr_key, each_ocr_val in default_entities.items():
     try:
       idx_list = df.index[df["key"] == each_ocr_key].tolist()
-    except:
+    except: # pylint: disable=bare-except
       idx_list = []
     # loop for matched records of mapping dictionary
     for idx, each_val in enumerate(each_ocr_val):
@@ -393,8 +399,11 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
              "page_width": int(df["page_width"][idx_list[idx]]),
              "page_height": int(df["page_height"][idx_list[idx]])
              }
-        except:
-          print("If key doesn't present in response")
+
+        except: # pylint: disable=bare-except
+          Logger.info("Key not found in parser output,"
+                      " so filling null value")
+
           temp_dict = {"entity": each_val, "value": None,
                        "extraction_confidence": None,
                        "manual_extraction": False,
@@ -420,6 +429,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
                          "page_height": None
                          }
         required_entities_list.append(temp_dict)
+  Logger.info("Default entities created from Form parser response")
   if derived_entities:
     # this function can be used for all docs, if derived entities
     # are extracted by using regex pattern
@@ -428,8 +438,22 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
     derived_entities_op_dict = derived_entities_extraction(parser_data,
                                                            derived_entities)
     required_entities_list.extend(list(derived_entities_op_dict.values()))
+    Logger.info("Derived entities created from Form parser response")
 
-  return required_entities_list,flag
+  if table_entities:
+    table_response = None
+    files = os.listdir(json_folder)
+    for json_file in files:
+      json_path = os.path.join(json_folder, json_file)
+      table_extract_obj = TableExtractor(json_path)
+      table_response = table_extract_obj.get_entities(table_entities)
+      if table_response and isinstance(table_response, list):
+        required_entities_list.extend(table_response)
+        break
+    if table_response is None:
+      Logger.error("No table data found")
+
+  return required_entities_list, flag
 
 
 def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None,
@@ -484,8 +508,10 @@ def clean_form_parser_keys(text):
       text = re.sub(r"\W+$", "", text)
     if last_word in [")", "]"]:
       text += last_word
-  except:
-    print("Exception occurred while processing")
+
+  except: # pylint: disable=bare-except
+    Logger.error("Exception occurred while cleaning keys")
+
   return text
 
 def del_gcs_folder(bucket, folder):

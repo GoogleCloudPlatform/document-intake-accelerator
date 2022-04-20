@@ -5,6 +5,8 @@ Extract data from a table present in a form
 
 import json
 from copy import deepcopy
+from common.utils.logging_handler import Logger
+
 class TableExtractor:
   """
   Extract data from a table present in the form
@@ -68,7 +70,7 @@ class TableExtractor:
                     table_data[row_num] = {"rows": deepcopy(col_data)}
 
                 except ValueError as e:
-                  print(e)
+                  Logger.error(e)
                   return "Table Empty !!!"
 
               page_data[table_num] = table_data
@@ -76,7 +78,8 @@ class TableExtractor:
               page_data["width"] = page["dimension"]["width"]
           self.master_dict[pg_num] = page_data
     else:
-      return "No data in json"
+      Logger.error("no data found in table")
+      return None
 
   @staticmethod
   def get_text(el, data):
@@ -102,8 +105,8 @@ class TableExtractor:
           cell_coordinates = el["boundingPoly"]["normalizedVertices"]
           coordinates = []
           for bb_cord in cell_coordinates:
-            coordinates.append(deepcopy(bb_cord['x']))
-            coordinates.append(deepcopy(bb_cord['y']))
+            coordinates.append(deepcopy(bb_cord["x"]))
+            coordinates.append(deepcopy(bb_cord["y"]))
 
     if text in ("", None):
       text = cell_conf = coordinates = None
@@ -140,7 +143,7 @@ class TableExtractor:
           return table_dict, table_header
         else:
           continue
-    print("Table headers does not match to 75%")
+    Logger.error("Input headers does not match up to 70% with any table.")
     return None
 
   def get_entities(self, table_entities):
@@ -190,8 +193,8 @@ class TableExtractor:
         else:
           return "Operation cannot be performed. Check your config"
       except ValueError as e:
-        print(e)
-        return "Check your config"
+        Logger.error(e)
+        return None
       out = []
 
       for user_inp in table_entities["entity_extraction"]:
@@ -209,36 +212,10 @@ class TableExtractor:
 
           out.append(deepcopy(entity_data))
         except ValueError as e:
-          print(e)
+          Logger.error(e)
           continue
       return out
     else:
-      return "No header present in the table. Table not extracted."
+      Logger.error("No header present in the table. Table not extracted.")
+      return None
 
-if __name__ == "__main__":
-  table_entities = {
-		"isheader": True,
-		# if table and page number is unknown mark the variables to 0
-		"table_num": 0, "page_num": 0,
-		"headers": [
-		"Date",
-		r"Name of Employer/Company/ Union and Address (City, State and Zip Code)",
-		"Website URL or Name of person contacted",
-		"Method (In person, Internet, mail)",
-		"Type of work sought", "Action taken on the date of contact"],
-		# entity name will be constructed based on the col number provided
-		# for an employer
-		"entity_extraction": [
-			{"entity_suffix": "(employer 1)", "col": 0, "row_no": 1},
-			{"entity_suffix": "(employer 2)", "col": 0, "row_no": 2},
-			{"entity_suffix": "(employer 1)", "col": 2, "row_no": 2},
-			{"entity_suffix": "(employer 1)", "col": 3, "row_no": 1},
-			{"entity_suffix": "(employer 1)", "col": 4, "row_no": 1},
-			{"entity_suffix": "(employer 2)", "col": 3, "row_no": 2},
-			{"entity_suffix": "(employer 2)", "col": 2, "row_no": 3},
-			{"entity_suffix": "(employer 3)", "col": 0, "row_no": 3},
-		]
-    }
-
-#print(TableExtractor(
-# "/Users/sumitvaise/DOCAI/zhuyjzrsoi/res_0.json").get_entities(table_entities))

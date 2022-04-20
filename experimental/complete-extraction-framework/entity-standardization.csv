@@ -1,13 +1,12 @@
 entity,document_type,standard_entity_name
 DLN,driver_license,dl_no
-DOB,driver_license,dob (yyyy/mm/dd)
-Name,driver_license,name
+DOB,driver_license,dob
 Address,driver_license,residential_address
 EXP,driver_license,exp_date
 ISS,driver_license,issue_date
 SEX,driver_license,sex
-LN,driver_license,last_name
-FN,driver_license,first_name
+LN,driver_license,name
+FN,driver_license,name
 ,,
 EMPLOYEE NAME,payslip,name
 EMPLOYER NAME,payslip,employer_name
@@ -25,7 +24,7 @@ SSN,unemployment_form_illinois,ssn
 Employee First Name,unemployment_form_illinois,name
 Employee MI,unemployment_form_illinois,name
 Employee Last Name,unemployment_form_illinois,name
-Date of Birth: (mm/dd/yyyy),unemployment_form_illinois,dob(yyyy/mm/dd)
+Date of Birth: (mm/dd/yyyy),unemployment_form_illinois,dob
 Employee E-Mail Address,unemployment_form_illinois,email
 Driving Licence Number,unemployment_form_illinois,dl_no
 Employee State,unemployment_form_illinois,state
@@ -43,8 +42,8 @@ Employee Residential State,unemployment_form_illinois,residential_state
 Employee Residential Zip Code,unemployment_form_illinois,residential_zip
 Employee Residential County,unemployment_form_illinois,residential_county
 Alien Registration Number,unemployment_form_illinois,alien_reg_no
-Entrance Date,unemployment_form_illinois,entrance_date (yyyy/mm/dd)
-Expiration Date,unemployment_form_illinois,expiry_date (yyyy/mm/dd)
+Entrance Date,unemployment_form_illinois,entrance_date
+Expiration Date,unemployment_form_illinois,expiry_date
 Document Type,unemployment_form_illinois,doc_type
 Employee Gender,unemployment_form_illinois,sex
 Employee Ethinicity,unemployment_form_illinois,ethnicity
@@ -58,9 +57,9 @@ Company Phone,unemployment_form_illinois,employer_phone_no
 "For this period of employment, what date did you start?",unemployment_form_illinois,work_start_date
 Last date worked,unemployment_form_illinois,work_end_date
 CLAIMANT SIGNATURE,unemployment_form_illinois,signature
-DATE,unemployment_form_illinois,signature_date (yyyy/mm/dd)
+DATE,unemployment_form_illinois,signature_date
 ,,
-TODAY'S DATE,unemployment_form_arkansas,application_apply_date (yyyy/mm/dd)
+TODAY'S DATE,unemployment_form_arkansas,application_apply_date
 SOCIAL SECURITY NUMBER,unemployment_form_arkansas,ssn
 EFFECTIVE DATE: (Local Office Only),unemployment_form_arkansas,effective_date
 EMPLOYEE FIRST NAME,unemployment_form_arkansas,name
@@ -72,7 +71,7 @@ EMPLOYEE STATE,unemployment_form_arkansas,mailing_state
 EMPLOYEE ZIP CODE,unemployment_form_arkansas,mailing_zip
 Employee Physical Address,unemployment_form_arkansas,residential_address
 Employee Physical City,unemployment_form_arkansas,residential_city
-Employee Physical ZipCode,unemployment_form_arkansas,residential_zip
+Employee Physical Zip Code,unemployment_form_arkansas,residential_zip
 Employee State of Residence,unemployment_form_arkansas,residential_state
 Employee County of Residence,unemployment_form_arkansas,residential_county
 Employee E-Mail Address,unemployment_form_arkansas,email
@@ -89,10 +88,10 @@ FIRST DATE WORKED AT YOUR LAST JOB,unemployment_form_arkansas,work_start_date
 DATE LAST WORK ENDED,unemployment_form_arkansas,work_end_date
 What kind of work did you do on your last job?,unemployment_form_arkansas,job_role
 Signature,unemployment_form_arkansas,signature
-Date,unemployment_form_arkansas,signature_date (yyyy/mm/dd)
+Date,unemployment_form_arkansas,signature_date
 ,,
 Social Security Number,unemployment_form_arizona,ssn
-Date,unemployment_form_arizona,application_apply_date (yyyy/mm/dd)
+Date,unemployment_form_arizona,application_apply_date
 Employee Primary Phone,unemployment_form_arizona,phone_no
 Employee Last Name,unemployment_form_arizona,name
 Employee First Name,unemployment_form_arizona,name
@@ -124,7 +123,7 @@ Day (Last Day of Work),unemployment_form_arizona,work_end_date
 Year (Last Day of Work),unemployment_form_arizona,work_end_date
 Employer's Phone No.,unemployment_form_arizona,employer_phone_no
 Claimant's Signature,unemployment_form_arizona,signature
-Date,unemployment_form_arizona,signature_date (yyyy/mm/dd)
+Date,unemployment_form_arizona,signature_date
 ,,
 "What is your Social Security number as given to you by the Social Security Administration
 by the Social Security Administration? ",unemployment_form_california,ssn
@@ -171,7 +170,7 @@ What is the telephone number of your very last employer at their physical addres
 What is the name of your immediate supervisor?,unemployment_form_california,supervisor_name
 Permanent Resident Card (|-551),unemployment_form_california,perminent_resident_no
 "The Alien Registration Number must be 7 to 9 digits long, Enter numeric digits only.",unemployment_form_california,alien_reg_no
-Expiration Date (EXP),unemployment_form_california,expiration_date (yyyy/mm/dd)
+Expiration Date (EXP),unemployment_form_california,expiration_date
 ,,
 Employee Name,claim_form_arizona,name
 Social Security Number,claim_form_arizona,ssn
@@ -204,7 +203,7 @@ What were your gross earnings before deductions?,claim_form_arizona,ytd
 Name of last company you separated from,claim_form_arizona,employer_name
 What was your last day of work?,claim_form_arizona,work_end_date
 Claimant's Signature ,claim_form_arizona,signature
-Date,claim_form_arizona,signature_date (yyyy/mm/dd)
+Date,claim_form_arizona,signature_date
 ,,
 CLAIMANT NAME,claim_form_arkansas,name
 SSN,claim_form_arkansas,ssn
@@ -223,3 +222,9 @@ EMPLOYER STREET OR BOX NO.,claim_form_arkansas,employer_address
 EMPLOYER CITY,claim_form_arkansas,employer_city
 EMPLOYER STATE,claim_form_arkansas,employer_state
 EMPLOYER ZIP CODE,claim_form_arkansas,employer_zip
+,,
+name,Utility Bill,name
+reciever address,Utility Bill,residential_address
+due date,Utility Bill,due_date
+Invoice date,Utility Bill,invoice_date
+Account no,Utility Bill,account_no
