@@ -49,6 +49,7 @@ class TableExtractor:
                   else:
                     columns.append((" ".join(val.split()), conf, cord))
                 table_data = {"headers": columns}
+                table_data["page_num"] = pg_num
                 col_data = {}
                 try:
                   for row_num, row in enumerate(table["bodyRows"]):
@@ -206,6 +207,9 @@ class TableExtractor:
           entity_data = row_dict[col]
           entity_data["entity"] = entity_name
           entity_data["key_coordinates"] = table_dict["headers"][col][2]
+          entity_data["page_height"] = self.master_dict[0]["height"]
+          entity_data["page_width"] = self.master_dict[0]["width"]
+          entity_data["page_no"] = table_dict["page_num"]
 
           out.append(deepcopy(entity_data))
         except ValueError as e:
@@ -240,5 +244,4 @@ if __name__ == "__main__":
 		]
     }
 
-#print(TableExtractor(
-# "/Users/sumitvaise/DOCAI/zhuyjzrsoi/res_0.json").get_entities(table_entities))
+print(TableExtractor("/Users/sumitvaise/Downloads/res_0.json").get_entities(table_entities))

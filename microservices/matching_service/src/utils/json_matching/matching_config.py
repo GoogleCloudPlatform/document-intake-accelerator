@@ -64,7 +64,7 @@ APPLICATION_DOC_TYPE = 'unemployement'
 STATE = 'arkansas'
 
 APPLICATION_DOC_DATE_FORMAT = {
-    'unemployement_form': {
+    'unemployment_form': {
         'arizona': '%m/%d/%y',
         'arkansas': '%m/%d/%Y',
         'california': '%m/%d/%y',
