@@ -18,7 +18,7 @@ router = APIRouter()
 
 @router.post("/extraction_api")
 async def extraction(case_id: str, uid: str, doc_class: str,
-                     document_type :str,context : str,
+                     document_type :str,context : str,gcs_url : str,
                      response: Response):
   """extracts the document with given case id and uid
         Args:
@@ -32,8 +32,8 @@ async def extraction(case_id: str, uid: str, doc_class: str,
       """
   try:
     client = bq_client()
-    document = Document.find_by_uid(uid)
-    gcs_url = document.url
+    # document = Document.find_by_uid(uid)
+    # gcs_url = document.url
     #Call ML model to extract entities from document
     extraction_output = await run_in_threadpool(extract_entities,
                               gcs_url, doc_class, context)

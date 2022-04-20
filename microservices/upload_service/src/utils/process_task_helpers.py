@@ -73,12 +73,12 @@ def get_classification(case_id: str, uid: str, gcs_url: str):
 
 
 def get_extraction_score(case_id: str, uid: str, document_class: str,
-                         document_type:str,context : str):
+                         document_type:str,context : str,gcs_url:str):
   """Call the Extraction API and get the extraction score"""
   base_url = "http://extraction-service/extraction_service/v1/extraction_api"
   req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
     f"&doc_class={document_class}&document_type={document_type}" \
-            f"&context={context}"
+            f"&context={context}&gcs_url={gcs_url}"
   response = requests.post(req_url)
   return response
 
@@ -152,8 +152,9 @@ def extract_documents(doc:Dict,document_type):
   uid = doc.get("uid")
   document_class = doc.get("document_class")
   context =  doc.get("context")
+  gcs_url =  doc.get("gcs_url")
   extract_res = get_extraction_score(case_id, uid, document_class,
-                                     document_type,context)
+                                     document_type,context,gcs_url)
 
   if extract_res.status_code == 200:
     Logger.info(f"Extraction successful for {document_type}")
@@ -187,7 +188,7 @@ def validate_match_approve(sup_doc:Dict,extraction_score):
     matching_res = get_matching_score(case_id, uid)
     if matching_res.status_code == 200:
       print("====Matching successful==========")
-      Logger.info("Matching successful for {uid}.")
+      Logger.info(f"Matching successful for {uid}.")
       matching_score = matching_res.json().get("score")
       update_autoapproval(document_class, document_type,case_id,uid,
 validation_score, extraction_score, matching_score)
