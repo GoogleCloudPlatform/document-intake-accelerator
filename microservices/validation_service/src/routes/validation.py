@@ -11,10 +11,10 @@ from utils.validation import get_values
 router = APIRouter(prefix="/validation")
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
-
+entity=[]
 
 @router.post("/validation_api")
-async def validation(case_id: str, uid: str, doc_class: str,entities:List[Dict]):
+async def validation(case_id: str, uid: str, doc_class: str):
   """ validates the document with case id , uid , doc_class
     Args:
     case_id (str): Case id of the file ,

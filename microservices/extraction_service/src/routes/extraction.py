@@ -3,7 +3,6 @@
 from fastapi import APIRouter, HTTPException, status, Response
 from fastapi.concurrency import run_in_threadpool
 from common.db_client import bq_client
-from common.models import Document
 from common.utils.logging_handler import Logger
 from common.utils.stream_to_bq import stream_document_to_bigquery
 from common.utils.format_data_for_bq import format_data_for_bq
@@ -18,7 +17,7 @@ router = APIRouter()
 
 @router.post("/extraction_api")
 async def extraction(case_id: str, uid: str, doc_class: str,
-                     document_type :str,context : str,
+                     document_type :str,context : str,gcs_url : str,
                      response: Response):
   """extracts the document with given case id and uid
         Args:
@@ -32,8 +31,8 @@ async def extraction(case_id: str, uid: str, doc_class: str,
       """
   try:
     client = bq_client()
-    document = Document.find_by_uid(uid)
-    gcs_url = document.url
+    # document = Document.find_by_uid(uid)
+    # gcs_url = document.url
     #Call ML model to extract entities from document
     extraction_output = await run_in_threadpool(extract_entities,
                               gcs_url, doc_class, context)
