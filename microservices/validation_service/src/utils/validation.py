@@ -74,7 +74,7 @@ def get_values(documentlabel,cid,uid,entity):
     get_scoring(data,merge_query,documentlabel,entity)
     Logger.info(f"Validation completed for document with case id {cid}"
         f"and uid {uid}")
-  except Exception as e:
+  except (Exception,) as e:
     Logger.error(e)
     validation_score = None
     return validation_score
@@ -109,7 +109,7 @@ def get_scoring(data,merge_query,documentlabel,entity):
     try:
       query_results = bigquery_client.query((query))
       df = query_results.to_dataframe()
-    except Exception as e:
+    except (Exception,) as e:
       Logger.error(e)
       df = pd.DataFrame()
     df = df.drop_duplicates()
