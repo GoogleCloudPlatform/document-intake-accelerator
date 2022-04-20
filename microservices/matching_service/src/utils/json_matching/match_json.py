@@ -71,13 +71,12 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
     # run the comparison for = total keys in the supporting docs
     app_df = pd.DataFrame(application_json_obj)
     app_keys = list(app_df['entity'])
-    print(app_keys)
     Logger.info(app_keys)
     support_df = pd.DataFrame(supporting_json_obj)
     support_df['matching_score'] = 0.0
     support_keys = list(support_df['entity'])
-    print(support_keys)
-    Logger.info(app_keys)
+    Logger.info(support_keys)
+    Logger.info(support_keys)
     if support_doc_type not in MATCHING_USER_KEYS_SUPPORTING_DOC:
       Logger.error('Unsupported supporting doc')
       return None
@@ -91,44 +90,46 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
       # if found compare their respectives values
       if u_key in app_keys and u_key in support_keys:
         app_val = list(app_df.loc[app_df['entity'] == u_key,
-                                  'value'])[0].lower()
+                                  'value'])[0]
         support_val = list(support_df.loc[support_df['entity'] == u_key,
-                                          'value'])[0].lower()
+                                          'value'])[0]
+        if app_val and support_val:
+          app_val = app_val.lower()
+          support_val = support_val.lower()
+          if app_val[-1] in ['\n', ' ']:
+            app_val = app_val[:-1]
 
-        if app_val[-1] in ['\n', ' ']:
-          app_val = app_val[:-1]
+          if support_val[-1] in ['\n', ' ']:
+            support_val = support_val[:-1]
 
-        if support_val[-1] in ['\n', ' ']:
-          support_val = support_val[:-1]
+          # 1. check for dates. date related keys contains value in tuple format
+          if isinstance(support_doc_dict[u_key], tuple):# a key signifies a date
+            wt_score = compare_dates(
+                app_val, support_val,
+                APPLICATION_DOC_DATE_FORMAT[app_doc_type][state],
+                support_doc_dict[u_key][1]) * support_doc_dict[u_key][0]
 
-        # 1. check for dates. date related keys contains value in tuple format
-        if isinstance(support_doc_dict[u_key], tuple):# a key signifies a date
-          wt_score = compare_dates(
-              app_val, support_val,
-              APPLICATION_DOC_DATE_FORMAT[app_doc_type][state],
-              support_doc_dict[u_key][1]) * support_doc_dict[u_key][0]
+            matched.append(round(wt_score, 2))
 
-          matched.append(round(wt_score, 2))
+          # 2. match values with only integers
+          # remove any special characters
+          # and check if the remaining string is contains
+          # # only digit
+          # elif re.sub('[^A-Za-z0-9]+', '', support_val).isdigit() and \
+          #             re.sub('[^A-Za-z0-9]+', '', app_val).isdigit():
+          elif support_val.isdigit() and app_val.isdigit():
+            wt_score = (1.0 if support_val == app_val else
+                        0.0) * support_doc_dict[u_key]
+            matched.append(round(wt_score, 2))
 
-        # 2. match values with only integers
-        # remove any special characters
-        # and check if the remaining string is contains
-        # # only digit
-        # elif re.sub('[^A-Za-z0-9]+', '', support_val).isdigit() and \
-        #             re.sub('[^A-Za-z0-9]+', '', app_val).isdigit():
-        elif support_val.isdigit() and app_val.isdigit():
-          wt_score = (1.0 if support_val == app_val else
-                      0.0) * support_doc_dict[u_key]
-          matched.append(round(wt_score, 2))
+          # 3. match values with only characters
+          else:
+            # if a sentence apply fuzzy logic
+            wt_score = float(fuzz.token_sort_ratio(support_val, app_val) / 100)
+            wt_score = round(wt_score * support_doc_dict[u_key], 2)
+            matched.append(wt_score)
 
-        # 3. match values with only characters
-        else:
-          # if a sentence apply fuzzy logic
-          wt_score = float(fuzz.token_sort_ratio(support_val, app_val) / 100)
-          wt_score = round(wt_score * support_doc_dict[u_key], 2)
-          matched.append(wt_score)
-
-        final_score = wt_score
+          final_score = wt_score
       else:
         final_score = 0.0
 
