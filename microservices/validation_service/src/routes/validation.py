@@ -63,7 +63,8 @@ async def validation(case_id: str, uid: str, doc_class: str,
 
 
 def update_validation_status(case_id: str, uid: str,
- validation_score: float, validation_status: str,validation_entities:List[Dict]):
+ validation_score: float, validation_status: str,
+              validation_entities:List[Dict]):
   """ Call status update api to update the validation score
     Args:
     case_id (str): Case id of the file ,
@@ -77,6 +78,7 @@ def update_validation_status(case_id: str, uid: str,
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
     f"&validation_score={validation_score}&status={validation_status}"
   else:
-    req_url = f"{base_url}?case_id={case_id}&uid={uid}&status={validation_status}"
+    req_url = f"{base_url}?case_id={case_id}&uid={uid}&" \
+              f"status={validation_status}"
   response = requests.post(req_url,json=validation_entities)
   return response
