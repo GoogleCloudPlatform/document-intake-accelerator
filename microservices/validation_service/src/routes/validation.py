@@ -10,7 +10,7 @@ from utils.validation import get_values
 router = APIRouter(prefix="/validation")
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
-
+entity=[]
 
 @router.post("/validation_api")
 async def validation(case_id: str, uid: str, doc_class: str):
@@ -25,7 +25,7 @@ async def validation(case_id: str, uid: str, doc_class: str):
     """
   status = "fail"
   try:
-    validation_score = get_values(doc_class, case_id, uid)
+    validation_score = get_values(doc_class, case_id, uid,entity)
     if validation_score is not None:
       status = "success"
     update_validation_status(case_id, uid, validation_score, status)
