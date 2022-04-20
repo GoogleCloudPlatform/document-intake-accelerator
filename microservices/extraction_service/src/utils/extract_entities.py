@@ -305,12 +305,13 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
       #     json.dump(final_extracted_entities, outfile, indent=4)
 
       # extraction accuracy calculation
-      document_extraction_confidence = extraction_accuracy_calc\
-          (final_extracted_entities,flag)
+      document_extraction_confidence,extraction_status = \
+        extraction_accuracy_calc(final_extracted_entities,flag)
       # print(final_extracted_entities)
       # print(document_extraction_confidence)
       Logger.info(f"Extraction completed for this document:{doc_type}")
-      return final_extracted_entities, document_extraction_confidence
+      return final_extracted_entities, \
+            document_extraction_confidence,extraction_status
     else:
       # Parser not available
       Logger.error(f"Parser not available for this document:{doc_type}")
