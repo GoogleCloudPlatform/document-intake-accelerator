@@ -36,7 +36,7 @@ def update_confidence(dupp,without_noise):
   for key in dupp.keys():
     for i in without_noise:
       if i["key"] == key:
-        i["value_confidence"] =-1.0
+        i["value_confidence"] =0.0
   return without_noise
 
 def check_duplicate_keys(dictme,without_noise):
@@ -254,7 +254,7 @@ def consolidate_coordinates(d):
       if i:
         entities_cooridnates.append(i)
     if entities_cooridnates:
-      final_coordinates = [entities_cooridnates[0][0],
+      entity_coordinates = [entities_cooridnates[0][0],
                            entities_cooridnates[0][1],
                            entities_cooridnates[-1][6],
                              entities_cooridnates[0][1],
@@ -262,10 +262,11 @@ def consolidate_coordinates(d):
                            entities_cooridnates[-1][7],
                              entities_cooridnates[-1][6],
                            entities_cooridnates[-1][7]]
+      final_coordinates = [float(i) for i in entity_coordinates]
     else:
       final_coordinates = None
 
-    return [float(i) for i in final_coordinates]
+    return final_coordinates
   else:
     if d.values[0]:
       return [float(i) for i in d.values[0]]
@@ -600,9 +601,11 @@ def extraction_accuracy_calc(total_entities_list,flag=True):
     -------
   """
   # get fields extraction accuracy
+  extraction_status="single entities present"
   if flag is False:
-    extraction_accuracy = -1.0
-    return extraction_accuracy
+    extraction_accuracy = 0.0
+    extraction_status="duplicate entities present"
+    return extraction_accuracy,extraction_status
   entity_accuracy_list = [each_entity.get("extraction_confidence") if
                           each_entity.get("extraction_confidence") else 0
                         for each_entity in
@@ -612,4 +615,4 @@ def extraction_accuracy_calc(total_entities_list,flag=True):
   extraction_accuracy = round(sum(entity_accuracy_list) /
                               len(entity_accuracy_list), 3)
 
-  return extraction_accuracy
+  return extraction_accuracy,extraction_status
