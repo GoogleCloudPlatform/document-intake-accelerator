@@ -2,7 +2,11 @@ import requests
 import traceback
 from endpoint_proxy import get_baseurl
 from common.models.document import Document
+from setup_e2e import create_table
 BUCKET_NAME = "gs://document-upload-test"
+
+def test_create_tabel():
+  create_table()
 
 def test_uuj_5():
   """
