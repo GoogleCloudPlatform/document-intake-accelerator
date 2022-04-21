@@ -44,7 +44,7 @@ def get_values(
   filename = "approval_rules.json"
   # file=open(filename)  
   # data= json.load(file)
-  with open(filename,encoding = 'utf-8') as json_file:
+  with open(filename,encoding = "utf-8") as json_file:
     data = json.load(json_file)
 
   Logger.info(
