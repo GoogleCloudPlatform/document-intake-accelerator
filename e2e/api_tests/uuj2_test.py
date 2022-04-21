@@ -12,9 +12,10 @@ def test_create_tabel():
   # Construct a BigQuery client object.
   client = bq_client()
   BIGQUERY_DB = "entities"
+  dataset_prefix = DATABASE_PREFIX + "data_extraction"
   # TODO(developer): Set dataset_id to the ID of the dataset to create.
   # dataset_id = "{}.your_dataset".format(client.project)
-  dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}"
+  dataset_id = f"{PROJECT_ID}.{dataset_prefix}"
   # Construct a full Dataset object to send to the API.
   dataset = bigquery.Dataset(dataset_id)
 
@@ -26,7 +27,7 @@ def test_create_tabel():
   # exists within the project.
   dataset = client.create_dataset(dataset, timeout=30)  # Make an API request.
   print("Created dataset {}.{}".format(client.project, dataset.dataset_id))
-  table_id = f"{PROJECT_ID}.{DATABASE_PREFIX}.{BIGQUERY_DB}"
+  table_id = f"{PROJECT_ID}.{dataset_prefix}.{BIGQUERY_DB}"
   schema = [
   bigquery.SchemaField("document_class", "STRING", mode="NULLABLE"),
   bigquery.SchemaField("case_id", "STRING", mode="NULLABLE"),
