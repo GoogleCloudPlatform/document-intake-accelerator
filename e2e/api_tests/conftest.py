@@ -1,10 +1,8 @@
 import pytest
 from setup_e2e import create_table, delete_dataset
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def setup():
-  print("=============CREATING TABLE=============")
   create_table()
   yield
   delete_dataset()
-  print("=============DELETING TABLE=============")
