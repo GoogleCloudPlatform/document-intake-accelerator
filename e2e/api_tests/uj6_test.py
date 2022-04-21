@@ -7,7 +7,6 @@
 import requests
 from endpoint_proxy import get_baseurl
 
-#Accessing ping endpoint for sample service
 
 def test_report_data_api():
   base_url = get_baseurl("hitl-service")
