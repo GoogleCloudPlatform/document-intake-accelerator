@@ -151,15 +151,20 @@ async def get_queue(hitl_status: str):
     500 : If there is any error during fetching from firestore
   """
 
+  #Filter function to filter based on current document status
   def filter_status(item):
     return item["current_status"].lower() == hitl_status.lower()
 
   if hitl_status.lower() not in ["approved", "rejected", "pending", "review"]:
     raise HTTPException(status_code=400, detail="Invalid Parameter")
   try:
+    #Fetching documents and converting to list of dictionaries
     docs = list(
         map(lambda x: x.to_dict(),
             Document.collection.filter(active="active").fetch()))
+
+    #Adding keys like ml_status, current_status filtering on current_status
+    #And sorting by upload_timestamp in descending order
     result_queue = add_keys(docs)
     result_queue = filter(filter_status,result_queue)
     result_queue = sorted(
