@@ -4,7 +4,7 @@ from common.config import PROJECT_ID, DATABASE_PREFIX
 
 client = bq_client()
 dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}data_extraction"
-def create_table():
+def create_test_table():
   print("=============CREATING TABLE=============")
   # Construct a BigQuery client object.
   
