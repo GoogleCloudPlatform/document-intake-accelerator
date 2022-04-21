@@ -1,319 +1,617 @@
 """
-This is the main file for extraction framework, based on \
-    doc type specialized parser or
-form parser functions will be called
-
+This script has all the common and re-usable functions
+required for extraction framework
 """
-
-import json
 import os
 import re
-import shutil
-import proto
-import random
-import string
-from google.cloud import documentai_v1 as documentai
+import pandas as pd
+import numpy as np
+from functools import reduce
 from google.cloud import storage
-from .change_json_format import get_json_format_for_processing, \
-    correct_json_format_for_db
-from .correct_key_value import data_transformation
-from .utils_functions import entities_extraction, download_pdf_gcs,\
-    extract_form_fields, del_gcs_folder, \
-    form_parser_entities_mapping, extraction_accuracy_calc, \
-    clean_form_parser_keys, standard_entity_mapping, strip_value
-from .config import \
-  NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE,\
-  GCS_OP_URI, MAPPING_DICT
-from common.config import PROJECT_ID
+from .table_extractor import TableExtractor
 from common.utils.logging_handler import Logger
-import warnings
-parser_config = os.path.join(
-    os.path.dirname(__file__), ".", "parser_config.json")
 
-warnings.simplefilter(action="ignore")
-
-def specialized_parser_extraction(parser_details: dict,
-                                  gcs_doc_path: str, doc_type: str):
+def pattern_based_entities(parser_data, pattern):
   """
-    This is specialized parser extraction main function.
-    It will send request to parser and retrieve response and call
-        default and derived entities functions
+  Function return matched text as per pattern
+  Parameters
+  ----------
+  parser_data: text in which pattern is applied
+  pattern : pattern
+  Returns: Extracted text by using pattern
+  -------
+  """
+
+  text = parser_data["text"]
+  pattern = re.compile(pattern, flags=re.DOTALL)
+  # match as per pattern
+  matched_text = re.search(pattern, text)
+  if matched_text:
+    op = matched_text.group(1)
+  else:
+    op = None
+  return op
+
+def update_confidence(dupp,without_noise):
+  for key in dupp.keys():
+    for i in without_noise:
+      if i["key"] == key:
+        i["value_confidence"] =0.0
+  return without_noise
+
+def check_duplicate_keys(dictme,without_noise):
+  #dictme is the mapping dictionary
+  #without_noise is the raw dictionary which comes from Form parser
+  dupp={}
+  for j,k in dictme.items():
+    # print(j,k)
+    if len(k) > 1:
+      dupp[j] = len(k)
+  for j,k in dupp.items():
+    count=0
+    for i in without_noise:
+      if i["key"] == j:
+        count = count + 1
+    #remove this later
+    count=0
+    if count!=k:
+      without_noise=update_confidence(dupp,without_noise)
+      return False
+
+
+  return True
+
+
+
+def default_entities_extraction(parser_entities, default_entities,doc_type):
+  """
+   This function extracted default entities
+   Parameters
+   ----------
+   parser_entities: Specialized parser entities
+   default_entities: Default entites that need to extract from parser entities
+   Returns : Default entites dict
+   -------
+  """
+  print(doc_type)
+  parser_entities_dict = {}
+
+  # retrieve parser given entities
+  for each_entity in parser_entities:
+    key, val, confidence = each_entity.get("type", ""), \
+                           each_entity.get("mentionText", ""), round(
+      each_entity.get("confidence", 0), 2)
+
+    parser_entities_dict[key] = [val, confidence]
+
+  entity_dict = {}
+
+  # create default entities
+  for key in default_entities:
+    if key in parser_entities_dict:
+      entity_dict[default_entities[key][0]] = {
+                 "entity": default_entities[key][0],
+                 "value": parser_entities_dict[key][0],
+                 "extraction_confidence": parser_entities_dict[key][1],
+                 "manual_extraction": False,
+                 "corrected_value": None}
+    else:
+      entity_dict[default_entities[key][0]] = {
+                 "entity": default_entities[key][0], "value": None,
+                 "extraction_confidence": None,
+                 "manual_extraction": False,
+                 "corrected_value": None}
+  if doc_type == "utility_bill":
+    if "supplier_address" in parser_entities_dict:
+      if parser_entities_dict["supplier_address"][0] == "":
+        if "receiver_address" in parser_entities_dict \
+        and parser_entities_dict["receiver_address"][0]!="":
+          entity_dict["reciever address"]["value"] = \
+          parser_entities_dict["receiver_address"][0]
+        else:
+          if "service_address" in parser_entities_dict:
+            entity_dict["reciever address"]["value"] = \
+            parser_entities_dict["service_address"][0]
+  return entity_dict
+
+
+def name_entity_creation(entity_dict, name_list):
+  """
+    This function is to create name from Fname and Gname.
+    Can be re-used if it helps
+    Parameters
+    ----------
+    entity_dict: extracted entities dict
+    name_list: list of varibles required to create name
+    Returns : derived name entitity dict
+    -------
+  """
+  name = ""
+  confidence = 0
+
+  # loop through all the name variables used for name creation
+  for each_name in name_list:
+    parser_extracted_name = entity_dict[each_name]["value"]
+    if parser_extracted_name:
+      name += parser_extracted_name
+      confidence += entity_dict[each_name]["extraction_confidence"]
+
+  if name.strip():
+    name = name.strip()
+    confidence = round(confidence / len(name_list), 2)
+  else:
+    name = None
+    confidence = None
+
+  name_dict = {
+      "entity": "Name", "value": name,
+       "extraction_confidence": confidence,
+       "manual_extraction": False,
+        "corrected_value": None}
+
+  return name_dict
+
+
+def derived_entities_extraction(parser_data, derived_entities):
+  """
+    This function extract/create derived entities based on config
+    derived entity section
+    Parameters
+    ----------
+    parser_data: text in which pattern is applied
+    derived_entities: derived entities dict and pattern
+    Returns: derived entities dict
+    -------
+  """
+
+  derived_entities_extracted_dict = {}
+
+  # loop through derived entities
+  for key, val in derived_entities.items():
+    pattern = val["rule"]
+    pattern_op = pattern_based_entities(parser_data, pattern)
+
+    derived_entities_extracted_dict[key] = \
+        {"entity": key, "value": pattern_op,
+            "extraction_confidence": None,
+            "manual_extraction": True,
+            "corrected_value": None,
+            "value_coordinates": None,
+            "key_coordinates": None,
+            "page_no": None,
+            "page_width": None,
+            "page_height": None
+            }
+
+  return derived_entities_extracted_dict
+
+
+def entities_extraction(parser_data, required_entities, doc_type):
+  """
+    This function reads information of default and derived entities
+    Parameters
+    ----------
+    parser_data: specialzed parser result
+    required_entities: required extracted entities
+    doc_type: Document type
+    Returns: Required entities dict
+    -------
+  """
+
+  # Read the entities from the processor
+  parser_entities = parser_data["entities"]
+  default_entities = required_entities["default_entities"]
+  derived_entities = required_entities.get("derived_entities")
+  # Extract default entities
+  entity_dict = default_entities_extraction(parser_entities,
+                                            default_entities,doc_type)
+  Logger.info("Default entities created from Specialized parser response")
+  # if any derived entities then extract them
+  if derived_entities:
+    # this function can be used for all docs, if derived entities
+    # are extracted by using regex pattern
+    derived_entities_extracted_dict = derived_entities_extraction\
+        (parser_data, derived_entities)
+    entity_dict.update(derived_entities_extracted_dict)
+    Logger.info("Derived entities created from Specialized parser response")
+  return entity_dict
+
+
+def check_int(d):
+  """
+    This function check given string is integer
+    Parameters
+    ----------
+    d: input string
+    Returns: True/False
+    -------
+  """
+  count = 0
+  date_val = ""
+  for i in d:
+    if i and (i.strip()).isdigit():
+      count = count + 1
+      date_val += str(i.strip())
+
+  flag = ((count >= 2) and (len(date_val) < 17))
+  return flag
+
+
+def consolidate_coordinates(d):
+  """
+    This function create co-ordinates for groupby entities
+    Parameters
+    ----------
+    d: entity co-ordinates list
+
+    Returns: List of co-ordinates
+    -------
+  """
+  entities_cooridnates = []
+
+  if len(d)>1:
+    for i in d:
+      if i:
+        entities_cooridnates.append(i)
+    if entities_cooridnates:
+      final_coordinates = [entities_cooridnates[0][0],
+                           entities_cooridnates[0][1],
+                           entities_cooridnates[-1][6],
+                             entities_cooridnates[0][1],
+                           entities_cooridnates[0][0],
+                           entities_cooridnates[-1][7],
+                             entities_cooridnates[-1][6],
+                           entities_cooridnates[-1][7]]
+    else:
+      final_coordinates = None
+
+    return [float(i) for i in final_coordinates]
+  else:
+    if d.values[0]:
+      return [float(i) for i in d.values[0]]
+    else:
+      return None
+
+def standard_entity_mapping(desired_entities_list, parser_name):
+  """
+    This function changes entity name to standard names and also
+                create consolidated entities like name and date
+    Parameters
+    ----------
+    desired_entities_list: List of default and derived entities
+    parser_name: name of the parser
+
+    Returns: Standard entities list
+    -------
+  """
+  # convert extracted json to pandas dataframe
+  df_json = pd.DataFrame.from_dict(desired_entities_list)
+  # read entity standardization csv
+  entity_standardization = os.path.join(
+        os.path.dirname(__file__), ".", "entity-standardization.csv")
+  entities_standardization_csv = pd.read_csv(entity_standardization)
+  entities_standardization_csv.dropna(how="all", inplace=True)
+
+  # Keep first record incase of duplicate entities
+  entities_standardization_csv.drop_duplicates(subset=["entity"]
+                                               , keep="first", inplace=True)
+  entities_standardization_csv.reset_index(drop=True)
+
+  # Create a dictionary from the look up dataframe/excel which has
+  # the key col and the value col
+  dict_lookup = dict(
+        zip(entities_standardization_csv["entity"],
+            entities_standardization_csv["standard_entity_name"]))
+  # Get( all the entity (key column) from the json as a list
+  key_list = list(df_json["entity"])
+  # Replace the value by creating a list by looking up the value and assign
+  # to json entity
+  df_json["entity"] = [dict_lookup[item] for item in key_list]
+  # convert datatype from object to int for column "extraction_confidence"
+  df_json["extraction_confidence"] = pd.to_numeric\
+      (df_json["extraction_confidence"],errors="coerce")
+  group_by_columns = ["value", "extraction_confidence", "manual_extraction",
+                      "corrected_value", "page_no",
+                        "page_width", "page_height", "key_coordinates",
+                      "value_coordinates"]
+  df_conc = df_json.groupby("entity")[group_by_columns[0]].apply(
+        lambda x: "/".join([v.strip() for v in x if v]) if check_int(x)
+        else " ".join([v.strip() for v in x if v])).reset_index()
+
+  df_av = df_json.groupby(["entity"])[group_by_columns[1]].mean().\
+      reset_index().round(2)
+  # taking mode for categorical variables
+  df_manual_extraction = df_json.groupby(["entity"])[group_by_columns[2]]\
+      .agg(pd.Series.mode).reset_index()
+  df_corrected_value = df_json.groupby(["entity"])[group_by_columns[3]]\
+      .mean().reset_index().round(2)
+  if parser_name == "FormParser":
+    df_page_no = df_json.groupby(["entity"])[group_by_columns[4]].mean()\
+        .reset_index().round(2)
+    df_page_width = df_json.groupby(["entity"])[group_by_columns[5]].mean()\
+        .reset_index().round(2)
+    df_page_height = df_json.groupby(["entity"])[group_by_columns[6]].mean()\
+        .reset_index().round(2)
+    # co-ordinate consolidation
+    df_key_coordinates = df_json.groupby("entity")[group_by_columns[7]].apply(
+      consolidate_coordinates).reset_index()
+    df_value_coordinates = df_json.groupby("entity")[group_by_columns[8]].apply(
+      consolidate_coordinates).reset_index()
+    dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value,
+           df_page_no, df_page_width, df_page_height,
+       df_key_coordinates, df_value_coordinates]
+  else:
+    dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value]
+
+  df_final = reduce(lambda left, right: pd.merge(left, right, on="entity"), dfs)
+  df_final = df_final.replace(r"^\s*$", np.nan, regex=True)
+  df_final = df_final.replace({np.nan: None})
+  extracted_entities_final_json = df_final.to_dict("records")
+  Logger.info("Entities standardization completed")
+  return extracted_entities_final_json
+
+
+def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
+                                 form_parser_text, json_folder):
+  """
+    Form parser entity mapping function
 
     Parameters
     ----------
-    parser_details: It has parser info like parser id, name, location, and etc
-    gcs_doc_path: Document gcs path
-    doc_type: Document type
+    form_parser_entity_list: Extracted form parser entities before mapping
+    mapping_dict: Mapping dictionary have info of default, derived entities
+            along with desired keys
 
-    Returns: Specialized parser response - list of dicts having entity,
-     value, confidence and manual_extraction information.
+    Returns: required entities - list of dicts having entity, value, confidence
+            and manual_extraction information
     -------
   """
+  # extract entities information from config files
+  default_entities = mapping_dict.get("default_entities")
+  derived_entities = mapping_dict.get("derived_entities")
+  table_entities = mapping_dict.get("table_entities")
+  flag = check_duplicate_keys(default_entities,form_parser_entity_list)
 
-  # The full resource name of the processor, e.g.:
-  # projects/project-id/locations/location/processor/processor-id
+  df = pd.DataFrame(form_parser_entity_list)
+  required_entities_list = []
+  # loop through one by one deafult entities mentioned in the config file
+  for each_ocr_key, each_ocr_val in default_entities.items():
+    try:
+      idx_list = df.index[df["key"] == each_ocr_key].tolist()
+    except: # pylint: disable=bare-except
+      idx_list = []
+    # loop for matched records of mapping dictionary
+    for idx, each_val in enumerate(each_ocr_val):
+      if idx_list:
+        try:
+          # creating response
+          temp_dict = \
+            {"entity": each_val, "value": df["value"][idx_list[idx]],
+             "extraction_confidence": float(df["value_confidence"]
+                                            [idx_list[idx]]),
+             "manual_extraction": False,
+             "corrected_value": None,
+             "value_coordinates": [float(i) for i in df["value_coordinates"]
+                                             [idx_list[idx]]],
+             "key_coordinates": [float(i) for i in df["key_coordinates"]
+                                           [idx_list[idx]]],
+             "page_no": int(df["page_no"][idx_list[idx]]),
+             "page_width": int(df["page_width"][idx_list[idx]]),
+             "page_height": int(df["page_height"][idx_list[idx]])
+             }
 
-  location = parser_details["location"]
-  processor_id = parser_details["processor_id"]
-  #parser_name = parser_details["parser_name"]
-  project_id = PROJECT_ID
-  opts = {}
-  if location == "eu":
-    opts = {"api_endpoint": "eu-documentai.googleapis.com"}
+        except: # pylint: disable=bare-except
+          Logger.info("Key not found in parser output,"
+                      " so filling null value")
 
-  client = documentai.DocumentProcessorServiceClient(client_options=opts)
-  # parser api end point
-  name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
-  blob = download_pdf_gcs(
-     gcs_uri=gcs_doc_path
-  )
+          temp_dict = {"entity": each_val, "value": None,
+                       "extraction_confidence": None,
+                       "manual_extraction": False,
+                       "corrected_value": None,
+                       "value_coordinates": None,
+                       "key_coordinates": None,
+                       "page_no": None,
+                       "page_width": None,
+                       "page_height": None
+                       }
 
-  document = {"content": blob.download_as_bytes(),
-              "mime_type": "application/pdf"}
-  # Configure the process request
-  request = {"name": name, "raw_document": document}
-  Logger.info("Specialized parser extraction api called")
-  # send request to parser
-  result = client.process_document(request=request)
-  parser_doc_data = result.document
-  # convert to json
-  json_string = proto.Message.to_json(parser_doc_data)
-  data = json.loads(json_string)
-  # remove unnecessary entities from parser
-  for each_attr in NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE:
-    if "." in each_attr:
-      parent_attr, child_attr = each_attr.split(".")
-      for idx in range(len(data.get(parent_attr, 0))):
-        data[parent_attr][idx].pop(child_attr, None)
-    else:
-      data.pop(each_attr, None)
+        required_entities_list.append(temp_dict)
+      else:
+        # filling null value if parser didn't extract
+        temp_dict = {"entity": each_val, "value": None,
+                         "extraction_confidence": None,
+                         "manual_extraction": False,
+                         "corrected_value": None,
+                         "value_coordinates": None,
+                         "key_coordinates": None,
+                         "page_no": None,
+                         "page_width": None,
+                         "page_height": None
+                         }
+        required_entities_list.append(temp_dict)
+  Logger.info("Default entities created from Form parser response")
+  if derived_entities:
+    # this function can be used for all docs, if derived entities
+    # are extracted by using regex pattern
+    parser_data = {}
+    parser_data["text"] = form_parser_text
+    derived_entities_op_dict = derived_entities_extraction(parser_data,
+                                                           derived_entities)
+    required_entities_list.extend(list(derived_entities_op_dict.values()))
+    Logger.info("Derived entities created from Form parser response")
 
-  # this can be removed while integration
-  # save parser op output
-  # print(data)
-  # with open("{}.json".format(os.path.join(parser_op, gcs_doc_path.split('/')
-  #                                           [-1][:-4])), "w") as outfile:
-  #     json.dump(data, outfile)
+  if table_entities:
+    table_response = None
+    files = os.listdir(json_folder)
+    for json_file in files:
+      json_path = os.path.join(json_folder, json_file)
+      table_extract_obj = TableExtractor(json_path)
+      table_response = table_extract_obj.get_entities(table_entities)
+      if table_response and isinstance(table_response, list):
+        required_entities_list.extend(table_response)
+        break
+    if table_response is None:
+      Logger.error("No table data found")
 
-  required_entities = MAPPING_DICT[doc_type]
-  # extract dl entities
-  extracted_entity_dict = entities_extraction(data, required_entities, doc_type)
-  # Create a list of entities dicts
-  specialized_parser_entity_list = [v for k, v in extracted_entity_dict.items()]
-
-  # this can be removed while integration
-  # save extracted entities json
-  # with open("{}.json".format(os.path.join(extracted_entities,
-  #     gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
-  #     json.dump(specialized_parser_entity_list, outfile, indent=4)
-  Logger.info("Required entities created from Specialized parser response")
-  return specialized_parser_entity_list
+  return required_entities_list, flag
 
 
-def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
-                           doc_type: str, state: str, timeout: int):
+def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None,
+                     output_filename=None) -> str:
   """
-  This is form parser extraction main function. It will send
-  request to parser and retrieve response and call
-    default and derived entities functions
+    Function takes a path of an object/file stored in GCS bucket and
+            downloads the file in the current working directory
 
-  Parameters
-    ----------
-    parser_details: It has parser info like parser id, name, location, and etc
-    gcs_doc_path: Document gcs path
-    doc_type: Document Type
-    state: State name
-    timeout: Max time given for extraction entities using async form parser API
-
-  Returns: Form parser response - list of dicts having entity, value,
-    confidence and manual_extraction information.
-    -------
+    Args:
+        bucket_name (str): bucket name from where file to be downloaded
+        gcs_uri (str): GCS object/file path
+        output_filename (str): desired filename
+        file_to_download (str): gcs file path excluding bucket name.
+            Ex: if file is stored in X bucket under the folder Y with
+            filename ABC.txt
+            then file_to_download = Y/ABC.txt
+    Return:
+        pdf_path (str): pdf file path that is downloaded from the
+                bucket and stored in local
   """
-
-  location = parser_details["location"]
-  processor_id = parser_details["processor_id"]
-  #parser_name = parser_details["parser_name"]
-  project_id = PROJECT_ID
-
-  opts = {}
-
-  # Location can be 'us' or 'eu'
-  if location == "eu":
-    opts = {"api_endpoint": "eu-documentai.googleapis.com"}
-
-  client = documentai.DocumentProcessorServiceClient(client_options=opts)
-  # create a temp folder to store parser op, delete folder once processing done
-  # call create gcs bucket function to create bucket,
-  # folder will be created automatically not the bucket
-  gcs_output_uri = GCS_OP_URI
-  letters = string.ascii_lowercase
-  temp_folder = "".join(random.choice(letters) for i in range(10))
-  gcs_output_uri_prefix = "temp_"+temp_folder
-  # temp folder location
-  destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
-  # delete temp folder
-  # del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
-  gcs_documents = documentai.GcsDocuments(
-    documents=[{"gcs_uri": gcs_doc_path, "mime_type": "application/pdf"}]
-  )
-  input_config = documentai.BatchDocumentsInputConfig\
-      (gcs_documents=gcs_documents)
-  # Temp op folder location
-  output_config = documentai.DocumentOutputConfig(
-    gcs_output_config={"gcs_uri": destination_uri}
-  )
-
-  # parser api end point
-  name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
-  Logger.info("Form parser extraction api called")
-  # request for Doc AI
-  request = documentai.types.document_processor_service.BatchProcessRequest(
-    name=name, input_documents=input_config,
-      document_output_config=output_config,
-  )
-  operation = client.batch_process_documents(request)
-  # Wait for the operation to finish
-  operation.result(timeout=timeout)
-
-  # Results are written to GCS. Use a regex to find
-  # output files
-  match = re.match(r"gs://([^/]+)/(.+)", destination_uri)
-  output_bucket = match.group(1)
-  prefix = match.group(2)
-
+  if bucket_name is None:
+    bucket_name = gcs_uri.split("/")[2]
+  # if file to download is not provided it can be extracted from the GCS URI
+  if file_to_download is None and gcs_uri is not None:
+    file_to_download = "/".join(gcs_uri.split("/")[3:])
   storage_client = storage.Client()
-  bucket = storage_client.get_bucket(output_bucket)
-  blob_list = list(bucket.list_blobs(prefix=prefix))
-  extracted_entity_list = []
-  form_parser_text = ""
-  # saving form parser json, this can be removed from pipeline
-  if not os.path.exists(temp_folder):
-    os.mkdir(temp_folder)
-  # browse through output jsons
-  for i, blob in enumerate(blob_list):
-    # If JSON file, download the contents of this blob as a bytes object.
-    if ".json" in blob.name:
-      blob_as_bytes = blob.download_as_bytes()
-      # saving the parser response to the folder, remove this while integration
-      # parser_json_fname = "temp.json"
-      parser_json_fname = \
-          os.path.join(temp_folder, f"res_{i}.json")
-      with open(parser_json_fname, "wb") as file_obj:
-        blob.download_to_file(file_obj)
-
-      document = documentai.types.Document.from_json(blob_as_bytes)
-      # print(f"Fetched file {i + 1}")
-      form_parser_text += document.text
-      # Read the text recognition output from the processor
-      for page in document.pages:
-        for form_field in page.form_fields:
-          field_name, field_name_confidence, field_coordinates = \
-              extract_form_fields(form_field.field_name, document)
-          field_value, field_value_confidence, value_coordinates = \
-              extract_form_fields(form_field.field_value, document)
-          # noise removal from keys and values
-          field_name = clean_form_parser_keys(field_name)
-          field_value = strip_value(field_value)
-          temp_dict = {"key": field_name, "key_coordinates":field_coordinates,
-                    "value": field_value,
-                     "value_coordinates": value_coordinates,
-                     "key_confidence": round(field_name_confidence, 2),
-                     "value_confidence": round(field_value_confidence, 2),
-                     "page_no": int(page.page_number),
-                     "page_width": int(page.dimension.width),
-                     "page_height": int(page.dimension.height)}
-
-          extracted_entity_list.append(temp_dict)
-
-      print("Extraction completed")
-    else:
-      print(f"Skipping non-supported file type {blob.name}")
-
-  # Save extracted entities json, can be removed from pipeline
-  # with open("{}.json".format(os.path.join(parser_op,
-  #     gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
-  #     json.dump(extracted_entity_list, outfile, indent=4)
-  # mappping dictionary of document type and state
-  doc_state = doc_type+"_"+state
-  mapping_dict = MAPPING_DICT[doc_state]
-  # Extract desired entites from form parser
-  form_parser_entities_list, flag = form_parser_entities_mapping(
-      extracted_entity_list,mapping_dict, form_parser_text, temp_folder)
-
-  # Save extract desired entities only
-  # with open("{}.json".format(os.path.join(extracted_entities,
-  #         gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
-  #     json.dump(form_parser_entities_list, outfile, indent=4)
-
-  # delete temp folder
-  shutil.rmtree(temp_folder)
-  del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
-  Logger.info("Required entities created from Form parser response")
-  return form_parser_entities_list,flag
+  bucket = storage_client.get_bucket(bucket_name)
+  blob = bucket.blob(file_to_download)
+  # save file, if output path provided
+  if output_filename:
+    with open(output_filename, "wb") as file_obj:
+      blob.download_to_file(file_obj)
+  return blob
 
 
-def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
+def clean_form_parser_keys(text):
   """
-  This function calls specialed parser or form parser depends on document type
+    Cleaning form parser keys
+    Parameters
+    ----------
+    text: original text before noise removal - removed spaces, newlines
+    Returns: text after noise removal
+    -------
+  """
+  # removing special characters from beginning and end of a string
+  try:
+    if len(text):
+      text = text.strip()
+      text = text.replace("\n", " ")
+      text = re.sub(r"^\W+", "", text)
+      last_word = text[-1]
+      text = re.sub(r"\W+$", "", text)
+    if last_word in [")", "]"]:
+      text += last_word
 
+  except: # pylint: disable=bare-except
+    Logger.error("Exception occurred while cleaning keys")
+
+  return text
+
+def del_gcs_folder(bucket, folder):
+
+  """
+  This function is to delete folder from gcs bucket, this is used to
+   delete temp folder from bucket
   Parameters
   ----------
-  gcs_doc_path: Document gcs path
-  doc_type: Type of documents. Ex: unemployment_form, driver_license, and etc
-  state: state
-
-  Returns
+  bucket: Bucket name
+  folder: Folder name inside bucket
+  Returns : None
   -------
-    List of dicts having entity, value, confidence and
-           manual_extraction information.
-    Extraction accuracy
   """
 
-  # parser_config_json = "parser_config.json"
-  parser_config_json = parser_config
-  # read parser details from configuration json file
-  with open(parser_config_json, "r", encoding="utf-8") as j:
-    parsers_info = json.loads(j.read())
-    parser_information = parsers_info.get(doc_type)
-    # if parser present then do extraction else update the status
-    if parser_information:
-      parser_name = parser_information["parser_name"]
-      if parser_name == "FormParser":
-        Logger.info(f"Form parser extraction started for"
-                    f" this document:{doc_type}")
-        desired_entities_list,flag = form_parser_extraction(
-            parser_information,gcs_doc_path, doc_type, state, 300)
-      else:
-        Logger.info(f"Specialized parser extraction "
-                    f"started for this document:{doc_type}")
-        flag=True
-        desired_entities_list = specialized_parser_extraction(
-            parser_information,gcs_doc_path, doc_type)
+  storage_client = storage.Client()
+  bucket = storage_client.get_bucket(bucket)
+  blobs = bucket.list_blobs(prefix=folder)
+  for blob in blobs:
+    blob.delete()
 
-      # calling standard entity mapping function to standardize the entities
-      final_extracted_entities = standard_entity_mapping(
-          desired_entities_list,parser_name)
-      # calling post processing utility function
-      # input json is the extracted json file after your mapping script
-      input_dict = get_json_format_for_processing(final_extracted_entities)
-      input_dict, output_dict = data_transformation(input_dict)
-      final_extracted_entities = correct_json_format_for_db(
-          output_dict,final_extracted_entities)
-      # with open("{}.json".format(os.path.join(mapped_extracted_entities,
-      #         gcs_doc_path.split('/')[-1][:-4])),
-      #           "w") as outfile:
-      #     json.dump(final_extracted_entities, outfile, indent=4)
+  # print("Delete successful")
 
-      # extraction accuracy calculation
-      document_extraction_confidence,extraction_status = \
-        extraction_accuracy_calc(final_extracted_entities,flag)
-      # print(final_extracted_entities)
-      # print(document_extraction_confidence)
-      Logger.info(f"Extraction completed for this document:{doc_type}")
-      return final_extracted_entities, \
-            document_extraction_confidence,extraction_status
-    else:
-      # Parser not available
-      Logger.error(f"Parser not available for this document:{doc_type}")
-      # print("parser not available for this document")
-      return None
+def strip_value(value):
+  '''Function for default cleaning of values to remove space at end and begining
+  and '\n' at end
+  Input:
+       value: Input string
+  Output:
+       corrected_value: corrected string without noise'''
+  if value is None:
+    corrected_value = value
+  else:
+    corrected_value = value.strip()
+    corrected_value = corrected_value.replace("\n", " ")
+  return corrected_value
+
+
+def extract_form_fields(doc_element: dict, document: dict):
+  """
+   # Extract form fields from form parser raw json
+    Parameters
+    ----------
+    doc_element: Entitiy
+    document: Extracted OCR Text
+
+    Returns: Entity name and Confidence
+    -------
+  """
+
+  response = ""
+  list_of_coordidnates = []
+  # If a text segment spans several lines, it will
+  # be stored in different text segments.
+  for segment in doc_element.text_anchor.text_segments:
+    start_index = (
+      int(segment.start_index)
+      if segment in doc_element.text_anchor.text_segments
+      else 0
+    )
+    end_index = int(segment.end_index)
+    response += document.text[start_index:end_index]
+  confidence = doc_element.confidence
+  coordinate = list([doc_element.bounding_poly.normalized_vertices])
+  # print("coordinate", coordinate)
+  # print("type", type(coordinate))
+
+  for item in coordinate:
+    # print("item", item)
+    # print("type", type(item))
+    for xy_coordinate in item:
+      # print("xy_coordinate", xy_coordinate)
+      # print("x", xy_coordinate.x)
+      list_of_coordidnates.append(float(round(xy_coordinate.x, 4)))
+      list_of_coordidnates.append(float(round(xy_coordinate.y, 4)))
+  return response, confidence, list_of_coordidnates
+
+
+def extraction_accuracy_calc(total_entities_list,flag=True):
+  """
+    This function is to calculate document extraction accuracy
+    Parameters
+    ----------
+    total_entities_list: Total extracted list of dict
+    Returns : Extraction score
+    -------
+  """
+  # get fields extraction accuracy
+  extraction_status="single entities present"
+  if flag is False:
+    extraction_accuracy = 0.0
+    extraction_status="duplicate entities present"
+    return extraction_accuracy,extraction_status
+  entity_accuracy_list = [each_entity.get("extraction_confidence") if
+                          each_entity.get("extraction_confidence") else 0
+                        for each_entity in
+                        total_entities_list if not each_entity.
+          get("manual_extraction")]
+
+  extraction_accuracy = round(sum(entity_accuracy_list) /
+                              len(entity_accuracy_list), 3)
+
+  return extraction_accuracy,extraction_status
