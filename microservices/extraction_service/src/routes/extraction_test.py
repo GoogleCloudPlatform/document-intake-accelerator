@@ -36,7 +36,8 @@ def test_extraction_api_success(client_with_emulator):
       "entity": "last_name",
       "value": "xyzz"
   }]
-  extract_entities_output = tuple([entities, 0.3])
+  extract_entities_output = tuple([entities, 0.3 ,
+                             "double_key_extraction"])
   print(extract_entities_output)
   mockresponse = Mock()
   mockresponse.status_code = 200

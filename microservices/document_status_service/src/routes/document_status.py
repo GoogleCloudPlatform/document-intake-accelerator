@@ -131,7 +131,8 @@ async def update_extraction_status(case_id: str,
                                    uid: str,
                                    status: str,
                                    entity: Optional[List[Dict]] = None,
-                                   extraction_score: Optional[float] = None):
+                                   extraction_score: Optional[float] = None,
+                                   extraction_status: Optional[str] = None):
   """takes case_id , uid , extraction_score ,document_type ,status
     of classification service as input
     updates the document class ,document_type ,status in database
@@ -156,6 +157,7 @@ async def update_extraction_status(case_id: str,
       document.system_status = fireo.ListUnion([system_status])
       document.entities = entity
       document.extraction_score = extraction_score
+      document.extraction_status = extraction_status
       document.update()
     else:
       system_status = {

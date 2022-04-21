@@ -38,6 +38,9 @@ async def extraction(case_id: str, uid: str, doc_class: str,
                               gcs_url, doc_class, context)
     #check if the output of extract entity function is
     #touple containing list of dictionaries and extraction score
+    # extraction_output = list(extraction_output)
+    # extraction_output.append("double key extraction")
+    # extraction_output =  tuple(extraction_output)
     is_tuple = isinstance(extraction_output, tuple)
     if is_tuple and isinstance(extraction_output[0], list):
       #call the format_data_bq function to format data to be
@@ -50,13 +53,15 @@ async def extraction(case_id: str, uid: str, doc_class: str,
       #update_extraction_status updates data to document collection
       db_update_status = update_extraction_status(case_id, uid, "success",
                                                   extraction_output[0],
-                                                  extraction_output[1])
+                                                  extraction_output[1],
+                                                  extraction_output[2])
       #checking if both databases are updated successfully
       if db_update_status.status_code == 200 and bq_update_status == []:
         return {
             "status": "success",
             "entities":extraction_output[0],
             "score": extraction_output[1],
+            "extraction_status":extraction_output[2],
             "message": f"document with case_id {case_id} ,uid_id {uid} "
                        f"successfully extracted"
         }
@@ -68,7 +73,7 @@ async def extraction(case_id: str, uid: str, doc_class: str,
 
     #check if  extract_entities returned None when parser not available
     elif extraction_output is None:
-      update_extraction_status(case_id, uid, "fail", None, None)
+      update_extraction_status(case_id, uid, "fail", None, None,None)
       Logger.error(f"Parser not available for case_id {case_id} "
                    f",uid {uid}, doc_class {doc_class}")
       response.status_code = status.HTTP_404_NOT_FOUND
@@ -79,7 +84,7 @@ async def extraction(case_id: str, uid: str, doc_class: str,
     else:
       raise HTTPException(status_code=500)
   except Exception as e:
-    update_extraction_status(case_id, uid, "fail", None, None)
+    update_extraction_status(case_id, uid, "fail", None, None,None)
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(f"Extraction failed for case_id {case_id} and uid {uid}")
     Logger.error(e)
@@ -91,7 +96,7 @@ async def extraction(case_id: str, uid: str, doc_class: str,
 
 
 def update_extraction_status(case_id: str, uid: str, extraction_status: str,
-                             entity: list, extraction_score: float):
+                entity: list, extraction_score: float,extraction_type:str):
   """
     This function calls the document status service
     to update the extraction status in Database
@@ -101,6 +106,8 @@ def update_extraction_status(case_id: str, uid: str, extraction_status: str,
      status (str): success or fail for extraction process
      entity (list):List of dictionary for entities and value
      extraction_score(float): Extraction score for doument
+     extraction_type(str): It's the extraction status if
+     like duplicate keys present or not
   """
 
   base_url = "http://document-status-service/document_status_service/v1/"
@@ -109,7 +116,8 @@ def update_extraction_status(case_id: str, uid: str, extraction_status: str,
     response = requests.post(
         f"{req_url}?case_id={case_id}"
         f"&uid={uid}&status={extraction_status}"
-        f"&extraction_score={extraction_score}",
+        f"&extraction_score={extraction_score}&"
+        f"extraction_status={extraction_type}",
         json=entity)
   else:
     response = requests.post(f"{req_url}?case_id={case_id}"
