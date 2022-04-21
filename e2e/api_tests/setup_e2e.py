@@ -1,6 +1,6 @@
 from common.db_client import bq_client
 from google.cloud import bigquery
-from common.config import PROJECT_ID
+from common.config import PROJECT_ID, DATABASE_PREFIX
 
 
 def create_table():
@@ -8,7 +8,6 @@ def create_table():
   # Construct a BigQuery client object.
   client = bq_client()
   BIGQUERY_DB = "entities"
-  DATABASE_PREFIX = "e2e_test_"
 
   dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}data_extraction"
   # Construct a full Dataset object to send to the API.
