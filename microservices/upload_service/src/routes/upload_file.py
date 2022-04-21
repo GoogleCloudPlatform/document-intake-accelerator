@@ -3,7 +3,7 @@
 import uuid
 import requests
 import traceback
-from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from typing import Optional, List
 from schemas.input_data import InputData
