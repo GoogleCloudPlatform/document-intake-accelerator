@@ -3,13 +3,14 @@ from google.cloud import bigquery
 from common.config import PROJECT_ID, DATABASE_PREFIX
 
 client = bq_client()
+dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}data_extraction"
 def create_table():
   print("=============CREATING TABLE=============")
   # Construct a BigQuery client object.
   
   BIGQUERY_DB = "entities"
 
-  dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}data_extraction"
+  
   # Construct a full Dataset object to send to the API.
   dataset = bigquery.Dataset(dataset_id)
   dataset.location = "US"
@@ -39,7 +40,6 @@ def create_table():
 
 def delete_dataset():
   print("================DELETING DATASET=============")
-  dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}data_extraction"
 
   # Use the delete_contents parameter to delete a dataset and its contents.
   # Use the not_found_ok parameter to not receive an error if the dataset has already been deleted.

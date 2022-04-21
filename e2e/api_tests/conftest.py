@@ -6,5 +6,5 @@ def setup():
   print("=============CREATING TABLE=============")
   create_table()
   yield
-  print("=============DELETING TABLE=============")
   delete_dataset()
+  print("=============DELETING TABLE=============")
