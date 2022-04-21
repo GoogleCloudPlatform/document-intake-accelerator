@@ -35,3 +35,19 @@ def create_table():
     print(
         "Created table {}.{}.{}".format(table.project, table.dataset_id, table.table_id)
     )
+
+def delete_dataset():
+
+    # Construct a BigQuery client object.
+    client = bq_client()
+
+    # TODO(developer): Set model_id to the ID of the model to fetch.
+    dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}"
+
+    # Use the delete_contents parameter to delete a dataset and its contents.
+    # Use the not_found_ok parameter to not receive an error if the dataset has already been deleted.
+    client.delete_dataset(
+        dataset_id, delete_contents=True, not_found_ok=True
+    )  # Make an API request.
+
+    print("Deleted dataset '{}'.".format(dataset_id))

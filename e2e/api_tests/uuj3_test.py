@@ -1,6 +1,7 @@
 import requests
 import traceback
 from endpoint_proxy import get_baseurl
+from setup_e2e import delete_dataset
 from common.models.document import Document
 BUCKET_NAME = "gs://document-upload-test"
 
@@ -54,3 +55,4 @@ def test_uuj_6():
   response = requests.post(dsu_url+f"/document_status_service/v1/update_autoapproved_status?case_id={case_id}&uid={uid}&status=success&autoapproved_status=Rejected&is_autoapproved=yes")
   assert response.status_code == 200
   print("==================autoapproval successful in uuj6===================")
+  delete_dataset()
