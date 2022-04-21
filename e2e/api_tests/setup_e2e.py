@@ -8,7 +8,7 @@ def create_table():
     client = bq_client()
     BIGQUERY_DB = "entities"
 
-    dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}"
+    dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}data_extraction"
     # Construct a full Dataset object to send to the API.
     dataset = bigquery.Dataset(dataset_id)
     dataset.location = "US"
