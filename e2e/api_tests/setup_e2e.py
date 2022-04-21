@@ -3,16 +3,14 @@ from google.cloud import bigquery
 from common.config import PROJECT_ID,DATABASE_PREFIX
 
 def create_table():
+    print("=============CREATING TABLE=============")
     # Construct a BigQuery client object.
     client = bq_client()
     BIGQUERY_DB = "entities"
-    # TODO(developer): Set dataset_id to the ID of the dataset to create.
-    # dataset_id = "{}.your_dataset".format(client.project)
+
     dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}"
     # Construct a full Dataset object to send to the API.
     dataset = bigquery.Dataset(dataset_id)
-
-    # TODO(developer): Specify the geographic location where the dataset should reside.
     dataset.location = "US"
 
     # Send the dataset to the API for creation, with an explicit timeout.
@@ -37,11 +35,8 @@ def create_table():
     )
 
 def delete_dataset():
-
-    # Construct a BigQuery client object.
+    print("================DELETING DATASET=============")
     client = bq_client()
-
-    # TODO(developer): Set model_id to the ID of the model to fetch.
     dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}"
 
     # Use the delete_contents parameter to delete a dataset and its contents.
