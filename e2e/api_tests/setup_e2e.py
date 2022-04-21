@@ -2,11 +2,11 @@ from common.db_client import bq_client
 from google.cloud import bigquery
 from common.config import PROJECT_ID, DATABASE_PREFIX
 
-
+client = bq_client()
 def create_table():
   print("=============CREATING TABLE=============")
   # Construct a BigQuery client object.
-  client = bq_client()
+  
   BIGQUERY_DB = "entities"
 
   dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}data_extraction"
@@ -39,8 +39,7 @@ def create_table():
 
 def delete_dataset():
   print("================DELETING DATASET=============")
-  client = bq_client()
-  dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}"
+  dataset_id = f"{PROJECT_ID}.{DATABASE_PREFIX}data_extraction"
 
   # Use the delete_contents parameter to delete a dataset and its contents.
   # Use the not_found_ok parameter to not receive an error if the dataset has already been deleted.
