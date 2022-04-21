@@ -42,7 +42,7 @@ def get_values(
   """
   # data = read_json("gs://async_form_parser/Jsons/acpt.json")"
   filename = "approval_rules.json"
-  # file=open(filename)  
+  # file=open(filename)
   # data= json.load(file)
   with open(filename,encoding = "utf-8") as json_file:
     data = json.load(json_file)
@@ -96,7 +96,7 @@ def get_values(
     if extraction_score == 0.0:
       flag = "no"
       status = "Review"
-      return status,flag 
+      return status,flag
     for i in data[document_label]:
       if i != "Reject":
         e_limit = data[document_label][i]["Extraction_Score"]
