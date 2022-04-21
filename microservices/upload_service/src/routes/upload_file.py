@@ -13,7 +13,6 @@ from common.models import Document
 from common.utils.publisher import publish_document
 from common.config import BUCKET_NAME
 import datetime
-from utils.process_task_helpers import run_pipeline
 
 # pylint: disable = broad-except ,literal-comparison
 router = APIRouter()
@@ -22,7 +21,6 @@ router = APIRouter()
 
 @router.post("/upload_files")
 async def upload_file(
-    bg: BackgroundTasks,
     context: str,
     files: List[UploadFile] = File(...),
     case_id: Optional[str] = None,
@@ -102,9 +100,7 @@ async def upload_file(
     # Pushing Message To Pubsub
     pubsub_msg = f"batch for {case_id} moved to bucket"
     message_dict = {"message": pubsub_msg,"message_list":message_list}
-    # publish_document(message_dict)
-    data={"configs":message_list}
-    bg.add_task(run_pipeline,data,False,False)
+    publish_document(message_dict)
     Logger.info(f"Files with case id {case_id} uploaded"
                   f" successfully")
     return {
