@@ -42,8 +42,11 @@ def get_values(
   """
   # data = read_json("gs://async_form_parser/Jsons/acpt.json")"
   filename = "approval_rules.json"
-  file=open(filename)  
-  data= json.load(file)
+  # file=open(filename)  
+  # data= json.load(file)
+  with open(filename,encoding = 'utf-8') as json_file:
+    data = json.load(json_file)
+
   Logger.info(
     f"Validation_Score:{validation_score}, Extraction_score :"
     f"{extraction_score},Matching_Score:{matching_score},"
