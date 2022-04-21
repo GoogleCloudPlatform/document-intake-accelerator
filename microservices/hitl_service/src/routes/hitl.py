@@ -150,7 +150,7 @@ async def get_queue(hitl_status: str):
     400 : If hitl_status is invalid
     500 : If there is any error during fetching from firestore
   """
-  
+
   def filter_status(item):
     return item["current_status"].lower() == hitl_status.lower()
 
