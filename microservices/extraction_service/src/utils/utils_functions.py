@@ -254,7 +254,7 @@ def consolidate_coordinates(d):
       if i:
         entities_cooridnates.append(i)
     if entities_cooridnates:
-      final_coordinates = [entities_cooridnates[0][0],
+      entity_coordinates = [entities_cooridnates[0][0],
                            entities_cooridnates[0][1],
                            entities_cooridnates[-1][6],
                              entities_cooridnates[0][1],
@@ -262,10 +262,11 @@ def consolidate_coordinates(d):
                            entities_cooridnates[-1][7],
                              entities_cooridnates[-1][6],
                            entities_cooridnates[-1][7]]
+      final_coordinates = [float(i) for i in entity_coordinates]
     else:
       final_coordinates = None
 
-    return [float(i) for i in final_coordinates]
+    return final_coordinates
   else:
     if d.values[0]:
       return [float(i) for i in d.values[0]]
