@@ -2,7 +2,6 @@ import requests
 import traceback
 from endpoint_proxy import get_baseurl
 from common.models.document import Document
-from setup_e2e import create_table
 from common.db_client import bq_client
 from google.cloud import bigquery
 from common.config import PROJECT_ID,DATABASE_PREFIX

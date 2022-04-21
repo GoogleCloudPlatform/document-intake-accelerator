@@ -1,7 +1,6 @@
 import requests
 import traceback
 from endpoint_proxy import get_baseurl
-from setup_e2e import delete_dataset
 from common.models.document import Document
 BUCKET_NAME = "gs://document-upload-test"
 
