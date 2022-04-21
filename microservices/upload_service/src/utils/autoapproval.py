@@ -51,7 +51,7 @@ def get_values(
   )
   if document_type in ("supporting_documents", "claims_form"):
     if document_type == "claims_form":
-      if extraction_score = 0.0:
+      if extraction_score == 0.0:
         flag="no"
         status = "Review"
         return status,flag
