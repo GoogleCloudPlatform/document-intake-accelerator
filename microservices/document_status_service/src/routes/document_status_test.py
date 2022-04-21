@@ -44,7 +44,8 @@ def test_extracion_status_update(client_with_emulator):
   uid = create_document(client_with_emulator, "test-01")
   response = client_with_emulator.post(
       f"{api_url}update_extraction_status?case_id=test-01&"
-      f"uid={uid}&status=success&extraction_score=0.9&extraction_status=single_key_extraction",
+      f"uid={uid}&status=success&extraction_score=0.9&"
+      f"extraction_status=single_key_extraction",
       json=[{
           "key": "name",
           "raw-value": "Max"
