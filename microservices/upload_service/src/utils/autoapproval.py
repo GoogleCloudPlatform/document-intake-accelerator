@@ -40,13 +40,22 @@ def get_values(
   status : Accept/Reject or Review
   flag : Yes or no
   """
-  data = read_json("gs://async_form_parser/Jsons/acpt.json")
+  # data = read_json("gs://async_form_parser/Jsons/acpt.json")"
+  filename = "approval_rules.json"
+  file=open(filename)  
+  data= json.load(file)
   Logger.info(
     f"Validation_Score:{validation_score}, Extraction_score :"
     f"{extraction_score},Matching_Score:{matching_score},"
     f"DocumentLabel:{document_label},DocumentType:{document_type}"
   )
   if document_type in ("supporting_documents", "claims_form"):
+    if document_type == "claims_form":
+      if extraction_score = 0.0:
+        flag="no"
+        status = "Review"
+        return status,flag
+
     for i in data[document_label]:
       if i != "Reject":
         v_limit = data[document_label][i]["Validation_Score"]
@@ -81,6 +90,10 @@ def get_values(
 
           return status, flag
   elif document_type == "application_form":
+    if extraction_score == 0.0:
+      flag = "no"
+      status = "Review"
+      return status,flag 
     for i in data[document_label]:
       if i != "Reject":
         e_limit = data[document_label][i]["Extraction_Score"]
