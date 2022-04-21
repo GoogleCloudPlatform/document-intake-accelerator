@@ -8,7 +8,7 @@ from google.cloud import bigquery
 from common.config import PROJECT_ID,DATABASE_PREFIX
 BUCKET_NAME = "gs://document-upload-test"
 
-def test_uuj_5():
+def test_uuj_5(setup):
   """
     UUJ 5 - Process the uploaded application form
     1. Classify the document

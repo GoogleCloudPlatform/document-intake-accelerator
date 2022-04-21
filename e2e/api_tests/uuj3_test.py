@@ -5,7 +5,7 @@ from setup_e2e import delete_dataset
 from common.models.document import Document
 BUCKET_NAME = "gs://document-upload-test"
 
-def test_uuj_6():
+def test_uuj_6(setup):
   """
     UUJ 6 - Process the uploaded Supporting Document
     1. Classify the document
