@@ -109,6 +109,7 @@ async def upload_file(
                   f" will be processed in sometime ",
         "case_id": case_id,
         "uid_list": uid_list,
+        "configs" : message_list
     }
   except Exception as e:
     Logger.error(e)
