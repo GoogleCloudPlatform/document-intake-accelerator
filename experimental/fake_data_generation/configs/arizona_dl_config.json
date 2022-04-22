@@ -1,0 +1,129 @@
+{
+    "image_file": "fake_data_generation/arizona_dl_converted.png",
+    "image_name_prefix": "arizona-driver-form-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Oswald",
+        "font_family": "Oswald",
+        "font_size": 12
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "driver_license",
+        "position_x": 585,
+        "position_y": 176
+      },
+      {
+        "name": "name",
+        "position_x": 315,
+        "position_y": 247,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      },
+      {
+        "name": "middle_name",
+        "position_x": 370,
+        "position_y": 247
+      },
+      {
+        "name": "name",
+        "position_x": 450,
+        "position_y": 247,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+        "name": "name",
+        "position_x": 100,
+        "position_y": 463,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      },
+      {
+        "name": "MI",
+        "position_x": 190,
+        "position_y": 463
+      },
+      {
+        "name": "name",
+        "position_x": 240,
+        "position_y": 463,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+        "name": "date_of_birth",
+        "position_x": 590,
+        "position_y": 210
+      },
+      {
+        "name": "date_of_birth",
+        "position_x": 630,
+        "position_y": 450
+      },
+      {
+        "name": "license_end_date",
+        "position_x": 375,
+        "position_y": 360
+      },
+      {
+        "name": "license_iss_date",
+        "position_x": 596,
+        "position_y": 358
+      },
+      {
+        "name": "resident_address",
+        "position_x": 315,
+        "position_y": 275
+      },
+      {
+        "name": "class",
+        "position_x": 390,
+        "position_y": 168
+      },
+      {
+        "name": "rest",
+        "position_x": 382,
+        "position_y": 212
+      },
+      {
+        "name": "gender",
+        "position_x": 375,
+        "position_y": 385
+      },
+      {
+        "name": "ht",
+        "position_x": 375,
+        "position_y": 406
+      },
+      {
+        "name": "wt",
+        "position_x": 375,
+        "position_y": 425
+      },
+      {
+        "name": "dd",
+        "position_x": 370,
+        "position_y": 492
+      },
+      {
+        "name": "eyes",
+        "position_x": 520,
+        "position_y": 382
+      },
+      {
+        "name": "hair",
+        "position_x": 520,
+        "position_y": 406
+      },
+      {
+        "name": "end",
+        "position_x": 382,
+        "position_y": 193
+      }
+    ]
+  }

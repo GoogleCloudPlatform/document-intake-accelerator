@@ -1,0 +1,130 @@
+{
+    "image_file": "fake_data_generation/california_dl_converted.png",
+    "image_name_prefix": "california-driver-form-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Oswald",
+        "font_family": "Oswald",
+        "font_size": 12
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "driver_license",
+        "position_x": 315,
+        "position_y": 153
+      },
+      {
+        "name": "name",
+        "position_x": 315,
+        "position_y": 262,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      },
+      {
+        "name": "middle_name",
+        "position_x": 360,
+        "position_y": 262
+      },
+      {
+        "name": "name",
+        "position_x": 324,
+        "position_y": 230,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+        "name": "name",
+        "position_x": 120,
+        "position_y": 450,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      },
+      {
+          "name": "MI",
+          "position_x": 180,
+          "position_y": 450
+      },
+      {
+        "name": "name",
+        "position_x": 210,
+        "position_y": 450,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+        "name": "date_of_birth",
+        "position_x": 339,
+        "position_y": 340
+      },
+      {
+        "name": "date_of_birth",
+        "position_x": 668,
+        "position_y": 368
+      },
+      {
+        "name": "license_end_date",
+        "position_x": 339,
+        "position_y": 198
+      },
+      {
+        "name": "license_iss_date",
+        "position_x": 684,
+        "position_y": 490
+      },
+      {
+        "name": "full_address",
+        "position_x": 284,
+        "position_y": 290
+    },
+    {
+      "name": "class",
+      "position_x": 630,
+      "position_y": 145
+    },
+    {
+      "name": "rest",
+      "position_x": 345,
+      "position_y": 365
+    },
+    {
+      "name": "gender",
+      "position_x": 419,
+      "position_y": 435
+    },
+    {
+      "name": "ht",
+      "position_x": 423,
+      "position_y": 460
+    },
+    {
+      "name": "wt",
+      "position_x": 559,
+      "position_y": 460
+    },
+    {
+      "name": "dd",
+      "position_x": 410,
+      "position_y": 492
+    },
+    {
+      "name": "eyes",
+      "position_x": 699,
+      "position_y": 439
+    },
+    {
+      "name": "hair",
+      "position_x": 553,
+      "position_y": 438
+    },
+    {
+        "name": "end",
+        "position_x": 610,
+        "position_y": 200
+    }
+ 
+    ]
+  }

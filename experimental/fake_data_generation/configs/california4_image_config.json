@@ -1,0 +1,73 @@
+{
+  "image_file": "fake_data_generation/california_4.png",
+  "image_name_prefix": "california-test-form4-",
+  "viewport_width": 800,
+  "viewport_height": 1200,
+  "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+        "font_family": "Indie Flower",
+        "font_size": 11
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "ssn",
+        "position_x": 189,
+        "position_y": 110,
+        "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+        "regex_match_group": 1    
+      },
+      {
+        "name": "ssn",
+        "position_x": 274,
+        "position_y": 110,
+        "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "ssn",
+        "position_x": 335,
+        "position_y": 110,
+        "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+        "regex_match_group": 3
+      },
+      {
+        "function": "text",
+        "text": "✔",
+        "position_x": 430,
+        "position_y": 535
+      },
+      {
+        "name": "employer",
+        "position_x": 480,
+        "position_y": 708
+      },
+      {
+        "name": "job_title",
+        "position_x": 412,
+        "position_y": 802
+      },
+      {
+        "name": "job_title",
+        "position_x": 412,
+        "position_y": 755
+      },
+      {
+        "name": "job_title",
+        "position_x": 384,
+        "position_y": 832
+      },
+      {
+        "name": "difference_in_years",
+        "position_x": 440,
+        "position_y": 785
+      },
+      {
+        "name": "num_months",
+        "position_x": 552,
+        "position_y": 785
+      }
+    ]
+  }

@@ -1,0 +1,62 @@
+{
+    "image_file": "fake_data_generation/arizona_2.png",
+    "image_name_prefix": "arizona-test-form2-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+        "font_family": "Indie Flower",
+        "font_size": 13
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "employer",
+        "position_x": 206,
+        "position_y": 748
+      },
+      {
+        "name": "work_end_date",
+        "position_x": 314,
+        "position_y": 855,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 1
+      },
+      {
+        "name": "work_end_date",
+        "position_x": 71,
+        "position_y": 855,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "work_end_date",
+        "position_x": 231,
+        "position_y": 855,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 3
+      },
+      {
+       "name": "employer_phone_number",
+       "position_x": 400,
+       "position_y": 855
+      },
+      {
+        "name": "employer_state",
+        "position_x": 438,
+        "position_y": 795
+      },
+      {
+        "name": "employer_zip",
+        "position_x": 504,
+        "position_y": 795
+      },
+      {
+        "name": "employer_address",
+        "position_x": 59,
+        "position_y": 795
+      }
+    ]
+  }

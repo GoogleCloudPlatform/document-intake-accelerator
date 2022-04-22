@@ -1,0 +1,96 @@
+{
+  "image_file": "fake_data_generation/california_1.png",
+  "image_name_prefix": "california-test-form-",
+  "viewport_width": 800,
+  "viewport_height": 1200,
+  "font_options": [
+    {
+      "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+      "font_family": "Indie Flower",
+      "font_size": 11
+    }
+  ],
+  "row_limit": 1,
+  "fields": [
+    {
+      "name": "ssn",
+      "position_x": 396,
+      "position_y": 419,
+      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+      "regex_match_group": 1
+    },
+    {
+      "name": "ssn",
+      "position_x": 457,
+      "position_y": 419,
+      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+      "regex_match_group": 2
+    },
+    {
+      "name": "ssn",
+      "position_x": 503,
+      "position_y": 419,
+      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+      "regex_match_group": 3
+    },
+    {
+      "name": "name",
+      "position_x": 415,
+      "position_y": 608,
+      "regex": "(\\w+) (\\w+)",
+      "regex_match_group": 1
+    },
+    {
+      "name": "name",
+      "position_x": 415,
+      "position_y": 590,
+      "regex": "(\\w+) (\\w+)",
+      "regex_match_group": 2
+    },
+    {
+      "name": "MI",
+      "position_x": 465,
+      "position_y": 622
+    },
+    {
+      "name": "date_of_birth",
+      "position_x": 384,
+      "position_y": 768
+    },
+    {
+      "name": "gender",
+      "position_x": 384,
+      "position_y": 788
+    },
+    {
+      "function": "text",
+      "text": "✔",
+      "position_x": 430,
+      "position_y": 318
+    },
+    {
+      "function": "text",
+      "text": "✔",
+      "position_x": 382,
+      "position_y": 650
+    },
+    {
+      "function": "text",
+      "text": "✔",
+      "position_x": 379,
+      "position_y": 812
+    },
+    {
+      "function": "text",
+      "text": "✔",
+      "position_x": 429,
+      "position_y": 865
+    },
+    {
+      "name": "language",
+      "position_x": 409,
+      "position_y": 842
+    }
+    
+  ]
+}

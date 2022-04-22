@@ -1,0 +1,162 @@
+{
+    "image_file": "fake_data_generation/arkansas_1.png",
+    "image_name_prefix": "arkansas-test-form-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Open+Sans",
+        "font_family": "Open Sans",
+        "font_size": 10
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      
+      {
+        "name": "today_date",
+        "position_x": 46,
+        "position_y": 135
+      },
+      {
+        "name": "ssn",
+        "position_x": 302,
+        "position_y": 135
+      },
+      {
+        "name": "eff_date",
+        "position_x": 550,
+        "position_y": 135
+      },
+      {
+        "function": "text",
+        "text": "✔",
+        "position_x": 521,
+        "position_y": 162
+      },
+      {
+        "name": "name",
+        "position_x": 47,
+        "position_y": 200,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      },
+      {
+        "name": "MI",
+        "position_x": 395,
+        "position_y": 200
+      },
+      {
+        "name": "name",
+        "position_x": 466,
+        "position_y": 200,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+        "name": "full_address",
+        "position_x": 48,
+        "position_y": 242
+      },
+      {
+        "name": "city",
+        "position_x": 90,
+        "position_y": 268
+      },
+      {
+        "name": "state",
+        "position_x": 377,
+        "position_y": 268
+      },
+      {
+        "name": "zip_code",
+        "position_x": 549,
+        "position_y": 268
+      },
+      {
+        "name": "state",
+        "position_x": 143,
+        "position_y": 364
+      },
+      {
+        "name": "county",
+        "position_x": 345,
+        "position_y": 364
+      },
+      {
+        "name": "email",
+        "position_x": 544,
+        "position_y": 364
+      },
+      {
+        "name": "phone_number",
+        "position_x": 348,
+        "position_y": 390
+      },
+      {
+        "name": "date_of_birth",
+        "position_x": 129,
+        "position_y": 416
+      },
+      {
+        "name": "gender",
+        "position_x": 345,
+        "position_y": 416
+      },
+      {
+        "name": "ethnicity",
+        "position_x": 130,
+        "position_y": 444
+      },
+      {
+        "name": "race",
+        "position_x": 130,
+        "position_y": 470
+      },
+      {
+        "name": "employer",
+        "position_x": 45,
+        "position_y": 681
+      },
+      {
+        "name": "employer_address",
+        "position_x": 46,
+        "position_y": 721
+      },
+      {
+        "name": "employer_phone_number",
+        "position_x": 135,
+        "position_y": 771
+      },
+      {
+        "name": "work_start_date",
+        "position_x": 417,
+        "position_y": 771
+      },
+      {
+        "name": "work_end_date",
+        "position_x": 668,
+        "position_y": 771
+      },
+      {
+        "name": "city",
+        "position_x": 82,
+        "position_y": 745
+      },
+      {
+        "name": "state",
+        "position_x": 322,
+        "position_y": 745
+      },
+      {
+        "name": "zip_code",
+        "position_x": 678,
+        "position_y": 745
+      },
+      {
+        "name": "county",
+        "position_x": 489,
+        "position_y": 745
+      }
+    ]
+  }

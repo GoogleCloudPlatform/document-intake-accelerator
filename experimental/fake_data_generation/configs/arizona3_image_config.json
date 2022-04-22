@@ -1,0 +1,28 @@
+{
+    "image_file": "fake_data_generation/arizona_3.png",
+    "image_name_prefix": "arizona-test-form3-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+        "font_family": "Indie Flower",
+        "font_size": 13
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "today_date",
+        "position_x": 640,
+        "position_y": 755
+      },
+      {
+        "name": "name",
+        "position_x": 217,
+        "position_y": 755,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      }
+    ]
+  }
