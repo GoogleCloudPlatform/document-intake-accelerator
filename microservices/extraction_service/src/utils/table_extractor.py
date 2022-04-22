@@ -1,4 +1,5 @@
 # pylint: disable=mixed-indentation
+# pylint: disable=broad-except
 """
 Extract data from a table present in a form
 """
