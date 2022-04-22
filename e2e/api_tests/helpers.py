@@ -20,7 +20,7 @@ def is_processing_success(data:List[Dict]):
     status = details.system_status
     print("System status is: ",status)
     stages = ["uploaded","classification","extraction","auto_approval","validation","matching"]
-  if status is not None:
-    for stat in status:
-      is_processed = stat.get("stage") in stages and stat.get("status") == "success"
+    if status is not None:
+      for stat in status:
+        is_processed = stat.get("stage") in stages and stat.get("status") == "success"
   return is_processed
