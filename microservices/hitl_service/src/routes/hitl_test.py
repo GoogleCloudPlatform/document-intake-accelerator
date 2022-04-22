@@ -178,7 +178,8 @@ def test_fetch_api(client_with_emulator):
   """Test case to check the fetch_file hitl endpoint"""
   with patch("routes.hitl.Logger"):
     response = client_with_emulator.get(
-        f"{api_url}fetch_file?case_id= wwe&uid=CS2EeDc2Gl0OAkdZ4rWK")
+        f"{api_url}fetch_file?case_id=13a18a76-c235-11ec-8bd9-b65304a06911"\
+          f"&uid=JzQAW4oajTxEmemJsULd")
     assert response.status_code == 200
 
 
@@ -187,7 +188,8 @@ def test_fetch_api_download(client_with_emulator):
   with patch("routes.hitl.Logger"):
     response = client_with_emulator.get(
         f"{api_url}fetch_file?"\
-          f"case_id= wwe&uid=CS2EeDc2Gl0OAkdZ4rWK&download=true"
+          f"case_id=13a18a76-c235-11ec-8bd9-b65304a06911&"\
+            f"uid=JzQAW4oajTxEmemJsULd&download=true"
     )
     assert response.status_code == 200
 
