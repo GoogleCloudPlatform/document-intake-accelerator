@@ -1,0 +1,141 @@
+{
+    "image_file": "fake_data_generation/paystub.png",
+    "image_name_prefix": "arkansas-paystub-form-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Oswald",
+        "font_family": "Oswald",
+        "font_size": 11
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "name",
+        "position_x": 55,
+        "position_y": 95,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      },
+      {
+        "name": "MI",
+        "position_x": 110,
+        "position_y": 95
+      },
+      {
+        "name": "name",
+        "position_x": 130,
+        "position_y": 95,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+        "name": "employer",
+        "position_x": 30,
+        "position_y": 20
+      },
+      {
+        "name": "employer_address",
+        "position_x": 28,
+        "position_y": 45
+      },
+      {
+        "name": "city",
+        "position_x": 300,
+        "position_y": 45
+      },
+      {
+        "name": "state",
+        "position_x": 400,
+        "position_y": 45
+      },
+      {
+        "name": "zip_code",
+        "position_x": 460,
+        "position_y": 45
+      },
+      {
+        "name": "ssn",
+        "position_x": 281,
+        "position_y": 95
+      },
+      {
+        "name": "check_no",
+        "position_x": 510,
+        "position_y": 95
+      },
+      {
+        "name": "employee_id",
+        "position_x": 415,
+        "position_y": 95
+      },
+      {
+        "name": "last_day_of_prev_month",
+        "position_x": 660,
+        "position_y": 95
+      },
+      {
+        "name": "start_day_of_prev_month",
+        "position_x": 584,
+        "position_y": 95
+      },
+      {
+        "function": "text",
+        "text":"-",
+        "position_x": 645,
+        "position_y": 95
+      },
+      {
+        "name": "payment_date",
+        "position_x": 721,
+        "position_y": 95
+      },
+      {
+        "name": "rate",
+        "position_x": 172,
+        "position_y": 155
+      },
+      {
+        "name": "hour",
+        "position_x": 249,
+        "position_y": 155
+      },
+      {
+        "name": "current_total",
+        "position_x": 340,
+        "position_y": 155
+      },
+      {
+        "name": "current_total",
+        "position_x": 464,
+        "position_y": 375
+      },
+      {
+        "name": "current_deduct",
+        "position_x": 604,
+        "position_y": 375
+      },
+      {
+        "name": "ytd_gross",
+        "position_x": 44,
+        "position_y": 375
+      },
+      {
+        "name": "ytd_deduct",
+        "position_x": 172,
+        "position_y": 375
+      },
+      {
+        "name": "net_total",
+        "position_x": 715,
+        "position_y": 375
+      },
+      {
+        "name": "ytd_net",
+        "position_x": 310,
+        "position_y": 375
+      }
+    ]
+} 

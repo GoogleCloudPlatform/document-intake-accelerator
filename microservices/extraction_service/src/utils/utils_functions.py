@@ -36,7 +36,7 @@ def update_confidence(dupp,without_noise):
   for key in dupp.keys():
     for i in without_noise:
       if i["key"] == key:
-        i["value_confidence"] =-1.0
+        i["value_confidence"] =0.0
   return without_noise
 
 def check_duplicate_keys(dictme,without_noise):
@@ -254,7 +254,7 @@ def consolidate_coordinates(d):
       if i:
         entities_cooridnates.append(i)
     if entities_cooridnates:
-      final_coordinates = [entities_cooridnates[0][0],
+      entity_coordinates = [entities_cooridnates[0][0],
                            entities_cooridnates[0][1],
                            entities_cooridnates[-1][6],
                              entities_cooridnates[0][1],
@@ -262,10 +262,11 @@ def consolidate_coordinates(d):
                            entities_cooridnates[-1][7],
                              entities_cooridnates[-1][6],
                            entities_cooridnates[-1][7]]
+      final_coordinates = [float(i) for i in entity_coordinates]
     else:
       final_coordinates = None
 
-    return [float(i) for i in final_coordinates]
+    return final_coordinates
   else:
     if d.values[0]:
       return [float(i) for i in d.values[0]]
@@ -306,7 +307,9 @@ def standard_entity_mapping(desired_entities_list, parser_name):
   key_list = list(df_json["entity"])
   # Replace the value by creating a list by looking up the value and assign
   # to json entity
-  df_json["entity"] = [dict_lookup[item] for item in key_list]
+  for index,item in enumerate(key_list):
+    if item in dict_lookup:
+      df_json["entity"][index]=dict_lookup[item]
   # convert datatype from object to int for column "extraction_confidence"
   df_json["extraction_confidence"] = pd.to_numeric\
       (df_json["extraction_confidence"],errors="coerce")
@@ -352,7 +355,7 @@ def standard_entity_mapping(desired_entities_list, parser_name):
 
 
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
-                                 form_parser_text, parser_json_fname):
+                                 form_parser_text, json_folder):
   """
     Form parser entity mapping function
 
@@ -441,9 +444,17 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
     Logger.info("Derived entities created from Form parser response")
 
   if table_entities:
-    table_extract_obj = TableExtractor(parser_json_fname)
-    table_response = table_extract_obj.get_entities(table_entities)
-    required_entities_list.extend(table_response)
+    table_response = None
+    files = os.listdir(json_folder)
+    for json_file in files:
+      json_path = os.path.join(json_folder, json_file)
+      table_extract_obj = TableExtractor(json_path)
+      table_response = table_extract_obj.get_entities(table_entities)
+      if table_response and isinstance(table_response, list):
+        required_entities_list.extend(table_response)
+        break
+    if table_response is None:
+      Logger.error("No table data found")
 
   return required_entities_list, flag
 
@@ -592,9 +603,11 @@ def extraction_accuracy_calc(total_entities_list,flag=True):
     -------
   """
   # get fields extraction accuracy
+  extraction_status="single entities present"
   if flag is False:
-    extraction_accuracy = -1.0
-    return extraction_accuracy
+    extraction_accuracy = 0.0
+    extraction_status="duplicate entities present"
+    return extraction_accuracy,extraction_status
   entity_accuracy_list = [each_entity.get("extraction_confidence") if
                           each_entity.get("extraction_confidence") else 0
                         for each_entity in
@@ -604,4 +617,4 @@ def extraction_accuracy_calc(total_entities_list,flag=True):
   extraction_accuracy = round(sum(entity_accuracy_list) /
                               len(entity_accuracy_list), 3)
 
-  return extraction_accuracy
+  return extraction_accuracy,extraction_status

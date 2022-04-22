@@ -42,11 +42,20 @@ def run_pipeline(payload: List[Dict], is_hitl: bool,is_reassign:bool):
         for doc in supporting_docs:
           # In case of reassign extraction is not required
           if not is_reassign:
-            extraction_score=extract_documents(doc,
+            extraction_output=extract_documents(doc,
             document_type="supporting_documents")
-            print("Reassigned flow")
-            Logger.info("Executing pipeline for reassign scenario.")
-          validate_match_approve(doc,extraction_score)
+            extraction_score = extraction_output[0]
+            extraction_entities =  extraction_output[1]
+            Logger.info(f" Executing pipeline for normal scenario {doc}")
+            if extraction_score and extraction_entities:
+              Logger.info(f"extraction score is {extraction_score},{doc}")
+              validate_match_approve(doc,extraction_score,extraction_entities)
+          else:
+            Logger.info(f" Executing pipeline for reassign scenario "
+                        f"{doc}")
+            extraction_score =  doc["extraction_score"]
+            extraction_entities =  doc["extraction_entities"]
+            validate_match_approve(doc,extraction_score,extraction_entities)
   except Exception as e:
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
@@ -64,23 +73,24 @@ def get_classification(case_id: str, uid: str, gcs_url: str):
 
 
 def get_extraction_score(case_id: str, uid: str, document_class: str,
-                         document_type:str,context : str):
+                         document_type:str,context : str,gcs_url:str):
   """Call the Extraction API and get the extraction score"""
   base_url = "http://extraction-service/extraction_service/v1/extraction_api"
   req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
     f"&doc_class={document_class}&document_type={document_type}" \
-            f"&context={context}"
+            f"&context={context}&gcs_url={gcs_url}"
   response = requests.post(req_url)
   return response
 
 
-def get_validation_score(case_id: str, uid: str, document_class: str):
+def get_validation_score(case_id: str, uid: str, document_class: str,
+                         extraction_entities : List[Dict]):
   """Call the validation API and get the validation score"""
   base_url = "http://validation-service/validation_service/v1/validation/"\
     "validation_api"
   req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
     f"&doc_class={document_class}"
-  response = requests.post(req_url)
+  response = requests.post(req_url,json=extraction_entities)
   return response
 
 
@@ -139,15 +149,19 @@ def filter_documents(configs: List[Dict]):
 def extract_documents(doc:Dict,document_type):
   """Perform extraction for application or supporting documents"""
   extraction_score = None
+  extraction_entities = None
   case_id = doc.get("case_id")
   uid = doc.get("uid")
   document_class = doc.get("document_class")
   context =  doc.get("context")
+  gcs_url =  doc.get("gcs_url")
   extract_res = get_extraction_score(case_id, uid, document_class,
-                                     document_type,context)
+                                     document_type,context,gcs_url)
+
   if extract_res.status_code == 200:
     Logger.info(f"Extraction successful for {document_type}")
     extraction_score = extract_res.json().get("score")
+    extraction_entities =  extract_res.json().get("entities")
     # if document is application form then update autoapproval status
     if document_type == "application_form":
       autoapproval_status = get_values(None, extraction_score, None,
@@ -158,9 +172,10 @@ def extract_documents(doc:Dict,document_type):
         case_id, uid, "success", autoapproval_status[0], "yes")
   else:
     Logger.error(f"extraction failed for {uid}")
-  return extraction_score
+  # extraction_score = None
+  return extraction_score ,extraction_entities
 
-def validate_match_approve(sup_doc:Dict,extraction_score):
+def validate_match_approve(sup_doc:Dict,extraction_score,extraction_entities):
   """Perform validation, matching and autoapproval for supporting documents"""
   validation_score=None
   matching_score=None
@@ -168,7 +183,8 @@ def validate_match_approve(sup_doc:Dict,extraction_score):
   uid = sup_doc.get("uid")
   document_class = sup_doc.get("document_class")
   document_type = "supporting_documents"
-  validation_res = get_validation_score(case_id, uid, document_class)
+  validation_res = get_validation_score(case_id, uid, document_class,
+                                extraction_entities)
   if validation_res.status_code == 200:
     print("====Validation successful==========")
     Logger.info(f"Validation successful for {uid}.")
@@ -176,7 +192,7 @@ def validate_match_approve(sup_doc:Dict,extraction_score):
     matching_res = get_matching_score(case_id, uid)
     if matching_res.status_code == 200:
       print("====Matching successful==========")
-      Logger.info("Matching successful for {uid}.")
+      Logger.info(f"Matching successful for {uid}.")
       matching_score = matching_res.json().get("score")
       update_autoapproval(document_class, document_type,case_id,uid,
 validation_score, extraction_score, matching_score)

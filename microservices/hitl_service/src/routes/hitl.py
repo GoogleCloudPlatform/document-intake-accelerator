@@ -3,7 +3,8 @@ from fastapi import APIRouter, HTTPException, Response
 from typing import Optional
 from common.models import Document
 from common.utils.logging_handler import Logger
-from common.config import BUCKET_NAME,DB_KEYS,ENTITY_KEYS
+from common.config import BUCKET_NAME,DB_KEYS,ENTITY_KEYS,\
+  APPLICATION_FORMS,SUPPORTING_DOCS
 from google.cloud import storage
 import datetime
 import requests
@@ -149,42 +150,25 @@ async def get_queue(hitl_status: str):
     400 : If hitl_status is invalid
     500 : If there is any error during fetching from firestore
   """
+
+  #Filter function to filter based on current document status
+  def filter_status(item):
+    return item["current_status"].lower() == hitl_status.lower()
+
   if hitl_status.lower() not in ["approved", "rejected", "pending", "review"]:
     raise HTTPException(status_code=400, detail="Invalid Parameter")
   try:
-    docs = list(Document.collection.filter(active="active").fetch())
-    result_queue = []
-    for d in docs:
-      doc_dict = d.to_dict()
-      hitl_trail = doc_dict["hitl_status"]
+    #Fetching documents and converting to list of dictionaries
+    docs = list(
+        map(lambda x: x.to_dict(),
+            Document.collection.filter(active="active").fetch()))
 
-      current_status = None
-      system_status = doc_dict["system_status"]
-
-      #Check the latest action hitl or system
-      #If the last step of system status is autoapproval
-      # consider autoapproval status
-      # elif last update was to hitl consider hitl
-      if hitl_trail:
-        last_hitl_status = hitl_trail[-1]
-        last_system_status = system_status[-1]
-        if last_system_status["timestamp"] > last_hitl_status["timestamp"]:
-          if last_system_status["stage"].lower() == "auto_approval"\
-             and last_system_status["status"].lower() == "success":
-            current_status = doc_dict["auto_approval"].lower()
-
-        else:
-          if last_hitl_status["status"].lower() != "reassigned":
-            current_status = last_hitl_status["status"].lower()
-      else:
-        if doc_dict["auto_approval"]:
-          current_status = doc_dict["auto_approval"].lower()
-      if current_status == hitl_status:
-        result_queue.append(doc_dict)
-
+    #Adding keys like ml_status, current_status filtering on current_status
+    #And sorting by upload_timestamp in descending order
+    result_queue = add_keys(docs)
+    result_queue = filter(filter_status,result_queue)
     result_queue = sorted(
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
-    result_queue = add_keys(result_queue)
     response = {"status": "Success"}
     response["len"] = len(result_queue)
     response["data"] = result_queue
@@ -318,7 +302,6 @@ async def fetch_file(case_id: str, uid: str, download: Optional[bool] = False):
         status_code=404, detail="Requested file not found") from e
 
   except Exception as e:
-    #return Response(content=None,media_type="application/pdf")
     print(e)
     Logger.error(e)
     err = traceback.format_exc().replace("\n", " ")
@@ -348,6 +331,7 @@ async def get_unclassified():
           result_queue.append(doc_dict)
     response = {"status": "success"}
     result_queue = add_keys(result_queue)
+    response["len"] = len(result_queue)
     response["data"] = result_queue
     return response
   except Exception as e:
@@ -432,10 +416,8 @@ async def update_hitl_classification(case_id: str, uid: str,
       Logger.error("Document for hitl classification not found")
       raise HTTPException(status_code=404, detail="Document not found")
 
-    if document_class not in [
-        "unemployment_form", "driving_licence", "claims_form", "utility_bill",
-        "pay_stub"
-    ]:
+    if document_class not in APPLICATION_FORMS and \
+      document_class not in SUPPORTING_DOCS:
       Logger.error("Invalid parameter document_class")
       raise HTTPException(
           status_code=400, detail="Invalid Parameter. Document class")
@@ -443,10 +425,15 @@ async def update_hitl_classification(case_id: str, uid: str,
     Logger.info(f"Starting manual classification for case_id"\
         f" {case_id} and uid {uid}")
     document_type = None
-    if document_class.lower() == "unemployment_form":
+    if document_class.lower() in APPLICATION_FORMS:
       document_type = "application_form"
-    else:
+    elif document_class.lower() in SUPPORTING_DOCS:
       document_type = "supporting_documents"
+    else:
+      Logger.error(f"Doc class {document_class} is not a valid doc class")
+      update_classification_status(case_id, uid, "failed")
+      raise HTTPException(
+        status_code=422, detail="Unidentified document class found")
 
     #Update DSM
     Logger.info("Updating Doc status from Hitl classification for case_id"\

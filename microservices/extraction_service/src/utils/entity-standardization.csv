@@ -177,25 +177,25 @@ Social Security Number,claim_form_arizona,ssn
 Week Ending Date,claim_form_arizona,week_end_date
 Date (employer 1),claim_form_arizona,date_employer1
 "Name of Employer/Company/Union and Address (City, State and Zip Code) (employer 1)",claim_form_arizona,info_employer1
-Website URL or Name of Person Contacted (employer 1),claim_form_arizona,contact_person_employer1
+Website URL or Name of person contacted (employer 1),claim_form_arizona,contact_person_employer1
 "Method (In person, Internet, mail) (employer 1)",claim_form_arizona,method_of_contact_employer1
 Type of work sought (employer 1),claim_form_arizona,job_role_employer1
 Action taken on the date of contact (employer 1),claim_form_arizona,action_employer1
 Date (employer 2),claim_form_arizona,date_employer2
 "Name of Employer/Company/Union and Address (City, State and Zip Code) (employer 2)",claim_form_arizona,info_employer2
-Website URL or Name of Person Contacted (employer 2),claim_form_arizona,contact_person_employer2
+Website URL or Name of person contacted (employer 2),claim_form_arizona,contact_person_employer2
 "Method (In person, Internet, mail) (employer 2)",claim_form_arizona,method_of_contact_employer2
 Type of work sought (employer 2),claim_form_arizona,job_role_employer2
 Action taken on the date of contact (employer 2),claim_form_arizona,action_employer2
 Date (employer 3),claim_form_arizona,date_employer3
 "Name of Employer/Company/Union and Address (City, State and Zip Code) (employer 3)",claim_form_arizona,info_employer3
-Website URL or Name of Person Contacted (employer 3),claim_form_arizona,contact_person_employer3
+Website URL or Name of person contacted (employer 3),claim_form_arizona,contact_person_employer3
 "Method (In person, Internet, mail)",claim_form_arizona,method_of_contact_employer3
 Type of work sought (employer 3),claim_form_arizona,job_role_employer3
 Action taken on the date of contact (employer 3),claim_form_arizona,action_employer3
 Date (employer 4),claim_form_arizona,date_employer4
 "Name of Employer/Company/Union and Address (City, State and Zip Code) (employer 4)",claim_form_arizona,info_employer4
-Website URL or Name of Person Contacted (employer 4),claim_form_arizona,contact_person_employer4
+Website URL or Name of person contacted (employer 4),claim_form_arizona,contact_person_employer4
 "Method (In person, Internet, mail)(employer 4)",claim_form_arizona,method_of_contact_employer4
 Type of work sought (employer 4),claim_form_arizona,job_role_employer4
 Action taken on the date of contact (employer 4),claim_form_arizona,action_employer4

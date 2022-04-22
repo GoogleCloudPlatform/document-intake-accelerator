@@ -44,7 +44,8 @@ def test_extracion_status_update(client_with_emulator):
   uid = create_document(client_with_emulator, "test-01")
   response = client_with_emulator.post(
       f"{api_url}update_extraction_status?case_id=test-01&"
-      f"uid={uid}&status=success&extraction_score=0.9",
+      f"uid={uid}&status=success&extraction_score=0.9&"
+      f"extraction_status=single_key_extraction",
       json=[{
           "key": "name",
           "raw-value": "Max"
@@ -57,10 +58,25 @@ def test_extracion_status_update(client_with_emulator):
 
 
 def test_validation_status_update(client_with_emulator):
+
   uid = create_document(client_with_emulator, "test-01")
+  entities = [{"value": "A-60544059",
+               "extraction_confidence": 0.94,
+               "manual_extraction": False,
+               "entity": "dl_no",
+               "corrected_value": None,
+               "matching_score": None,
+               "validation_score": None},
+              {"value": "1992-04-07",
+               "entity": "dob",
+               "corrected_value": None,
+               "extraction_confidence": 0.73,
+               "manual_extraction": False,
+               "matching_score": None,
+               "validation_score": 0.0}, ]
   response = client_with_emulator.post(
       f"{api_url}update_validation_status?case_id=test-01&"
-      f"uid={uid}&status=success&validation_score=9")
+      f"uid={uid}&status=success&validation_score=9",json = entities)
   print(response)
   assert response.status_code == 200
 

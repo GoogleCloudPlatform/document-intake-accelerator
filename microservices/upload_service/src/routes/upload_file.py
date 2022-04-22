@@ -80,8 +80,7 @@ async def upload_file(
                   f" uploaded successfullly in GCS bucket")
       #Update the document upload as success in DB
       document = Document.find_by_uid(uid)
-      print("uid is ",uid)
-      print("Document is ",document)
+
       gcs_base_url = f"gs://{BUCKET_NAME}"
       document.url = f"{gcs_base_url}/{case_id}/{uid}/{file.filename}"
       system_status = {
@@ -110,6 +109,7 @@ async def upload_file(
                   f" will be processed in sometime ",
         "case_id": case_id,
         "uid_list": uid_list,
+        "configs" : message_list
     }
   except Exception as e:
     Logger.error(e)

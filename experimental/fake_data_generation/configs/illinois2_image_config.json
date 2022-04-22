@@ -1,0 +1,190 @@
+{
+    "image_file": "fake_data_generation/illinois_2.png",
+    "image_name_prefix": "illinois-test-form2-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+       "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+       "font_family": "Indie Flower",
+       "font_size": 14
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "name",
+        "position_x": 495,
+        "position_y": 35,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+        "name": "city",
+        "position_x": 98,
+        "position_y": 152
+      },
+      {
+        "name": "state",
+        "position_x": 324,
+        "position_y": 152
+      },
+      {
+        "name": "ssn",
+        "position_x": 145,
+        "position_y": 35
+      },
+      {
+        "function": "text",
+        "text": "✔",
+        "position_x": 186,
+        "position_y": 88
+      },
+      {
+        "function": "text",
+        "text": "✔",
+        "position_x": 636,
+        "position_y": 278
+      },
+      {
+        "function": "text",
+        "text": "✔",
+        "position_x": 186,
+        "position_y": 310
+      },
+      {
+        "name": "full_address",
+        "position_x": 119,
+        "position_y": 130
+      },
+      {
+        "name": "county",
+        "position_x": 649,
+        "position_y": 152
+      },
+      {
+        "name": "zip_code",
+        "position_x": 452,
+        "position_y": 152
+      },
+      {
+        "name": "resident_address",
+        "position_x": 119,
+        "position_y": 350
+      },
+      {
+        "name": "county",
+        "position_x": 649,
+        "position_y": 375
+      },
+      {
+        "name": "zip_code",
+        "position_x": 452,
+        "position_y": 375
+      },
+      {
+        "name": "city",
+        "position_x": 98,
+        "position_y": 375
+      },
+      {
+        "name": "state",
+        "position_x": 317,
+        "position_y": 375
+      },
+      {
+        "name": "document_type",
+        "position_x": 435,
+        "position_y": 710
+      },
+      {
+        "name": "phone_number",
+        "position_x": 175,
+        "position_y": 175,
+        "regex": "(\\d{3})-(\\d{3})-(\\d{3})",
+        "regex_match_group": 1
+      },
+      {
+        "name": "phone_number",
+        "position_x": 233,
+        "position_y": 175,
+        "regex": "(\\d{3})-(\\d{3})-(\\d{3})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "phone_number",
+        "position_x": 297,
+        "position_y": 175,
+        "regex": "(\\d{3})-(\\d{3})-(\\d{3})",
+        "regex_match_group": 3
+      },
+      {
+        "function": "text",
+        "text": "✔",
+        "position_x": 398,
+        "position_y": 642
+      },
+      {
+        "name": "alien_registration_number",
+        "position_x": 215,
+        "position_y": 685
+      },
+      {
+        "name": "work_start_date",
+        "position_x": 485,
+        "position_y": 685,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 1
+      },
+      {
+        "name": "work_start_date",
+        "position_x": 532,
+        "position_y": 685,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "work_start_date",
+        "position_x": 575,
+        "position_y": 685,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 3
+      },
+      {
+        "name": "work_end_date",
+        "position_x": 165,
+        "position_y": 710,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 1
+      },
+      {
+        "name": "work_end_date",
+        "position_x": 215,
+        "position_y": 710,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "work_end_date",
+        "position_x": 260,
+        "position_y": 710,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 3
+      },
+      {
+        "name": "language",
+        "position_x": 313,
+        "position_y": 972
+      },
+      {
+        "name": "gender",
+        "position_x": 560,
+        "position_y": 852
+      },
+      {
+        "name": "ethnicity",
+        "position_x": 498,
+        "position_y": 910
+      }
+    ]
+  }

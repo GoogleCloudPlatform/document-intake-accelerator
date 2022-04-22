@@ -1,5 +1,6 @@
 """ reassign endpoints """
 from fastapi import APIRouter, Response, status, HTTPException
+from typing import List, Dict
 from common.models import Document
 from common.db_client import bq_client
 from common.utils.format_data_for_bq import format_data_for_bq
@@ -100,6 +101,7 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     document_type = document.document_type
     entities = document.entities
     context = document.context
+    extraction_score =  document.extraction_score
 
     #remove the prefix of bucket name from gcs_url to get blob name
     prefix_name = f"gs://{BUCKET_NAME}/"
@@ -132,11 +134,12 @@ async def reassign_case_id(reassign: Reassign, response: Response):
         "timestamp": str(datetime.datetime.utcnow()),
         "user": user,
         "comment": comment,
+        "old_case_id":old_case_id,
+        "new_case_id" :new_case_id,
         "action": f"reassigned from {old_case_id} to {new_case_id}"
     }
     document.hitl_status = fireo.ListUnion([hitl_audit_trail])
     document.update()
-    print("updating bigquery")
     #Update Bigquery database
     entities_for_bq = format_data_for_bq(entities)
     update_bq = stream_document_to_bigquery(client, new_case_id, uid,
@@ -145,8 +148,9 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     print("--------firestore db ----------------")
     # status_process_task =
     response_process_task = call_process_task(new_case_id,uid,document_class,
-    document_type,updated_url,context)
+    document_type,updated_url,context,extraction_score,entities)
     if update_bq == [] and response_process_task.status_code == 202:
+
       Logger.info(
           f"ressign case_id from {old_case_id} to {new_case_id} is successfull")
       return {"status": "success", "url": document.url}
@@ -165,7 +169,8 @@ async def reassign_case_id(reassign: Reassign, response: Response):
 
 
 def call_process_task(case_id: str, uid: str, document_class: str,
-                      document_type: str, gcs_uri: str,context: str):
+                      document_type: str, gcs_uri: str,context: str,
+                      extraction_score: float,entities:List[Dict]):
   """
     Starts the process task API after reassign
   """
@@ -176,12 +181,13 @@ def call_process_task(case_id: str, uid: str, document_class: str,
       "context":context,
       "gcs_url": gcs_uri,
       "document_class": document_class,
-      "document_type": document_type
+      "document_type": document_type,
+      "extraction_score":extraction_score,
+      "extraction_entities": entities
   }
   payload = {"configs": [data]}
   base_url = "http://upload-service/upload_service" \
             "/v1/process_task?is_reassign=true"
-  print("params for process task", base_url, payload)
   Logger.info(f"Params for process task {payload}")
   response = requests.post(base_url,json=payload)
   return response

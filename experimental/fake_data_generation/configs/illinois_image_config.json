@@ -1,0 +1,137 @@
+{
+  "image_file": "fake_data_generation/illinois_1.png",
+  "image_name_prefix": "illinois-test-form-",
+  "viewport_width": 800,
+  "viewport_height": 1200,
+  "font_options": [
+    {
+      "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+      "font_family": "Indie Flower",
+      "font_size": 14
+    }
+  ],
+  "row_limit": 1,
+  "fields": [
+    {
+      "name": "name",
+      "position_x": 134,
+      "position_y": 225,
+      "regex": "(\\w+) (\\w+)",
+      "regex_match_group": 1
+    },
+    {
+      "name": "name",
+      "position_x": 544,
+      "position_y": 225,
+      "regex": "(\\w+) (\\w+)",
+      "regex_match_group": 2
+    },
+    {
+      "name": "MI",
+      "position_x": 409,
+      "position_y": 225
+    },
+    {
+      "name": "driver_license",
+      "position_x": 398,
+      "position_y": 306
+    },
+    {
+      "function": "text",
+      "text": "✔",
+      "position_x": 80,
+      "position_y": 309
+    },
+    {
+      "name": "date_of_birth",
+      "position_x": 210,
+      "position_y": 255,
+      "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+      "regex_match_group": 1
+    },
+    {
+      "name": "date_of_birth",
+      "position_x": 274,
+      "position_y": 255,
+      "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+      "regex_match_group": 2
+    },
+    {
+      "name": "date_of_birth",
+      "position_x": 339,
+      "position_y": 255,
+      "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+      "regex_match_group": 3
+    },
+    {
+      "name": "email",
+      "position_x": 153,
+      "position_y": 275
+    },
+
+    {
+      "name": "claimant_id",
+      "position_x": 134,
+      "position_y": 205
+    },
+    {
+      "name": "city",
+      "position_x": 554,
+      "position_y": 770
+    },
+    {
+      "name": "state",
+      "position_x": 705,
+      "position_y": 770
+    },
+    {
+      "name": "state",
+      "position_x": 666,
+      "position_y": 307
+    },
+    {
+      "name": "state",
+      "position_x": 666,
+      "position_y": 333
+    },
+    {
+      "name": "ssn",
+      "position_x": 510,
+      "position_y": 205,
+      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+      "regex_match_group": 1
+    },
+    {
+      "name": "ssn",
+      "position_x": 575,
+      "position_y": 205,
+      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+      "regex_match_group": 2
+    },
+    {
+      "name": "ssn",
+      "position_x": 637,
+      "position_y": 205,
+      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+      "regex_match_group": 3
+    },
+    {
+      "function": "text",
+      "text": "✔",
+      "position_x": 112,
+      "position_y": 930
+    },
+    {
+      "function": "text",
+      "text": "✔",
+      "position_x": 170,
+      "position_y": 950
+    },
+    {
+      "function": "text",
+      "text": "✔",
+      "position_x": 170,
+      "position_y": 950
+    }
+  ]
+}
