@@ -20,7 +20,7 @@ TESTDATA_FILENAME3 = os.path.join(
 TESTDATA_FILENAME4 = os.path.join(
     os.path.dirname(__file__), "fake_data", "DL-arkansas-1.pdf")
 
-def test_uuj_1(setup):
+def test_uuj_1():
   """
     UUJ 1 - General upload one document with case_id workflow:
     submit Pdf document with one case_id

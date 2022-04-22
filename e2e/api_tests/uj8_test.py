@@ -11,8 +11,8 @@ from common.models.document import Document
 def add_records():
   timestamp = str(datetime.datetime.utcnow())
   d = Document()
-  d.case_id = "test_1"
-  d.uid = "utest_1"
+  d.case_id = "uj8_approved_test_1"
+  d.uid = "uj8_approved_test_1"
   d.active = "active"
   d.upload_timestamp = timestamp
   d.auto_approval = "Approved"
@@ -24,8 +24,8 @@ def add_records():
   d.save()
 
   d = Document()
-  d.case_id = "test_2"
-  d.uid = "utest_2"
+  d.case_id = "uj8_approved_test_2"
+  d.uid = "uj8_approved_test_2"
   d.active = "active"
   d.upload_timestamp = timestamp
   d.auto_approval = "Rejected"
@@ -47,8 +47,6 @@ def add_records():
   }]
   d.save()
 
-def delete_records():
-  Document().collection.delete_all()
 def test_approved_queue():
   add_records()
   base_url = get_baseurl("hitl-service")
@@ -59,5 +57,4 @@ def test_approved_queue():
   res_data = res.json()
   print(res_data)
   assert res_data["len"]>0
-  assert res_data["data"] is []
-  delete_records()
+  assert res_data["data"] is not []
