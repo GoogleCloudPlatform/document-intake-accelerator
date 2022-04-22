@@ -138,12 +138,13 @@ class TableExtractor:
 
     for pg_num in page:
       for table_num in page[pg_num]:
-        table_dict = page[pg_num][table_num]
-        table_header = [val[0] for val in table_dict["headers"]]
-        if TableExtractor.compare_lists(table_header, inp_header) >= 0.70:
-          return table_dict, table_header
-        else:
-          continue
+        if isinstance(table_num, int):
+          table_dict = page[pg_num][table_num]
+          table_header = [val[0] for val in table_dict["headers"]]
+          if TableExtractor.compare_lists(table_header, inp_header) >= 0.70:
+            return table_dict, table_header
+          else:
+            continue
     Logger.error("Input headers does not match up to 70% with any table.")
     return None
 
