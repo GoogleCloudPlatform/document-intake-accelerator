@@ -1,7 +1,8 @@
 """
-  UUJ 1 - General upload one document with case_id workflow:
-  submit Pdf document with one case_id
+  UUJ Arkansas - General upload documents
   get message for file is successfully uploaded
+  process the document
+  check all the stages ["uploaded","classification","extraction","auto_approval"] are successful
 """
 
 import requests
@@ -21,7 +22,7 @@ TESTDATA_FILENAME4 = os.path.join(
     os.path.dirname(__file__), "fake_data", "DL-arkansas-1.pdf")
 CONTEXT = "arkansas"
 
-def test_uuj_1(setup):
+def test_uuj_1_arkansas(setup):
   """
     UUJ 1 - General upload one document with case_id workflow:
     submit Pdf document with one case_id
@@ -45,7 +46,7 @@ def test_uuj_1(setup):
   
   
 
-def test_uuj_2(setup):
+def test_uuj_2_arkansas(setup):
   """
     UUJ 2 - General upload multiple documents with case_id workflow:
     submit Pdf document with one case_id
@@ -70,7 +71,7 @@ def test_uuj_2(setup):
   is_processed = is_processing_success(data)
   assert is_processed == True
 
-def test_uuj_3(setup):
+def test_uuj_3_arkansas(setup):
   """
     UUJ 3 - General upload single document without case_id workflow:
     submit Pdf document without providing case_id
@@ -91,7 +92,7 @@ def test_uuj_3(setup):
   is_processed = is_processing_success(data)
   assert is_processed == True
 
-def test_uuj_4(setup):
+def test_uuj_4_arkansas(setup):
   """
     UUJ 4 - General upload multiple documents with case_id workflow:
     submit Pdf document without providing case_id
