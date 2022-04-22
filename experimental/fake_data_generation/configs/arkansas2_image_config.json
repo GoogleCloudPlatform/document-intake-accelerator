@@ -1,0 +1,34 @@
+{
+    "image_file": "fake_data_generation/arkansas_2.png",
+    "image_name_prefix": "arkansas-test-form2-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Open+Sans",
+        "font_family": "Open Sans",
+        "font_size": 10
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "job_title",
+        "position_x": 273,
+        "position_y": 162
+      },
+      
+      {
+        "name": "today_date",
+        "position_x": 461,
+        "position_y": 934
+      },
+      {
+        "name": "name",
+        "position_x": 130,
+        "position_y": 934,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      }
+    ]
+  }

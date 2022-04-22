@@ -1,0 +1,155 @@
+{
+    "image_file": "fake_data_generation/illinois_5.png",
+    "image_name_prefix": "illinois-test-form5-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+        "font_family": "Indie Flower",
+        "font_size": 14
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "employer",
+        "position_x": 224,
+        "position_y": 87
+      },
+      {
+        "name": "employer_address",
+        "position_x": 186,
+        "position_y": 111
+      },
+      {
+        "name": "employer_city",
+        "position_x": 116,
+        "position_y": 135
+      },
+      {
+        "name": "time_worked",
+        "position_x": 179,
+        "position_y": 180
+      },
+      {
+        "name": "days_in_week",
+        "position_x": 590,
+        "position_y": 180
+      },
+      {
+        "name": "employer_state",
+        "position_x": 320,
+        "position_y": 135
+      },
+      {
+        "name": "employer_zip",
+        "position_x": 413,
+        "position_y": 135
+      },
+      {
+        "name": "work_start_date",
+        "position_x": 332,
+        "position_y": 157,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 1
+      },
+      {
+        "name": "work_start_date",
+        "position_x": 384,
+        "position_y": 157,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "work_start_date",
+        "position_x": 428,
+        "position_y": 157,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 3
+      },
+      {
+        "name": "work_end_date",
+        "position_x": 585,
+        "position_y": 157,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 1
+      },
+      {
+        "name": "work_end_date",
+        "position_x": 636,
+        "position_y": 157,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "work_end_date",
+        "position_x": 684,
+        "position_y": 157,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 3
+      },
+      {
+        "name": "ssn",
+        "position_x": 128,
+        "position_y": 40
+      },
+      {
+        "name": "name",
+        "position_x": 442,
+        "position_y": 40,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+        "name": "employer_phone_number",
+        "position_x": 600,
+        "position_y": 134,
+        "regex": "(\\d{3})-(\\d{3})-(\\d{3})",
+        "regex_match_group": 1
+      },
+      {
+        "name": "employer_phone_number",
+        "position_x": 643,
+        "position_y": 134,
+        "regex": "(\\d{3})-(\\d{3})-(\\d{3})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "employer_phone_number",
+        "position_x": 700,
+        "position_y": 134,
+        "regex": "(\\d{3})-(\\d{3})-(\\d{3})",
+        "regex_match_group": 3
+      },
+      {
+        "name": "name",
+        "position_x": 209,
+        "position_y": 955,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      },
+      {
+        "name": "today_date",
+        "position_x": 708,
+        "position_y": 955,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 1
+      },
+      {
+        "name": "today_date",
+        "position_x": 655,
+        "position_y": 955,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "today_date",
+        "position_x": 594,
+        "position_y": 955,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 3
+      }
+  
+    ]
+  }

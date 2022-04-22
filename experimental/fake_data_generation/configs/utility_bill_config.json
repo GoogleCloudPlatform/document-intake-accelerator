@@ -1,0 +1,70 @@
+{
+    "image_file": "fake_data_generation/utility_bill_2.png",
+    "image_name_prefix": "arkansas-new-utility-bill-form-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Oswald",
+        "font_family": "Oswald",
+        "font_size": 10
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "name",
+        "position_x": 70,
+        "position_y": 325,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      },
+      {
+        "name": "MI",
+        "position_x": 115,
+        "position_y": 325
+      },
+      {
+        "name": "name",
+        "position_x": 130,
+        "position_y": 325,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+        "name": "statement_date",
+        "position_x": 608,
+        "position_y": 250
+      },
+      {
+        "name": "due_date",
+        "position_x": 615,
+        "position_y": 270
+      },
+      {
+        "name": "full_address",
+        "position_x": 68,
+        "position_y": 350
+      },
+      {
+        "name": "account_no",
+        "position_x": 609,
+        "position_y": 230
+      },
+      {
+        "name": "city",
+        "position_x": 72,
+        "position_y": 370
+      },
+      {
+        "name": "state",
+        "position_x": 132,
+        "position_y": 370
+      },
+      {
+        "name": "zip_code",
+        "position_x": 182,
+        "position_y": 370
+      }
+    ]
+} 
