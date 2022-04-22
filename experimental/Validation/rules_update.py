@@ -113,7 +113,7 @@ def get_params(args):
   elif args.template == 'Template1':
     params={
     'key' : args.key,
-    'BQ_Table' :"`claims-processing-dev.data_extraction.testing_json`",
+    'BQ_Table' :"`project_table`",
     'doc_type' : args.doc_type,
     'value_before' : args.value_before,
     'value_after' : args.value_after}
@@ -121,13 +121,13 @@ def get_params(args):
   elif args.template == 'Template2':
     params = {
     'key' : args.key_list,
-    'BQ_Table' : '`claims-processing-dev.data_extraction.testing_json`',
+    'BQ_Table' : '`project_table`',
     'value' : args.value_list,
     'operator' : args.operator_list}
   else:
       params={
     'key' : args.key,
-    'BQ_Table' :"`claims-processing-dev.data_extraction.testing_json`",
+    'BQ_Table' :"`project_table`",
     'doc_type' : args.doc_type,
     'operator' : args.operator,
     'value' : args.value}
@@ -224,7 +224,10 @@ def update_json(jinn,args):
     Output:
       data : Updated Rule Dict
     '''
-    data = read_json("gs://async_form_parser/Jsons/rules.json")
+    try:
+      data = read_json("gs://async_form_parser/Jsons/rules.json")
+    except FileNotFoundError:
+      data={}
     rule_no = "Rule_1"
     try:
       get_list = list(data[args.doc_type].keys())
@@ -279,21 +282,31 @@ def main():
   Main Function Used to control the code flow
   '''
   args=parsers()
-  data = read_json("gs://async_form_parser/Jsons/temp1.json")
+  try:
+    data = read_json("gs://async_form_parser/Jsons/templates.json")
+  except FileNotFoundError:
+    Logger.info(f"Template File Does not exist or the file path is incorrect")
+    return
   if args.view:
-    data = read_json("gs://async_form_parser/Jsons/rules.json")
+    try:
+      data = read_json("gs://async_form_parser/Jsons/rules.json")
     #Iterating on the rules to print one by one
-    for i in data[args.doc_type]:
-      Logger.info(f"{i} : {data[args.doc_type][i]}")
+      for i in data[args.doc_type]:
+        Logger.info(f"{i} : {data[args.doc_type][i]}")
+    except FileNotFoundError:
+      Logger.info(f"File Does not exist or the file path is incorrect")
     return
 
 
   if args.delete:
-    data = read_json("gs://async_form_parser/Jsons/rules.json")
-    data[args.doc_type].pop(args.ruleid)
-    json.dump(data, open("rules.json","w"))
-    upload_bucket()
-    os.remove("rules.json")
+    try:
+      data = read_json("gs://async_form_parser/Jsons/rules.json")
+      data[args.doc_type].pop(args.ruleid)
+      json.dump(data, open("rules.json","w"))
+      upload_bucket()
+      os.remove("rules.json")
+    except FileNotFoundError:
+      Logger.info(f"File Does not exist or the file path is incorrect")
     return
   params = get_params(args)
   template = load_template(data,args)
