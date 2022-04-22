@@ -307,7 +307,9 @@ def standard_entity_mapping(desired_entities_list, parser_name):
   key_list = list(df_json["entity"])
   # Replace the value by creating a list by looking up the value and assign
   # to json entity
-  df_json["entity"] = [dict_lookup[item] for item in key_list]
+  for index,item in enumerate(key_list):
+    if item in dict_lookup:
+      df_json["entity"][index]=dict_lookup[item]
   # convert datatype from object to int for column "extraction_confidence"
   df_json["extraction_confidence"] = pd.to_numeric\
       (df_json["extraction_confidence"],errors="coerce")
