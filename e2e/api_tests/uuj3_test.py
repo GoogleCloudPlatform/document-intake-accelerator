@@ -13,7 +13,16 @@ def test_uuj_6(setup):
     4. Perform matching
     3. Autoapprove
   """
-  
+  case_id = "test123_x2"
+  uid="tI03AfAUpwZECYd5f6OM"
+  file = "Copy of Arkansas-form-1.pdf"
+  gcs_url = f"{BUCKET_NAME}/{case_id}/{uid}/{file}"
+  d = Document()
+  d.uid = uid
+  d.case_id = case_id
+  d.context = "arkansas"
+  d.url = gcs_url
+  d.save()
   case_id = "test123_x2"
   uid="4snA7fAT15S6qSXtuqE2"
   file = "arkansas-paystub-1.pdf"
