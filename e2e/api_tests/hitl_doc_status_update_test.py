@@ -1,6 +1,5 @@
 """
-  UJ15 - E2E tests for checking
-  HITL endpoint for Updating Document status by HITL
+  E2E tests for checking Document status update by HITL
 """
 
 import requests

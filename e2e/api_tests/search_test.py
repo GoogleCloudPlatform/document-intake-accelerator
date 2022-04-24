@@ -1,10 +1,9 @@
 """
-  UJ7 - E2E tests for checking
+  E2E tests for checking
   Search functionality
 """
 
 import requests
-from e2e.api_tests.uj6_test import add_records
 from endpoint_proxy import get_baseurl
 from common.models.document import Document
 import datetime

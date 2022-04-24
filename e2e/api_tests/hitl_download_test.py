@@ -1,5 +1,5 @@
 """
-  UJ17 - E2E tests for download functionality
+  E2E test case for download by HITL functionality
 """
 
 import requests

@@ -1,6 +1,5 @@
 """
-  UJ12 - E2E tests for checking
-  HITL endpoint for Unclassified documents table
+  E2E tests for checking Unclassified documents filter table
 """
 
 import requests

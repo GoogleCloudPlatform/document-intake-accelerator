@@ -1,6 +1,6 @@
 """
-  UJ14 - E2E tests for checking
-  HITL endpoint for Updating entity values with user provided values
+  E2E tests for checking 
+  HITL updating extracted entity value with user provided values
 """
 
 import requests

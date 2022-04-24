@@ -1,6 +1,5 @@
 """
-  UJ13 - E2E test for checking
-  HITL classification of unclassified document
+  E2E test for checking HITL classification of unclassified document
 """
 
 import requests
@@ -23,9 +22,8 @@ def is_doc_unclassified(details):
   """
   is_unclassified = False
   status = details["system_status"]
-  print("System status is: ",status)
   #Checking if the last entry in system status trail is of classification
-  # and the status was not successful 
+  # and the status was not successful
   if status[-1]["stage"].lower() == "classification" \
     and status[-1]["status"].lower() != "success":
     is_unclassified=True
@@ -40,11 +38,14 @@ def upload_and_process():
   #Get base url of upload service and gather input
   base_url = get_baseurl("upload-service")
   case_id = "test123x1_unclassified"
-  files = [("files", ("Copy of Arkansas-form-1.pdf", open(TESTDATA_FILENAME1,"rb"), "application/pdf")),("files", ("arkansas-utility-1.pdf", open(TESTDATA_FILENAME2,
+  files = [("files", ("Copy of Arkansas-form-1.pdf", \
+    open(TESTDATA_FILENAME1,"rb"), "application/pdf")),\
+      ("files", ("arkansas-utility-1.pdf", open(TESTDATA_FILENAME2,
                                                   "rb"), "application/pdf"))]
   CONTEXT = "arkansas"
 
-  response = requests.post(base_url+f"/upload_service/v1/upload_files?context={CONTEXT}&case_id={case_id}",files=files)
+  response = requests.post(base_url+f"/upload_service/v1/upload_files?"\
+    f"context={CONTEXT}&case_id={case_id}",files=files)
 
   #Check if the files were uploaded successfully
   assert response.status_code == 200
@@ -53,7 +54,8 @@ def upload_and_process():
   # and pass that as a parameter to process task endpoint 
   data = response.json().get("configs")
   payload={"configs": data}
-  response = requests.post(base_url+f"/upload_service/v1/process_task",json=payload)
+  response = requests.post(base_url+f"/upload_service/v1/process_task",\
+    json=payload)
 
   #Check if the processing is started
   assert response.status_code == 202

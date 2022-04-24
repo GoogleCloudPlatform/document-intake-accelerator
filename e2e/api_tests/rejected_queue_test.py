@@ -1,12 +1,12 @@
 """
-  UJ9 - E2E tests for checking
-  HITL endpoint for Rejected documents table
+  E2E tests for checking Rejected queue documents table
 """
 
 import requests
 from endpoint_proxy import get_baseurl
 import datetime
 from common.models.document import Document
+
 
 def add_records():
   """
@@ -24,16 +24,14 @@ def add_records():
   d.upload_timestamp = timestamp
   d.auto_approval = "Rejected"
   d.system_status = [{
-    "stage":"uploaded",
-    "status":"success",
-    "timestamp":timestamp
-  },
-  {
-    "stage":"auto_approval",
-    "status":"success",
-    "timestamp":timestamp
-  }
-  ]
+      "stage": "uploaded",
+      "status": "success",
+      "timestamp": timestamp
+  }, {
+      "stage": "auto_approval",
+      "status": "success",
+      "timestamp": timestamp
+  }]
   d.save()
 
   d = Document()
@@ -43,20 +41,23 @@ def add_records():
   d.upload_timestamp = timestamp
   d.auto_approval = "Approved"
   d.hitl_status = [{
-    "status":"rejected",
-    "user":"John Adam",
-    "comment":"Approving",
-    "timestamp":str(datetime.datetime.utcnow()+datetime.timedelta(seconds=3))
+      "status":
+          "rejected",
+      "user":
+          "John Adam",
+      "comment":
+          "Approving",
+      "timestamp":
+          str(datetime.datetime.utcnow() + datetime.timedelta(seconds=3))
   }]
   d.system_status = [{
-    "stage":"uploaded",
-    "status":"success",
-    "timestamp":timestamp
-  },
-  {
-    "stage":"auto_approval",
-    "status":"success",
-    "timestamp":timestamp
+      "stage": "uploaded",
+      "status": "success",
+      "timestamp": timestamp
+  }, {
+      "stage": "auto_approval",
+      "status": "success",
+      "timestamp": timestamp
   }]
   d.save()
 
@@ -71,7 +72,7 @@ def test_rejected_queue():
   #Getting base url for hitl service
   base_url = get_baseurl("hitl-service")
 
-  status="rejected"
+  status = "rejected"
   res = requests.post(base_url + f"/hitl_service/v1/get_queue?"\
     f"hitl_status={status}")
 
@@ -81,5 +82,5 @@ def test_rejected_queue():
   #Getting response data and checking the data is not empty
   res_data = res.json()
   print(res_data)
-  assert res_data["len"]>0
+  assert res_data["len"] > 0
   assert res_data["data"] is not []

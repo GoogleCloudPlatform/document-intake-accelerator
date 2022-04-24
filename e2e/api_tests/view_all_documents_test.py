@@ -1,13 +1,12 @@
 """
-  UJ6 - E2E tests for checking
-  HITL endpoint for table data
-  is working
+  E2E tests for viewing all document records on the overview page
 """
 
 import datetime
 import requests
 from endpoint_proxy import get_baseurl
 from common.models.document import Document
+
 
 def add_records():
   """
@@ -20,31 +19,32 @@ def add_records():
   d.active = "active"
   d.upload_timestamp = timestamp
   d.system_status = [{
-    "stage":"uploaded",
-    "status":"success",
-    "timestamp":timestamp
+      "stage": "uploaded",
+      "status": "success",
+      "timestamp": timestamp
   }]
   d.save()
-  
+
+
 def test_all_table_data():
   """
   User journey to see all document records in the table
   """
   #Adding records
   add_records()
-  
+
   #Get base url for hitl service
   base_url = get_baseurl("hitl-service")
-  
+
   res = requests.get(base_url + "/hitl_service/v1/report_data")
-  
+
   #Checking if response status was 200
   assert res.status_code == 200
-  
+
   #Getting json data from response
   res_data = res.json()
   print(res_data)
-  
+
   #Checking that the response data is not empty
   assert res_data["len"] > 0
   assert res_data["data"] is not []

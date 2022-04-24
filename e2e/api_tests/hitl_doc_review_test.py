@@ -1,10 +1,8 @@
 """
-  UJ16 - E2E tests for checking
-  document review by HITL
+  E2E test case for document review by HITL
 """
 
 import requests
-from e2e.api_tests.uj6_test import add_records
 from endpoint_proxy import get_baseurl
 from common.models.document import Document
 import datetime
