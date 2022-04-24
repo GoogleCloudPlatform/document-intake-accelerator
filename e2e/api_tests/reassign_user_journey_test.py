@@ -31,19 +31,19 @@ def test_reassign_user_journey(setup):
   TESTDATA_APPLICATION2 = os.path.join(
     os.path.dirname(__file__), "fake_data", "California18.pdf")
   TESTDATA_SUPPORTING_DOC_DL = os.path.join(
-    os.path.dirname(__file__), "fake_data", "California-dl-18.pdf")
+    os.path.dirname(__file__), "fake_data", "california-dl-18.pdf")
   TESTDATA_SUPPORTING_DOC_PAYSTUB = os.path.join(
-    os.path.dirname(__file__), "fake_data", "California-paystub-14.pdf")
+    os.path.dirname(__file__), "fake_data", "california-paystub-14.pdf")
   TESTDATA_SUPPORTING_UTILITY_BILL = os.path.join(
-    os.path.dirname(__file__), "fake_data", "California-utility-bills-14.pdf")
+    os.path.dirname(__file__), "fake_data", "california-utility-bills-14.pdf")
 
   files1 = [("files", ("California14.pdf", open(TESTDATA_APPLICATION1,"rb"),
                        "application/pdf")),
-           ("files", ("California-dl-18.pdf", open(TESTDATA_SUPPORTING_DOC_DL,"rb"),
+           ("files", ("california-dl-18.pdf", open(TESTDATA_SUPPORTING_DOC_DL,"rb"),
                       "application/pdf")),
-           ("files", ("California-paystub-14.pdf", open(TESTDATA_SUPPORTING_DOC_PAYSTUB, "rb"),
+           ("files", ("california-paystub-14.pdf", open(TESTDATA_SUPPORTING_DOC_PAYSTUB, "rb"),
                       "application/pdf")),
-           ("files", ("California-utility-bills-14.pdf", open(TESTDATA_SUPPORTING_UTILITY_BILL, "rb"),
+           ("files", ("california-utility-bills-14.pdf", open(TESTDATA_SUPPORTING_UTILITY_BILL, "rb"),
                       "application/pdf"))
          ]
 
@@ -140,6 +140,19 @@ def test_reassign_user_journey(setup):
   reassign_response = requests.post(
     f"{hitl_base_url}/hitl_service/v1/reassign_case_id",json=reassign_data)
   assert  reassign_response.status_code == 400
+
+  #User provides a wrong uid which does not exists in DB
+  reassign_data = {
+    "old_case_id": old_case_id,
+    "uid": uid + "test",
+    "new_case_id": old_case_id,
+    "user": "adam",
+    "comment": "reassign user joueney"
+  }
+  #assert document not found 404
+  reassign_response = requests.post(
+    f"{hitl_base_url}/hitl_service/v1/reassign_case_id", json=reassign_data)
+  assert reassign_response.status_code == 404
 
   # when user tries to reassign a application instead of supporting
   #document user reassign api returns 406 status code
