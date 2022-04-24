@@ -1,3 +1,4 @@
+# pylint: disable=broad-except
 """
 This is the main file for extraction framework, based on \
     doc type specialized parser or
@@ -237,19 +238,18 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   doc_state = doc_type+"_"+state
   mapping_dict = MAPPING_DICT[doc_state]
   # Extract desired entites from form parser
-  form_parser_entities_list, flag = form_parser_entities_mapping(
-      extracted_entity_list,mapping_dict, form_parser_text, temp_folder)
+  try:
+    form_parser_entities_list, flag = form_parser_entities_mapping(
+        extracted_entity_list,mapping_dict, form_parser_text, temp_folder)
 
-  # Save extract desired entities only
-  # with open("{}.json".format(os.path.join(extracted_entities,
-  #         gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
-  #     json.dump(form_parser_entities_list, outfile, indent=4)
-
-  # delete temp folder
-  shutil.rmtree(temp_folder)
-  del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
-  Logger.info("Required entities created from Form parser response")
-  return form_parser_entities_list,flag
+    # delete temp folder
+    shutil.rmtree(temp_folder)
+    del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
+    Logger.info("Required entities created from Form parser response")
+    return form_parser_entities_list,flag
+  except Exception as e:
+    Logger.error(e)
+    shutil.rmtree(temp_folder)
 
 
 def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
