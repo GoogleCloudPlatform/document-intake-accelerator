@@ -145,7 +145,7 @@ def test_reassign_user_journey(setup):
   reassign_data = {
     "old_case_id": old_case_id,
     "uid": uid + "test",
-    "new_case_id": old_case_id,
+    "new_case_id": new_case_id,
     "user": "adam",
     "comment": "reassign user joueney"
   }
