@@ -169,7 +169,7 @@ def get_date_in_format(input_date_format, output_date_format, value):
       # convert existing date to new date format
       new_date = datetime.strptime(value, input_date_format)\
           .strftime(output_date_format)  # 2022-02-02
-    except ValueError as e:
+    except Exception as e:  # pylint: disable=broad-except
       # if any error in date format no change in input date
       Logger.error("Error occurred in the date format so "
                    "keeping existed date only")
@@ -310,7 +310,7 @@ def data_transformation(input_dict):
       # correct input dictionary
       temp_dict[index] = corrected_dict
     return input_dict, temp_dict
-  except ValueError as e:
+  except Exception as e:  # pylint: disable=broad-except
     Logger.error(f"Error in the date tranformation postprocessing {e}")
     Logger.error(e)
     return None,None
