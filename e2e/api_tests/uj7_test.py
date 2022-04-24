@@ -10,6 +10,10 @@ from common.models.document import Document
 import datetime
 
 def add_records():
+  """
+  Function to insert records into collection 
+  that can be searched and fetched by the API
+  """
   timestamp = str(datetime.datetime.utcnow())
   d = Document()
   d.case_id = "uj7_search_test_1"
@@ -42,23 +46,33 @@ def add_records():
   d.save()
 
 def test_search():
+  """
+  User journey to perform search on the document records
+  """
+  #Inserting records
   add_records()
+
+  #Getting base url of hitl service
   base_url = get_baseurl("hitl-service")
+
+  #Preparing payload and making request
+  #Searching for case_id
   payload = {"term":"uj7_search_test_1"}
   res = requests.post(base_url + f"/hitl_service/v1/search",json=payload)
-  print(res)
-  res_data = res.json()
-  print(res_data)
-  
+
+  #Checking if the response status is 200
   assert res.status_code == 200
+
   res_data = res.json()
   print(res_data)
+
+  #Checking if the response data is not empty
   assert res_data["len"] > 0
   assert res_data["data"] is not []
 
+  #Searching for applicant name which is an extracted entity
   payload = {"term":"james"}
   res = requests.post(base_url + f"/hitl_service/v1/search",json=payload)
-  print(res)
   res_data = res.json()
   print(res_data)
   

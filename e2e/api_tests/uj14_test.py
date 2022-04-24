@@ -9,6 +9,13 @@ from common.models.document import Document
 import datetime
 
 def add_records(entity,case_id,uid):
+  """
+  Function to insert records into collection
+  ARGS:
+  entity :List[Dict] - list of entities
+  case_id : str - case_id of the document
+  uid : str - uid of the document
+  """
   timestamp = str(datetime.datetime.utcnow())
   
   d = Document()
@@ -26,6 +33,10 @@ def add_records(entity,case_id,uid):
   return doc_dict
 
 def test_update_entities():
+  """
+  User journey to update the values of the extracted entities
+  """
+  #Inserting records
   case_id = "uj14_update_entity_1"
   uid = "uj14_update_entity_uid_1"
   entity = [{"entity":"name",
@@ -33,9 +44,18 @@ def test_update_entities():
             "corrected_value":None
           }]
   doc_dict = add_records(entity,case_id,uid)  
+
+  #Updating entities and making the api request with the parameters
   entity[0]["corrected_value"] = "James fernandez"
   doc_dict["entities"] = entity 
   base_url = get_baseurl("hitl-service")
   res = requests.post(base_url + f"/hitl_service/v1/update_entity?"\
     f"uid={uid}",json=doc_dict)
+  #Checking if the request was successful
   assert res.status_code == 200
+
+  #Checking if the database is updated correctly
+  d = Document()
+  doc = d.find_by_uid(uid)
+  assert entity == doc.entities
+

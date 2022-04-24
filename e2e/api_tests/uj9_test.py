@@ -9,6 +9,13 @@ import datetime
 from common.models.document import Document
 
 def add_records():
+  """
+  Function to insert records with status rejected
+  into collection that can be fetched by the API
+  """
+  #Inserting two documents 1 with auto approval status as rejected
+  #and one with hitl status as rejected
+
   timestamp = str(datetime.datetime.utcnow())
   d = Document()
   d.case_id = "uj9_rejected_test_1"
@@ -55,12 +62,23 @@ def add_records():
 
 
 def test_rejected_queue():
+  """
+  User journey to see all documents in rejected queue
+  """
+  #Adding Records
   add_records()
+
+  #Getting base url for hitl service
   base_url = get_baseurl("hitl-service")
+
   status="rejected"
   res = requests.post(base_url + f"/hitl_service/v1/get_queue?"\
     f"hitl_status={status}")
+
+  #Checking if response status is 200
   assert res.status_code == 200
+
+  #Getting response data and checking the data is not empty
   res_data = res.json()
   print(res_data)
   assert res_data["len"]>0
