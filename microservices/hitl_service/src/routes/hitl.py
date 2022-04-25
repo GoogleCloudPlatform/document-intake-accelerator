@@ -321,16 +321,19 @@ async def get_unclassified():
     500 : If there is any error during fetching from firestore
   """
   try:
-    docs = list(Document.collection.filter(active="active").fetch())
+    docs = list(
+        map(lambda x: x.to_dict(),
+            Document.collection.filter(active="active").fetch()))
     result_queue = []
-    for d in docs:
-      doc_dict = d.to_dict()
+    for doc_dict in docs:
       system_trail = doc_dict["system_status"]
       if system_trail[-1]["stage"].lower() == "classification":
         if system_trail[-1]["status"].lower() != "success":
           result_queue.append(doc_dict)
     response = {"status": "success"}
     result_queue = add_keys(result_queue)
+    result_queue = sorted(
+        result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
     response["len"] = len(result_queue)
     response["data"] = result_queue
     return response
@@ -616,4 +619,4 @@ async def search(search_term: SearchPayload):
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
     raise HTTPException(
-        status_code=400, detail="Error occurred in search") from e
+        status_code=500, detail="Error occurred in search") from e

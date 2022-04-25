@@ -1,4 +1,5 @@
 # pylint: disable=mixed-indentation
+# pylint: disable=broad-except
 """
 Extract data from a table present in a form
 """
@@ -138,14 +139,55 @@ class TableExtractor:
 
     for pg_num in page:
       for table_num in page[pg_num]:
-        table_dict = page[pg_num][table_num]
-        table_header = [val[0] for val in table_dict["headers"]]
-        if TableExtractor.compare_lists(table_header, inp_header) >= 0.70:
-          return table_dict, table_header
-        else:
-          continue
+        if isinstance(table_num, int):
+          table_dict = page[pg_num][table_num]
+          table_header = [val[0] for val in table_dict["headers"]]
+          if TableExtractor.compare_lists(table_header, inp_header) >= 0.70:
+            return table_dict, table_header
+          else:
+            continue
     Logger.error("Input headers does not match up to 70% with any table.")
     return None
+
+  def table_not_found(self, table_entities):
+    """Make all user input entities to None
+
+    Args:
+        table_entities (dict): user input from config
+
+    Returns:
+        list: with all entities provided by user to None
+    """
+    out = []
+    if table_entities["isheader"]:
+      inp_header = table_entities["headers"]
+
+    for user_inp in table_entities["entity_extraction"]:
+      try:
+        entity_data = {}
+        suffix, _ = user_inp["entity_suffix"], user_inp["row_no"]
+        col = user_inp["col"]
+        if suffix in (None, ""):
+          suffix = ""
+        entity_name = f"{inp_header[col]} {suffix}"
+        entity_data = {
+                        "value": None,
+                        "extraction_confidence": None,
+                        "value_coordinates": None,
+                        "manual_extraction": False,
+                        "corrected_value": None
+                      }
+        entity_data["entity"] = entity_name
+        entity_data["key_coordinates"] = None
+        entity_data["page_height"] = self.master_dict[0]["height"]
+        entity_data["page_width"] = self.master_dict[0]["width"]
+        entity_data["page_no"] = None
+
+        out.append(deepcopy(entity_data))
+      except Exception as e:
+        Logger.error(e)
+        continue
+    return out
 
   def get_entities(self, table_entities):
     """
@@ -174,7 +216,8 @@ class TableExtractor:
           table_dict = self.master_dict[page_num][table_num]
           columns = [val[0] for val in table_dict["headers"]]
           if TableExtractor.compare_lists(columns, inp_header) < 0.70:
-            return "Table does not match with the headers provided"
+            Logger.error( "Table does not match with the headers provided")
+            return self.table_not_found(table_entities)
         # if no table and page info provided.Iterate over all the pages to find
         # the table based on header
         elif page_num == 0 and table_num == 0:
@@ -183,19 +226,21 @@ class TableExtractor:
           if table_data:
             table_dict, columns = table_data
           else:
-            return None
+            return self.table_not_found(table_entities)
 
         elif page_num > 0 and table_num == 0:
           if page_num not in self.master_dict:
-            return "page not found"
+            Logger.error( "page not found")
+            return self.table_not_found(table_entities)
           page_dict = self.master_dict[page_num]
           table_dict, columns = TableExtractor.get_table_using_header(
             page_dict, inp_header)
         else:
-          return "Operation cannot be performed. Check your config"
-      except ValueError as e:
+          Logger.error("Operation cannot be performed. Check your config")
+          return self.table_not_found(table_entities)
+      except Exception as e:
         Logger.error(e)
-        return None
+        return self.table_not_found(table_entities)
       out = []
 
       for user_inp in table_entities["entity_extraction"]:
@@ -215,11 +260,11 @@ class TableExtractor:
           entity_data["page_no"] = table_dict["page_num"]
 
           out.append(deepcopy(entity_data))
-        except ValueError as e:
-          Logger.error(e)
+        except Exception as e:
+          Logger.warning(e)
           continue
       return out
     else:
       Logger.error("No header present in the table. Table not extracted.")
-      return None
+      return self.table_not_found(table_entities)
 

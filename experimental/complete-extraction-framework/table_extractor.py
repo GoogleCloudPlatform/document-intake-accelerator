@@ -135,14 +135,47 @@ class TableExtractor:
 
     for pg_num in page:
       for table_num in page[pg_num]:
-        table_dict = page[pg_num][table_num]
-        table_header = [val[0] for val in table_dict["headers"]]
-        if TableExtractor.compare_lists(table_header, inp_header) >= 0.70:
-          return table_dict, table_header
-        else:
-          continue
-    print("Table headers does not match to 75%")
+        if isinstance(table_num, int):
+          table_dict = page[pg_num][table_num]
+          table_header = [val[0] for val in table_dict["headers"]]
+          if TableExtractor.compare_lists(table_header, inp_header) >= 0.70:
+            return table_dict, table_header
+          else:
+            continue
+    print("Table headers does not match to 70%")
     return None
+
+  def table_not_found(self, table_entities):
+    out = []
+    if table_entities["isheader"]:
+      inp_header = table_entities["headers"]
+
+    for user_inp in table_entities["entity_extraction"]:
+      try:
+        entity_data = {}
+        suffix, _ = user_inp["entity_suffix"], user_inp["row_no"]
+        col = user_inp["col"]
+        if suffix in (None, ""):
+          suffix = ""
+        entity_name = f"{inp_header[col]} {suffix}"
+        entity_data = {
+                        "value": None,
+                        "extraction_confidence": None,
+                        "value_coordinates": None,
+                        "manual_extraction": False,
+                        "corrected_value": None
+                      }
+        entity_data["entity"] = entity_name
+        entity_data["key_coordinates"] = None
+        entity_data["page_height"] = self.master_dict[0]["height"]
+        entity_data["page_width"] = self.master_dict[0]["width"]
+        entity_data["page_no"] = None
+
+        out.append(deepcopy(entity_data))
+      except Exception as e:
+        print(e)
+        continue
+    return out
 
   def get_entities(self, table_entities):
     """
@@ -171,7 +204,7 @@ class TableExtractor:
           table_dict = self.master_dict[page_num][table_num]
           columns = [val[0] for val in table_dict["headers"]]
           if TableExtractor.compare_lists(columns, inp_header) < 0.70:
-            return "Table does not match with the headers provided"
+            return self.table_not_found(table_entities)
         # if no table and page info provided.Iterate over all the pages to find
         # the table based on header
         elif page_num == 0 and table_num == 0:
@@ -180,19 +213,21 @@ class TableExtractor:
           if table_data:
             table_dict, columns = table_data
           else:
-            return None
+            return self.table_not_found(table_entities)
 
         elif page_num > 0 and table_num == 0:
           if page_num not in self.master_dict:
-            return "page not found"
+            print("page not found")
+            return self.table_not_found(table_entities)
           page_dict = self.master_dict[page_num]
           table_dict, columns = TableExtractor.get_table_using_header(
             page_dict, inp_header)
         else:
-          return "Operation cannot be performed. Check your config"
-      except ValueError as e:
+          print("Operation cannot be performed. Check your config")
+          return self.table_not_found(table_entities)
+      except Exception as e:
         print(e)
-        return "Check your config"
+        return self.table_not_found(table_entities)
       out = []
 
       for user_inp in table_entities["entity_extraction"]:
@@ -212,12 +247,13 @@ class TableExtractor:
           entity_data["page_no"] = table_dict["page_num"]
 
           out.append(deepcopy(entity_data))
-        except ValueError as e:
+        except Exception as e:
           print(e)
           continue
       return out
     else:
-      return "No header present in the table. Table not extracted."
+      print("No header present in the table. Table not extracted.")
+      return self.table_not_found(table_entities)
 
 if __name__ == "__main__":
   table_entities = {
@@ -229,7 +265,8 @@ if __name__ == "__main__":
 		r"Name of Employer/Company/ Union and Address (City, State and Zip Code)",
 		"Website URL or Name of person contacted",
 		"Method (In person, Internet, mail)",
-		"Type of work sought", "Action taken on the date of contact"],
+		"Type of work sought", "Action taken on the date of contact"
+    ],
 		# entity name will be constructed based on the col number provided
 		# for an employer
 		"entity_extraction": [
