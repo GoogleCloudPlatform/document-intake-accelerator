@@ -3,6 +3,7 @@ from google.cloud import bigquery
 from common.config import PROJECT_ID, DATABASE_PREFIX
 from google.cloud import storage
 
+DATASET_NAME = "validation"
 
 client = bq_client()
 
@@ -10,10 +11,10 @@ def create_test_table():
   print("=============CREATING TABLE=============")
   # Construct a BigQuery client object.
   
-  BIGQUERY_DB = "entities"
+  BQ_TABLE_NAME = "validation_table"
 
-  dataset_id = f"{DATABASE_PREFIX}data_extraction"
-  dataset_prefix = f"{client.project}.{DATABASE_PREFIX}data_extraction"
+  dataset_id = f"{DATABASE_PREFIX}{DATASET_NAME}"
+  dataset_prefix = f"{client.project}.{DATABASE_PREFIX}{DATASET_NAME}"
   # Construct a full Dataset object to send to the API.
   dataset = bigquery.Dataset(dataset_prefix)
   dataset.location = "US"
@@ -23,7 +24,7 @@ def create_test_table():
   # exists within the project.
   dataset = client.create_dataset(dataset, timeout=30)  # Make an API request.
   print("Created dataset {}.{}".format(client.project, dataset.dataset_id))
-  table_id = f"{client.project}.{dataset_id}.{BIGQUERY_DB}"
+  table_id = f"{client.project}.{dataset_id}.{BQ_TABLE_NAME}"
   schema = [
     bigquery.SchemaField("document_class", "STRING", mode="NULLABLE"),
     bigquery.SchemaField("case_id", "STRING", mode="NULLABLE"),
@@ -43,7 +44,7 @@ def create_test_table():
 
 def delete_dataset():
   print("================DELETING DATASET=============")
-  dataset_id = f"{client.project}.{DATABASE_PREFIX}data_extraction"
+  dataset_id = f"{client.project}.{DATABASE_PREFIX}{DATASET_NAME}"
   # Use the delete_contents parameter to delete a dataset and its contents.
   # Use the not_found_ok parameter to not receive an error if the dataset has already been deleted.
   client.delete_dataset(

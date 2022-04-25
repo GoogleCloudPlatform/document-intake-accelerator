@@ -15,9 +15,9 @@ DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
 BUCKET_NAME ="document-upload-test"
 PATH ="gs://async_form_parser/Jsons/rules.json"
 PROJECT_ID ="claims-processing-dev"
-BIGQUERY_DB = "data_extraction.entities"
+BIGQUERY_DB = "validation.validation_table"
 TOPIC_ID = "claim_test"
-VALIDATION_TABLE = "claims-processing-dev.data_extraction.entities"
+VALIDATION_TABLE = "claims-processing-dev.validation.validation_table"
 
 
 #Map to standardise predicted document class from classifier to
