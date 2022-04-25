@@ -22,7 +22,7 @@ TESTDATA_FILENAME4 = os.path.join(
     os.path.dirname(__file__), "fake_data", "DL-arkansas-1.pdf")
 CONTEXT = "arkansas"
 
-def test_uuj_1_arkansas(setup):
+def test_uuj_1_arkansas():
   """
     UUJ 1 - General upload one document with case_id workflow:
     submit Pdf document with one case_id
@@ -46,7 +46,7 @@ def test_uuj_1_arkansas(setup):
   
   
 
-def test_uuj_2_arkansas(setup):
+def test_uuj_2_arkansas():
   """
     UUJ 2 - General upload multiple documents with case_id workflow:
     submit Pdf document with one case_id
@@ -71,7 +71,7 @@ def test_uuj_2_arkansas(setup):
   is_processed = is_processing_success(data)
   assert is_processed == True
 
-def test_uuj_3_arkansas(setup):
+def test_uuj_3_arkansas():
   """
     UUJ 3 - General upload single document without case_id workflow:
     submit Pdf document without providing case_id
