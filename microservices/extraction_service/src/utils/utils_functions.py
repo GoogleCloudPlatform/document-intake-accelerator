@@ -310,6 +310,9 @@ def standard_entity_mapping(desired_entities_list, parser_name):
   for index,item in enumerate(key_list):
     if item in dict_lookup:
       df_json["entity"][index]=dict_lookup[item]
+    else:
+      df_json = df_json.drop(index)
+      df_json.reset_index(inplace=True, drop=True)
   # convert datatype from object to int for column "extraction_confidence"
   df_json["extraction_confidence"] = pd.to_numeric\
       (df_json["extraction_confidence"],errors="coerce")
