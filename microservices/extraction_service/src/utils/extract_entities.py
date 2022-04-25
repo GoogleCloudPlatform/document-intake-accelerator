@@ -250,7 +250,8 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
     return form_parser_entities_list,flag
   except Exception as e:
     Logger.error(e)
-    shutil.rmtree(temp_folder)
+    if os.path.exists(temp_folder):
+      shutil.rmtree(temp_folder)
 
 
 def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
