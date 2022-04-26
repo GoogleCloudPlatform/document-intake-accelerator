@@ -55,7 +55,7 @@ def test_get_queue_api(client_with_emulator):
   """Test case to check the get_queue hitl endpoint"""
 
   d = Document()
-  d.hitl_status = [{"status": "approved", "user": "Adam", "timestamp": "12.00"}]
+  d.hitl_status = [{"status": "approved","user": "Adam","timestamp": "12.00"}]
   d.system_status = [{
       "stage": "auto_approval",
       "status": "success",
@@ -75,7 +75,7 @@ def test_get_queue_api_invalid_status(client_with_emulator):
 
   d = Document()
   d.active = "active"
-  d.hitl_status = [{"status": "approved", "user": "Adam", "timestamp": "12.00"}]
+  d.hitl_status = [{"status": "approved","user": "Adam","timestamp": "12.00"}]
   d.save()
   with patch("routes.hitl.Logger"):
     response = client_with_emulator.post(
@@ -108,7 +108,8 @@ def test_update_hitl_status_api_invalid_uid(client_with_emulator):
   d.save()
   with patch("routes.hitl.Logger"):
     response = client_with_emulator.post(
-        f"{api_url}update_hitl_status?uid=u12&status=approved&user=Jon&comment="
+        f"{api_url}update_hitl_status?uid=u12&"\
+          "status=approved&user=Jon&comment="
     )
     assert response.status_code == 200
     json_response = json.loads(response.text)
@@ -176,38 +177,47 @@ def test_update_entity_api_invalid_uid(client_with_emulator):
 
 def test_fetch_api(client_with_emulator):
   """Test case to check the fetch_file hitl endpoint"""
-  with patch("routes.hitl.Logger"):
-    response = client_with_emulator.get(
-        f"{api_url}fetch_file?case_id=13a18a76-c235-11ec-8bd9-b65304a06911"\
-          f"&uid=JzQAW4oajTxEmemJsULd")
-    assert response.status_code == 200
+  data = "test data"
+  header = {"Content-Disposition": "inline;filename=" + "arkansas.pdf"}
+  with patch("routes.hitl.get_file_from_bucket", return_value=(data, header)):
+    with patch("routes.hitl.Logger"):
+      response = client_with_emulator.get(
+        f"{api_url}fetch_file?case_id=dummy_caseid"\
+          f"&uid=dummy_uid")
+      assert response.status_code == 200
 
 
 def test_fetch_api_download(client_with_emulator):
   """Test case to check the fetch_file hitl endpoint"""
-  with patch("routes.hitl.Logger"):
-    response = client_with_emulator.get(
+  data = "test data"
+  header = {"Content-Disposition": "attachment;filename=" + "arkansas.pdf"}
+  with patch("routes.hitl.get_file_from_bucket", return_value=(data, header)):
+    with patch("routes.hitl.Logger"):
+      response = client_with_emulator.get(
         f"{api_url}fetch_file?"\
-          f"case_id=13a18a76-c235-11ec-8bd9-b65304a06911&"\
-            f"uid=JzQAW4oajTxEmemJsULd&download=true"
-    )
-    assert response.status_code == 200
+          f"case_id=dummy_caseid"\
+            f"&uid=dummy_uid&download=true"
+      )
+      assert response.status_code == 200
 
 
 def test_fetch_api_invalid_case_id(client_with_emulator):
   """Test case to check the fetch_file hitl endpoint"""
-  with patch("routes.hitl.Logger"):
-    response = client_with_emulator.get(
-        f"{api_url}fetch_file?case_id= ww&uid=CS2EeDc2Gl0OAkdZ4rWK")
-    assert response.status_code == 404
+
+  with patch("routes.hitl.get_file_from_bucket", return_value=(None, None)):
+    with patch("routes.hitl.Logger"):
+      response = client_with_emulator.get(
+          f"{api_url}fetch_file?case_id=invalid_caseid&uid=dummy_uid")
+      assert response.status_code == 404
 
 
 def test_fetch_api_invalid_uid(client_with_emulator):
   """Test case to check the fetch_file hitl endpoint"""
-  with patch("routes.hitl.Logger"):
-    response = client_with_emulator.get(
-        f"{api_url}fetch_file?case_id= wwe&uid=CS2EeDc2Gl0OAkdZ4r")
-    assert response.status_code == 404
+  with patch("routes.hitl.get_file_from_bucket", return_value=(None, None)):
+    with patch("routes.hitl.Logger"):
+      response = client_with_emulator.get(
+          f"{api_url}fetch_file?case_id=dummy_caseid&uid=invalid_uid")
+      assert response.status_code == 404
 
 
 def test_get_unclassified_api(client_with_emulator):

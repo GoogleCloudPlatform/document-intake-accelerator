@@ -18,7 +18,8 @@ router = APIRouter()
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
 
-def add_keys(docs_list:list):
+
+def add_keys(docs_list: list):
   for doc in docs_list:
     name = "N/A"
     if doc["entities"]:
@@ -77,7 +78,6 @@ def add_keys(docs_list:list):
     doc["status_last_updated_by"] = status_last_updated_by
 
   return docs_list
-
 
 
 @router.get("/report_data")
@@ -166,7 +166,7 @@ async def get_queue(hitl_status: str):
     #Adding keys like ml_status, current_status filtering on current_status
     #And sorting by upload_timestamp in descending order
     result_queue = add_keys(docs)
-    result_queue = filter(filter_status,result_queue)
+    result_queue = filter(filter_status, result_queue)
     result_queue = sorted(
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
     response = {"status": "Success"}
@@ -256,6 +256,36 @@ async def update_hitl_status(uid: str,
         status_code=500, detail="Failed to update hitl status") from e
 
 
+def get_file_from_bucket(case_id: str,
+                         uid: str,
+                         download: Optional[bool] = False):
+  storage_client = storage.Client()
+  #listing out all blobs with case_id and uid
+  blobs = storage_client.list_blobs(
+      BUCKET_NAME, prefix=case_id + "/" + uid + "/", delimiter="/")
+
+  target_blob = None
+  #Selecting the last blob which would be the pdf file
+  for blob in blobs:
+    target_blob = blob
+
+  #If file is not found raise 404
+  if target_blob is None:
+    return None, None
+
+  filename = target_blob.name.split("/")[-1]
+  #Downloading the pdf file into a byte string
+  return_data = target_blob.download_as_bytes()
+
+  #Checking for download flag and setting headers
+  headers = None
+  if download:
+    headers = {"Content-Disposition": "attachment;filename=" + filename}
+  else:
+    headers = {"Content-Disposition": "inline;filename=" + filename}
+  return (return_data, headers)
+
+
 @router.get("/fetch_file")
 async def fetch_file(case_id: str, uid: str, download: Optional[bool] = False):
   """
@@ -266,30 +296,9 @@ async def fetch_file(case_id: str, uid: str, download: Optional[bool] = False):
   Returns 500: If something fails
   """
   try:
-    storage_client = storage.Client()
-    #listing out all blobs with case_id and uid
-    blobs = storage_client.list_blobs(
-        BUCKET_NAME, prefix=case_id + "/" + uid + "/", delimiter="/")
-
-    target_blob = None
-    #Selecting the last blob which would be the pdf file
-    for blob in blobs:
-      target_blob = blob
-
-    #If file is not found raise 404
-    if target_blob is None:
+    return_data, headers = get_file_from_bucket(case_id, uid, download)
+    if return_data is None and headers is None:
       raise FileNotFoundError
-
-    filename = target_blob.name.split("/")[-1]
-    #Downloading the pdf file into a byte string
-    return_data = target_blob.download_as_bytes()
-
-    #Checking for download flag and setting headers
-    headers = None
-    if download:
-      headers = {"Content-Disposition": "attachment;filename=" + filename}
-    else:
-      headers = {"Content-Disposition": "inline;filename=" + filename}
     return Response(
         content=return_data, headers=headers, media_type="application/pdf")
 
@@ -436,7 +445,7 @@ async def update_hitl_classification(case_id: str, uid: str,
       Logger.error(f"Doc class {document_class} is not a valid doc class")
       update_classification_status(case_id, uid, "failed")
       raise HTTPException(
-        status_code=422, detail="Unidentified document class found")
+          status_code=422, detail="Unidentified document class found")
 
     #Update DSM
     Logger.info("Updating Doc status from Hitl classification for case_id"\
@@ -558,6 +567,7 @@ async def search(search_term: SearchPayload):
                   detail="Invalid Parameter type.\
                     Limit start and end should be of type int")
             docs_list = docs_list[limit_start:limit_end]
+          docs_list = add_keys(docs_list)
           return {"status": "success","len": len(docs_list),"data": docs_list}
       else:
         raise HTTPException(
