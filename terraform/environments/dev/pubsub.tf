@@ -1,8 +1,12 @@
 #Creating a pubsub resource for queue
 
+#creating pubsub topic
+
 resource "google_pubsub_topic" "queue" {
   name = "queue-topic"
 }
+
+#creating pubsub subscription
 
 resource "google_pubsub_subscription" "queue-sub" {
   name  = "queue-sub"
@@ -18,7 +22,7 @@ resource "google_pubsub_subscription" "queue-sub" {
   }
 
   push_config {
-    push_endpoint = google_cloud_run_service.queue-run.status[0].url
+    push_endpoint = google_cloud_run_service.queue-run.status[0].url  #calling the cloud run endpoint
     oidc_token {
         service_account_email = module.pubsub-service-account.email
     }

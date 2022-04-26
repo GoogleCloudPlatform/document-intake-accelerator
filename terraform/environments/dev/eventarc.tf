@@ -1,4 +1,4 @@
-#creating trigger in cloudrun from pubsub
+#creating trigger for cloudrun when document is uploaded to pubsub topic
 
 resource "google_eventarc_trigger" "trigger-pubsub-tf" {
   provider = google-beta

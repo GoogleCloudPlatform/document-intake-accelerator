@@ -7,12 +7,12 @@ resource "google_cloud_run_service" "queue-run" {
   template {
     spec {
       containers {
-        image = var.cloud_run_image_path
+        image = var.cloud_run_image_path   #Image to connect pubsub to cloud run to processtask API and fetch data from firestore
         ports{
             container_port=8000
         }
         env {
-          name = "t"
+          name = "t"  #thresold value for comparison with the number of uploaded docs in firesotre collection
           value = "10"
         }
        
@@ -26,7 +26,7 @@ resource "google_cloud_run_service" "queue-run" {
     }
 }
 
-#Retriving cloudrun endpoint
+#Displaying the cloudrun endpoint
 
 output "cloud_run" {
     value = google_cloud_run_service.queue-run.status[0].url

@@ -15,6 +15,7 @@ resource "google_container_cluster" "primary" {
     cluster_secondary_range_name = google_compute_subnetwork.custom-vpc.secondary_ip_range.0.range_name
     services_secondary_range_name = google_compute_subnetwork.custom-vpc.secondary_ip_range.1.range_name
   }
+  #This allows workloads in your cluster to impersonate IAM service accounts to access Google cloud Services
   workload_identity_config {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
