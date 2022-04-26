@@ -142,7 +142,10 @@ async def upload_data_json(input_data: InputData):
       case_id = str(uuid.uuid1())
     #Converting Json to required format
     for key, value in input_data.items():
-      entity.append({"entity": key, "value": value, "extraction_confidence": 1})
+      entity.append({"entity": key,
+       "value": value,
+       "extraction_confidence": 1,
+       "corrected_value": None})
     uid = create_document_from_data(case_id, document_type, document_class,
                                     context, entity)
 

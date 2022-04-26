@@ -83,13 +83,13 @@ def test_reassign_user_journey(setup):
   response = requests.post(upload_base_url + f"/upload_service/v1/process_task",
                            json=payload_app2)
   assert response.status_code == 202
-
+  time.sleep(60)
   response = requests.post(upload_base_url + f"/upload_service/v1/process_task",
                            json=payload_app1)
   assert response.status_code == 202
 
   #Adding time.sleep for  3 min so that all uploaded documents are processed
-  time.sleep(120)
+  time.sleep(180)
 
   #this for loop iterates on output of upload api response to  get uid
   # and case_id of the uploaded supporting document which will be
@@ -183,7 +183,7 @@ def test_reassign_user_journey(setup):
 
   #adding time.sleep to check that document is processed
   #after the reassign process
-  time.sleep(120)
+  time.sleep(180)
 
   #asserting that the right hitl audit trail is added in
   #database

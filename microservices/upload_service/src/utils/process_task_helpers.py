@@ -47,7 +47,7 @@ def run_pipeline(payload: List[Dict], is_hitl: bool,is_reassign:bool):
             extraction_score = extraction_output[0]
             extraction_entities =  extraction_output[1]
             Logger.info(f" Executing pipeline for normal scenario {doc}")
-            if extraction_score and extraction_entities:
+            if extraction_score is not None and extraction_entities:
               Logger.info(f"extraction score is {extraction_score},{doc}")
               validate_match_approve(doc,extraction_score,extraction_entities)
           else:
@@ -159,7 +159,8 @@ def extract_documents(doc:Dict,document_type):
                                      document_type,context,gcs_url)
 
   if extract_res.status_code == 200:
-    Logger.info(f"Extraction successful for {document_type}")
+    Logger.info(f"Extraction successful for {document_type}\
+       case_id: {case_id} uid:{uid}")
     extraction_score = extract_res.json().get("score")
     extraction_entities =  extract_res.json().get("entities")
     # if document is application form then update autoapproval status
@@ -187,19 +188,19 @@ def validate_match_approve(sup_doc:Dict,extraction_score,extraction_entities):
                                 extraction_entities)
   if validation_res.status_code == 200:
     print("====Validation successful==========")
-    Logger.info(f"Validation successful for {uid}.")
+    Logger.info(f"Validation successful for case_id: {case_id} uid:{uid}.")
     validation_score = validation_res.json().get("score")
     matching_res = get_matching_score(case_id, uid)
     if matching_res.status_code == 200:
       print("====Matching successful==========")
-      Logger.info(f"Matching successful for {uid}.")
+      Logger.info(f"Matching successful for case_id: {case_id} uid:{uid}.")
       matching_score = matching_res.json().get("score")
       update_autoapproval(document_class, document_type,case_id,uid,
 validation_score, extraction_score, matching_score)
     else:
-      Logger.error(f"Matching FAILED for {uid}")
+      Logger.error(f"Matching FAILED for case_id: {case_id} uid:{uid}")
   else:
-    Logger.error(f"Extraction FAILED for {uid}")
+    Logger.error(f"Extraction FAILED for case_id: {case_id} uid:{uid}")
   return validation_score,matching_score
 
 def update_autoapproval(document_class, document_type,case_id,uid,
@@ -209,7 +210,8 @@ validation_score=None, extraction_score=None, matching_score=None):
     validation_score, extraction_score, matching_score,
     document_class, document_type)
   Logger.info(
-    f"autoapproval_status for application:{autoapproval_status}")
+    f"autoapproval_status for application:{autoapproval_status}\
+      for case_id: {case_id} uid:{uid}")
   update_autoapproval_status(
     case_id, uid, "success", autoapproval_status[0], "yes")
 
