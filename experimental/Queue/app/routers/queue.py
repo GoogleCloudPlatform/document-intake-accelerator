@@ -6,7 +6,7 @@ from firebase_admin import credentials, firestore, initialize_app
 import requests
 import json
 from fastapi import status, Response
-# Initialize Flask app
+
 # Initialize Firestore DB
 # cred = credentials.Certificate("serviceAccountKey.json")
 default_app = firebase_admin.initialize_app(cred)
