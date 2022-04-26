@@ -243,13 +243,15 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
         extracted_entity_list,mapping_dict, form_parser_text, temp_folder)
 
     # delete temp folder
-    shutil.rmtree(temp_folder)
+    if os.path.exists(temp_folder):
+      shutil.rmtree(temp_folder)
     del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
     Logger.info("Required entities created from Form parser response")
     return form_parser_entities_list,flag
   except Exception as e:
     Logger.error(e)
-    shutil.rmtree(temp_folder)
+    if os.path.exists(temp_folder):
+      shutil.rmtree(temp_folder)
 
 
 def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
