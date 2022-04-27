@@ -13,7 +13,7 @@ DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
 
 
 BUCKET_NAME ="document-upload-test"
-PATH ="gs://async_form_parser/Jsons/rules.json"
+PATH ="gs://adp-claims-processing-dev/Validation/rules.json"
 PROJECT_ID ="claims-processing-dev"
 BIGQUERY_DB = "validation.validation_table"
 TOPIC_ID = "claim_test"

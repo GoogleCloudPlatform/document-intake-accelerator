@@ -225,7 +225,7 @@ def update_json(jinn,args):
       data : Updated Rule Dict
     '''
     try:
-      data = read_json("gs://async_form_parser/Jsons/rules.json")
+      data = read_json("gs://adp-claims-processing-dev/Validation/rules.json")
     except FileNotFoundError:
       data={}
     rule_no = "Rule_1"
@@ -273,8 +273,8 @@ def upload_bucket():
   Upload the Newly Created json to the bucket
   '''
   client = storage.Client(project='claims-processing-dev')
-  bucket = client.get_bucket('async_form_parser')
-  blob = bucket.blob('Jsons/rules.json')
+  bucket = client.get_bucket('adp-claims-processing-dev')
+  blob = bucket.blob('Validation/rules.json')
   blob.upload_from_filename('rules.json')
 
 def main():
@@ -283,24 +283,26 @@ def main():
   '''
   args=parsers()
   try:
-    data = read_json("gs://async_form_parser/Jsons/templates.json")
+    data = read_json("gs://adp-claims-processing-dev/Validation/templates.json")
   except FileNotFoundError:
     Logger.info(f"Template File Does not exist or the file path is incorrect")
     return
   if args.view:
     try:
-      data = read_json("gs://async_form_parser/Jsons/rules.json")
+      data = read_json("gs://adp-claims-processing-dev/Validation/rules.json")
     #Iterating on the rules to print one by one
       for i in data[args.doc_type]:
         Logger.info(f"{i} : {data[args.doc_type][i]}")
     except FileNotFoundError:
       Logger.info(f"File Does not exist or the file path is incorrect")
+    except KeyError:
+      Logger.info(f"Document Name is incorrect")
     return
 
 
   if args.delete:
     try:
-      data = read_json("gs://async_form_parser/Jsons/rules.json")
+      data = read_json("gs://adp-claims-processing-dev/Validation/rules.json")
       data[args.doc_type].pop(args.ruleid)
       json.dump(data, open("rules.json","w"))
       upload_bucket()
