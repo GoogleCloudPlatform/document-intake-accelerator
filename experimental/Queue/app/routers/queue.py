@@ -13,12 +13,12 @@ default_app = firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 router = APIRouter(prefix="/queue", tags=["Queue"])
+# process task api endpoint
 req_url = "https://adp-dev.cloudpssolutions.com/upload_service/v1/process_task"
 
 
 @router.post("/publish")
 async def publish_msg(request:Request,response: Response):
-    t=200
     envelope = await request.json()
     print(type(envelope))
     print(envelope)
@@ -34,6 +34,7 @@ async def publish_msg(request:Request,response: Response):
         response.status_code = status.HTTP_400_BAD_REQUEST
         return response.status_code
 
+    # store the count of no.of documents in uploaded state to variable result 
     result=get_count()
     pubsub_message = envelope["message"]
     if result<int(os.environ['t']):
@@ -50,10 +51,9 @@ async def publish_msg(request:Request,response: Response):
             print(name1)
             payload= name1.get("message_list")
             data = {"configs":payload}
-            #data={"case_id": name1.get("caseid"),"uid": name1.get("uid"),"gcs_url": name1.get("gcs_url"),"context": name1.get("context")}
-            #data=name1.get("message_list")
             print("This is data")
             print(data)
+            # cloud run will send data to process task api endpoint
             response=requests.post(req_url,json=data)
             print(result)
             print(f"Hello {name}")
@@ -67,21 +67,18 @@ async def publish_msg(request:Request,response: Response):
         return response.status_code
 
     return ("", 204)
-  
+
+# function to get count of no.of documents in uploaded state in collection name document  
 def get_count():
     ct=0
-    docs = db.collection(u'document_process_task').stream()
+    docs = db.collection(u'document').stream()
     for doc in docs:
         a=doc.to_dict()
-        #print(a)
-        #print('loop')
         b=a["system_status"]
         if type(b)==list:
-            #print('in loop')
             for i in b:
                 l=len(b)
                 if l==1:
-                #print('loop')
                     if i["stage"]=="uploaded" and i["status"]=="success":
                         ct=ct+1
                     
