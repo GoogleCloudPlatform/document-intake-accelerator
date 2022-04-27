@@ -259,3 +259,7 @@ branch.
 * If all goes well with tests passed, click Merge pull request to merge the changes to the master.
 
 Test for PR changes
+
+### (For Develpers) Microservices Assumptions
+* app_registration_id used on the ui is referred as case_id in the API code
+* case_id is referred as external case_id in the firestore
