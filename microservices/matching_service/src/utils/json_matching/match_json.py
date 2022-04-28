@@ -86,6 +86,7 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
     #not_found = []
 
     for u_key in support_doc_dict.keys():
+      raw_score = 0.0
       # check if the user provided key is present in the both the docs
       # if found compare their respectives values
       if u_key in app_keys and u_key in support_keys:
@@ -104,11 +105,11 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
 
           # 1. check for dates. date related keys contains value in tuple format
           if isinstance(support_doc_dict[u_key], tuple):# a key signifies a date
-            wt_score = compare_dates(
+            raw_score = compare_dates(
                 app_val, support_val,
                 APPLICATION_DOC_DATE_FORMAT[app_doc_type][state],
-                support_doc_dict[u_key][1]) * support_doc_dict[u_key][0]
-
+                support_doc_dict[u_key][1])
+            wt_score = raw_score * support_doc_dict[u_key][0]
             matched.append(round(wt_score, 2))
 
           # 2. match values with only integers
@@ -118,18 +119,18 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
           # elif re.sub('[^A-Za-z0-9]+', '', support_val).isdigit() and \
           #             re.sub('[^A-Za-z0-9]+', '', app_val).isdigit():
           elif support_val.isdigit() and app_val.isdigit():
-            wt_score = (1.0 if support_val == app_val else
-                        0.0) * support_doc_dict[u_key]
+            raw_score = 1.0 if support_val == app_val else 0.0
+            wt_score = raw_score * support_doc_dict[u_key]
             matched.append(round(wt_score, 2))
 
           # 3. match values with only characters
           else:
             # if a sentence apply fuzzy logic
-            wt_score = float(fuzz.token_sort_ratio(support_val, app_val) / 100)
-            wt_score = round(wt_score * support_doc_dict[u_key], 2)
+            raw_score = float(fuzz.token_sort_ratio(support_val, app_val) / 100)
+            wt_score = round(raw_score * support_doc_dict[u_key], 2)
             matched.append(wt_score)
 
-          final_score = wt_score
+          final_score = raw_score
         else:
           Logger.warning(f'Values related to keys are None: {u_key}')
           final_score = 0.0
