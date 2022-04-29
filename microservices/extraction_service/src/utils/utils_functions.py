@@ -73,7 +73,6 @@ def default_entities_extraction(parser_entities, default_entities,doc_type):
    Returns : Default entites dict
    -------
   """
-  print(doc_type)
   parser_entities_dict = {}
 
   # retrieve parser given entities
@@ -81,7 +80,7 @@ def default_entities_extraction(parser_entities, default_entities,doc_type):
     key, val, confidence = each_entity.get("type", ""), \
                            each_entity.get("mentionText", ""), round(
       each_entity.get("confidence", 0), 2)
-
+    val = strip_value(val)
     parser_entities_dict[key] = [val, confidence]
 
   entity_dict = {}
@@ -170,7 +169,7 @@ def derived_entities_extraction(parser_data, derived_entities):
   for key, val in derived_entities.items():
     pattern = val["rule"]
     pattern_op = pattern_based_entities(parser_data, pattern)
-
+    pattern_op = strip_value(pattern_op)
     derived_entities_extracted_dict[key] = \
         {"entity": key, "value": pattern_op,
             "extraction_confidence": None,
