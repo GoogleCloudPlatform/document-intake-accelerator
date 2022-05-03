@@ -24,6 +24,7 @@ resource "google_cloud_run_service" "queue-run" {
     percent         = 100
     latest_revision = true
     }
+  depends_on = [null_resource.provision]
 }
 
 #Displaying the cloudrun endpoint
