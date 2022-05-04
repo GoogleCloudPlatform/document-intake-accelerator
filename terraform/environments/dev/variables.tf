@@ -74,7 +74,7 @@ variable "machine_type" {
 
 variable "cloud_run_image_path" {
     type = string
-    default = "gcr.io/claims-processing-dev/cloudrun75"
+    default = "gcr.io/claims-processing-dev/queue-image"
 }
 
 
