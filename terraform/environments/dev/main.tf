@@ -89,7 +89,7 @@ module "gke-node-service-account" {
 module "cicd-terraform-account" {
   source       = "github.com/terraform-google-modules/cloud-foundation-fabric/modules/iam-service-account/"
   project_id   = local.project_id
-  name         = "tf-${local.project_id}"
+  name         = "tf-cicd-${local.project_id}"
   display_name = "The Terraform Service Account. Used by CICD processes."
 
   # authoritative roles granted *on* the service accounts to other identities
@@ -114,17 +114,46 @@ module "cicd-terraform-account" {
   }
 }
 
-resource "google_container_cluster" "main-cluster" {
-  depends_on = [google_project_service.project-apis]
-  name     = "default-cluster"
-  location = local.region
-  # networking_mode = "VPC_NATIVE"
+#Creating custom VPC Network and Subnet
 
-  #to enable VPC native
-  # ip_allocation_policy {
-  #   cluster_secondary_range_name  = google_compute_subnetwork.gke-pods.name
-  #   services_secondary_range_name = google_compute_subnetwork.gke-services.name
-  # }
+resource "google_compute_subnetwork" "custom-vpc" {
+  name          = var.subnetwork
+  ip_cidr_range = "10.255.0.0/16"
+  region        = "us-central1"
+  network       = google_compute_network.custom-test.id
+  secondary_ip_range {
+    range_name    = "tf-pod-secondary-range-update1"
+    ip_cidr_range = "10.52.0.0/14"
+  }
+  secondary_ip_range {
+    range_name    = "tf-service-secondary-range-update1"
+    ip_cidr_range = "10.56.0.0/20"
+  }
+
+}
+
+resource "google_compute_network" "custom-test" {
+  name                    = var.network
+  auto_create_subnetworks = false
+} 
+
+resource "google_container_cluster" "main-cluster" {
+  depends_on = [google_project_service.project-apis, google_compute_subnetwork.custom-vpc]
+  name       = var.cluster_name
+  location   = var.region
+
+  # We can't create a cluster with no node pool defined, but we want to only use
+  # separately managed node pools. So we create the smallest possible default
+  # node pool and immediately delete it.
+  remove_default_node_pool = true
+  initial_node_count       = 1
+  network = google_compute_network.custom-test.self_link
+  subnetwork = google_compute_subnetwork.custom-vpc.self_link
+
+  ip_allocation_policy {
+    cluster_secondary_range_name = google_compute_subnetwork.custom-vpc.secondary_ip_range.0.range_name
+    services_secondary_range_name = google_compute_subnetwork.custom-vpc.secondary_ip_range.1.range_name
+  }
 
   workload_identity_config {
     workload_pool = "${local.project_id}.svc.id.goog"
@@ -146,12 +175,6 @@ resource "google_container_cluster" "main-cluster" {
   release_channel {
     channel = "RAPID"
   }
-
-  # We can't create a cluster with no node pool defined, but we want to only use
-  # separately managed node pools. So we create the smallest possible default
-  # node pool and immediately delete it.
-  remove_default_node_pool = true
-  initial_node_count       = 1
 }
 
 resource "google_container_node_pool" "primary_nodes" {
@@ -201,13 +224,6 @@ resource "google_service_account_iam_binding" "gsa-ksa-binding" {
   ]
 
   depends_on = [kubernetes_service_account.ksa]
-}
-
-# Instantiate firestore on environment
-resource "google_app_engine_application" "firestore" {
-  provider      = google
-  location_id   = local.firestore_region
-  database_type = "CLOUD_FIRESTORE"
 }
 
 resource "google_storage_bucket" "default" {

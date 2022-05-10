@@ -8,7 +8,7 @@ import json
 from fastapi import status, Response
 
 # Initialize Firestore DB
-# cred = credentials.Certificate("serviceAccountKey.json")
+cred = credentials.Certificate("serviceAccountKey.json")
 default_app = firebase_admin.initialize_app(cred)
 db = firestore.client()
 
