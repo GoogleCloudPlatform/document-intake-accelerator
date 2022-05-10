@@ -42,6 +42,11 @@ variable "env" {
   default     = "dev"
 }
 
+variable "cluster_name" {
+    type = string
+    default = "adp-cluster"
+}
+
 variable "network" {
     type = string
     default = "adp-vpc"
