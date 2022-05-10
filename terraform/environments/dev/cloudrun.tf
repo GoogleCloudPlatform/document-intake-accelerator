@@ -1,5 +1,12 @@
 #Creating a cloud run service
 
+resource "google_storage_bucket" "firestore-backup-bucket" {
+  name          = "${var.project_id}-queue-log"
+  location      = var.multiregion
+  storage_class = "NEARLINE"
+  uniform_bucket_level_access = true
+}
+
 resource "google_cloud_run_service" "queue-run" {
   name     = "queue-cloudrun"
   location = var.region
