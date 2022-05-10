@@ -42,8 +42,15 @@ variable "env" {
   default     = "dev"
 }
 
+variable "network" {
+    type = string
+    default = "adp-vpc"
+}
 
-
+variable "subnetwork" {
+    type = string
+    default = "adp-subnetwork"  
+}
 
 #adding new variables for the updated scripts
 
