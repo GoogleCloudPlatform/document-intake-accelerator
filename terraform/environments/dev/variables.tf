@@ -58,12 +58,6 @@ variable "subnetwork" {
 
 #adding new variables for the updated scripts
 
-variable "cloud_run_image_path" {
-    type = string
-    default = "gcr.io/${var.project_id}/queue-image"
-}
-
-
 variable "dataset_name" {
     type = string
     default = "entity_extraction"
