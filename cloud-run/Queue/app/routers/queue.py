@@ -10,7 +10,7 @@ from app.config.config import PROCESS_TASK_URL
 
 
 #Initialize Firestore DB
-#cred = credentials.Certificate('key2.json')
+
 cred = credentials.Certificate("serviceAccountKey.json")
 default_app = firebase_admin.initialize_app(cred)
 #firebase_admin.initialize_app(cred)
