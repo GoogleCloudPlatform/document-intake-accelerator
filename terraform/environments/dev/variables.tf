@@ -1,7 +1,6 @@
 variable "project_id" {
   type        = string
   description = "GCP Project ID"
-  default     = "claims-processing-dev"
 
   validation {
     condition     = length(var.project_id) > 0
