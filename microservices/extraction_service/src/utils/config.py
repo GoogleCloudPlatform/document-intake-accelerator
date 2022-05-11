@@ -15,7 +15,7 @@ NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles",
                                                             "revisions",
                                                             "pages.image"]
 # GCS temp folder to store async form parser output
-GCS_OP_URI = "gs://async_form_parser"
+GCS_OP_URI = "gs://output_doc_ai"
 # Mapping dict
 MAPPING_DICT = {
   "unemployment_form_arizona": {

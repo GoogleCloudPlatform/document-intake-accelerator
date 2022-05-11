@@ -1,4 +1,5 @@
-"""Main module"""
+
+
 # pylint:disable=E0401
 from fastapi import FastAPI, status
 from fastapi.openapi.utils import get_openapi
@@ -10,7 +11,6 @@ app = FastAPI(docs_url="/docs",
 
 
 def custom_openapi():
-    """ Swagger OPEN-API """
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
@@ -34,5 +34,4 @@ app.include_router(
 
 @app.get("/", tags=["Index"], status_code=status.HTTP_200_OK)
 async def index():
-    """ Index API """
     return {"message": "Message Received!"}
