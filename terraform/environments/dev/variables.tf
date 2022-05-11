@@ -86,5 +86,9 @@ variable "project_name" {
 variable "org_id" {
     default = ""
     description = "This project organization id"
-  
+}
+
+variable "firebase_init" {
+    default = true
+    description = "Whether to run Firebase init resource"
 }
