@@ -1,6 +1,7 @@
 # Enabling a firbase project
 
 resource "google_app_engine_application" "firebase_init" {
+  count = "${var.firebase_init ? 1 : 0}"
   provider = google-beta
   project  = var.project_id
   location_id = var.firestore_region
