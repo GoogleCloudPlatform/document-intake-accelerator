@@ -60,7 +60,7 @@ variable "subnetwork" {
 
 variable "cloud_run_image_path" {
     type = string
-    default = "gcr.io/claims-processing-dev/queue-image"
+    default = "gcr.io/${var.project_id}/queue-image"
 }
 
 
