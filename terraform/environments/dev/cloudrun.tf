@@ -14,7 +14,7 @@ resource "google_cloud_run_service" "queue-run" {
   template {
     spec {
       containers {
-        image = var.cloud_run_image_path   #Image to connect pubsub to cloud run to processtask API and fetch data from firestore
+        image = "gcr.io/${var.project_id}/queue-image"  #Image to connect pubsub to cloud run to processtask API and fetch data from firestore
         ports{
             container_port=8000
         }
