@@ -11,7 +11,6 @@ locals {
     "bigquery.googleapis.com",             # BigQuery
     "bigquerydatatransfer.googleapis.com", # BigQuery Data Transfer
     "cloudbuild.googleapis.com",           # Cloud Build
-    "cloudrun.googleapis.com",             # Cloud Run
     "compute.googleapis.com",              # Load Balancers, Cloud Armor
     "container.googleapis.com",            # Google Kubernetes Engine
     "containerregistry.googleapis.com",    # Google Container Registry
@@ -21,6 +20,7 @@ locals {
     "iam.googleapis.com",                  # Cloud IAM
     "logging.googleapis.com",              # Cloud Logging
     "monitoring.googleapis.com",           # Cloud Operations Suite
+    "run.googleapis.com",                  # Cloud Run
     "secretmanager.googleapis.com",        # Secret Manager
     "storage.googleapis.com",              # Cloud Storage
   ]
