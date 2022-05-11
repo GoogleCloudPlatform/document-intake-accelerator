@@ -4,8 +4,7 @@ first page
 from utils.classification.pdf_splitter import PDFManager
 from utils.classification.vertex_predicitons import VertexPredictions
 from utils.classification.download_pdf_gcs import download_pdf_gcs
-from utils.classification.classification_config import \
-   CONF_THRESH,ENDPOINT_ID,PROJECT_ID
+from common.config import CONF_THRESH, ENDPOINT_ID, PROJECT_ID
 import json
 import os
 import sys
