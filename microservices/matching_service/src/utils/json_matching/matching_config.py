@@ -33,7 +33,7 @@ MATCHING_USER_KEYS_SUPPORTING_DOC = {
     #    'name': 0.16, 'dob': (0.16, '%y/%m/%d'), 'sex': 0.16, 'dl_no': 0.16},
     'driving_licence': {
         'name': 0.25,
-        'dob': (0.25, '%Y/%m/%d'),
+        'dob': (0.25, '%Y-%m-%d'),
         'dl_no': 0.25,
         'sex': 0.25
     },
@@ -66,7 +66,7 @@ STATE = 'arkansas'
 APPLICATION_DOC_DATE_FORMAT = {
     'unemployment_form': {
         'arizona': '%m/%d/%y',
-        'arkansas': '%m/%d/%Y',
+        'arkansas': '%Y-%m-%d',
         'california': '%m/%d/%y',
         'illinois': '%m/%d/%y'
     }
