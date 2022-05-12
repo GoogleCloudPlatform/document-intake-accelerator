@@ -219,33 +219,33 @@ def get_var(var):
 
 
 def update_json(jinn,args):
-    '''
-    Add the newly create Sql Query(Rule) to the already existing Rules json
-    Input:
-      jinn: Newly Generated SQL Query(Rule)
-      args" Command Line arguments recevied from the user
-    Output:
-      data : Updated Rule Dict
-    '''
-    try:
-      data = read_json(PATH)
-    except Exception:
-      data={}
-    rule_no = "Rule_1"
-    try:
-      get_list = list(data[args.doc_type].keys())
-    except KeyError as e:
-      data[args.doc_type]={rule_no : jinn}
-      return data
-
-    var=get_list[-1]
-    if args.ruleid:
-        rule_no = args.ruleid
-    else:
-        rule_no = get_var(var)
-    if args.doc_type in data:
-      data[args.doc_type][rule_no] = jinn
+  '''
+  Add the newly create Sql Query(Rule) to the already existing Rules json
+  Input:
+    jinn: Newly Generated SQL Query(Rule)
+    args" Command Line arguments recevied from the user
+  Output:
+    data : Updated Rule Dict
+  '''
+  try:
+    data = read_json(PATH)
+  except Exception:
+    data={}
+  rule_no = "Rule_1"
+  try:
+    get_list = list(data[args.doc_type].keys())
+  except KeyError as e:
+    data[args.doc_type]={rule_no : jinn}
     return data
+
+  var=get_list[-1]
+  if args.ruleid:
+      rule_no = args.ruleid
+  else:
+      rule_no = get_var(var)
+  if args.doc_type in data:
+    data[args.doc_type][rule_no] = jinn
+  return data
 
 
 
