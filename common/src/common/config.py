@@ -12,8 +12,11 @@ if PROJECT_ID != "":
 DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
 
 
+
 BUCKET_NAME ="document-upload-test"
+BUCKET_NAME_VALIDATION = "adp-claims-processing-dev"
 PATH ="gs://adp-claims-processing-dev/Validation/rules.json"
+PATH_TEMPLATE = "gs://adp-claims-processing-dev/Validation/templates.json"
 PROJECT_ID ="claims-processing-dev"
 BIGQUERY_DB = "validation.validation_table"
 TOPIC_ID = "claim_test"
