@@ -46,13 +46,13 @@ MATCHING_USER_KEYS_SUPPORTING_DOC = {
         'ytd': 0.14,
         'rate': 0.14,
         'hours': 0.14,
-        'pay_period_from': (0.14, '%y/%m/%d'),
-        'pay_period_to': (0.14, '%y/%m/%d'),
+        'pay_period_from': (0.14, '%Y-%m-%d'),
+        'pay_period_to': (0.14, '%Y-%m-%d'),
         'ssn': 0.14
     },
     'claims_form': {
         'employer_info': 0.19,
-        'work_start_date': (0.19, '%y/%m/%d'),
+        'work_start_date': (0.19, '%Y-%m-%d'),
         'employer_name': 0.24,
         'employer_address': 0.19,
         'employer_city': 0.19
@@ -65,9 +65,9 @@ STATE = 'arkansas'
 
 APPLICATION_DOC_DATE_FORMAT = {
     'unemployment_form': {
-        'arizona': '%m/%d/%y',
+        'arizona': '%Y-%m-%d',
         'arkansas': '%Y-%m-%d',
-        'california': '%m/%d/%y',
-        'illinois': '%m/%d/%y'
+        'california': '%Y-%m-%d',
+        'illinois': '%Y/%m/%d'
     }
 }
