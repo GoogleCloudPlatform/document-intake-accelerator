@@ -42,3 +42,12 @@ DB_KEYS = [
 ]
 
 ENTITY_KEYS = ["name", "dob", "residential_address", "email", "phone_no"]
+
+# Classification Configs
+#Prediction Confidence threshold for the classifier to reject any prediction
+#less than the threshold value.
+CONF_THRESH = 0.98
+
+
+#Endpoint Id where model is deployed.
+ENDPOINT_ID = "4679565468279767040"
