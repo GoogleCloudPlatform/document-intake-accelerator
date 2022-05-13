@@ -30,12 +30,13 @@ echo "EMAIL=${EMAIL}"
 echo "WEB_APP_DOMAIN=${WEB_APP_DOMAIN}"
 echo "API_DOMAIN=${API_DOMAIN}"
 echo "CLUSTER_NAME=${CLUSTER_NAME}"
+echo "CLUSTER_REGION=${CLUSTER_REGION}"
 echo
 
 
 printf "\n${BLUE}Setting up kubectl to use context for project ${PROJECT_ID} ...${NORMAL}\n"
 gcloud container clusters get-credentials ${CLUSTER_NAME} \
-  --zone us-central1-a \
+  --region ${CLUSTER_REGION} \
   --project $PROJECT_ID
 
 printf "\n${BLUE}Setting up Cert manager ...${NORMAL}\n"
