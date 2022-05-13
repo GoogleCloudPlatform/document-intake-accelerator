@@ -13,6 +13,7 @@ declare -a EnvVars=(
   "WEB_APP_DOMAIN"
   "API_DOMAIN"
   "EMAIL"
+  "CLUSTER_NAME"
 )
 for variable in ${EnvVars[@]}; do
   if [[ -z "${!variable}" ]]; then
@@ -28,11 +29,12 @@ echo "PROJECT_ID=${PROJECT_ID}"
 echo "EMAIL=${EMAIL}"
 echo "WEB_APP_DOMAIN=${WEB_APP_DOMAIN}"
 echo "API_DOMAIN=${API_DOMAIN}"
+echo "CLUSTER_NAME=${CLUSTER_NAME}"
 echo
 
 
 printf "\n${BLUE}Setting up kubectl to use context for project ${PROJECT_ID} ...${NORMAL}\n"
-gcloud container clusters get-credentials default-cluster \
+gcloud container clusters get-credentials ${CLUSTER_NAME} \
   --zone us-central1-a \
   --project $PROJECT_ID
 
