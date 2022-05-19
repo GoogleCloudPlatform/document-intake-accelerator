@@ -235,6 +235,13 @@ resource "google_storage_bucket" "default" {
   uniform_bucket_level_access = true
 }
 
+resource "google_storage_bucket" "document-upload" {
+  name          = "${local.project_id}-document-upload"
+  location      = local.multiregion
+  storage_class = "STANDARD"
+  uniform_bucket_level_access = true
+}
+
 resource "google_storage_bucket" "assets" {
   name          = "${local.project_id}-assets"
   location      = local.multiregion
