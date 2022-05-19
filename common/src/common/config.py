@@ -18,6 +18,9 @@ BIGQUERY_DB = "validation.validation_table"
 TOPIC_ID = "claim_test"
 VALIDATION_TABLE = f"{PROJECT_ID}.validation.validation_table"
 
+# Endpoint Id where model is deployed.
+# TODO: Please update this to your deployed VertexAI model ID.
+ENDPOINT_ID = "4679565468279767040"
 
 #Map to standardise predicted document class from classifier to
 # standard document_class values
@@ -47,6 +50,3 @@ ENTITY_KEYS = ["name", "dob", "residential_address", "email", "phone_no"]
 #less than the threshold value.
 CONF_THRESH = 0.98
 
-
-#Endpoint Id where model is deployed.
-ENDPOINT_ID = "4679565468279767040"
