@@ -10,15 +10,17 @@ if PROJECT_ID != "":
   os.environ["GOOGLE_CLOUD_PROJECT"] = PROJECT_ID
 
 DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
-
-
-BUCKET_NAME ="document-upload-test"
-PATH ="gs://adp-claims-processing-dev/Validation/rules.json"
-PROJECT_ID ="claims-processing-dev"
+BUCKET_NAME = f"{PROJECT_ID}-document-upload"
+BUCKET_NAME_VALIDATION = PROJECT_ID
+PATH = f"gs://{PROJECT_ID}/Validation/rules.json"
+PATH_TEMPLATE = f"gs://{PROJECT_ID}/Validation/templates.json"
 BIGQUERY_DB = "validation.validation_table"
 TOPIC_ID = "claim_test"
-VALIDATION_TABLE = "claims-processing-dev.validation.validation_table"
+VALIDATION_TABLE = f"{PROJECT_ID}.validation.validation_table"
 
+# Endpoint Id where model is deployed.
+# TODO: Please update this to your deployed VertexAI model ID.
+ENDPOINT_ID = "4679565468279767040"
 
 #Map to standardise predicted document class from classifier to
 # standard document_class values
@@ -42,3 +44,9 @@ DB_KEYS = [
 ]
 
 ENTITY_KEYS = ["name", "dob", "residential_address", "email", "phone_no"]
+
+# Classification Configs
+#Prediction Confidence threshold for the classifier to reject any prediction
+#less than the threshold value.
+CONF_THRESH = 0.98
+

@@ -15,6 +15,7 @@ locals {
     "container.googleapis.com",            # Google Kubernetes Engine
     "containerregistry.googleapis.com",    # Google Container Registry
     "dataflow.googleapis.com",             # Cloud Dataflow
+    "eventarc.googleapis.com",             # Event Arc
     "firebase.googleapis.com",             # Firebase
     "firestore.googleapis.com",            # Firestore
     "iam.googleapis.com",                  # Cloud IAM
@@ -229,6 +230,13 @@ resource "google_service_account_iam_binding" "gsa-ksa-binding" {
 
 resource "google_storage_bucket" "default" {
   name          = "${local.project_id}"
+  location      = local.multiregion
+  storage_class = "STANDARD"
+  uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket" "document-upload" {
+  name          = "${local.project_id}-document-upload"
   location      = local.multiregion
   storage_class = "STANDARD"
   uniform_bucket_level_access = true

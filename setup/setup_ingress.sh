@@ -13,6 +13,7 @@ declare -a EnvVars=(
   "WEB_APP_DOMAIN"
   "API_DOMAIN"
   "EMAIL"
+  "CLUSTER_NAME"
 )
 for variable in ${EnvVars[@]}; do
   if [[ -z "${!variable}" ]]; then
@@ -28,27 +29,29 @@ echo "PROJECT_ID=${PROJECT_ID}"
 echo "EMAIL=${EMAIL}"
 echo "WEB_APP_DOMAIN=${WEB_APP_DOMAIN}"
 echo "API_DOMAIN=${API_DOMAIN}"
+echo "CLUSTER_NAME=${CLUSTER_NAME}"
+echo "CLUSTER_REGION=${CLUSTER_REGION}"
 echo
 
 
 printf "\n${BLUE}Setting up kubectl to use context for project ${PROJECT_ID} ...${NORMAL}\n"
-gcloud container clusters get-credentials default-cluster \
-  --zone us-central1-a \
+gcloud container clusters get-credentials ${CLUSTER_NAME} \
+  --region ${CLUSTER_REGION} \
   --project $PROJECT_ID
 
 printf "\n${BLUE}Setting up Cert manager ...${NORMAL}\n"
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.2.0/cert-manager.yaml
-sed -i '' -e "s/_EMAIL_PLACEHOLDER/${EMAIL}/g" setup/certificate_issuer.yaml
+sed -i'' -e "s/_EMAIL_PLACEHOLDER/${EMAIL}/g" setup/certificate_issuer.yaml
 kubectl apply -f setup/certificate_issuer.yaml
-sed -i '' -e "s/${EMAIL}/_EMAIL_PLACEHOLDER/g" setup/certificate_issuer.yaml
+sed -i'' -e "s/${EMAIL}/_EMAIL_PLACEHOLDER/g" setup/certificate_issuer.yaml
 
 printf "\n${BLUE}Setting up Nginx Ingress ...${NORMAL}\n"
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.43.0/deploy/static/provider/cloud/deploy.yaml
-sed -i '' -e "s/_WEB_APP_DOMAIN/${WEB_APP_DOMAIN}/g" setup/nginx_ingress.yaml
-sed -i '' -e "s/_API_DOMAIN/${API_DOMAIN}/g" setup/nginx_ingress.yaml
+sed -i'' -e "s/_WEB_APP_DOMAIN/${WEB_APP_DOMAIN}/g" setup/nginx_ingress.yaml
+sed -i'' -e "s/_API_DOMAIN/${API_DOMAIN}/g" setup/nginx_ingress.yaml
 kubectl apply -f setup/nginx_ingress.yaml
-sed -i '' -e "s/${WEB_APP_DOMAIN}/_WEB_APP_DOMAIN/g" setup/nginx_ingress.yaml
-sed -i '' -e "s/${API_DOMAIN}/_API_DOMAIN/g" setup/nginx_ingress.yaml
+sed -i'' -e "s/${WEB_APP_DOMAIN}/_WEB_APP_DOMAIN/g" setup/nginx_ingress.yaml
+sed -i'' -e "s/${API_DOMAIN}/_API_DOMAIN/g" setup/nginx_ingress.yaml
 
 printf "\n${BLUE}Retrieving load balancer ingress IP address ...${NORMAL}\n"
 INGRESS_IP_ADDRESS=""
