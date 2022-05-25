@@ -1,5 +1,3 @@
-
-
 FROM python:3.7-stretch
 RUN apt-get update -y
 COPY . app/
