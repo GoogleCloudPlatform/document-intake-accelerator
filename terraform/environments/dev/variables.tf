@@ -32,58 +32,58 @@ variable "dataset_location" {
 }
 
 variable "multiregion" {
-  type        = string
-  default     = "us"
+  type    = string
+  default = "us"
 }
 
 variable "env" {
-  type        = string
-  default     = "dev"
+  type    = string
+  default = "dev"
 }
 
 variable "cluster_name" {
-    type = string
-    default = "adp-cluster"
+  type    = string
+  default = "adp-cluster"
 }
 
 variable "network" {
-    type = string
-    default = "adp-vpc"
+  type    = string
+  default = "adp-vpc"
 }
 
 variable "subnetwork" {
-    type = string
-    default = "adp-subnetwork"  
+  type    = string
+  default = "adp-subnetwork"
 }
 
 #adding new variables for the updated scripts
 
 variable "dataset_name" {
-    type = string
-    default = "entity_extraction"
-    description = "bigquery dataset"
+  type        = string
+  default     = "entity_extraction"
+  description = "bigquery dataset"
 }
 
 variable "table_name" {
-    type = string
-    default = "entity"
-    description = "bigquery table"
+  type        = string
+  default     = "validation_table"
+  description = "bigquery table"
 }
 
 variable "project_name" {
-    type = string
-    default = ""
-    description = "This project name"
+  type        = string
+  default     = ""
+  description = "This project name"
 }
 
 variable "org_id" {
-    default = ""
-    description = "This project organization id"
+  default     = ""
+  description = "This project organization id"
 }
 
 variable "firebase_init" {
-    default = true
-    description = "Whether to run Firebase init resource"
+  default     = true
+  description = "Whether to run Firebase init resource"
 }
 
 variable "cert_issuer_email" {
