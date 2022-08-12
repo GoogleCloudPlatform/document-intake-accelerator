@@ -15,7 +15,7 @@ BUCKET_NAME_VALIDATION = PROJECT_ID
 PATH = f"gs://{PROJECT_ID}/Validation/rules.json"
 PATH_TEMPLATE = f"gs://{PROJECT_ID}/Validation/templates.json"
 BIGQUERY_DB = "validation.validation_table"
-TOPIC_ID = "claim_test"
+TOPIC_ID = "queue-topic"
 VALIDATION_TABLE = f"{PROJECT_ID}.validation.validation_table"
 
 # Endpoint Id where model is deployed.

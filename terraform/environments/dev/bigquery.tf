@@ -1,18 +1,16 @@
 #Creating a bigquery dataset and table schema
 
 resource "google_bigquery_dataset" "data_set" {
-  dataset_id                  = var.dataset_name
-  friendly_name               = "test"
-  description                 = "This is a bigquery dataset"
-  location                    = "US"
-
+  dataset_id    = "validation"
+  friendly_name = "Validation Dataset"
+  description   = "BQ dataset for validation process"
+  location      = "US"
 }
 
 resource "google_bigquery_table" "table_id" {
-  dataset_id = google_bigquery_dataset.data_set.dataset_id
-  table_id   = var.table_name
+  dataset_id          = "validation"
+  table_id            = "validation_table"
   deletion_protection = "false"
-
 
   schema = <<EOF
 [

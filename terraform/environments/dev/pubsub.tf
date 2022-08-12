@@ -12,7 +12,7 @@ resource "google_pubsub_subscription" "queue-sub" {
   name  = "queue-sub"
   topic = google_pubsub_topic.queue.name
 
-  ack_deadline_seconds = 600
+  ack_deadline_seconds       = 600
   message_retention_duration = "86400s"
 
 
@@ -22,9 +22,9 @@ resource "google_pubsub_subscription" "queue-sub" {
   }
 
   push_config {
-    push_endpoint = google_cloud_run_service.queue-run.status[0].url  #calling the cloud run endpoint
+    push_endpoint = google_cloud_run_service.queue-run.status[0].url #calling the cloud run endpoint
     oidc_token {
-        service_account_email = module.pubsub-service-account.email
+      service_account_email = module.pubsub-service-account.email
     }
   }
 
