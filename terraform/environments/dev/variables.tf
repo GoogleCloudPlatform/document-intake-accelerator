@@ -58,18 +58,6 @@ variable "subnetwork" {
 
 #adding new variables for the updated scripts
 
-variable "dataset_name" {
-  type        = string
-  default     = "entity_extraction"
-  description = "bigquery dataset"
-}
-
-variable "table_name" {
-  type        = string
-  default     = "validation_table"
-  description = "bigquery table"
-}
-
 variable "project_name" {
   type        = string
   default     = ""
