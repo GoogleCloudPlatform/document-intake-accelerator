@@ -27,6 +27,7 @@ locals {
   ]
 }
 
+data "google_project" "project" {}
 
 resource "google_project_service" "project-apis" {
   for_each                   = toset(local.services)
@@ -60,6 +61,9 @@ module "gke-pod-service-account" {
       # Granting Dataflow Admin and Dataflow Worker for Fraud Jobs
       "roles/dataflow.admin",
       "roles/dataflow.worker",
+      # Container registory
+      "roles/containerregistry.ServiceAgent",
+      "roles/container.admin"
     ]
   }
 }
@@ -248,6 +252,19 @@ resource "google_storage_bucket" "assets" {
   location      = local.multiregion
   storage_class = "STANDARD"
   uniform_bucket_level_access = true
+}
+
+module "ingress" {
+  depends_on = [google_container_cluster.main-cluster]
+
+  source            = "../../modules/ingress"
+  project_id        = var.project_id
+  cert_issuer_email = var.cert_issuer_email
+
+  # Domains for API endpoint, excluding protocols.
+  domain            = var.api_domain
+  region            = var.region
+  cors_allow_origin = "http://localhost:4200,http://localhost:3000,${var.web_app_domain}"
 }
 
 # resource "google_compute_router" "router" {
