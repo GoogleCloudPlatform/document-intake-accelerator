@@ -267,6 +267,16 @@ module "ingress" {
   cors_allow_origin = "http://localhost:4200,http://localhost:3000,${var.web_app_domain}"
 }
 
+# Copying rules JSON files to GCS bucket.
+resource "null_resource" "validation_rules" {
+  depends_on = [
+    google_storage_bucket.default
+  ]
+  provisioner "local-exec" {
+    command = "gsutil cp ../../../common/src/common/validation_rules/* gs://${var.project_id}/Validation"
+  }
+}
+
 # resource "google_compute_router" "router" {
 #   name    = "${local.project_id}-router"
 #   region  = local.region
