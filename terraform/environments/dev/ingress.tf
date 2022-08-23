@@ -1,10 +1,10 @@
-module "cert_manager" {
-  source = "terraform-iaac/cert-manager/kubernetes"
+# module "cert_manager" {
+#   source = "terraform-iaac/cert-manager/kubernetes"
 
-  cluster_issuer_email                   = var.cert_issuer_email
-  cluster_issuer_name                    = "letsencrypt"
-  cluster_issuer_private_key_secret_name = "cert-manager-private-key"
-}
+#   cluster_issuer_email                   = var.cert_issuer_email
+#   cluster_issuer_name                    = "letsencrypt"
+#   cluster_issuer_private_key_secret_name = "cert-manager-private-key"
+# }
 
 resource "kubernetes_namespace" "ingress_nginx" {
   metadata {
@@ -18,7 +18,8 @@ module "nginx-controller" {
   namespace = "ingress-nginx"
   # TODO: does this require cert_manager up and running or can they be completed in parallel
   depends_on = [
-    module.cert_manager, resource.kubernetes_namespace.ingress_nginx
+    # module.cert_manager, 
+    resource.kubernetes_namespace.ingress_nginx,
   ]
 }
 

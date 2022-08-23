@@ -8,6 +8,7 @@ resource "google_storage_bucket" "queue-log-bucket" {
 }
 
 resource "google_cloud_run_service" "queue-run" {
+  count = "${var.cloudrun_deploy ? 1 : 0}"
   name     = "queue-cloudrun"
   location = var.region
 
@@ -21,8 +22,11 @@ resource "google_cloud_run_service" "queue-run" {
         env {
           name = "t"  #thresold value for comparison with the number of uploaded docs in firesotre collection
           value = "10"
+        }
+        env {
           # API endpoint domain
-          API_DOMAIN = var.api_domain
+          name = "API_DOMAIN"
+          value = var.api_domain
         }
       }
       service_account_name = module.cloud-run-service-account.email
@@ -35,8 +39,12 @@ resource "google_cloud_run_service" "queue-run" {
   depends_on = [null_resource.provision]
 }
 
-#Displaying the cloudrun endpoint
-
-output "cloud_run" {
-    value = google_cloud_run_service.queue-run.status[0].url
+# Displaying the cloudrun endpoint
+data "google_cloud_run_service" "queue-run" {
+  name = "queue-cloudrun"
+  location = var.region
 }
+
+# output "cloud_run" {
+#   value = google_cloud_run_service.queue-run.status[0].url
+# }

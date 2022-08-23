@@ -70,8 +70,13 @@ variable "org_id" {
 }
 
 variable "firebase_init" {
-  default     = true
+  default     = false
   description = "Whether to run Firebase init resource"
+}
+
+variable "cloudrun_deploy" {
+  default     = false
+  description = "Whether to deploy Queue cloudrun service resource"
 }
 
 variable "cert_issuer_email" {

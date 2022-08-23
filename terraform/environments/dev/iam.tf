@@ -1,24 +1,20 @@
 locals {
-  # Add users here.
-  user_accounts = [
-    # "user:test@google.com",
-  ]
-
-  sa_accounts = [
-    # Example:
-    # "serviceAccount:service-account@sample-project-id.iam.gserviceaccount.com",
-  ]
+  compute_engine_sa = "serviceAccount:${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
+  cloud_services_sa = "serviceAccount:${data.google_project.project.number}@cloudservices.gserviceaccount.com"
 }
 
-resource "google_project_iam_member" "add_sa_accounts" {
-  for_each = toset(local.sa_accounts)
-  project  = local.project_id
-  role     = "roles/viewer"
-  member   = each.value
-}
+data "google_project" "project" {}
 
-resource "google_project_iam_binding" "add_user_accounts" {
-  project  = local.project_id
-  role     = "roles/editor"
-  members  = local.user_accounts
+module "cloudbuild_sa_iam_bindings" {
+  source  = "terraform-google-modules/iam/google//modules/projects_iam"
+  version = "7.4.1"
+
+  projects = [var.project_id]
+  mode     = "additive"
+
+  bindings = {
+    "roles/run.admin" = [local.compute_engine_sa, local.cloud_services_sa]
+    "roles/iam.serviceAccountUser" = [local.compute_engine_sa, local.cloud_services_sa]
+    "roles/compute.admin" = [local.compute_engine_sa, local.cloud_services_sa]
+  }
 }

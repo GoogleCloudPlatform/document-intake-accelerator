@@ -84,6 +84,7 @@ module "gke-node-service-account" {
       "roles/stackdriver.resourceMetadata.writer",
       "roles/storage.admin",
       "roles/containerregistry.ServiceAgent",
+      "roles/container.admin",
     ]
   }
 }
