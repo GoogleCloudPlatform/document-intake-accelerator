@@ -27,7 +27,7 @@ resource "kubectl_manifest" "ingress" {
 kind: Ingress
 apiVersion: extensions/v1beta1
 metadata:
-  name: dev-deeplit-nginx-ingress
+  name: nginx-ingress
   annotations:
     kubernetes.io/ingress.class: "nginx"
     cert-manager.io/clusterissuer: "letsencrypt"
