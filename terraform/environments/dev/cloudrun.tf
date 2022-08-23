@@ -8,20 +8,24 @@ resource "google_storage_bucket" "queue-log-bucket" {
 }
 
 resource "google_cloud_run_service" "queue-run" {
-  count = "${var.cloudrun_deploy ? 1 : 0}"
+  # count = "${var.cloudrun_deploy ? 1 : 0}"
   name     = "queue-cloudrun"
   location = var.region
 
   template {
     spec {
       containers {
-        image = "gcr.io/${var.project_id}/queue-image"  #Image to connect pubsub to cloud run to processtask API and fetch data from firestore
+        image = "gcr.io/${var.project_id}/queue-image:latest"  #Image to connect pubsub to cloud run to processtask API and fetch data from firestore
         ports{
             container_port=8000
         }
         env {
           name = "t"  #thresold value for comparison with the number of uploaded docs in firesotre collection
           value = "10"
+        }
+        env {
+          name = "PROJECT_ID"
+          value = var.project_id
         }
         env {
           # API endpoint domain

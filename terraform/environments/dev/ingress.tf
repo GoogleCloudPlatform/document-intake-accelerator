@@ -12,10 +12,17 @@ resource "kubernetes_namespace" "ingress_nginx" {
   }
 }
 
+resource "google_compute_address" "ingress_ip_address" {
+  name = "nginx-controller"
+}
+
 module "nginx-controller" {
   source    = "terraform-iaac/nginx-controller/helm"
   version   = "2.0.2"
   namespace = "ingress-nginx"
+
+  ip_address = google_compute_address.ingress_ip_address.address
+
   # TODO: does this require cert_manager up and running or can they be completed in parallel
   depends_on = [
     # module.cert_manager, 

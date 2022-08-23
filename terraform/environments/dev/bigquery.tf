@@ -8,9 +8,9 @@ resource "google_bigquery_dataset" "data_set" {
 }
 
 resource "google_bigquery_table" "table_id" {
+  deletion_protection = false
   dataset_id          = "validation"
   table_id            = "validation_table"
-  deletion_protection = "false"
 
   schema = <<EOF
 [

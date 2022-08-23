@@ -8,12 +8,12 @@ import json
 from fastapi import status, Response
 from app.config.config import PROCESS_TASK_URL
 
+PROJECT_ID = os.environ.get("PROJECT_ID")
 
-#Initialize Firestore DB
-
-cred = credentials.Certificate("serviceAccountKey.json")
-default_app = firebase_admin.initialize_app(cred)
-#firebase_admin.initialize_app(cred)
+# Initializing Firebase client.
+firebase_admin.initialize_app(credentials.ApplicationDefault(), {
+    "projectId": PROJECT_ID,
+})
 db = firestore.client()
 
 router = APIRouter(prefix="/queue", tags=["Queue"])
