@@ -21,8 +21,9 @@ resource "google_cloud_run_service" "queue-run" {
         env {
           name = "t"  #thresold value for comparison with the number of uploaded docs in firesotre collection
           value = "10"
+          # API endpoint domain
+          API_DOMAIN = var.api_domain
         }
-       
       }
       service_account_name = module.cloud-run-service-account.email
     }

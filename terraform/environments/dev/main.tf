@@ -205,9 +205,9 @@ resource "google_container_node_pool" "primary_nodes" {
   }
 }
 
-
 # Creating a Kubernetes Service account for Workload Identity
 resource "kubernetes_service_account" "ksa" {
+  depends_on = [google_container_cluster.main-cluster]
   metadata {
     name = "ksa"
     annotations = {
@@ -249,26 +249,26 @@ resource "google_storage_bucket" "assets" {
   uniform_bucket_level_access = true
 }
 
-resource "google_compute_router" "router" {
-  name    = "${local.project_id}-router"
-  region  = local.region
-  network = google_container_cluster.main-cluster.network
+# resource "google_compute_router" "router" {
+#   name    = "${local.project_id}-router"
+#   region  = local.region
+#   network = google_container_cluster.main-cluster.network
 
-  bgp {
-    asn = 64514
-  }
-}
+#   bgp {
+#     asn = 64514
+#   }
+# }
 
-resource "google_compute_router_nat" "nat" {
-  name                               = "router-nat"
-  router                             = google_compute_router.router.name
-  region                             = google_compute_router.router.region
-  nat_ip_allocate_option             = "AUTO_ONLY"
-  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+# resource "google_compute_router_nat" "nat" {
+#   name                               = "router-nat"
+#   router                             = google_compute_router.router.name
+#   region                             = google_compute_router.router.region
+#   nat_ip_allocate_option             = "AUTO_ONLY"
+#   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 
-  log_config {
-    enable = true
-    filter = "ERRORS_ONLY"
-  }
-}
+#   log_config {
+#     enable = true
+#     filter = "ERRORS_ONLY"
+#   }
+# }
 

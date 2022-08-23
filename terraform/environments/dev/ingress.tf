@@ -25,7 +25,7 @@ module "nginx-controller" {
 resource "kubectl_manifest" "ingress" {
   yaml_body = <<YAML
 kind: Ingress
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 metadata:
   name: nginx-ingress
   annotations:
@@ -41,41 +41,64 @@ spec:
     - hosts:
       - ${var.api_domain}
       secretName: autodocprocessing # [TODO] Change this to anything
+  defaultBackend:
+    service:
+      name: adp-ui
+      port:
+        number: 80
   rules:
   - host: ${var.api_domain}
     http:
       paths:
-      - backend:
-          serviceName: adp-ui
-          servicePort: 80
       - path: /upload_service/v1
+        pathType: Prefix
         backend:
-          serviceName: upload-service
-          servicePort: 80
+          service:
+            name: upload-service
+            port:
+              number: 80
       - path: /classification_service/v1
+        pathType: Prefix
         backend:
-          serviceName: classification-service
-          servicePort: 80
+          service:
+            name: classification-service
+            port:
+              number: 80
       - path: /validation_service/v1
+        pathType: Prefix
         backend:
-          serviceName: validation-service
-          servicePort: 80
+          service:
+            name: validation-service
+            port:
+              number: 80
       - path: /extraction_service/v1
+        pathType: Prefix
         backend:
-          serviceName: extraction-service
-          servicePort: 80
+          service:
+            name: extraction-service
+            port:
+              number: 80
       - path: /hitl_service/v1
+        pathType: Prefix
         backend:
-          serviceName: hitl-service
-          servicePort: 80
+          service:
+            name: hitl-service
+            port:
+              number: 80
       - path: /document_status_service/v1
+        pathType: Prefix
         backend:
-          serviceName: document-status-service
-          servicePort: 80
+          service:
+            name: document-status-service
+            port:
+              number: 80
       - path: /matching_service/v1
+        pathType: Prefix
         backend:
-          serviceName: matching-service
-          servicePort: 80
+          service:
+            name: matching-service
+            port:
+              number: 80
 
 YAML
 
