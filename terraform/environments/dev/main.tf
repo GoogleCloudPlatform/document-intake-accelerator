@@ -104,6 +104,13 @@ module "pubsub" {
   cloudrun_endpoint = module.cloudrun.endpoint
 }
 
+module "validation_bigquery" {
+  depends_on = [
+    module.project_services, 
+  ]
+  source     = "../../modules/bigquery"
+}
+
 resource "google_storage_bucket" "default" {
   name          = "${local.project_id}"
   location      = local.multiregion
