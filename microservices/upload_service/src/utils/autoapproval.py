@@ -5,26 +5,8 @@ depending on the 3 different scores
 import os
 import json
 from google.cloud import storage
+from common.autoapproval_config import AUTO_APPROVAL_MAPPING
 from common.utils.logging_handler import Logger
-filename = os.path.join(
-    os.path.dirname(__file__), ".", "approval_rules.json")
-
-def read_json(path):
-  """
-  Function to read a json file directly from gcs
-  Input:
-  path: gcs path of the json to be loaded
-  Output:
-  data_dict : dict consisting of the json output
-  """
-  bucket_name = path.split("/", 3)[2]
-  file_path = path.split("/", 3)[3]
-  client = storage.Client()
-  bucket = client.get_bucket(bucket_name)
-  blob = bucket.blob(file_path)
-  data = blob.download_as_string(client=None)
-  data_dict = json.loads(data)
-  return data_dict
 
 
 def get_values(
@@ -42,12 +24,8 @@ def get_values(
   status : Accept/Reject or Review
   flag : Yes or no
   """
-  # data = read_json("gs://async_form_parser/Jsons/acpt.json")"
-  # filename = "approval_rules.json"
-  # file=open(filename)
-  # data= json.load(file)
-  with open(filename,encoding = "utf-8") as json_file:
-    data = json.load(json_file)
+
+  data = AUTO_APPROVAL_MAPPING
 
   Logger.info(
     f"Validation_Score:{validation_score}, Extraction_score :"

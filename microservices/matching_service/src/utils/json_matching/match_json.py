@@ -11,8 +11,8 @@ https://docs.google.com/spreadsheets/d/1WB_fSH-nrsknoJyP0qvPmAt6y
 import datetime
 from fuzzywuzzy import fuzz
 import pandas as pd
-from utils.json_matching.matching_config import MATCHING_USER_KEYS_SUPPORTING_DOC
-from utils.json_matching.matching_config import APPLICATION_DOC_DATE_FORMAT
+from common.matching_config import MATCHING_USER_KEYS_SUPPORTING_DOC
+from common.matching_config import APPLICATION_DOC_DATE_FORMAT
 from common.utils.logging_handler import Logger
 
 

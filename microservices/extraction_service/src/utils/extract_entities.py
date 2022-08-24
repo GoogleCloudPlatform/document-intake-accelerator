@@ -22,10 +22,9 @@ from .utils_functions import entities_extraction, download_pdf_gcs,\
     extract_form_fields, del_gcs_folder, \
     form_parser_entities_mapping, extraction_accuracy_calc, \
     clean_form_parser_keys, standard_entity_mapping, strip_value
-from .config import \
-  NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE,\
-  GCS_OP_URI, MAPPING_DICT
 from common.config import PROJECT_ID
+from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME, \
+    DOCAI_ATTRIBUTES_TO_IGNORE, DOCAI_ENTITY_MAPPING
 from common.utils.logging_handler import Logger
 import warnings
 parser_config = os.path.join(
@@ -81,7 +80,7 @@ def specialized_parser_extraction(parser_details: dict,
   json_string = proto.Message.to_json(parser_doc_data)
   data = json.loads(json_string)
   # remove unnecessary entities from parser
-  for each_attr in NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE:
+  for each_attr in DOCAI_ATTRIBUTES_TO_IGNORE:
     if "." in each_attr:
       parent_attr, child_attr = each_attr.split(".")
       for idx in range(len(data.get(parent_attr, 0))):
@@ -96,7 +95,7 @@ def specialized_parser_extraction(parser_details: dict,
   #                                           [-1][:-4])), "w") as outfile:
   #     json.dump(data, outfile)
 
-  required_entities = MAPPING_DICT[doc_type]
+  required_entities = DOCAI_ENTITY_MAPPING[doc_type]
   # extract dl entities
   extracted_entity_dict = entities_extraction(data, required_entities, doc_type)
   # Create a list of entities dicts
@@ -146,7 +145,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   # create a temp folder to store parser op, delete folder once processing done
   # call create gcs bucket function to create bucket,
   # folder will be created automatically not the bucket
-  gcs_output_uri = GCS_OP_URI
+  gcs_output_uri = DOCAI_OUTPUT_BUCKET_NAME
   letters = string.ascii_lowercase
   temp_folder = "".join(random.choice(letters) for i in range(10))
   gcs_output_uri_prefix = "temp_"+temp_folder
@@ -236,7 +235,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   #     json.dump(extracted_entity_list, outfile, indent=4)
   # mappping dictionary of document type and state
   doc_state = doc_type+"_"+state
-  mapping_dict = MAPPING_DICT[doc_state]
+  mapping_dict = DOCAI_ENTITY_MAPPING[doc_state]
   # Extract desired entites from form parser
   try:
     form_parser_entities_list, flag = form_parser_entities_mapping(

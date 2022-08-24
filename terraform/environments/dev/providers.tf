@@ -26,35 +26,35 @@ data "google_client_config" "default" {}
 # Defer reading the cluster data until the GKE cluster exists.
 data "google_container_cluster" "default" {
   # as-is this will probably need to be run a few times
-  name     = "adp-cluster"
+  name     = "main-cluster"
   location = var.region
   project  = var.project_id
 }
 
 # Used by module.gke.
 provider "kubernetes" {
-  host  = "https://${data.google_container_cluster.default.endpoint}"
+  host  = data.google_container_cluster.default.endpoint
   token = data.google_client_config.default.access_token
   cluster_ca_certificate = base64decode(
-    data.google_container_cluster.default.master_auth[0].cluster_ca_certificate,
+    try(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate, ""),
   )
 }
 
 # Used by module.ingress.
 provider "kubectl" {
-  host             = "https://${data.google_container_cluster.default.endpoint}"
+  host             = data.google_container_cluster.default.endpoint
   token            = data.google_client_config.default.access_token
   cluster_ca_certificate = base64decode(
-    data.google_container_cluster.default.master_auth[0].cluster_ca_certificate,
+    try(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate, ""),
   )
 }
 
 provider "helm" {
   kubernetes {
-    host  = "https://${data.google_container_cluster.default.endpoint}"
+    host  = data.google_container_cluster.default.endpoint
     token = data.google_client_config.default.access_token
     cluster_ca_certificate = base64decode(
-      data.google_container_cluster.default.master_auth[0].cluster_ca_certificate,
+      try(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate, ""),
     )
   }
 }

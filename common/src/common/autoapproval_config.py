@@ -1,4 +1,4 @@
-{
+AUTO_APPROVAL_MAPPING = {
   "driving_licence": {
     "Accept1": {
       "Validation_Score": 0.4,

@@ -79,7 +79,7 @@ variable "cloudrun_deploy" {
   description = "Whether to deploy Queue cloudrun service resource"
 }
 
-variable "cert_issuer_email" {
+variable "admin_email" {
   type        = string
   description = "email of the cert issuer"
 }

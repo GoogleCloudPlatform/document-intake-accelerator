@@ -1,25 +1,19 @@
-"""
-This is Document and state mapping dict
-Default entities sections have entities that are coming from parser
-Derived section have information of entities which are not extracted from
-parser and need to extract them by using pattern
-Create state wise mapping if it form parser, and one doc type mapping
-if it is specialized parser
-"""
+### DocAI parser and extraction configuration
+import os
+PROJECT_ID = os.environ.get("PROJECT_ID", "")
+assert PROJECT_ID, "Env var PROJECT_ID is not set."
 
-import common
-
-# pylint: disable=W1401
+# GCS temp folder to store async form parser output
+DOCAI_OUTPUT_BUCKET_NAME = f"{PROJECT_ID}-docai-output"
 
 # Attributes not required from specialized parser raw json
-NOT_REQUIRED_ATTRIBUTES_FROM_SPECIALIZED_PARSER_RESPONSE = ["textStyles",
-                                                            "textChanges",
-                                                            "revisions",
-                                                            "pages.image"]
-# GCS temp folder to store async form parser output
-GCS_OP_URI = f"gs://{}"
-# Mapping dict
-MAPPING_DICT = {
+DOCAI_ATTRIBUTES_TO_IGNORE = ["textStyles",
+                              "textChanges",
+                              "revisions",
+                              "pages.image"]
+
+# Full mapping of entityes and column names, grouped by document class.
+DOCAI_ENTITY_MAPPING = {
   "unemployment_form_arizona": {
     "default_entities": {
       "Social Security Number:": ["Social Security Number"],
