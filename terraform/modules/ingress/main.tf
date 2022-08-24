@@ -46,6 +46,10 @@ module "nginx-controller" {
 }
 
 resource "kubernetes_ingress_v1" "default_ingress" {
+  depends_on = [
+    module.nginx-controller
+  ]
+
   metadata {
     name = "default-ingress"
     annotations = {
@@ -83,41 +87,3 @@ resource "kubernetes_ingress_v1" "default_ingress" {
     }
   }
 }
-
-# resource "kubectl_manifest" "ingress" {
-#   yaml_body = <<YAML
-# kind: Ingress
-# apiVersion: networking.k8s.io/v1
-# metadata:
-#   name: default-nginx-ingress
-#   annotations:
-#     kubernetes.io/ingress.class: "nginx"
-#     cert-manager.io/cluster-issuer: "letsencrypt"
-#     nginx.ingress.kubernetes.io/enable-cors: "true"
-#     nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS, DELETE"
-#     nginx.ingress.kubernetes.io/cors-allow-origin: "${var.cors_allow_origin}"
-#     nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
-#     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-# spec:
-#   tls:
-#     - hosts:
-#       - ${var.domain}
-#       secretName: ${var.domain}-ssl-cert
-#   rules:
-#   - host: ${var.domain}
-#     http:
-#       paths:
-#       - pathType: Prefix
-#         path: /sample_service
-#         backend:
-#           service:
-#             name: sample-service
-#             port:
-#               number: 80
-
-# YAML
-
-#   depends_on = [
-#     module.nginx-controller
-#   ]
-# }
