@@ -78,6 +78,7 @@ resource "kubernetes_ingress_v1" "default_ingress" {
     }
 
     tls {
+      hosts = [ "${var.domain}" ]
       secret_name = "tls-secret"
     }
   }
