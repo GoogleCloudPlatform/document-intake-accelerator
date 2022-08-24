@@ -7,5 +7,5 @@ output "name" {
 }
 
 output "location" {
-  value = google_cloud_run_service.cloudrun-service.name
+  value = google_cloud_run_service.cloudrun-service.location
 }

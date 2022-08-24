@@ -49,6 +49,13 @@ module "service_accounts" {
   env        = var.env
 }
 
+module "firebase" {
+  depends_on = [module.project_services]
+  source           = "../../modules/firebase"
+  project_id       = var.project_id
+  firestore_region = var.firestore_region
+}
+
 module "vpc_network" {
   source      = "../../modules/vpc_network"
   project_id  = var.project_id

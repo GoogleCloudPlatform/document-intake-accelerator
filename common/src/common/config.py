@@ -4,7 +4,7 @@ Config module to setup common environment
 
 import os
 
-# ========= Generic =============================
+# ========= Overall =============================
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
 if PROJECT_ID != "":
   os.environ["GOOGLE_CLOUD_PROJECT"] = PROJECT_ID
@@ -17,6 +17,7 @@ SUPPORTING_DOCS = ["driving_licence","claims_form","utility_bill","pay_stub"]
 # ========= Document upload ======================
 BUCKET_NAME = f"{PROJECT_ID}-document-upload"
 TOPIC_ID = "queue-topic"
+PROCESS_TASK_API_PATH= "/upload_service/v1/process_task"
 
 # ========= Validation ===========================
 BUCKET_NAME_VALIDATION = PROJECT_ID
