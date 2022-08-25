@@ -98,8 +98,8 @@ module "cloudrun" {
 
 module "pubsub" {
   depends_on = [
-    module.project_services, 
-    module.cloudrun, 
+    module.project_services,
+    module.cloudrun,
     data.google_cloud_run_service.queue-run
   ]
   source     = "../../modules/pubsub"
@@ -113,10 +113,29 @@ module "pubsub" {
 
 module "validation_bigquery" {
   depends_on = [
-    module.project_services, 
+    module.project_services,
   ]
   source     = "../../modules/bigquery"
 }
+
+module "docai" {
+  depends_on = [module.project_services]
+  source     = "../../modules/docai"
+
+  # See modules/docai/README.md for DocAI processor types.
+  # The key needs to match with the keys in
+  # common/src/common/parser_config.json.
+  project_id = var.project_id
+  processors = {
+    driving_licence = "US_DRIVER_LICENSE_PROCESSOR"
+    utility_bill = "UTILITY_PROCESSOR"
+    pay_stub = "PAYSTUB_PROCESSOR"
+    unemployment_form = "FORM_PARSER_PROCESSOR"
+    claims_form = "FORM_PARSER_PROCESSOR"
+  }
+}
+
+# ================= Storage buckets ====================
 
 resource "google_storage_bucket" "default" {
   name          = "${local.project_id}"

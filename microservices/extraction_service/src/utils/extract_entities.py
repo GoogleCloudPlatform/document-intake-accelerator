@@ -3,7 +3,6 @@
 This is the main file for extraction framework, based on \
     doc type specialized parser or
 form parser functions will be called
-
 """
 
 import json
@@ -25,10 +24,9 @@ from .utils_functions import entities_extraction, download_pdf_gcs,\
 from common.config import PROJECT_ID
 from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME, \
     DOCAI_ATTRIBUTES_TO_IGNORE, DOCAI_ENTITY_MAPPING
+from common.parser_config import PARSER_CONFIG_JSON
 from common.utils.logging_handler import Logger
 import warnings
-parser_config = os.path.join(
-    os.path.dirname(__file__), ".", "parser_config.json")
 
 warnings.simplefilter(action="ignore")
 
@@ -63,7 +61,8 @@ def specialized_parser_extraction(parser_details: dict,
 
   client = documentai.DocumentProcessorServiceClient(client_options=opts)
   # parser api end point
-  name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
+  # name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
+  name = processor_id
   blob = download_pdf_gcs(
      gcs_uri=gcs_doc_path
   )
@@ -270,51 +269,48 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
     Extraction accuracy
   """
 
-  # parser_config_json = "parser_config.json"
-  parser_config_json = parser_config
   # read parser details from configuration json file
-  with open(parser_config_json, "r", encoding="utf-8") as j:
-    parsers_info = json.loads(j.read())
-    parser_information = parsers_info.get(doc_type)
-    # if parser present then do extraction else update the status
-    if parser_information:
-      parser_name = parser_information["parser_name"]
-      if parser_name == "FormParser":
-        Logger.info(f"Form parser extraction started for"
-                    f" this document:{doc_type}")
-        desired_entities_list,flag = form_parser_extraction(
-            parser_information,gcs_doc_path, doc_type, state, 300)
-      else:
-        Logger.info(f"Specialized parser extraction "
-                    f"started for this document:{doc_type}")
-        flag=True
-        desired_entities_list = specialized_parser_extraction(
-            parser_information,gcs_doc_path, doc_type)
-
-      # calling standard entity mapping function to standardize the entities
-      final_extracted_entities = standard_entity_mapping(
-          desired_entities_list,parser_name)
-      # calling post processing utility function
-      # input json is the extracted json file after your mapping script
-      input_dict = get_json_format_for_processing(final_extracted_entities)
-      input_dict, output_dict = data_transformation(input_dict)
-      final_extracted_entities = correct_json_format_for_db(
-          output_dict,final_extracted_entities)
-      # with open("{}.json".format(os.path.join(mapped_extracted_entities,
-      #         gcs_doc_path.split('/')[-1][:-4])),
-      #           "w") as outfile:
-      #     json.dump(final_extracted_entities, outfile, indent=4)
-
-      # extraction accuracy calculation
-      document_extraction_confidence,extraction_status = \
-        extraction_accuracy_calc(final_extracted_entities,flag)
-      # print(final_extracted_entities)
-      # print(document_extraction_confidence)
-      Logger.info(f"Extraction completed for this document:{doc_type}")
-      return final_extracted_entities, \
-            document_extraction_confidence,extraction_status
+  parsers_info = PARSER_CONFIG_JSON
+  parser_information = parsers_info.get(doc_type)
+  # if parser present then do extraction else update the status
+  if parser_information:
+    parser_name = parser_information["parser_name"]
+    if parser_name == "FormParser":
+      Logger.info(f"Form parser extraction started for"
+                  f" this document:{doc_type}")
+      desired_entities_list,flag = form_parser_extraction(
+          parser_information,gcs_doc_path, doc_type, state, 300)
     else:
-      # Parser not available
-      Logger.error(f"Parser not available for this document:{doc_type}")
-      # print("parser not available for this document")
-      return None
+      Logger.info(f"Specialized parser extraction "
+                  f"started for this document:{doc_type}")
+      flag=True
+      desired_entities_list = specialized_parser_extraction(
+          parser_information,gcs_doc_path, doc_type)
+
+    # calling standard entity mapping function to standardize the entities
+    final_extracted_entities = standard_entity_mapping(
+        desired_entities_list,parser_name)
+    # calling post processing utility function
+    # input json is the extracted json file after your mapping script
+    input_dict = get_json_format_for_processing(final_extracted_entities)
+    input_dict, output_dict = data_transformation(input_dict)
+    final_extracted_entities = correct_json_format_for_db(
+        output_dict,final_extracted_entities)
+    # with open("{}.json".format(os.path.join(mapped_extracted_entities,
+    #         gcs_doc_path.split('/')[-1][:-4])),
+    #           "w") as outfile:
+    #     json.dump(final_extracted_entities, outfile, indent=4)
+
+    # extraction accuracy calculation
+    document_extraction_confidence,extraction_status = \
+      extraction_accuracy_calc(final_extracted_entities,flag)
+    # print(final_extracted_entities)
+    # print(document_extraction_confidence)
+    Logger.info(f"Extraction completed for this document:{doc_type}")
+    return final_extracted_entities, \
+          document_extraction_confidence,extraction_status
+  else:
+    # Parser not available
+    Logger.error(f"Parser not available for this document:{doc_type}")
+    # print("parser not available for this document")
+    return None

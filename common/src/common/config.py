@@ -49,29 +49,29 @@ CONF_THRESH = 0.98
 
 # List of database keys and extracted entities that are searchable
 DB_KEYS = [
-  "active", 
-  "auto_approval", 
-  "is_autoapproved", 
-  "matching_score", 
+  "active",
+  "auto_approval",
+  "is_autoapproved",
+  "matching_score",
   "case_id",
-  "uid", 
-  "url", 
-  "context", 
-  "document_class", 
+  "uid",
+  "url",
+  "context",
+  "document_class",
   "document_type",
-  "upload_timestamp", 
-  "extraction_score", 
+  "upload_timestamp",
+  "extraction_score",
   "is_hitl_classified",
 ]
 ENTITY_KEYS = [
-  "name", 
-  "dob", 
-  "residential_address", 
-  "email", 
+  "name",
+  "dob",
+  "residential_address",
+  "email",
   "phone_no",
 ]
 
-### Misc 
+### Misc
 
 # Used by E2E testing. Leave as blank by default.
 DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
