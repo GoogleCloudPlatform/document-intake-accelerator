@@ -20,7 +20,7 @@ resource "google_bigquery_table" "table_id" {
     "mode": "NULLABLE"
   },
   {
-    "name": "uuid",
+    "name": "uid",
     "type": "STRING",
     "mode": "NULLABLE"
   },

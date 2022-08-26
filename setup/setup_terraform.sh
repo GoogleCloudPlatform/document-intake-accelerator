@@ -37,10 +37,6 @@ enable_apis () {
   gcloud services enable iamcredentials.googleapis.com
 }
 
-# copy_validation_rules () {
-#   gsutil cp common/src/common/validation_rules/* gs://${PROJECT_ID}/Validation
-# }
-
 print_highlight () {
   printf "${BLUE}$1${NORMAL}\n"
 }

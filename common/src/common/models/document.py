@@ -29,18 +29,19 @@ class Document(BaseModel):
   is_hitl_classified = BooleanField()
   external_case_id = TextField()
   extraction_status = TextField()
+  error_detail = TextField()
 
   class Meta:
     ignore_none_field = False
     collection_name = DATABASE_PREFIX+ "document"
 
   @classmethod
-  def find_by_uid(cls, uuid):
+  def find_by_uid(cls, uid):
     """Find the document  using  uid
     Args:
-        uuid (string):  UID
+        uid (string):  UID
     Returns:
         Document: Document Object
     """
-    return Document.collection.filter("uid", "==", uuid).get()
+    return Document.collection.filter("uid", "==", uid).get()
 

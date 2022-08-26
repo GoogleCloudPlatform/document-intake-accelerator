@@ -84,7 +84,7 @@ module "ingress" {
   # Domains for API endpoint, excluding protocols.
   domain            = var.api_domain
   region            = var.region
-  cors_allow_origin = "http://localhost:4200,http://localhost:3000,${var.web_app_domain}"
+  cors_allow_origin = "http://localhost:4200,http://localhost:3000,${var.api_domain}"
 }
 
 module "cloudrun" {
@@ -118,16 +118,18 @@ module "validation_bigquery" {
   source     = "../../modules/bigquery"
 }
 
+# ================= Document AI Parsers ====================
+
 module "docai" {
   depends_on = [module.project_services]
   source     = "../../modules/docai"
-
-  # See modules/docai/README.md for DocAI processor types.
-  # The key needs to match with the keys in
-  # common/src/common/parser_config.json.
   project_id = var.project_id
+
+  # See modules/docai/README.md for available DocAI processor types.
+  # Once applied Terraform changes, please run /setup/update_parser_config.sh
+  # to automatically update common/src/common/parser_config.json.
   processors = {
-    driving_licence = "US_DRIVER_LICENSE_PROCESSOR"
+    driver_license = "US_DRIVER_LICENSE_PROCESSOR"
     utility_bill = "UTILITY_PROCESSOR"
     pay_stub = "PAYSTUB_PROCESSOR"
     unemployment_form = "FORM_PARSER_PROCESSOR"
@@ -146,6 +148,13 @@ resource "google_storage_bucket" "default" {
 
 resource "google_storage_bucket" "document-upload" {
   name          = "${local.project_id}-document-upload"
+  location      = local.multiregion
+  storage_class = "STANDARD"
+  uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket" "docai-output" {
+  name          = "${local.project_id}-docai-output"
   location      = local.multiregion
   storage_class = "STANDARD"
   uniform_bucket_level_access = true

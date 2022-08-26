@@ -1,6 +1,55 @@
-# Google Solutions - Google DocAI Claims Processing
+# Google Solutions - Automated Document Processing (ADP)
 
-Please contact jonchen@google.com] for any questions.
+Please contact jonchen@google.com for any questions.
+
+## Deployment
+
+### GCP foundation - Terraform
+
+Set up Terraform environment variables and GCS bucket for state file:
+
+```
+export PROJECT_ID=<GCP Project ID>
+export TF_VAR_api_domain=<Your API Domain>
+export TF_VAR_admin_email=<Your Email>
+export TF_VAR_project_id=$PROJECT_ID
+
+# Create Terraform Statefile GCS bucket.
+bash setup/setup_terraform.sh
+```
+
+Run Terraform apply
+
+```
+cd terraform/environments/dev
+terraform init
+terraform apply
+
+# Enter yes at the promopt to apply Terraform changes.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+```
+
+### Deploying Kubernetes Microservices
+
+
+
+## Configuration
+
+### Classification
+
+### Extraction
+
+### Validation
+
+### Matching
+
+### Human-In-The-Loop Web Application
+
 
 ## Development
 

@@ -245,7 +245,7 @@ def test_update_hitl_classification_api(client_with_emulator):
 
   case_id = "test_case"
   uid = "u123"
-  document_class = "driving_licence"
+  document_class = "driver_license"
 
   mockresponse = Mock()
   mockresponse.status_code = 200

@@ -88,8 +88,3 @@ variable "api_domain" {
   type        = string
   description = "api domain name"
 }
-
-variable "web_app_domain" {
-  type        = string
-  description = "web app domain name"
-}

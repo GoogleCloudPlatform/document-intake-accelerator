@@ -1,5 +1,5 @@
 """
-  E2E tests for checking 
+  E2E tests for checking
   HITL updating extracted entity value with user provided values
 """
 
@@ -17,7 +17,7 @@ def add_records(entity,case_id,uid):
   uid : str - uid of the document
   """
   timestamp = str(datetime.datetime.utcnow())
-  
+
   d = Document()
   d.case_id = case_id
   d.uid = uid
@@ -43,11 +43,11 @@ def test_update_entities():
             "value":"JAMES ADAM",
             "corrected_value":None
           }]
-  doc_dict = add_records(entity,case_id,uid)  
+  doc_dict = add_records(entity,case_id,uid)
 
   #Updating entities and making the api request with the parameters
   entity[0]["corrected_value"] = "James fernandez"
-  doc_dict["entities"] = entity 
+  doc_dict["entities"] = entity
   base_url = get_baseurl("hitl-service")
   res = requests.post(base_url + f"/hitl_service/v1/update_entity?"\
     f"uid={uid}",json=doc_dict)

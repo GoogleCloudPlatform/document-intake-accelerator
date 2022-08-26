@@ -26,12 +26,12 @@
 # 6. 28/September/1990 -->  %d/%B/%Y
 # """
 # # Values for the keys are just an example
-# SUPPORT_DOC_TYPE = 'drivers_license'
+# SUPPORT_DOC_TYPE = 'driver_license'
 # # date format for supporting doc follows American Date Format: 'yyyy/mm/dd'.
 # MATCHING_USER_KEYS_SUPPORTING_DOC = {
-#     # 'drivers_license': {
+#     # 'driver_license': {
 #     #    'name': 0.16, 'dob': (0.16, '%y/%m/%d'), 'sex': 0.16, 'dl_no': 0.16},
-#     'driving_licence': {
+#     'driver_license': {
 #         'name': 0.25,
 #         'dob': (0.25, '%Y-%m-%d'),
 #         'dl_no': 0.25,

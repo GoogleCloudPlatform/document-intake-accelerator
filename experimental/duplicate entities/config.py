@@ -66,7 +66,7 @@ MAPPING_DICT = {
             "E-Mail Address": ["Employee E-Mail Address"]
         }
     },
-   "driving_licence": {
+   "driver_license": {
           "default_entities":{
                         "Document Id" : ["DLN"],
                         "Expiration Date": ["EXP"],

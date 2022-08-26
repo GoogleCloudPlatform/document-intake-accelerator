@@ -30,8 +30,9 @@ import warnings
 
 warnings.simplefilter(action="ignore")
 
-def specialized_parser_extraction(parser_details: dict,
-                                  gcs_doc_path: str, doc_type: str):
+
+def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
+                                  doc_type: str, context: str):
   """
     This is specialized parser extraction main function.
     It will send request to parser and retrieve response and call
@@ -63,12 +64,12 @@ def specialized_parser_extraction(parser_details: dict,
   # parser api end point
   # name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
   name = processor_id
-  blob = download_pdf_gcs(
-     gcs_uri=gcs_doc_path
-  )
+  blob = download_pdf_gcs(gcs_uri=gcs_doc_path)
 
-  document = {"content": blob.download_as_bytes(),
-              "mime_type": "application/pdf"}
+  document = {
+      "content": blob.download_as_bytes(),
+      "mime_type": "application/pdf"
+  }
   # Configure the process request
   request = {"name": name, "raw_document": document}
   Logger.info("Specialized parser extraction api called")
@@ -87,16 +88,13 @@ def specialized_parser_extraction(parser_details: dict,
     else:
       data.pop(each_attr, None)
 
-  # this can be removed while integration
-  # save parser op output
-  # print(data)
-  # with open("{}.json".format(os.path.join(parser_op, gcs_doc_path.split('/')
-  #                                           [-1][:-4])), "w") as outfile:
-  #     json.dump(data, outfile)
+  # Get corresponding mapping dict, for specific context or fallback to "all"
+  docai_entity_mapping_by_context = DOCAI_ENTITY_MAPPING.get(context)
+  mapping_dict = docai_entity_mapping_by_context.get(
+      doc_type) or DOCAI_ENTITY_MAPPING["all"][doc_type]
 
-  required_entities = DOCAI_ENTITY_MAPPING[doc_type]
   # extract dl entities
-  extracted_entity_dict = entities_extraction(data, required_entities, doc_type)
+  extracted_entity_dict = entities_extraction(data, mapping_dict, doc_type)
   # Create a list of entities dicts
   specialized_parser_entity_list = [v for k, v in extracted_entity_dict.items()]
 
@@ -110,7 +108,7 @@ def specialized_parser_extraction(parser_details: dict,
 
 
 def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
-                           doc_type: str, state: str, timeout: int):
+                           doc_type: str, context: str, timeout: int):
   """
   This is form parser extraction main function. It will send
   request to parser and retrieve response and call
@@ -121,7 +119,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
     parser_details: It has parser info like parser id, name, location, and etc
     gcs_doc_path: Document gcs path
     doc_type: Document Type
-    state: State name
+    context: context name
     timeout: Max time given for extraction entities using async form parser API
 
   Returns: Form parser response - list of dicts having entity, value,
@@ -131,9 +129,6 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
 
   location = parser_details["location"]
   processor_id = parser_details["processor_id"]
-  #parser_name = parser_details["parser_name"]
-  project_id = PROJECT_ID
-
   opts = {}
 
   # Location can be 'us' or 'eu'
@@ -144,30 +139,36 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   # create a temp folder to store parser op, delete folder once processing done
   # call create gcs bucket function to create bucket,
   # folder will be created automatically not the bucket
-  gcs_output_uri = DOCAI_OUTPUT_BUCKET_NAME
+  gcs_output_uri = f"gs://{DOCAI_OUTPUT_BUCKET_NAME}"
   letters = string.ascii_lowercase
   temp_folder = "".join(random.choice(letters) for i in range(10))
-  gcs_output_uri_prefix = "temp_"+temp_folder
+  gcs_output_uri_prefix = "temp_" + temp_folder
   # temp folder location
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
   # delete temp folder
   # del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
-  gcs_documents = documentai.GcsDocuments(
-    documents=[{"gcs_uri": gcs_doc_path, "mime_type": "application/pdf"}]
-  )
+  gcs_documents = documentai.GcsDocuments(documents=[{
+      "gcs_uri": gcs_doc_path,
+      "mime_type": "application/pdf"
+  }])
   input_config = documentai.BatchDocumentsInputConfig\
       (gcs_documents=gcs_documents)
   # Temp op folder location
   output_config = documentai.DocumentOutputConfig(
-    gcs_output_config={"gcs_uri": destination_uri}
-  )
+      gcs_output_config={"gcs_uri": destination_uri})
+
+  Logger.info(f"input_config = {input_config}")
+  Logger.info(f"output_config = {output_config}")
+  Logger.info(f"processor_id = {processor_id}")
 
   # parser api end point
-  name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
+  # name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
   Logger.info("Form parser extraction api called")
+
   # request for Doc AI
   request = documentai.types.document_processor_service.BatchProcessRequest(
-    name=name, input_documents=input_config,
+      name=processor_id,
+      input_documents=input_config,
       document_output_config=output_config,
   )
   operation = client.batch_process_documents(request)
@@ -213,14 +214,17 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
           # noise removal from keys and values
           field_name = clean_form_parser_keys(field_name)
           field_value = strip_value(field_value)
-          temp_dict = {"key": field_name, "key_coordinates":field_coordinates,
-                    "value": field_value,
-                     "value_coordinates": value_coordinates,
-                     "key_confidence": round(field_name_confidence, 2),
-                     "value_confidence": round(field_value_confidence, 2),
-                     "page_no": int(page.page_number),
-                     "page_width": int(page.dimension.width),
-                     "page_height": int(page.dimension.height)}
+          temp_dict = {
+              "key": field_name,
+              "key_coordinates": field_coordinates,
+              "value": field_value,
+              "value_coordinates": value_coordinates,
+              "key_confidence": round(field_name_confidence, 2),
+              "value_confidence": round(field_value_confidence, 2),
+              "page_no": int(page.page_number),
+              "page_width": int(page.dimension.width),
+              "page_height": int(page.dimension.height)
+          }
 
           extracted_entity_list.append(temp_dict)
 
@@ -228,31 +232,33 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
     else:
       print(f"Skipping non-supported file type {blob.name}")
 
-  # Save extracted entities json, can be removed from pipeline
-  # with open("{}.json".format(os.path.join(parser_op,
-  #     gcs_doc_path.split('/')[-1][:-4])), "w") as outfile:
-  #     json.dump(extracted_entity_list, outfile, indent=4)
-  # mappping dictionary of document type and state
-  doc_state = doc_type+"_"+state
-  mapping_dict = DOCAI_ENTITY_MAPPING[doc_state]
+  # Get corresponding mapping dict, for specific context or fallback to "all"
+  docai_entity_mapping_by_context = DOCAI_ENTITY_MAPPING.get(context)
+  mapping_dict = docai_entity_mapping_by_context.get(
+      doc_type) or DOCAI_ENTITY_MAPPING["all"][doc_type]
+
+  print(f"context = {context}")
+  print(f"doc_type = {doc_type}")
+  print(f"mapping_dict = {mapping_dict}")
+
   # Extract desired entites from form parser
   try:
     form_parser_entities_list, flag = form_parser_entities_mapping(
-        extracted_entity_list,mapping_dict, form_parser_text, temp_folder)
+        extracted_entity_list, mapping_dict, form_parser_text, temp_folder)
 
     # delete temp folder
     if os.path.exists(temp_folder):
       shutil.rmtree(temp_folder)
     del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
     Logger.info("Required entities created from Form parser response")
-    return form_parser_entities_list,flag
+    return form_parser_entities_list, flag
   except Exception as e:
     Logger.error(e)
     if os.path.exists(temp_folder):
       shutil.rmtree(temp_folder)
 
 
-def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
+def extract_entities(gcs_doc_path: str, doc_type: str, context: str):
   """
   This function calls specialed parser or form parser depends on document type
 
@@ -260,7 +266,7 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
   ----------
   gcs_doc_path: Document gcs path
   doc_type: Type of documents. Ex: unemployment_form, driver_license, and etc
-  state: state
+  context: context
 
   Returns
   -------
@@ -275,27 +281,29 @@ def extract_entities(gcs_doc_path: str, doc_type: str, state: str):
   # if parser present then do extraction else update the status
   if parser_information:
     parser_name = parser_information["parser_name"]
-    if parser_name == "FormParser":
+    parser_type = parser_information["parser_type"]
+
+    if parser_type == "FORM_PARSER_PROCESSOR":
       Logger.info(f"Form parser extraction started for"
                   f" this document:{doc_type}")
-      desired_entities_list,flag = form_parser_extraction(
-          parser_information,gcs_doc_path, doc_type, state, 300)
+      desired_entities_list, flag = form_parser_extraction(
+          parser_information, gcs_doc_path, doc_type, context, 300)
     else:
       Logger.info(f"Specialized parser extraction "
                   f"started for this document:{doc_type}")
-      flag=True
+      flag = True
       desired_entities_list = specialized_parser_extraction(
-          parser_information,gcs_doc_path, doc_type)
+          parser_information, gcs_doc_path, doc_type, context)
 
     # calling standard entity mapping function to standardize the entities
-    final_extracted_entities = standard_entity_mapping(
-        desired_entities_list,parser_name)
+    final_extracted_entities = standard_entity_mapping(desired_entities_list,
+                                                       parser_name)
     # calling post processing utility function
     # input json is the extracted json file after your mapping script
     input_dict = get_json_format_for_processing(final_extracted_entities)
     input_dict, output_dict = data_transformation(input_dict)
     final_extracted_entities = correct_json_format_for_db(
-        output_dict,final_extracted_entities)
+        output_dict, final_extracted_entities)
     # with open("{}.json".format(os.path.join(mapped_extracted_entities,
     #         gcs_doc_path.split('/')[-1][:-4])),
     #           "w") as outfile:

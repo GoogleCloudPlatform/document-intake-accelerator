@@ -31,8 +31,8 @@ def is_doc_unclassified(details):
 
 def upload_and_process():
   """
-  Function to upload and process one application form and one 
-  supporting document with the same case_id and 
+  Function to upload and process one application form and one
+  supporting document with the same case_id and
   returns the data of the unclassified document
   """
   #Get base url of upload service and gather input
@@ -51,7 +51,7 @@ def upload_and_process():
   assert response.status_code == 200
 
   #Get response data from the upload endpoint
-  # and pass that as a parameter to process task endpoint 
+  # and pass that as a parameter to process task endpoint
   data = response.json().get("configs")
   payload={"configs": data}
   response = requests.post(base_url+f"/upload_service/v1/process_task",\
@@ -80,7 +80,7 @@ def upload_and_process():
 
 def test_hitl_classification(setup):
   """
-  User Journey to classify an unclassified document 
+  User Journey to classify an unclassified document
   to an existing document class
   """
   #Upload and process documents

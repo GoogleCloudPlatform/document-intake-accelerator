@@ -186,5 +186,5 @@ SD_JSON = [
   }
 ]
 
-print(compare_json(AF_JSON, SD_JSON, "driving_licence",
+print(compare_json(AF_JSON, SD_JSON, "driver_license",
                  "unemployment_form", "arkansas"))

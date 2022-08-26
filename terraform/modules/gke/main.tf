@@ -1,14 +1,19 @@
 locals {
   project = var.project_id
-  project_roles = [
+  gke_sa_roles = [
+    "roles/aiplatform.user",
+    "roles/bigquery.admin",
+    "roles/datastore.owner",
+    "roles/documentai.admin",
+    "roles/firebase.admin",
     "roles/iam.serviceAccountUser",
+    "roles/logging.admin",
     "roles/logging.logWriter",
     "roles/monitoring.metricWriter",
     "roles/monitoring.viewer",
+    "roles/pubsub.admin",
     "roles/stackdriver.resourceMetadata.writer",
     "roles/storage.admin",
-    "roles/datastore.owner",
-    "roles/firebase.admin",
   ]
   gke_pod_sa_email = "gke-node-sa@${var.project_id}.iam.gserviceaccount.com"
 }
@@ -20,7 +25,7 @@ module "service_accounts" {
   names         = ["gke-node-sa"]
   display_name  = "SA for GKE Node Pool"
   description   = "Service account is used in the gke node pool"
-  project_roles = [for i in local.project_roles : "${var.project_id}=>${i}"]
+  project_roles = [for i in local.gke_sa_roles : "${var.project_id}=>${i}"]
 }
 
 module "gke" {

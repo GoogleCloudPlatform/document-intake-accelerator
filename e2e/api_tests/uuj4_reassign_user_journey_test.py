@@ -98,7 +98,7 @@ def test_reassign_user_journey(setup):
     uid = doc.get("uid")
     document = Document.find_by_uid(uid)
     if document.document_type == "supporting_documents" and\
-        document.document_class == "driving_licence":
+        document.document_class == "driver_license":
       supporting_doc_case_id =  document.case_id
       supporting_doc_uid =  document.uid
     elif document.document_type == "application_form":

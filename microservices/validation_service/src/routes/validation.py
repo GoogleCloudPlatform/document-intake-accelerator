@@ -11,11 +11,12 @@ from utils.validation import get_values
 router = APIRouter(prefix="/validation")
 SUCCESS_RESPONSE = {"status": "Success"}
 FAILED_RESPONSE = {"status": "Failed"}
-entity=[]
+entity = []
+
 
 @router.post("/validation_api")
 async def validation(case_id: str, uid: str, doc_class: str,
-                 entities:List[Dict],response: Response):
+                     entities: List[Dict], response: Response):
   """ validates the document with case id , uid , doc_class
     Args:
     case_id (str): Case id of the file ,
@@ -27,7 +28,7 @@ async def validation(case_id: str, uid: str, doc_class: str,
     """
   validation_status = "fail"
   try:
-    validation_output = get_values(doc_class, case_id, uid ,entities)
+    validation_output = get_values(doc_class, case_id, uid, entities)
     #The output of get_values is a tuple if executed successfully
     #so taking valdation score and validation entities from output
     if validation_output is not None:
@@ -35,36 +36,34 @@ async def validation(case_id: str, uid: str, doc_class: str,
       validation_entities = validation_output[1]
       validation_status = "success"
       update_validation_status(case_id, uid, validation_score,
-                               validation_status,validation_entities)
-      Logger.info(
-        f"Validation Score for cid:{case_id}, uid: {uid},"
-        f" doc_class:{doc_class} is {validation_score}")
-      return {
-        "status": validation_status,
-        "score": validation_score
-      }
+                               validation_status, validation_entities)
+      Logger.info(f"Validation Score for cid:{case_id}, uid: {uid},"
+                  f" doc_class:{doc_class} is {validation_score}")
+      return {"status": validation_status, "score": validation_score}
     #Else condition works if the get_values function returns None
     else:
       validation_status = "fail"
-      update_validation_status(case_id, uid,None , validation_status,entities)
-      Logger.error(
-        f"Validation failed  for case_id:{case_id}, uid: {uid},"
-        f" doc_class:{doc_class}")
-      response.status_code =  status.HTTP_500_INTERNAL_SERVER_ERROR
+      update_validation_status(case_id, uid, None, validation_status, entities)
+      Logger.error(f"Validation failed for case_id:{case_id}, uid: {uid},"
+                   f" doc_class:{doc_class}")
+      response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
       response.body = f"Validation failed for case_id {case_id}" \
                       f"uid {uid}, doc_class {doc_class}"
       return response
+
   except Exception as error:
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
-    update_validation_status(case_id, uid, None, validation_status,entities)
+    print(err)
+
+    update_validation_status(case_id, uid, None, validation_status, entities)
     raise HTTPException(
-      status_code=500, detail="Failed to update validation score")from error
+        status_code=500, detail="Failed to update validation score") from error
 
 
-def update_validation_status(case_id: str, uid: str,
- validation_score: float, validation_status: str,
-              validation_entities:List[Dict]):
+def update_validation_status(case_id: str, uid: str, validation_score: float,
+                             validation_status: str,
+                             validation_entities: List[Dict]):
   """ Call status update api to update the validation score
     Args:
     case_id (str): Case id of the file ,
@@ -80,5 +79,5 @@ def update_validation_status(case_id: str, uid: str,
   else:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}&" \
               f"status={validation_status}"
-  response = requests.post(req_url,json=validation_entities)
+  response = requests.post(req_url, json=validation_entities)
   return response

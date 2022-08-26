@@ -12,7 +12,7 @@ assert PROJECT_ID, "Env var PROJECT_ID is not set."
 
 #List of application forms and supporting documents
 APPLICATION_FORMS = ["unemployment_form"]
-SUPPORTING_DOCS = ["driving_licence","claims_form","utility_bill","pay_stub"]
+SUPPORTING_DOCS = ["driver_license","claims_form","utility_bill","pay_stub"]
 
 # ========= Document upload ======================
 BUCKET_NAME = f"{PROJECT_ID}-document-upload"
@@ -29,13 +29,13 @@ VALIDATION_TABLE = f"{PROJECT_ID}.validation.validation_table"
 # ========= Classification =======================
 # Endpoint Id where model is deployed.
 # TODO: Please update this to your deployed VertexAI model ID.
-ENDPOINT_ID = "4679565468279767040"
+CLASSIFICATION_ENDPOINT_ID = "4679565468279767040"
 
 # Map to standardise predicted document class from classifier to
 # standard document_class values
 DOC_CLASS_STANDARDISATION_MAP = {
   "UE": "unemployment_form",
-  "DL": "driving_licence",
+  "DL": "driver_license",
   "Claim": "claims_form",
   "Utility": "utility_bill",
   "PayStub": "pay_stub"
