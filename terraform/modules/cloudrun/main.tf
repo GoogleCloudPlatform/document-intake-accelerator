@@ -7,6 +7,27 @@ resource "google_storage_bucket" "queue-log-bucket" {
   uniform_bucket_level_access = true
 }
 
+# Creating a custom service account for cloud run
+module "cloud-run-service-account" {
+  source       = "github.com/terraform-google-modules/cloud-foundation-fabric/modules/iam-service-account/"
+  project_id   = var.project_id
+  name         = "cloudrun-sa"
+  display_name = "This is service account for cloud run"
+
+  iam = {
+    "roles/iam.serviceAccountUser" = []
+  }
+
+  iam_project_roles = {
+    (var.project_id) = [
+      "roles/run.invoker",
+      "roles/eventarc.eventReceiver",
+      "roles/firebase.admin",
+      "roles/firestore.serviceAgent"
+    ]
+  }
+}
+
 # Build Cloudrun image
 data "archive_file" "common-zip" {
   type        = "zip"
@@ -59,34 +80,12 @@ resource "null_resource" "build-cloudrun-image" {
   }
 }
 
-# Creating a custom service account for cloud run
-
-module "cloud-run-service-account" {
-  source       = "github.com/terraform-google-modules/cloud-foundation-fabric/modules/iam-service-account/"
-  project_id   = var.project_id
-  name         = "cloudrun-sa"
-  display_name = "This is service account for cloud run"
-
-  iam = {
-    "roles/iam.serviceAccountUser" = []
-  }
-
-  iam_project_roles = {
-    (var.project_id) = [
-      "roles/run.invoker",
-      "roles/eventarc.eventReceiver",
-      "roles/firebase.admin",
-      "roles/firestore.serviceAgent"
-    ]
-  }
-}
-
 resource "google_cloud_run_service" "cloudrun-service" {
   depends_on = [
     module.cloud-run-service-account,
     null_resource.build-cloudrun-image
   ]
-  # count = "${var.cloudrun_deploy ? 1 : 0}"
+
   name     = var.name
   location = var.region
 

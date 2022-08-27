@@ -55,6 +55,7 @@ def update_matching_status(case_id: str,
     f"&entity={entity}&matching_score={matching_score}"
 
     response = requests.post(req_url, json=entity)
+
     if response.status_code == 200:
       return {"status": STATUS_SUCCESS}
     else:

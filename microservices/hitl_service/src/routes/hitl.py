@@ -21,7 +21,7 @@ SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 FAILED_RESPONSE = {"status": STATUS_ERROR}
 
 
-def add_keys(docs_list: list):
+def get_doc_list_data(docs_list: list):
   for doc in docs_list:
     name = "N/A"
     if doc["entities"]:
@@ -33,46 +33,55 @@ def add_keys(docs_list: list):
             name = entity["value"]
     doc["applicant_name"] = name
 
-    ml_status = "N/A"
-    current_status = "N/A"
+    process_status = "-"
+    current_status = "-"
     status_last_updated_by = "System"
+
     if doc["system_status"]:
       system_status = doc["system_status"]
-      ml_status = ((system_status[-1]["stage"]).replace("_"," ")+\
-        " "+system_status[-1]["status"]).title()
+      last_system_status = system_status[-1]
 
+      process_status = ((last_system_status["stage"]).replace("_"," ")+\
+        " "+last_system_status["status"]).title()
+
+      print(f"system_status = {system_status}")
+      print(f"process_status = {process_status}")
+
+      # If there's HITL status, use the latest HITL status.
       if doc["hitl_status"]:
         last_hitl_status = doc["hitl_status"][-1]
 
-        if system_status[-1]["timestamp"] > last_hitl_status["timestamp"]:
-          if system_status[-1]["stage"].lower() == "auto_approval":
-            if system_status[-1]["status"].lower() == STATUS_SUCCESS:
+        if last_system_status["timestamp"] > last_hitl_status["timestamp"]:
+          if last_system_status["stage"] == "auto_approval":
+            if last_system_status["status"] == STATUS_SUCCESS:
               current_status = doc["auto_approval"].title()
             else:
               current_status = STATUS_IN_PROGRESS
-          elif system_status[-1]["status"].lower() == STATUS_SUCCESS:
+          elif last_system_status["status"] == STATUS_SUCCESS:
             current_status = STATUS_IN_PROGRESS
           else:
             current_status = STATUS_ERROR
         else:
-          if last_hitl_status["status"].lower() == "reassigned":
+          if last_hitl_status["status"] == "reassigned":
             current_status = STATUS_IN_PROGRESS
           else:
             current_status = last_hitl_status["status"].title()
             status_last_updated_by = last_hitl_status["user"]
 
+      # Otherwise, check the last system status.
       else:
-        if system_status[-1]["stage"].lower() == "auto_approval":
-          if system_status[-1]["status"].lower() == STATUS_SUCCESS:
+        if last_system_status["stage"] == "auto_approval":
+          if last_system_status["status"] == STATUS_SUCCESS:
             current_status = doc["auto_approval"].title()
           else:
-            current_status = STATUS_ERROR
-        elif system_status[-1]["status"].lower() == STATUS_SUCCESS:
+            current_status = STATUS_REVIEW
+
+        elif last_system_status["status"] == STATUS_SUCCESS:
           current_status = STATUS_IN_PROGRESS
         else:
           current_status = STATUS_ERROR
 
-    doc["ml_status"] = ml_status
+    doc["process_status"] = process_status
     doc["current_status"] = current_status
     doc["status_last_updated_by"] = status_last_updated_by
 
@@ -95,7 +104,7 @@ async def report_data():
             Document.collection.filter(active="active").fetch()))
     docs_list = sorted(
         docs_list, key=lambda i: i["upload_timestamp"], reverse=True)
-    docs_list = add_keys(docs_list)
+    docs_list = get_doc_list_data(docs_list)
     response = {"status": STATUS_SUCCESS}
     response["len"] = len(docs_list)
     response["data"] = docs_list
@@ -125,7 +134,7 @@ async def get_document(uid: str):
       response["detail"] = "No Document found with the given uid"
       return response
     response = {"status": STATUS_SUCCESS}
-    docs = add_keys([doc.to_dict()])
+    docs = get_doc_list_data([doc.to_dict()])
     response["data"] = docs[0]
     return response
 
@@ -164,9 +173,9 @@ async def get_queue(hitl_status: str):
         map(lambda x: x.to_dict(),
             Document.collection.filter(active="active").fetch()))
 
-    #Adding keys like ml_status, current_status filtering on current_status
+    #Adding keys like process_status, current_status filtering on current_status
     #And sorting by upload_timestamp in descending order
-    result_queue = add_keys(docs)
+    result_queue = get_doc_list_data(docs)
     result_queue = filter(filter_status, result_queue)
     result_queue = sorted(
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
@@ -343,7 +352,7 @@ async def get_unclassified():
         if system_trail[-1]["status"].lower() != STATUS_SUCCESS:
           result_queue.append(doc_dict)
     response = {"status": STATUS_SUCCESS}
-    result_queue = add_keys(result_queue)
+    result_queue = get_doc_list_data(result_queue)
     result_queue = sorted(
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
     response["len"] = len(result_queue)
@@ -571,7 +580,7 @@ async def search(search_term: SearchPayload):
                   detail="Invalid Parameter type.\
                     Limit start and end should be of type int")
             docs_list = docs_list[limit_start:limit_end]
-          docs_list = add_keys(docs_list)
+          docs_list = get_doc_list_data(docs_list)
           return {
               "status": STATUS_SUCCESS,
               "len": len(docs_list),
@@ -621,7 +630,7 @@ async def search(search_term: SearchPayload):
 
     if limit_start is not None and limit_end is not None:
       resultset = resultset[limit_start:limit_end]
-    resultset = add_keys(resultset)
+    resultset = get_doc_list_data(resultset)
     return {"status": STATUS_SUCCESS, "len": len(resultset), "data": resultset}
 
   except HTTPException as e:

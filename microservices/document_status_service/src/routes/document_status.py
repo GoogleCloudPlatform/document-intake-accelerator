@@ -14,8 +14,6 @@ import traceback
 # pylint: disable = broad-except
 
 router = APIRouter()
-SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
-FAILED_RESPONSE = {"status": STATUS_ERROR}
 
 
 @router.post("/create_document")
@@ -39,7 +37,8 @@ async def create_document(case_id: str, filename: str, context: str):
     document.uid = document.save().id
     document.active = "active"
     document.save()
-    return {"status": STATUS_SUCCESS, "uid": document.uid}
+    return {"status": STATUS_SUCCESS, "status_code": 200, "uid": document.uid}
+
   except Exception as e:
     Logger.error(f"Error in create document for case_id {case_id} "
                  f"and {filename}")
@@ -116,7 +115,13 @@ async def update_classification_status(
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-    return {"status": STATUS_SUCCESS, "case_id": case_id, "uid": uid}
+    return {
+        "status": STATUS_SUCCESS,
+        "status_code": 200,
+        "case_id": case_id,
+        "uid": uid
+    }
+
   except Exception as e:
     Logger.error(f"Error in updating classification status for "
                  f"case_id {case_id} and uid {uid}")
@@ -169,7 +174,13 @@ async def update_extraction_status(case_id: str,
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-    return {"status": STATUS_SUCCESS, "case_id": case_id, "uid": uid}
+    return {
+        "status": STATUS_SUCCESS,
+        "status_code": 200,
+        "case_id": case_id,
+        "uid": uid
+    }
+
   except Exception as e:
     Logger.error(f"Error in updating extraction status case_id {case_id} "
                  f"and uid {uid}")
@@ -219,7 +230,14 @@ async def update_validation_status(case_id: str,
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-    return {"status": STATUS_SUCCESS, "case_id": case_id, "uid": uid}
+
+    return {
+        "status": STATUS_SUCCESS,
+        "status_code": 200,
+        "case_id": case_id,
+        "uid": uid
+    }
+
   except Exception as e:
     Logger.error(f"Error in updating validation status"
                  f" for case_id {case_id} and uid {uid}")
@@ -271,7 +289,14 @@ async def update_matching_status(case_id: str,
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-    return {"status": STATUS_SUCCESS, "case_id": case_id, "uid": uid}
+
+    return {
+        "status": STATUS_SUCCESS,
+        "status_code": 200,
+        "case_id": case_id,
+        "uid": uid
+    }
+
   except Exception as e:
     Logger.error(f"Error in updating matching status for"
                  f" case_id {case_id} and uid {uid}")
