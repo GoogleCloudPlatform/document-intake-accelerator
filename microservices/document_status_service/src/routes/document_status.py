@@ -2,6 +2,8 @@
 from common.config import BUCKET_NAME
 from common.models import Document
 from common.utils.logging_handler import Logger
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+
 import fireo
 from fastapi import APIRouter, HTTPException
 from typing import Optional, List, Dict
@@ -12,8 +14,8 @@ import traceback
 # pylint: disable = broad-except
 
 router = APIRouter()
-SUCCESS_RESPONSE = {"status": "Success"}
-FAILED_RESPONSE = {"status": "Failed"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
+FAILED_RESPONSE = {"status": STATUS_ERROR}
 
 
 @router.post("/create_document")
@@ -37,7 +39,7 @@ async def create_document(case_id: str, filename: str, context: str):
     document.uid = document.save().id
     document.active = "active"
     document.save()
-    return {"status": "Success", "uid": document.uid}
+    return {"status": STATUS_SUCCESS, "uid": document.uid}
   except Exception as e:
     Logger.error(f"Error in create document for case_id {case_id} "
                  f"and {filename}")
@@ -79,15 +81,15 @@ async def update_classification_status(
        """
   try:
     document = Document.find_by_uid(uid)
-    if status == "success":
+    if status == STATUS_SUCCESS:
       #update  the document type and document class
       document.document_class = document_class
       document.document_type = document_type
       document.is_hitl_classified = is_hitl
       system_status = {
-          "is_hitl" : is_hitl,
+          "is_hitl": is_hitl,
           "stage": "classification",
-          "status": "success",
+          "status": STATUS_SUCCESS,
           "timestamp": str(datetime.datetime.utcnow())
       }
       document.system_status = fireo.ListUnion([system_status])
@@ -114,7 +116,7 @@ async def update_classification_status(
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-    return {"status": "Success", "case_id": case_id, "uid": uid}
+    return {"status": STATUS_SUCCESS, "case_id": case_id, "uid": uid}
   except Exception as e:
     Logger.error(f"Error in updating classification status for "
                  f"case_id {case_id} and uid {uid}")
@@ -148,10 +150,10 @@ async def update_extraction_status(case_id: str,
            """
   try:
     document = Document.find_by_uid(uid)
-    if status == "success":
+    if status == STATUS_SUCCESS:
       system_status = {
           "stage": "extraction",
-          "status": "success",
+          "status": STATUS_SUCCESS,
           "timestamp": str(datetime.datetime.utcnow())
       }
       document.system_status = fireo.ListUnion([system_status])
@@ -162,12 +164,12 @@ async def update_extraction_status(case_id: str,
     else:
       system_status = {
           "stage": "extraction",
-          "status": "fail",
+          "status": STATUS_ERROR,
           "timestamp": str(datetime.datetime.utcnow())
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-    return {"status": "Success", "case_id": case_id, "uid": uid}
+    return {"status": STATUS_SUCCESS, "case_id": case_id, "uid": uid}
   except Exception as e:
     Logger.error(f"Error in updating extraction status case_id {case_id} "
                  f"and uid {uid}")
@@ -183,7 +185,7 @@ async def update_extraction_status(case_id: str,
 async def update_validation_status(case_id: str,
                                    uid: str,
                                    status: str,
-                                   entities : Optional[List[Dict]]=None,
+                                   entities: Optional[List[Dict]] = None,
                                    validation_score: Optional[float] = None):
   """takes case_id , uid , validation status of validation
   service as input and updates in database
@@ -199,12 +201,12 @@ async def update_validation_status(case_id: str,
           """
   try:
     document = Document.find_by_uid(uid)
-    if status == "success":
+    if status == STATUS_SUCCESS:
       document.validation_score = validation_score
       document.entities = entities
       system_status = {
           "stage": "validation",
-          "status": "success",
+          "status": STATUS_SUCCESS,
           "timestamp": str(datetime.datetime.utcnow())
       }
       document.system_status = fireo.ListUnion([system_status])
@@ -212,12 +214,12 @@ async def update_validation_status(case_id: str,
     else:
       system_status = {
           "stage": "validation",
-          "status": "fail",
+          "status": STATUS_ERROR,
           "timestamp": str(datetime.datetime.utcnow())
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-    return {"status": "Success", "case_id": case_id, "uid": uid}
+    return {"status": STATUS_SUCCESS, "case_id": case_id, "uid": uid}
   except Exception as e:
     Logger.error(f"Error in updating validation status"
                  f" for case_id {case_id} and uid {uid}")
@@ -250,11 +252,11 @@ async def update_matching_status(case_id: str,
            """
   try:
     document = Document.find_by_uid(uid)
-    if status == "success":
+    if status == STATUS_SUCCESS:
       system_status = {
-        "stage": "matching",
-        "status": "success",
-        "timestamp": str(datetime.datetime.utcnow())
+          "stage": "matching",
+          "status": STATUS_SUCCESS,
+          "timestamp": str(datetime.datetime.utcnow())
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
@@ -263,13 +265,13 @@ async def update_matching_status(case_id: str,
       document.save()
     else:
       system_status = {
-        "stage": "matching",
-        "status": "fail",
-        "timestamp": str(datetime.datetime.utcnow())
+          "stage": "matching",
+          "status": STATUS_ERROR,
+          "timestamp": str(datetime.datetime.utcnow())
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-    return {"status": "Success", "case_id": case_id, "uid": uid}
+    return {"status": STATUS_SUCCESS, "case_id": case_id, "uid": uid}
   except Exception as e:
     Logger.error(f"Error in updating matching status for"
                  f" case_id {case_id} and uid {uid}")
@@ -285,11 +287,11 @@ async def update_autoapproved(case_id: str, uid: str, status: str,
                               autoapproved_status: str, is_autoapproved: str):
   try:
     document = Document.find_by_uid(uid)
-    if status == "success":
+    if status == STATUS_SUCCESS:
       document.auto_approval = autoapproved_status
       system_status = {
           "stage": "auto_approval",
-          "status": "success",
+          "status": STATUS_SUCCESS,
           "timestamp": str(datetime.datetime.utcnow())
       }
       document.system_status = fireo.ListUnion([system_status])
@@ -298,12 +300,12 @@ async def update_autoapproved(case_id: str, uid: str, status: str,
     else:
       system_status = {
           "stage": "auto_approval",
-          "status": "fail",
+          "status": STATUS_ERROR,
           "timestamp": str(datetime.datetime.utcnow())
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-    return {"status": "Success", "case_id": case_id, "uid": uid}
+    return {"status": STATUS_SUCCESS, "case_id": case_id, "uid": uid}
   except Exception as e:
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
@@ -333,7 +335,7 @@ async def create_documet_json_input(case_id: str, document_class: str,
     document.upload_timestamp = str(datetime.datetime.utcnow())
     system_status = {
         "stage": "uploaded",
-        "status": "success",
+        "status": STATUS_SUCCESS,
         "timestamp": str(datetime.datetime.utcnow())
     }
     document.system_status = fireo.ListUnion([system_status])
@@ -346,7 +348,8 @@ async def create_documet_json_input(case_id: str, document_class: str,
     document.url = f"{gcs_base_url}/{case_id}/{document.uid}" \
                 f"/input_data_{case_id}_{document.uid}.json"
     document.save()
-    return {"status": "success", "uid": document.uid}
+    return {"status": STATUS_SUCCESS, "uid": document.uid}
+
   except Exception as e:
     Logger.error("Error in  creating document")
     Logger.error(e)

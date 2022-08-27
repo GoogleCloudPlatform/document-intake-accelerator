@@ -7,6 +7,7 @@ import os
 from testing.fastapi_fixtures import client_with_emulator
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
 from unittest.mock import Mock, patch
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 # assigning url
 api_url = "http://localhost:8080/classification_service/v1/"\
@@ -14,7 +15,8 @@ api_url = "http://localhost:8080/classification_service/v1/"\
 
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
-SUCCESS_RESPONSE = {"status": "Success"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
+
 
 def test_classify_all_parameters(client_with_emulator):
   """

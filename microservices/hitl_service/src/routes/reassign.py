@@ -8,6 +8,8 @@ from common.utils.stream_to_bq import stream_document_to_bigquery
 from common.utils.copy_gcs_documents import copy_blob
 from common.utils.logging_handler import Logger
 from common.config import BUCKET_NAME
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+
 # disabling for linting to pass
 # pylint: disable = broad-except
 import re
@@ -55,9 +57,7 @@ async def reassign_case_id(reassign: Reassign, response: Response):
       response.body = f"The  existing case_id {old_case_id}and new " \
                   f"case_id {new_case_id} is" \
                   f" same enter different case_id"
-      return {"message":response.body}
-
-
+      return {"message": response.body}
 
     document = Document.find_by_uid(uid)
     #If document with given uid does not exist send 404
@@ -68,7 +68,7 @@ async def reassign_case_id(reassign: Reassign, response: Response):
       response.status_code = status.HTTP_404_NOT_FOUND
       response.body = f"document to be reassigned with case_id {old_case_id} " \
                       f"and uid {uid} does not exist in database"
-      return {"message":response.body}
+      return {"message": response.body}
 
     #if given document with old case_id is application and cannot be
     # reassigned send user response that this file is not acceptable
@@ -93,7 +93,7 @@ async def reassign_case_id(reassign: Reassign, response: Response):
       response.body = f"Application with case_id {new_case_id}" \
       f" does not exist in database to reassigne supporting doc " \
       f"{old_case_id} and uid {uid}"
-      return {"message":response.body}
+      return {"message": response.body}
 
     client = bq_client()
     gcs_source_url = document.url
@@ -101,7 +101,7 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     document_type = document.document_type
     entities = document.entities
     context = document.context
-    extraction_score =  document.extraction_score
+    extraction_score = document.extraction_score
 
     #remove the prefix of bucket name from gcs_url to get blob name
     prefix_name = f"gs://{BUCKET_NAME}/"
@@ -117,7 +117,7 @@ async def reassign_case_id(reassign: Reassign, response: Response):
                                  destination_blob_name)
 
     # check if moving file in gcs is sucess
-    if status_copy_blob != "success":
+    if status_copy_blob != STATUS_SUCCESS:
       response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
       response.body = f"Error in copying files in " \
      f"gcs bucket from source folder {old_case_id},destination" \
@@ -134,8 +134,8 @@ async def reassign_case_id(reassign: Reassign, response: Response):
         "timestamp": str(datetime.datetime.utcnow()),
         "user": user,
         "comment": comment,
-        "old_case_id":old_case_id,
-        "new_case_id" :new_case_id,
+        "old_case_id": old_case_id,
+        "new_case_id": new_case_id,
         "action": f"reassigned from {old_case_id} to {new_case_id}"
     }
     document.hitl_status = fireo.ListUnion([hitl_audit_trail])
@@ -143,17 +143,19 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     #Update Bigquery database
     entities_for_bq = format_data_for_bq(entities)
     update_bq = stream_document_to_bigquery(client, new_case_id, uid,
-                                document_class, document_type,
-                              entities_for_bq)
+                                            document_class, document_type,
+                                            entities_for_bq)
     print("--------firestore db ----------------")
     # status_process_task =
-    response_process_task = call_process_task(new_case_id,uid,document_class,
-    document_type,updated_url,context,extraction_score,entities)
+    response_process_task = call_process_task(new_case_id, uid, document_class,
+                                              document_type, updated_url,
+                                              context, extraction_score,
+                                              entities)
     if update_bq == [] and response_process_task.status_code == 202:
 
       Logger.info(
           f"ressign case_id from {old_case_id} to {new_case_id} is successfull")
-      return {"status": "success", "url": document.url}
+      return {"status": STATUS_SUCCESS, "url": document.url}
     else:
       print("inside else")
       response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -169,8 +171,8 @@ async def reassign_case_id(reassign: Reassign, response: Response):
 
 
 def call_process_task(case_id: str, uid: str, document_class: str,
-                      document_type: str, gcs_uri: str,context: str,
-                      extraction_score: float,entities:List[Dict]):
+                      document_type: str, gcs_uri: str, context: str,
+                      extraction_score: float, entities: List[Dict]):
   """
     Starts the process task API after reassign
   """
@@ -178,17 +180,16 @@ def call_process_task(case_id: str, uid: str, document_class: str,
   data = {
       "case_id": case_id,
       "uid": uid,
-      "context":context,
+      "context": context,
       "gcs_url": gcs_uri,
       "document_class": document_class,
       "document_type": document_type,
-      "extraction_score":extraction_score,
+      "extraction_score": extraction_score,
       "extraction_entities": entities
   }
   payload = {"configs": [data]}
   base_url = "http://upload-service/upload_service" \
             "/v1/process_task?is_reassign=true"
   Logger.info(f"Params for process task {payload}")
-  response = requests.post(base_url,json=payload)
+  response = requests.post(base_url, json=payload)
   return response
-

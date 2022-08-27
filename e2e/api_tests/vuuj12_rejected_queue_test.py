@@ -6,6 +6,7 @@ import requests
 from endpoint_proxy import get_baseurl
 import datetime
 from common.models.document import Document
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 
 def add_records():
@@ -25,11 +26,11 @@ def add_records():
   d.auto_approval = "Rejected"
   d.system_status = [{
       "stage": "uploaded",
-      "status": "success",
+      "status": STATUS_SUCCESS,
       "timestamp": timestamp
   }, {
       "stage": "auto_approval",
-      "status": "success",
+      "status": STATUS_SUCCESS,
       "timestamp": timestamp
   }]
   d.save()
@@ -39,7 +40,7 @@ def add_records():
   d.uid = "uj9_rejected_test_2"
   d.active = "active"
   d.upload_timestamp = timestamp
-  d.auto_approval = "Approved"
+  d.auto_approval = STATUS_APPROVED
   d.hitl_status = [{
       "status":
           "rejected",
@@ -52,11 +53,11 @@ def add_records():
   }]
   d.system_status = [{
       "stage": "uploaded",
-      "status": "success",
+      "status": STATUS_SUCCESS,
       "timestamp": timestamp
   }, {
       "stage": "auto_approval",
-      "status": "success",
+      "status": STATUS_SUCCESS,
       "timestamp": timestamp
   }]
   d.save()

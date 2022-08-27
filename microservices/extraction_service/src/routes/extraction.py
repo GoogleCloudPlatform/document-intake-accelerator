@@ -6,6 +6,8 @@ from common.db_client import bq_client
 from common.utils.logging_handler import Logger
 from common.utils.stream_to_bq import stream_document_to_bigquery
 from common.utils.format_data_for_bq import format_data_for_bq
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+
 from utils.extract_entities import extract_entities
 import requests
 import traceback
@@ -16,9 +18,8 @@ router = APIRouter()
 
 
 @router.post("/extraction_api")
-async def extraction(case_id: str, uid: str, doc_class: str,
-                     document_type :str,context : str,gcs_url : str,
-                     response: Response):
+async def extraction(case_id: str, uid: str, doc_class: str, document_type: str,
+                     context: str, gcs_url: str, response: Response):
   """extracts the document with given case id and uid
         Args:
             case_id (str): Case id of the file ,
@@ -34,8 +35,8 @@ async def extraction(case_id: str, uid: str, doc_class: str,
     # document = Document.find_by_uid(uid)
     # gcs_url = document.url
     #Call ML model to extract entities from document
-    extraction_output = await run_in_threadpool(extract_entities,
-                              gcs_url, doc_class, context)
+    extraction_output = await run_in_threadpool(extract_entities, gcs_url,
+                                                doc_class, context)
     #check if the output of extract entity function is
     #touple containing list of dictionaries and extraction score
     # extraction_output = list(extraction_output)
@@ -51,17 +52,17 @@ async def extraction(case_id: str, uid: str, doc_class: str,
                                                      doc_class, document_type,
                                                      entities_for_bq)
       #update_extraction_status updates data to document collection
-      db_update_status = update_extraction_status(case_id, uid, "success",
+      db_update_status = update_extraction_status(case_id, uid, STATUS_SUCCESS,
                                                   extraction_output[0],
                                                   extraction_output[1],
                                                   extraction_output[2])
       #checking if both databases are updated successfully
       if db_update_status.status_code == 200 and bq_update_status == []:
         return {
-            "status": "success",
-            "entities":extraction_output[0],
+            "status": STATUS_SUCCESS,
+            "entities": extraction_output[0],
             "score": extraction_output[1],
-            "extraction_status":extraction_output[2],
+            "extraction_status": extraction_output[2],
             "message": f"document with case_id {case_id} ,uid_id {uid} "
                        f"successfully extracted"
         }
@@ -73,7 +74,7 @@ async def extraction(case_id: str, uid: str, doc_class: str,
 
     #check if  extract_entities returned None when parser not available
     elif extraction_output is None:
-      update_extraction_status(case_id, uid, "fail", None, None,None)
+      update_extraction_status(case_id, uid, STATUS_ERROR, None, None, None)
       Logger.error(f"Parser not available for case_id {case_id} "
                    f",uid {uid}, doc_class {doc_class}")
       response.status_code = status.HTTP_404_NOT_FOUND
@@ -84,7 +85,7 @@ async def extraction(case_id: str, uid: str, doc_class: str,
     else:
       raise HTTPException(status_code=500)
   except Exception as e:
-    update_extraction_status(case_id, uid, "fail", None, None,None)
+    update_extraction_status(case_id, uid, STATUS_ERROR, None, None, None)
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(f"Extraction failed for case_id {case_id} and uid {uid}")
     Logger.error(e)
@@ -96,7 +97,8 @@ async def extraction(case_id: str, uid: str, doc_class: str,
 
 
 def update_extraction_status(case_id: str, uid: str, extraction_status: str,
-                entity: list, extraction_score: float,extraction_type:str):
+                             entity: list, extraction_score: float,
+                             extraction_type: str):
   """
     This function calls the document status service
     to update the extraction status in Database
@@ -112,7 +114,7 @@ def update_extraction_status(case_id: str, uid: str, extraction_status: str,
 
   base_url = "http://document-status-service/document_status_service/v1/"
   req_url = f"{base_url}update_extraction_status"
-  if extraction_status == "success":
+  if extraction_status == STATUS_SUCCESS:
     response = requests.post(
         f"{req_url}?case_id={case_id}"
         f"&uid={uid}&status={extraction_status}"

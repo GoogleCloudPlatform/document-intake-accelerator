@@ -5,6 +5,8 @@ from common.models import Document
 from common.utils.logging_handler import Logger
 from common.config import BUCKET_NAME,DB_KEYS,ENTITY_KEYS,\
   APPLICATION_FORMS,SUPPORTING_DOCS
+from common.config import STATUS_APPROVED, STATUS_REVIEW, STATUS_REJECTED, STATUS_PENDING
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 from google.cloud import storage
 import datetime
 import requests
@@ -15,8 +17,8 @@ from models.search_payload import SearchPayload
 # pylint: disable = broad-except
 
 router = APIRouter()
-SUCCESS_RESPONSE = {"status": "Success"}
-FAILED_RESPONSE = {"status": "Failed"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
+FAILED_RESPONSE = {"status": STATUS_ERROR}
 
 
 def add_keys(docs_list: list):
@@ -31,9 +33,6 @@ def add_keys(docs_list: list):
             name = entity["value"]
     doc["applicant_name"] = name
 
-    in_progress = "In Progress"
-    failed = "Failed"
-
     ml_status = "N/A"
     current_status = "N/A"
     status_last_updated_by = "System"
@@ -47,31 +46,31 @@ def add_keys(docs_list: list):
 
         if system_status[-1]["timestamp"] > last_hitl_status["timestamp"]:
           if system_status[-1]["stage"].lower() == "auto_approval":
-            if system_status[-1]["status"].lower() == "success":
+            if system_status[-1]["status"].lower() == STATUS_SUCCESS:
               current_status = doc["auto_approval"].title()
             else:
-              current_status = in_progress
-          elif system_status[-1]["status"].lower() == "success":
-            current_status = in_progress
+              current_status = STATUS_IN_PROGRESS
+          elif system_status[-1]["status"].lower() == STATUS_SUCCESS:
+            current_status = STATUS_IN_PROGRESS
           else:
-            current_status = failed
+            current_status = STATUS_ERROR
         else:
           if last_hitl_status["status"].lower() == "reassigned":
-            current_status = in_progress
+            current_status = STATUS_IN_PROGRESS
           else:
             current_status = last_hitl_status["status"].title()
             status_last_updated_by = last_hitl_status["user"]
 
       else:
         if system_status[-1]["stage"].lower() == "auto_approval":
-          if system_status[-1]["status"].lower() == "success":
+          if system_status[-1]["status"].lower() == STATUS_SUCCESS:
             current_status = doc["auto_approval"].title()
           else:
-            current_status = failed
-        elif system_status[-1]["status"].lower() == "success":
-          current_status = in_progress
+            current_status = STATUS_ERROR
+        elif system_status[-1]["status"].lower() == STATUS_SUCCESS:
+          current_status = STATUS_IN_PROGRESS
         else:
-          current_status = failed
+          current_status = STATUS_ERROR
 
     doc["ml_status"] = ml_status
     doc["current_status"] = current_status
@@ -97,7 +96,7 @@ async def report_data():
     docs_list = sorted(
         docs_list, key=lambda i: i["upload_timestamp"], reverse=True)
     docs_list = add_keys(docs_list)
-    response = {"status": "Success"}
+    response = {"status": STATUS_SUCCESS}
     response["len"] = len(docs_list)
     response["data"] = docs_list
     return response
@@ -122,10 +121,10 @@ async def get_document(uid: str):
   try:
     doc = Document.find_by_uid(uid)
     if not doc or not doc.to_dict()["active"] == "active":
-      response = {"status": "Failed"}
+      response = {"status": STATUS_ERROR}
       response["detail"] = "No Document found with the given uid"
       return response
-    response = {"status": "Success"}
+    response = {"status": STATUS_SUCCESS}
     docs = add_keys([doc.to_dict()])
     response["data"] = docs[0]
     return response
@@ -155,7 +154,9 @@ async def get_queue(hitl_status: str):
   def filter_status(item):
     return item["current_status"].lower() == hitl_status.lower()
 
-  if hitl_status.lower() not in ["approved", "rejected", "pending", "review"]:
+  if hitl_status.lower() not in [
+      STATUS_APPROVED, "rejected", "pending", STATUS_REVIEW
+  ]:
     raise HTTPException(status_code=400, detail="Invalid Parameter")
   try:
     #Fetching documents and converting to list of dictionaries
@@ -169,7 +170,7 @@ async def get_queue(hitl_status: str):
     result_queue = filter(filter_status, result_queue)
     result_queue = sorted(
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
-    response = {"status": "Success"}
+    response = {"status": STATUS_SUCCESS}
     response["len"] = len(result_queue)
     response["data"] = result_queue
     return response
@@ -195,12 +196,12 @@ async def update_entity(uid: str, updated_doc: dict):
   try:
     doc = Document.find_by_uid(uid)
     if not doc or not doc.to_dict()["active"].lower() == "active":
-      response = {"status": "Failed"}
+      response = {"status": STATUS_ERROR}
       response["detail"] = "No Document found with the given uid"
       return response
     doc.entities = updated_doc["entities"]
     doc.update()
-    return {"status": "Success"}
+    return {"status": STATUS_SUCCESS}
 
   except Exception as e:
     print(e)
@@ -208,7 +209,7 @@ async def update_entity(uid: str, updated_doc: dict):
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
     raise HTTPException(
-        status_code=500, detail="Failed to update entity") from e
+        status_code=500, detail="STATUS_ERROR to update entity") from e
 
 
 @router.post("/update_hitl_status")
@@ -223,7 +224,9 @@ async def update_hitl_status(uid: str,
     Returns 200 : Updation was successful
     Returns 500 : If something fails
   """
-  if status.lower() not in ["approved", "rejected", "pending", "review"]:
+  if status.lower() not in [
+      STATUS_APPROVED, "rejected", "pending", STATUS_REVIEW
+  ]:
     raise HTTPException(status_code=400, detail="Invalid Parameter")
   try:
     timestamp = str(datetime.datetime.utcnow())
@@ -237,7 +240,7 @@ async def update_hitl_status(uid: str,
 
     doc = Document.find_by_uid(uid)
     if not doc or not doc.to_dict()["active"].lower() == "active":
-      response = {"status": "Failed"}
+      response = {"status": STATUS_ERROR}
       response["detail"] = "No Document found with the given uid"
       return response
     if doc:
@@ -245,7 +248,7 @@ async def update_hitl_status(uid: str,
       doc.hitl_status = fireo.ListUnion([hitl_status])
       doc.is_autoapproved = "no"
       doc.update()
-    return {"status": "Success"}
+    return {"status": STATUS_SUCCESS}
 
   except Exception as e:
     print(e)
@@ -253,7 +256,7 @@ async def update_hitl_status(uid: str,
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
     raise HTTPException(
-        status_code=500, detail="Failed to update hitl status") from e
+        status_code=500, detail="STATUS_ERROR to update hitl status") from e
 
 
 def get_file_from_bucket(case_id: str,
@@ -337,9 +340,9 @@ async def get_unclassified():
     for doc_dict in docs:
       system_trail = doc_dict["system_status"]
       if system_trail[-1]["stage"].lower() == "classification":
-        if system_trail[-1]["status"].lower() != "success":
+        if system_trail[-1]["status"].lower() != STATUS_SUCCESS:
           result_queue.append(doc_dict)
-    response = {"status": "success"}
+    response = {"status": STATUS_SUCCESS}
     result_queue = add_keys(result_queue)
     result_queue = sorted(
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
@@ -371,7 +374,7 @@ def update_classification_status(case_id: str,
   base_url = "http://document-status-service/document_status_service" \
   "/v1/update_classification_status"
 
-  if status.lower() == "success":
+  if status.lower() == STATUS_SUCCESS:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
     f"&status={status}&is_hitl={True}&document_class={document_class}"\
       f"&document_type={document_type}"
@@ -443,7 +446,7 @@ async def update_hitl_classification(case_id: str, uid: str,
       document_type = "supporting_documents"
     else:
       Logger.error(f"Doc class {document_class} is not a valid doc class")
-      update_classification_status(case_id, uid, "failed")
+      update_classification_status(case_id, uid, STATUS_ERROR)
       raise HTTPException(
           status_code=422, detail="Unidentified document class found")
 
@@ -453,14 +456,15 @@ async def update_hitl_classification(case_id: str, uid: str,
     response = update_classification_status(
         case_id,
         uid,
-        "success",
+        STATUS_SUCCESS,
         document_class=document_class,
         document_type=document_type)
     print(response)
     if response.status_code != 200:
-      Logger.error(f"Document status update failed for {case_id} and {uid}")
+      Logger.error(
+          f"Document status update {STATUS_ERROR} for {case_id} and {uid}")
       raise HTTPException(
-          status_code=500, detail="Document status updation failed")
+          status_code=500, detail="Document status updation {STATUS_ERROR}")
 
     #Call Process task
     Logger.info("Starting Process task from hitl classification")
@@ -468,7 +472,7 @@ async def update_hitl_classification(case_id: str, uid: str,
                             doc.url, doc.context)
     if res.status_code == 202:
       return {
-          "status": "success",
+          "status": STATUS_SUCCESS,
           "message": "Process task api has been started successfully"
       }
 
@@ -568,7 +572,11 @@ async def search(search_term: SearchPayload):
                     Limit start and end should be of type int")
             docs_list = docs_list[limit_start:limit_end]
           docs_list = add_keys(docs_list)
-          return {"status": "success","len": len(docs_list),"data": docs_list}
+          return {
+              "status": STATUS_SUCCESS,
+              "len": len(docs_list),
+              "data": docs_list
+          }
       else:
         raise HTTPException(
             status_code=422, detail="Entered key is not filterable")
@@ -614,7 +622,7 @@ async def search(search_term: SearchPayload):
     if limit_start is not None and limit_end is not None:
       resultset = resultset[limit_start:limit_end]
     resultset = add_keys(resultset)
-    return {"status": "success", "len": len(resultset), "data": resultset}
+    return {"status": STATUS_SUCCESS, "len": len(resultset), "data": resultset}
 
   except HTTPException as e:
     print(e)

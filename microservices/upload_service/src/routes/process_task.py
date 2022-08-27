@@ -4,16 +4,18 @@ from models.process_task import ProcessTask
 from utils.process_task_helpers import run_pipeline
 # pylint: disable = ungrouped-imports
 from common.utils.logging_handler import Logger
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 router = APIRouter()
-SUCCESS_RESPONSE = {"status": "Success"}
-FAILED_RESPONSE = {"status": "Failed"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
+FAILED_RESPONSE = {"status": STATUS_ERROR}
 
 
 @router.post("/process_task", status_code=status.HTTP_202_ACCEPTED)
 async def process_task(payload: ProcessTask,
-background_task: BackgroundTasks, is_hitl: bool = False,
-is_reassign:bool = False):
+                       background_task: BackgroundTasks,
+                       is_hitl: bool = False,
+                       is_reassign: bool = False):
   """Process task runs the ML pipeline
 
   Args:

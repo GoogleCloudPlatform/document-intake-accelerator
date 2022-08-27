@@ -3,6 +3,7 @@
 from common.config import BUCKET_NAME
 from google.cloud.storage import Blob
 from google.cloud import storage
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 
 def upload_file(case_id, uid, file):
@@ -11,7 +12,7 @@ def upload_file(case_id, uid, file):
   blob_name = f"{case_id}/{uid}/{file.filename}"
   blob = Blob(blob_name, bucket)
   blob.upload_from_file(file.file)
-  return "success"
+  return STATUS_SUCCESS
 
 
 def upload_json_file(case_id, uid, input_data):
@@ -21,4 +22,4 @@ def upload_json_file(case_id, uid, input_data):
   blob = bucket.blob(destination_blob_name)
   blob.upload_from_string(input_data)
   print(case_id + uid + input_data)
-  return "success"
+  return STATUS_SUCCESS

@@ -8,12 +8,14 @@ from common.models.document import Document
 import os
 import time
 from helpers import is_processing_success
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 TESTDATA_FILENAME1 = os.path.join(
     os.path.dirname(__file__), "fake_data", "Copy of Arkansas-form-1.pdf")
 
 TESTDATA_FILENAME2 = os.path.join(
     os.path.dirname(__file__), "fake_data", "arkansas-utility-1.pdf")
+
 
 def is_doc_unclassified(details):
   """
@@ -25,9 +27,10 @@ def is_doc_unclassified(details):
   #Checking if the last entry in system status trail is of classification
   # and the status was not successful
   if status[-1]["stage"].lower() == "classification" \
-    and status[-1]["status"].lower() != "success":
-    is_unclassified=True
+    and status[-1]["status"] != STATUS_SUCCESS:
+    is_unclassified = True
   return is_unclassified
+
 
 def upload_and_process():
   """
@@ -53,7 +56,7 @@ def upload_and_process():
   #Get response data from the upload endpoint
   # and pass that as a parameter to process task endpoint
   data = response.json().get("configs")
-  payload={"configs": data}
+  payload = {"configs": data}
   response = requests.post(base_url+f"/upload_service/v1/process_task",\
     json=payload)
 
@@ -77,6 +80,7 @@ def upload_and_process():
   assert is_unclassified == True
 
   return doc_data
+
 
 def test_hitl_classification(setup):
   """

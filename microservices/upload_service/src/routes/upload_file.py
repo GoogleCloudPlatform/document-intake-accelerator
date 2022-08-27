@@ -3,6 +3,7 @@
 import uuid
 import requests
 import traceback
+import datetime
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from typing import Optional, List
@@ -12,11 +13,10 @@ from common.utils.logging_handler import Logger
 from common.models import Document
 from common.utils.publisher import publish_document
 from common.config import BUCKET_NAME
-import datetime
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 # pylint: disable = broad-except ,literal-comparison
 router = APIRouter()
-
 
 
 @router.post("/upload_files")
@@ -25,7 +25,6 @@ async def upload_file(
     files: List[UploadFile] = File(...),
     case_id: Optional[str] = None,
     comment: Optional[str] = None,
-
 ):
   """Uploads files to the GCS bucket and Save the record in the database
 
@@ -49,7 +48,7 @@ async def upload_file(
   if case_id is None:
     case_id = str(uuid.uuid1())
   uid_list = []
-  message_list=[]
+  message_list = []
   try:
     for file in files:
       #create a record in database for uploaded document
@@ -59,13 +58,13 @@ async def upload_file(
       #Upload document in GCS bucket
       status = await run_in_threadpool(ug.upload_file, case_id, uid, file)
       #check the uploaded document status
-      if status != "success":
+      if status != STATUS_SUCCESS:
 
         #Update the document upload in GCS as failed
         document = Document.find_by_uid(uid)
         system_status = {
             "stage": "upload",
-            "status": "fail",
+            "status": STATUS_ERROR,
             "timestamp": str(datetime.datetime.utcnow()),
             "comment": comment
         }
@@ -85,31 +84,31 @@ async def upload_file(
       document.url = f"{gcs_base_url}/{case_id}/{uid}/{file.filename}"
       system_status = {
           "stage": "uploaded",
-          "status": "success",
+          "status": STATUS_SUCCESS,
           "timestamp": str(datetime.datetime.utcnow()),
           "comment": comment
       }
       document.system_status = [system_status]
       document.update()
       message_list.append({
-          "case_id":case_id,
-          "uid":uid,
+          "case_id": case_id,
+          "uid": uid,
           "gcs_url": document.url,
-          "context":context
-          })
+          "context": context
+      })
     # Pushing Message To Pubsub
     pubsub_msg = f"batch for {case_id} moved to bucket"
-    message_dict = {"message": pubsub_msg,"message_list":message_list}
+    message_dict = {"message": pubsub_msg, "message_list": message_list}
     publish_document(message_dict)
     Logger.info(f"Files with case id {case_id} uploaded"
-                  f" successfully")
+                f" successfully")
     return {
         "status": f"Files with case id {case_id} uploaded"
                   f"successfully, the document"
                   f" will be processed in sometime ",
         "case_id": case_id,
         "uid_list": uid_list,
-        "configs" : message_list
+        "configs": message_list
     }
   except Exception as e:
     Logger.error(e)
@@ -142,10 +141,12 @@ async def upload_data_json(input_data: InputData):
       case_id = str(uuid.uuid1())
     #Converting Json to required format
     for key, value in input_data.items():
-      entity.append({"entity": key,
-       "value": value,
-       "extraction_confidence": 1,
-       "corrected_value": None})
+      entity.append({
+          "entity": key,
+          "value": value,
+          "extraction_confidence": 1,
+          "corrected_value": None
+      })
     uid = create_document_from_data(case_id, document_type, document_class,
                                     context, entity)
 
@@ -153,10 +154,9 @@ async def upload_data_json(input_data: InputData):
     return {"status": status, "input_data": input_data, "case_id": case_id}
   except Exception as e:
     Logger.error(e)
-    raise HTTPException(status_code=500, detail="Error "
-                                    "in uploading document")from e
-
-
+    raise HTTPException(
+        status_code=500, detail="Error "
+        "in uploading document") from e
 
 
 def create_document_from_data(case_id, document_type, document_class, context,

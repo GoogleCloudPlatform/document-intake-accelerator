@@ -6,6 +6,7 @@ import requests
 from endpoint_proxy import get_baseurl
 import datetime
 from common.models.document import Document
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 
 def add_records():
@@ -21,14 +22,14 @@ def add_records():
   d.uid = "uj11_review_test_1"
   d.active = "active"
   d.upload_timestamp = timestamp
-  d.auto_approval = "Review"
+  d.auto_approval = STATUS_REVIEW
   d.system_status = [{
       "stage": "uploaded",
-      "status": "success",
+      "status": STATUS_SUCCESS,
       "timestamp": timestamp
   }, {
       "stage": "auto_approval",
-      "status": "success",
+      "status": STATUS_SUCCESS,
       "timestamp": timestamp
   }]
   d.save()
@@ -44,7 +45,7 @@ def test_review_queue():
   #Getting base url for hitl service
   base_url = get_baseurl("hitl-service")
 
-  status = "review"
+  status = STATUS_REVIEW
   res = requests.post(base_url + f"/hitl_service/v1/get_queue?"\
     f"hitl_status={status}")
 

@@ -109,6 +109,10 @@ def get_scoring(data, merge_query, documentlabel, entity):
   '''
   l2 = []
   validation_score = 0
+  validation_rule = data.get(documentlabel)
+
+  assert validation_rule, f"Unable to find validation rule for document type: {documentlabel}"
+
   for i in data[documentlabel]:
     query = data[documentlabel][i] + merge_query
     query = query.replace("project_table", VALIDATION_TABLE)

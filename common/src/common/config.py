@@ -12,12 +12,22 @@ assert PROJECT_ID, "Env var PROJECT_ID is not set."
 
 #List of application forms and supporting documents
 APPLICATION_FORMS = ["unemployment_form"]
-SUPPORTING_DOCS = ["driver_license","claims_form","utility_bill","pay_stub"]
+SUPPORTING_DOCS = ["driver_license", "claims_form", "utility_bill", "pay_stub"]
+
+# Doc approval status, will reflect on the Frontend app.
+STATUS_APPROVED = "Approved"
+STATUS_REVIEW = "Need Review"
+STATUS_REJECTED = "Rejected"
+STATUS_PENDING = "Pending"
+STATUS_IN_PROGRESS = "Processing"
+
+STATUS_SUCCESS = "Complete"
+STATUS_ERROR = "Error"
 
 # ========= Document upload ======================
 BUCKET_NAME = f"{PROJECT_ID}-document-upload"
 TOPIC_ID = "queue-topic"
-PROCESS_TASK_API_PATH= "/upload_service/v1/process_task"
+PROCESS_TASK_API_PATH = "/upload_service/v1/process_task"
 
 # ========= Validation ===========================
 BUCKET_NAME_VALIDATION = PROJECT_ID
@@ -34,11 +44,11 @@ CLASSIFICATION_ENDPOINT_ID = "4679565468279767040"
 # Map to standardise predicted document class from classifier to
 # standard document_class values
 DOC_CLASS_STANDARDISATION_MAP = {
-  "UE": "unemployment_form",
-  "DL": "driver_license",
-  "Claim": "claims_form",
-  "Utility": "utility_bill",
-  "PayStub": "pay_stub"
+    "UE": "unemployment_form",
+    "DL": "driver_license",
+    "Claim": "claims_form",
+    "Utility": "utility_bill",
+    "PayStub": "pay_stub"
 }
 
 #Prediction Confidence threshold for the classifier to reject any prediction
@@ -49,30 +59,29 @@ CONF_THRESH = 0.98
 
 # List of database keys and extracted entities that are searchable
 DB_KEYS = [
-  "active",
-  "auto_approval",
-  "is_autoapproved",
-  "matching_score",
-  "case_id",
-  "uid",
-  "url",
-  "context",
-  "document_class",
-  "document_type",
-  "upload_timestamp",
-  "extraction_score",
-  "is_hitl_classified",
+    "active",
+    "auto_approval",
+    "is_autoapproved",
+    "matching_score",
+    "case_id",
+    "uid",
+    "url",
+    "context",
+    "document_class",
+    "document_type",
+    "upload_timestamp",
+    "extraction_score",
+    "is_hitl_classified",
 ]
 ENTITY_KEYS = [
-  "name",
-  "dob",
-  "residential_address",
-  "email",
-  "phone_no",
+    "name",
+    "dob",
+    "residential_address",
+    "email",
+    "phone_no",
 ]
 
 ### Misc
 
 # Used by E2E testing. Leave as blank by default.
 DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
-

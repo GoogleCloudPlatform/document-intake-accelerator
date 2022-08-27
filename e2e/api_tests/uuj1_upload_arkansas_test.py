@@ -22,6 +22,7 @@ TESTDATA_FILENAME4 = os.path.join(
     os.path.dirname(__file__), "fake_data", "DL-arkansas-1.pdf")
 CONTEXT = "arkansas"
 
+
 def test_uuj_1_arkansas(setup):
   """
     UUJ 1 - General upload one document with case_id workflow:
@@ -32,19 +33,22 @@ def test_uuj_1_arkansas(setup):
   """
   base_url = get_baseurl("upload-service")
   case_id = "test123x1"
-  files = [("files", ("Copy of Arkansas-form-1.pdf", open(TESTDATA_FILENAME1,
-                                                  "rb"), "application/pdf"))]
-  response = requests.post(base_url+f"/upload_service/v1/upload_files?context={CONTEXT}&case_id={case_id}",files=files)
+  files = [("files", ("Copy of Arkansas-form-1.pdf",
+                      open(TESTDATA_FILENAME1, "rb"), "application/pdf"))]
+  response = requests.post(
+      base_url +
+      f"/upload_service/v1/upload_files?context={CONTEXT}&case_id={case_id}",
+      files=files)
   assert response.status_code == 200
   data = response.json().get("configs")
-  payload={"configs": data}
-  response = requests.post(base_url+f"/upload_service/v1/process_task",json=payload)
+  payload = {"configs": data}
+  response = requests.post(
+      base_url + f"/upload_service/v1/process_task", json=payload)
   assert response.status_code == 202
   time.sleep(120)
   is_processed = is_processing_success(data)
   assert is_processed == True
-  
-  
+
 
 def test_uuj_2_arkansas(setup):
   """
@@ -56,20 +60,29 @@ def test_uuj_2_arkansas(setup):
   """
   base_url = get_baseurl("upload-service")
   case_id = "test123x2"
-  
-  files = [("files", ("Copy of Arkansas-form-1.pdf", open(TESTDATA_FILENAME1,"rb"), "application/pdf")),
-           ("files", ("arkansas-paystub-1.pdf", open(TESTDATA_FILENAME2,"rb"), "application/pdf")),
-           ("files", ("Arkansas-claim-1.pdf", open(TESTDATA_FILENAME3,"rb"), "application/pdf")),
-           ("files", ("DL-arkansas-1.pdf", open(TESTDATA_FILENAME4,"rb"), "application/pdf"))]
-  response = requests.post(base_url+f"/upload_service/v1/upload_files?context={CONTEXT}&case_id={case_id}",files=files)
+
+  files = [("files", ("Copy of Arkansas-form-1.pdf",
+                      open(TESTDATA_FILENAME1, "rb"), "application/pdf")),
+           ("files", ("arkansas-paystub-1.pdf", open(TESTDATA_FILENAME2,
+                                                     "rb"), "application/pdf")),
+           ("files", ("Arkansas-claim-1.pdf", open(TESTDATA_FILENAME3,
+                                                   "rb"), "application/pdf")),
+           ("files", ("DL-arkansas-1.pdf", open(TESTDATA_FILENAME4,
+                                                "rb"), "application/pdf"))]
+  response = requests.post(
+      base_url +
+      f"/upload_service/v1/upload_files?context={CONTEXT}&case_id={case_id}",
+      files=files)
   assert response.status_code == 200
   data = response.json().get("configs")
-  payload={"configs": data}
-  response = requests.post(base_url+f"/upload_service/v1/process_task",json=payload)
+  payload = {"configs": data}
+  response = requests.post(
+      base_url + f"/upload_service/v1/process_task", json=payload)
   assert response.status_code == 202
   time.sleep(120)
   is_processed = is_processing_success(data)
   assert is_processed == True
+
 
 def test_uuj_3_arkansas(setup):
   """
@@ -80,17 +93,21 @@ def test_uuj_3_arkansas(setup):
     check all the stages ["uploaded","classification","extraction","validation","matching","auto_approval"] are successful
   """
   base_url = get_baseurl("upload-service")
-  files = [("files", ("Copy of Arkansas-form-1.pdf", open(TESTDATA_FILENAME1,
-                                                  "rb"), "application/pdf"))]
-  response = requests.post(base_url+f"/upload_service/v1/upload_files?context={CONTEXT}",files=files)
+  files = [("files", ("Copy of Arkansas-form-1.pdf",
+                      open(TESTDATA_FILENAME1, "rb"), "application/pdf"))]
+  response = requests.post(
+      base_url + f"/upload_service/v1/upload_files?context={CONTEXT}",
+      files=files)
   assert response.status_code == 200
   data = response.json().get("configs")
-  payload={"configs": data}
-  response = requests.post(base_url+f"/upload_service/v1/process_task",json=payload)
+  payload = {"configs": data}
+  response = requests.post(
+      base_url + f"/upload_service/v1/process_task", json=payload)
   assert response.status_code == 202
   time.sleep(120)
   is_processed = is_processing_success(data)
   assert is_processed == True
+
 
 def test_uuj_4_arkansas(setup):
   """
@@ -101,15 +118,22 @@ def test_uuj_4_arkansas(setup):
     check all the stages ["uploaded","classification","extraction","validation","matching","auto_approval"] are successful
   """
   base_url = get_baseurl("upload-service")
-  files = [("files", ("Copy of Arkansas-form-1.pdf", open(TESTDATA_FILENAME1,"rb"), "application/pdf")),
-           ("files", ("arkansas-paystub-1.pdf", open(TESTDATA_FILENAME2,"rb"), "application/pdf")),
-           ("files", ("Arkansas-claim-1.pdf", open(TESTDATA_FILENAME3,"rb"), "application/pdf")),
-           ("files", ("DL-arkansas-1.pdf", open(TESTDATA_FILENAME4,"rb"), "application/pdf"))]
-  response = requests.post(base_url+f"/upload_service/v1/upload_files?context={CONTEXT}",files=files)
+  files = [("files", ("Copy of Arkansas-form-1.pdf",
+                      open(TESTDATA_FILENAME1, "rb"), "application/pdf")),
+           ("files", ("arkansas-paystub-1.pdf", open(TESTDATA_FILENAME2,
+                                                     "rb"), "application/pdf")),
+           ("files", ("Arkansas-claim-1.pdf", open(TESTDATA_FILENAME3,
+                                                   "rb"), "application/pdf")),
+           ("files", ("DL-arkansas-1.pdf", open(TESTDATA_FILENAME4,
+                                                "rb"), "application/pdf"))]
+  response = requests.post(
+      base_url + f"/upload_service/v1/upload_files?context={CONTEXT}",
+      files=files)
   assert response.status_code == 200
   data = response.json().get("configs")
-  payload={"configs": data}
-  response = requests.post(base_url+f"/upload_service/v1/process_task",json=payload)
+  payload = {"configs": data}
+  response = requests.post(
+      base_url + f"/upload_service/v1/process_task", json=payload)
   assert response.status_code == 202
   time.sleep(120)
   is_processed = is_processing_success(data)

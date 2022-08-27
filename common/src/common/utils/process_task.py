@@ -7,14 +7,16 @@ import requests
 from common.utils.logging_handler import Logger
 from common.utils.autoapproval import get_values
 from typing import List, Dict
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 # pylint: disable = broad-except
 
 router = APIRouter()
-SUCCESS_RESPONSE = {"status": "Success"}
-FAILED_RESPONSE = {"status": "Failed"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
+FAILED_RESPONSE = {"status": STATUS_ERROR}
 
-def run_pipeline(payload: List[Dict], is_hitl: bool=False):
+
+def run_pipeline(payload: List[Dict], is_hitl: bool = False):
   validation_score = None
   extraction_score = None
   matching_score = None
@@ -27,11 +29,11 @@ def run_pipeline(payload: List[Dict], is_hitl: bool=False):
       applications.append(apps)
     elif document_type == "supporting_documents":
       supporting_docs.append(payload.get("configs")[0])
-    print(
-      f"is_hitl: {is_hitl} Application form: {applications}\
+    print(f"is_hitl: {is_hitl} Application form: {applications}\
          and supporting_docs:{supporting_docs}")
     Logger.info(
-      f"Application form:{applications} and supporting_docs:{supporting_docs}")
+        f"Application form:{applications} and supporting_docs:{supporting_docs}"
+    )
 
   try:
     if not is_hitl:
@@ -54,13 +56,13 @@ def run_pipeline(payload: List[Dict], is_hitl: bool=False):
         extract_res = get_extraction_score(case_id, uid, document_class)
         Logger.info("Extraction successful for application_form.")
         extraction_score = extract_res.json().get("score")
-        autoapproval_status = get_values(
-          validation_score, extraction_score, matching_score,
-          document_class, document_type)
+        autoapproval_status = get_values(validation_score, extraction_score,
+                                         matching_score, document_class,
+                                         document_type)
         Logger.info(
-          f"autoapproval_status for application:{autoapproval_status}")
-        update_autoapproval_status(
-          case_id, uid, "success", autoapproval_status[0], "yes")
+            f"autoapproval_status for application:{autoapproval_status}")
+        update_autoapproval_status(case_id, uid, STATUS_SUCCESS,
+                                   autoapproval_status[0], "yes")
 
       for sup_doc in supporting_docs:
         case_id = sup_doc.get("case_id")
@@ -69,11 +71,9 @@ def run_pipeline(payload: List[Dict], is_hitl: bool=False):
         document_type = "supporting_documents"
         extract_res = get_extraction_score(case_id, uid, document_class)
         if extract_res.status_code == 200:
-          Logger.info(
-            "Extraction successful for supporting_documents.")
+          Logger.info("Extraction successful for supporting_documents.")
           extraction_score = extract_res.json().get("score")
-          validation_res = get_validation_score(
-            case_id, uid, document_class)
+          validation_res = get_validation_score(case_id, uid, document_class)
           if validation_res.status_code == 200:
             print("====Validation successful==========")
             Logger.info("Validation successful.")
@@ -83,13 +83,12 @@ def run_pipeline(payload: List[Dict], is_hitl: bool=False):
               print("====Matching successful==========")
               Logger.info("Matching successful.")
               matching_score = matching_res.json().get("score")
-              autoapproval_status = get_values(
-                validation_score, extraction_score, matching_score,
-                document_class, document_type)
-              Logger.info(
-                f"autoapproval_status:{autoapproval_status}")
-              update_autoapproval_status(
-                case_id, uid, "success", autoapproval_status[0], "yes")
+              autoapproval_status = get_values(validation_score,
+                                               extraction_score, matching_score,
+                                               document_class, document_type)
+              Logger.info(f"autoapproval_status:{autoapproval_status}")
+              update_autoapproval_status(case_id, uid, STATUS_SUCCESS,
+                                         autoapproval_status[0], "yes")
             else:
               err = traceback.format_exc().replace("\n", " ")
               Logger.error(err)
@@ -150,7 +149,7 @@ def get_matching_score(case_id: str, uid: str):
 
 
 def update_autoapproval_status(case_id: str, uid: str, a_status: str,
-                 autoapproved_status: str, is_autoapproved: str):
+                               autoapproved_status: str, is_autoapproved: str):
   """Update auto approval status"""
   base_url = "http://document-status-service/document_status_service" \
     "/v1/update_autoapproved_status"
@@ -163,8 +162,8 @@ def update_autoapproval_status(case_id: str, uid: str, a_status: str,
 
 def get_document(case_id: str, uid: str):
   """Get the document with given uid and case_id"""
-  doc = Document.collection.filter(
-    "case_id", "==", case_id).filter("uid", "==", uid).get()
+  doc = Document.collection.filter("case_id", "==",
+                                   case_id).filter("uid", "==", uid).get()
   return doc
 
 
@@ -181,7 +180,7 @@ def filter_documents(configs: List[Dict]):
       document_type = cl_result.json().get("doc_type")
       document_class = cl_result.json().get("doc_class")
       Logger.info(
-        f"Classification successful for {uid}:document_type:{document_type},\
+          f"Classification successful for {uid}:document_type:{document_type},\
       document_class:{document_class}.")
 
       if document_type == "application_form":

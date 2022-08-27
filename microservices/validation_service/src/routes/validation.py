@@ -3,14 +3,16 @@ import traceback
 import requests
 from fastapi import APIRouter, HTTPException, status, Response
 from typing import List, Dict
-from common.utils.logging_handler import Logger
 from utils.validation import get_values
+from common.utils.logging_handler import Logger
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+
 # disabling for linting to pass
 # pylint: disable = broad-except
 
 router = APIRouter(prefix="/validation")
-SUCCESS_RESPONSE = {"status": "Success"}
-FAILED_RESPONSE = {"status": "Failed"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
+FAILED_RESPONSE = {"status": STATUS_ERROR}
 entity = []
 
 
@@ -26,7 +28,7 @@ async def validation(case_id: str, uid: str, doc_class: str,
     200 : validation score successfully  updated
     500  : HTTPException: 500 Internal Server Error if something fails
     """
-  validation_status = "fail"
+  validation_status = STATUS_ERROR
   try:
     validation_output = get_values(doc_class, case_id, uid, entities)
     #The output of get_values is a tuple if executed successfully
@@ -34,7 +36,7 @@ async def validation(case_id: str, uid: str, doc_class: str,
     if validation_output is not None:
       validation_score = validation_output[0]
       validation_entities = validation_output[1]
-      validation_status = "success"
+      validation_status = STATUS_SUCCESS
       update_validation_status(case_id, uid, validation_score,
                                validation_status, validation_entities)
       Logger.info(f"Validation Score for cid:{case_id}, uid: {uid},"
@@ -42,7 +44,7 @@ async def validation(case_id: str, uid: str, doc_class: str,
       return {"status": validation_status, "score": validation_score}
     #Else condition works if the get_values function returns None
     else:
-      validation_status = "fail"
+      validation_status = STATUS_ERROR
       update_validation_status(case_id, uid, None, validation_status, entities)
       Logger.error(f"Validation failed for case_id:{case_id}, uid: {uid},"
                    f" doc_class:{doc_class}")
@@ -73,7 +75,7 @@ def update_validation_status(case_id: str, uid: str, validation_score: float,
     """
   base_url = "http://document-status-service/document_status_service" \
     "/v1/update_validation_status"
-  if validation_status == "success":
+  if validation_status == STATUS_SUCCESS:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
     f"&validation_score={validation_score}&status={validation_status}"
   else:

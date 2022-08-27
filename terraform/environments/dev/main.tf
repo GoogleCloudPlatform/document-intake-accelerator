@@ -167,6 +167,8 @@ resource "google_storage_bucket" "assets" {
   uniform_bucket_level_access = true
 }
 
+# ================= Validation Rules ====================
+
 # Copying rules JSON files to GCS bucket.
 resource "null_resource" "validation_rules" {
   depends_on = [
