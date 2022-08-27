@@ -48,27 +48,19 @@ def update_matching_status(case_id: str,
   """
   Logger.info(f"Updating Matching status for case_id {case_id} and uid {uid}")
   response = None
-  if status.lower() == STATUS_SUCCESS:
+  if status == STATUS_SUCCESS:
     base_url = "http://document-status-service/document_status_service/"\
       "v1/update_matching_status"
     req_url = f"{base_url}?case_id={case_id}&uid={uid}&status={status}"\
     f"&entity={entity}&matching_score={matching_score}"
 
-    response = requests.post(req_url, json=entity)
+    return requests.post(req_url, json=entity)
 
-    if response.status_code == 200:
-      return {"status": STATUS_SUCCESS}
-    else:
-      return {"status": STATUS_ERROR}
   else:
     base_url = "http://document-status-service/document_status_service/"\
       "v1/update_matching_status"
     req_url = f"{base_url}?case_id={case_id}&uid={uid}&status={status}"
-    response = requests.post(req_url)
-    if response.status_code == 200:
-      return {"status": STATUS_SUCCESS}
-    else:
-      return {"status": STATUS_ERROR}
+    return requests.post(req_url)
 
 
 @router.post("/match_document")

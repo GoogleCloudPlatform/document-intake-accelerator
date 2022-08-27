@@ -25,6 +25,7 @@ async def upload_file(
     files: List[UploadFile] = File(...),
     case_id: Optional[str] = None,
     comment: Optional[str] = None,
+    user: Optional[str] = None,
 ):
   """Uploads files to the GCS bucket and Save the record in the database
 
@@ -52,7 +53,7 @@ async def upload_file(
   try:
     for file in files:
       #create a record in database for uploaded document
-      output = create_document(case_id, file.filename, context)
+      output = create_document(case_id, file.filename, context, user=user)
       uid = output
       uid_list.append(uid)
       #Upload document in GCS bucket
@@ -65,7 +66,7 @@ async def upload_file(
         system_status = {
             "stage": "upload",
             "status": STATUS_ERROR,
-            "timestamp": str(datetime.datetime.utcnow()),
+            "timestamp": datetime.datetime.utcnow(),
             "comment": comment
         }
         document.system_status = [system_status]
@@ -85,7 +86,7 @@ async def upload_file(
       system_status = {
           "stage": "uploaded",
           "status": STATUS_SUCCESS,
-          "timestamp": str(datetime.datetime.utcnow()),
+          "timestamp": datetime.datetime.utcnow(),
           "comment": comment
       }
       document.system_status = [system_status]
@@ -172,11 +173,12 @@ def create_document_from_data(case_id, document_type, document_class, context,
   return uid
 
 
-def create_document(case_id, filename, context):
+def create_document(case_id, filename, context, user=None):
   base_url = "http://document-status-service/document_status_service/v1/"
   req_url = f"{base_url}create_document"
   response = requests.post(
-      f"{req_url}?case_id={case_id}&filename={filename}&context={context}")
+      f"{req_url}?case_id={case_id}&filename={filename}&context={context}&user={user}"
+  )
   response = response.json()
   uid = response["uid"]
   return uid

@@ -15,7 +15,7 @@ def add_records():
   Function to insert records into collection
   that can be searched and fetched by the API
   """
-  timestamp = str(datetime.datetime.utcnow())
+  timestamp = datetime.datetime.utcnow()
   d = Document()
   d.case_id = "uj7_search_test_1"
   d.uid = "uj7_search_test_1"

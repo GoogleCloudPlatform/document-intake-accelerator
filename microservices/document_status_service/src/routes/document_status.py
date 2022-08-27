@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 @router.post("/create_document")
-async def create_document(case_id: str, filename: str, context: str):
+async def create_document(case_id: str, filename: str, context: str, user=None):
   """takes case_id ,filename as input and Save the record in the database
 
      Args:
@@ -32,10 +32,17 @@ async def create_document(case_id: str, filename: str, context: str):
   try:
     document = Document()
     document.case_id = case_id
-    document.upload_timestamp = str(datetime.datetime.utcnow())
+    document.upload_timestamp = datetime.datetime.utcnow()
     document.context = context
     document.uid = document.save().id
     document.active = "active"
+    document.system_status = [{
+        "is_hitl": True if user else False,
+        "user": "User" if user else None,
+        "stage": "upload",
+        "status": STATUS_SUCCESS,
+        "timestamp": datetime.datetime.utcnow()
+    }]
     document.save()
     return {"status": STATUS_SUCCESS, "status_code": 200, "uid": document.uid}
 
@@ -89,7 +96,7 @@ async def update_classification_status(
           "is_hitl": is_hitl,
           "stage": "classification",
           "status": STATUS_SUCCESS,
-          "timestamp": str(datetime.datetime.utcnow())
+          "timestamp": datetime.datetime.utcnow()
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
@@ -111,7 +118,7 @@ async def update_classification_status(
       system_status = {
           "stage": "classification",
           "status": status,
-          "timestamp": str(datetime.datetime.utcnow())
+          "timestamp": datetime.datetime.utcnow()
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
@@ -159,7 +166,7 @@ async def update_extraction_status(case_id: str,
       system_status = {
           "stage": "extraction",
           "status": STATUS_SUCCESS,
-          "timestamp": str(datetime.datetime.utcnow())
+          "timestamp": datetime.datetime.utcnow()
       }
       document.system_status = fireo.ListUnion([system_status])
       document.entities = entity
@@ -170,7 +177,7 @@ async def update_extraction_status(case_id: str,
       system_status = {
           "stage": "extraction",
           "status": STATUS_ERROR,
-          "timestamp": str(datetime.datetime.utcnow())
+          "timestamp": datetime.datetime.utcnow()
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
@@ -218,7 +225,7 @@ async def update_validation_status(case_id: str,
       system_status = {
           "stage": "validation",
           "status": STATUS_SUCCESS,
-          "timestamp": str(datetime.datetime.utcnow())
+          "timestamp": datetime.datetime.utcnow()
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
@@ -226,7 +233,7 @@ async def update_validation_status(case_id: str,
       system_status = {
           "stage": "validation",
           "status": STATUS_ERROR,
-          "timestamp": str(datetime.datetime.utcnow())
+          "timestamp": datetime.datetime.utcnow()
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
@@ -274,7 +281,7 @@ async def update_matching_status(case_id: str,
       system_status = {
           "stage": "matching",
           "status": STATUS_SUCCESS,
-          "timestamp": str(datetime.datetime.utcnow())
+          "timestamp": datetime.datetime.utcnow()
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
@@ -285,7 +292,7 @@ async def update_matching_status(case_id: str,
       system_status = {
           "stage": "matching",
           "status": STATUS_ERROR,
-          "timestamp": str(datetime.datetime.utcnow())
+          "timestamp": datetime.datetime.utcnow()
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
@@ -317,7 +324,7 @@ async def update_autoapproved(case_id: str, uid: str, status: str,
       system_status = {
           "stage": "auto_approval",
           "status": STATUS_SUCCESS,
-          "timestamp": str(datetime.datetime.utcnow())
+          "timestamp": datetime.datetime.utcnow()
       }
       document.system_status = fireo.ListUnion([system_status])
       document.is_autoapproved = is_autoapproved
@@ -326,7 +333,7 @@ async def update_autoapproved(case_id: str, uid: str, status: str,
       system_status = {
           "stage": "auto_approval",
           "status": STATUS_ERROR,
-          "timestamp": str(datetime.datetime.utcnow())
+          "timestamp": datetime.datetime.utcnow()
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
@@ -357,11 +364,11 @@ async def create_documet_json_input(case_id: str, document_class: str,
     document = Document()
     document.case_id = case_id
     document.entities = entity
-    document.upload_timestamp = str(datetime.datetime.utcnow())
+    document.upload_timestamp = datetime.datetime.utcnow()
     system_status = {
         "stage": "uploaded",
         "status": STATUS_SUCCESS,
-        "timestamp": str(datetime.datetime.utcnow())
+        "timestamp": datetime.datetime.utcnow()
     }
     document.system_status = fireo.ListUnion([system_status])
     document.active = "active"

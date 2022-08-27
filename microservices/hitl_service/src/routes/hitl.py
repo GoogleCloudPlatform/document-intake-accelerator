@@ -35,17 +35,22 @@ def get_doc_list_data(docs_list: list):
 
     process_status = "-"
     current_status = "-"
-    status_last_updated_by = "System"
+    status_last_updated_by = "-"
+    last_update_timestamp = None
+
+    all_status_list = (doc.get("hitl_status", []) or []) + (
+        doc.get("system_status", []) or [])
+    audit_trail = sorted(all_status_list, key=lambda d: d["timestamp"])
+    if audit_trail and len(audit_trail) > 0:
+      last_update_timestamp = audit_trail[-1]["timestamp"]
 
     if doc["system_status"]:
       system_status = doc["system_status"]
       last_system_status = system_status[-1]
+      status_last_updated_by = "System"
 
       process_status = ((last_system_status["stage"]).replace("_"," ")+\
         " "+last_system_status["status"]).title()
-
-      print(f"system_status = {system_status}")
-      print(f"process_status = {process_status}")
 
       # If there's HITL status, use the latest HITL status.
       if doc["hitl_status"]:
@@ -67,6 +72,7 @@ def get_doc_list_data(docs_list: list):
           else:
             current_status = last_hitl_status["status"].title()
             status_last_updated_by = last_hitl_status["user"]
+            last_update_timestamp = last_hitl_status["timestamp"]
 
       # Otherwise, check the last system status.
       else:
@@ -84,6 +90,8 @@ def get_doc_list_data(docs_list: list):
     doc["process_status"] = process_status
     doc["current_status"] = current_status
     doc["status_last_updated_by"] = status_last_updated_by
+    doc["last_update_timestamp"] = last_update_timestamp
+    doc["audit_trail"] = audit_trail
 
   return docs_list
 
@@ -161,10 +169,13 @@ async def get_queue(hitl_status: str):
 
   #Filter function to filter based on current document status
   def filter_status(item):
-    return item["current_status"].lower() == hitl_status.lower()
+    return item["current_status"] == hitl_status
 
   if hitl_status.lower() not in [
-      STATUS_APPROVED, "rejected", "pending", STATUS_REVIEW
+      STATUS_APPROVED.lower(),
+      STATUS_REJECTED.lower(),
+      STATUS_PENDING.lower(),
+      STATUS_REVIEW.lower()
   ]:
     raise HTTPException(status_code=400, detail="Invalid Parameter")
   try:
@@ -218,7 +229,7 @@ async def update_entity(uid: str, updated_doc: dict):
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
     raise HTTPException(
-        status_code=500, detail="STATUS_ERROR to update entity") from e
+        status_code=500, detail="Unable to update entity") from e
 
 
 @router.post("/update_hitl_status")
@@ -234,15 +245,18 @@ async def update_hitl_status(uid: str,
     Returns 500 : If something fails
   """
   if status.lower() not in [
-      STATUS_APPROVED, "rejected", "pending", STATUS_REVIEW
+      STATUS_APPROVED.lower(),
+      STATUS_REJECTED.lower(),
+      STATUS_PENDING.lower(),
+      STATUS_REVIEW.lower()
   ]:
     raise HTTPException(status_code=400, detail="Invalid Parameter")
   try:
-    timestamp = str(datetime.datetime.utcnow())
+    timestamp = datetime.datetime.utcnow()
     print(timestamp)
     hitl_status = {
         "timestamp": timestamp,
-        "status": status.lower(),
+        "status": status,
         "user": user,
         "comment": comment
     }
@@ -347,9 +361,9 @@ async def get_unclassified():
             Document.collection.filter(active="active").fetch()))
     result_queue = []
     for doc_dict in docs:
-      system_trail = doc_dict["system_status"]
-      if system_trail[-1]["stage"].lower() == "classification":
-        if system_trail[-1]["status"].lower() != STATUS_SUCCESS:
+      system_trail = doc_dict.get("system_status")
+      if system_trail and system_trail[-1]["stage"].lower() == "classification":
+        if system_trail[-1]["status"] != STATUS_SUCCESS:
           result_queue.append(doc_dict)
     response = {"status": STATUS_SUCCESS}
     result_queue = get_doc_list_data(result_queue)
@@ -383,7 +397,7 @@ def update_classification_status(case_id: str,
   base_url = "http://document-status-service/document_status_service" \
   "/v1/update_classification_status"
 
-  if status.lower() == STATUS_SUCCESS:
+  if status == STATUS_SUCCESS:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
     f"&status={status}&is_hitl={True}&document_class={document_class}"\
       f"&document_type={document_type}"
@@ -470,10 +484,9 @@ async def update_hitl_classification(case_id: str, uid: str,
         document_type=document_type)
     print(response)
     if response.status_code != 200:
-      Logger.error(
-          f"Document status update {STATUS_ERROR} for {case_id} and {uid}")
+      Logger.error(f"Document status update failed for {case_id} and {uid}")
       raise HTTPException(
-          status_code=500, detail="Document status updation {STATUS_ERROR}")
+          status_code=500, detail="Document status updation failed")
 
     #Call Process task
     Logger.info("Starting Process task from hitl classification")

@@ -15,7 +15,7 @@ def add_records():
   into collection that can be fetched by the API
   """
 
-  timestamp = str(datetime.datetime.utcnow())
+  timestamp = datetime.datetime.utcnow()
 
   d = Document()
   d.case_id = "uj10_pending_test_1"

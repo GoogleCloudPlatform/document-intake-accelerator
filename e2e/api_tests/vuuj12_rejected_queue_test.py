@@ -17,7 +17,7 @@ def add_records():
   #Inserting two documents 1 with auto approval status as rejected
   #and one with hitl status as rejected
 
-  timestamp = str(datetime.datetime.utcnow())
+  timestamp = datetime.datetime.utcnow()
   d = Document()
   d.case_id = "uj9_rejected_test_1"
   d.uid = "uj9_rejected_test_1"

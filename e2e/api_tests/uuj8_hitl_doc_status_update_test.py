@@ -13,7 +13,7 @@ def add_records():
   """
   Function to insert records into collection
   """
-  timestamp = str(datetime.datetime.utcnow())
+  timestamp = datetime.datetime.utcnow()
 
   case_id = "uj15_update_status_test_1"
   uid = "uj15_update_status_test_1"
@@ -53,7 +53,7 @@ def add_records():
       "status": STATUS_REJECTED,
       "user": "john.adams",
       "comment": "",
-      "timestamp": str(datetime.datetime.utcnow())
+      "timestamp": datetime.datetime.utcnow()
   }]
   d.save()
 

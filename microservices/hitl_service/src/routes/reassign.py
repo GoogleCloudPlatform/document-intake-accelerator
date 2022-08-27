@@ -131,7 +131,7 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     # Update HITL audit trail for reassigned action
     hitl_audit_trail = {
         "status": "reassigned",
-        "timestamp": str(datetime.datetime.utcnow()),
+        "timestamp": datetime.datetime.utcnow(),
         "user": user,
         "comment": comment,
         "old_case_id": old_case_id,

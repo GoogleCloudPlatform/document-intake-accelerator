@@ -56,7 +56,7 @@ def update_classification_status(case_id: str,
   base_url = "http://document-status-service/document_status_service" \
   "/v1/update_classification_status"
 
-  if status.lower() == STATUS_SUCCESS:
+  if status == STATUS_SUCCESS:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
     f"&status={status}&document_class={document_class}"\
       f"&document_type={document_type}"

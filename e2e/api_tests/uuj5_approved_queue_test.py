@@ -17,7 +17,7 @@ def add_records():
   #Inserting two documents 1 with auto approval status as approved
   #and one with hitl status as approved
 
-  timestamp = str(datetime.datetime.utcnow())
+  timestamp = datetime.datetime.utcnow()
   d = Document()
   d.case_id = "uj8_approved_test_1"
   d.uid = "uj8_approved_test_1"

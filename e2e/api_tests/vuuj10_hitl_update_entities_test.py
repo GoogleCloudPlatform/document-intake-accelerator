@@ -18,7 +18,7 @@ def add_records(entity, case_id, uid):
   case_id : str - case_id of the document
   uid : str - uid of the document
   """
-  timestamp = str(datetime.datetime.utcnow())
+  timestamp = datetime.datetime.utcnow()
 
   d = Document()
   d.case_id = case_id
