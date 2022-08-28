@@ -37,7 +37,7 @@ module "gke" {
   version                    = "v22.1.0"
   project_id                 = var.project_id
   name                       = var.cluster_name
-  kubernetes_version         = "1.22.8-gke.202"
+  kubernetes_version         = "1.22.10-gke.600"
   region                     = var.region
   regional                   = true
   network                    = var.vpc_network
@@ -85,7 +85,7 @@ module "gke" {
 }
 
 resource "time_sleep" "wait_30_seconds" {
-  depends_on = [module.gke]
+  depends_on      = [module.gke]
   create_duration = "30s"
 }
 

@@ -148,9 +148,9 @@ module "docai" {
   processors = {
     driver_license    = "US_DRIVER_LICENSE_PROCESSOR"
     utility_bill      = "UTILITY_PROCESSOR"
-    pay_stub          = "PAYSTUB_PROCESSOR"
     unemployment_form = "FORM_PARSER_PROCESSOR"
     claims_form       = "FORM_PARSER_PROCESSOR"
+    # pay_stub        = "PAYSTUB_PROCESSOR"
   }
 }
 
