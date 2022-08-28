@@ -47,6 +47,7 @@ module "cloudbuild_sa_iam_bindings" {
     "roles/run.admin"              = [local.compute_engine_sa, local.cloud_services_sa]
     "roles/iam.serviceAccountUser" = [local.compute_engine_sa, local.cloud_services_sa]
     "roles/compute.admin"          = [local.compute_engine_sa, local.cloud_services_sa]
+    "roles/compute.serviceAgent"   = [local.compute_engine_sa, local.cloud_services_sa]
     "roles/storage.admin"          = [local.compute_engine_sa, local.cloud_services_sa]
   }
 }
