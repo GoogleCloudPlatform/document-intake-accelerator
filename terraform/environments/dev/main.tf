@@ -42,15 +42,20 @@ module "project_services" {
   services   = local.services
 }
 
+resource "time_sleep" "wait_for_project_services" {
+  depends_on      = [module.project_services]
+  create_duration = "60s"
+}
+
 module "service_accounts" {
-  depends_on = [module.project_services]
+  depends_on = [time_sleep.wait_for_project_services]
   source     = "../../modules/service_accounts"
   project_id = var.project_id
   env        = var.env
 }
 
 module "firebase" {
-  depends_on       = [module.project_services]
+  depends_on       = [time_sleep.wait_for_project_services]
   source           = "../../modules/firebase"
   project_id       = var.project_id
   firestore_region = var.firestore_region
@@ -64,7 +69,10 @@ module "vpc_network" {
 }
 
 module "gke" {
-  depends_on     = [module.project_services, module.vpc_network]
+  depends_on = [
+    time_sleep.wait_for_project_services,
+    module.vpc_network
+  ]
   source         = "../../modules/gke"
   project_id     = var.project_id
   cluster_name   = "main-cluster"
@@ -88,7 +96,10 @@ module "ingress" {
 }
 
 module "cloudrun" {
-  depends_on = [module.project_services, module.vpc_network]
+  depends_on = [
+    time_sleep.wait_for_project_services,
+    module.vpc_network
+  ]
   source     = "../../modules/cloudrun"
   project_id = var.project_id
   name       = "queue-cloudrun"
@@ -98,7 +109,7 @@ module "cloudrun" {
 
 module "pubsub" {
   depends_on = [
-    module.project_services,
+    time_sleep.wait_for_project_services,
     module.service_accounts,
     module.cloudrun,
     data.google_cloud_run_service.queue-run
@@ -116,7 +127,7 @@ module "pubsub" {
 
 module "validation_bigquery" {
   depends_on = [
-    module.project_services,
+    time_sleep.wait_for_project_services
   ]
   source = "../../modules/bigquery"
 }
@@ -124,7 +135,9 @@ module "validation_bigquery" {
 # ================= Document AI Parsers ====================
 
 module "docai" {
-  depends_on = [module.project_services]
+  depends_on = [
+    time_sleep.wait_for_project_services
+  ]
   source     = "../../modules/docai"
   project_id = var.project_id
 
