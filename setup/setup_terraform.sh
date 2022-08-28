@@ -32,7 +32,7 @@ create_bucket () {
   print_highlight "Creating terraform state bucket: ${TF_BUCKET_NAME}\n"
   gsutil mb -l $TF_BUCKET_LOCATION gs://$TF_BUCKET_NAME
   gsutil versioning set on gs://$TF_BUCKET_NAME
-
+  export TF_BUCKET_NAME=$TF_BUCKET_NAME
   echo
 }
 
@@ -90,7 +90,6 @@ print_highlight () {
 
 create_bucket
 enable_apis
-create_sa
+# create_sa
 
-echo
 print_highlight "Terraform state bucket: ${TF_BUCKET_NAME}\n"

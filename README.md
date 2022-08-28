@@ -35,6 +35,7 @@ bash setup/setup_terraform.sh
 Run Terraform apply
 
 ```
+export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=terraform-sa@$PROJECT_ID.iam.gserviceaccount.com
 cd terraform/environments/dev
 terraform init
 terraform apply
