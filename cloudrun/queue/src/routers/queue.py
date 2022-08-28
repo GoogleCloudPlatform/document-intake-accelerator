@@ -6,8 +6,9 @@ from firebase_admin import credentials, firestore, initialize_app
 import requests
 import json
 from fastapi import status, Response
-from config.config import PROCESS_TASK_URL
+from config.config import PROCESS_TASK_URL, API_DOMAIN
 from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+from common.utils.logging_handler import Logger
 
 PROJECT_ID = os.environ.get("PROJECT_ID")
 
@@ -18,12 +19,14 @@ firebase_admin.initialize_app(credentials.ApplicationDefault(), {
 db = firestore.client()
 
 router = APIRouter(prefix="/queue", tags=["Queue"])
-
 req_url = PROCESS_TASK_URL
 
 
 @router.post("/publish")
 async def publish_msg(request: Request, response: Response):
+  Logger.info(f"PROCESS_TASK_URL = {PROCESS_TASK_URL}")
+  print("PROCESS_TASK_URL = {PROCESS_TASK_URL}")
+
   envelope = await request.json()
   print(type(envelope))
   print(envelope)

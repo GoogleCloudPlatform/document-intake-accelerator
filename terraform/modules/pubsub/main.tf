@@ -6,30 +6,45 @@ resource "google_pubsub_topic" "queue" {
   name = var.topic
 }
 
-# Creating a custom service account for pubsub
-module "pubsub-service-account" {
-    source     = "github.com/terraform-google-modules/cloud-foundation-fabric/modules/iam-service-account/"
-    project_id = var.project_id
-    name       = "pubsub-sa"
-    display_name = "This is service account for pubsub"
+# data "google_project" "project" {}
 
-    iam = {
-        "roles/iam.serviceAccountUser" = []
-    }
+# resource "google_project_iam_policy" "project" {
+#   project     = var.project_id
+#   policy_data = data.google_iam_policy.admin.policy_data
+# }
+# data "google_iam_policy" "admin" {
+#   binding {
+#     role = "roles/iam.serviceAccountTokenCreator"
+#     members = [
+#       "serviceAccount:service-${data.google_project.project.number}@gcp-sa-pubsub.iam.gserviceaccount.com",
+#     ]
+#   }
+# }
 
-    iam_project_roles = {
-        (var.project_id) = [
-            "roles/run.invoker"
-        ]
-    }
-}
+# # Creating a custom service account for pubsub
+# module "pubsub-service-account" {
+#     source     = "github.com/terraform-google-modules/cloud-foundation-fabric/modules/iam-service-account/"
+#     project_id = var.project_id
+#     name       = "pubsub-sa"
+#     display_name = "This is service account for pubsub"
+
+#     iam = {
+#         "roles/iam.serviceAccountUser" = []
+#     }
+
+#     iam_project_roles = {
+#         (var.project_id) = [
+#             "roles/run.invoker"
+#         ]
+#     }
+# }
 
 #creating pubsub subscription
 
 resource "google_pubsub_subscription" "queue-sub" {
-  depends_on = [
-    module.pubsub-service-account,
-  ]
+  # depends_on = [
+  #   module.pubsub-service-account,
+  # ]
   name  = "queue-sub"
   topic = google_pubsub_topic.queue.name
 
@@ -44,17 +59,17 @@ resource "google_pubsub_subscription" "queue-sub" {
     # Calling the cloud run endpoint
     push_endpoint = var.cloudrun_endpoint
     oidc_token {
-      service_account_email = module.pubsub-service-account.email
+      service_account_email = var.service_account_email
     }
   }
 }
 
 resource "google_eventarc_trigger" "pubsub-trigger" {
-  provider = google-beta
-  name     = "pubsub-trigger"
-  project  = var.project_id
-  location = var.region
-  service_account = module.pubsub-service-account.email
+  provider        = google-beta
+  name            = "pubsub-trigger"
+  project         = var.project_id
+  location        = var.region
+  service_account = var.service_account_email
 
   matching_criteria {
     attribute = "type"
@@ -68,7 +83,7 @@ resource "google_eventarc_trigger" "pubsub-trigger" {
   }
   transport {
     pubsub {
-        topic = google_pubsub_topic.queue.name
+      topic = google_pubsub_topic.queue.name
     }
   }
 }

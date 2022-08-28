@@ -131,21 +131,19 @@ async def match_document(case_id: str, uid: str):
           "Error in getting matching score")
 
     else:
-      Logger.error(f"Error while matching document with case_id {case_id}"\
-        f" and uid {uid}."\
-          f" Application form with entities not found"\
-            f" with given case_id:{case_id}")
+      Logger.error(f"Matching with case_id {case_id} and uid {uid}: "\
+          f"Application form with entities not found with given case_id: {case_id}")
       raise HTTPException(
           status_code=404, detail="No supporting Application entities found")
 
   except HTTPException as e:
     dsm_status = update_matching_status(case_id, uid, STATUS_ERROR)
     Logger.error(
-        f"Error while matching document with case_id {case_id} and uid {uid}")
+        f"HTTPException while matching document with case_id {case_id} and uid {uid}"
+    )
     print(e)
     Logger.error(e)
-    err = traceback.format_exc().replace("\n", " ")
-    Logger.error(err)
+    Logger.error(traceback.format_exc().replace("\n", " "))
     raise e
 
   except Exception as e:
@@ -156,5 +154,4 @@ async def match_document(case_id: str, uid: str):
     print(e)
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
-    raise HTTPException(
-        status_code=500, detail="Matching Failed.Something went wrong") from e
+    raise HTTPException(status_code=500, detail=f"Matching Failed: {e}") from e

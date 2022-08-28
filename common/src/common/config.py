@@ -10,6 +10,9 @@ if PROJECT_ID != "":
   os.environ["GOOGLE_CLOUD_PROJECT"] = PROJECT_ID
 assert PROJECT_ID, "Env var PROJECT_ID is not set."
 
+REGOIN = "us-central1"
+PROCESS_TIMEOUT_SECONDS = 600
+
 #List of application forms and supporting documents
 APPLICATION_FORMS = ["unemployment_form"]
 SUPPORTING_DOCS = ["driver_license", "claims_form", "utility_bill", "pay_stub"]
@@ -23,6 +26,7 @@ STATUS_IN_PROGRESS = "Processing"
 
 STATUS_SUCCESS = "Complete"
 STATUS_ERROR = "Error"
+STATUS_TIMEOUT = "Timeout"
 
 # ========= Document upload ======================
 BUCKET_NAME = f"{PROJECT_ID}-document-upload"

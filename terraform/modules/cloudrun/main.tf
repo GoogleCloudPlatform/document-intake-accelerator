@@ -20,10 +20,13 @@ module "cloud-run-service-account" {
 
   iam_project_roles = {
     (var.project_id) = [
-      "roles/run.invoker",
       "roles/eventarc.eventReceiver",
       "roles/firebase.admin",
-      "roles/firestore.serviceAgent"
+      "roles/firestore.serviceAgent",
+      "roles/iam.serviceAccountUser",
+      "roles/iam.serviceAccountTokenCreator",
+      "roles/run.invoker",
+      "roles/pubsub.serviceAgent",
     ]
   }
 }
@@ -61,6 +64,10 @@ data "archive_file" "cloudrun-queue-zip" {
   output_path = "cloudrun-queue.zip"
 }
 resource "null_resource" "build-cloudrun-image" {
+  depends_on = [
+    null_resource.build-common-image,
+  ]
+
   triggers = {
     src_hash = "${data.archive_file.cloudrun-queue-zip.output_sha}"
   }
@@ -83,7 +90,8 @@ resource "null_resource" "build-cloudrun-image" {
 resource "google_cloud_run_service" "cloudrun-service" {
   depends_on = [
     module.cloud-run-service-account,
-    null_resource.build-cloudrun-image
+    null_resource.build-common-image,
+    null_resource.build-cloudrun-image,
   ]
 
   name     = var.name
@@ -118,4 +126,3 @@ resource "google_cloud_run_service" "cloudrun-service" {
     latest_revision = true
   }
 }
-

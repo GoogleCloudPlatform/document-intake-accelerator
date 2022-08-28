@@ -7,6 +7,7 @@ from importlib_metadata import os
 from google.cloud import storage
 from google.cloud import aiplatform
 from google.cloud.aiplatform.gapic.schema import predict
+from common.config import REGOIN
 
 
 class VertexPredictions:
@@ -18,7 +19,7 @@ class VertexPredictions:
 
   def __init__(self,
                project_id,
-               location="us-central1",
+               location=REGOIN,
                credentials_json=None) -> None:
     self.project_id = project_id
     self.loc = location
@@ -28,7 +29,7 @@ class VertexPredictions:
       self,
       endpoint_id: str,
       filename: str,
-      api_endpoint: str = "us-central1-aiplatform.googleapis.com"):
+      api_endpoint: str = f"{REGOIN}-aiplatform.googleapis.com"):
     """ Get prediction on images.
 
     Returns:

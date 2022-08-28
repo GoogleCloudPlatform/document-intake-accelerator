@@ -6,7 +6,8 @@ from common.utils.logging_handler import Logger
 from common.config import BUCKET_NAME,DB_KEYS,ENTITY_KEYS,\
   APPLICATION_FORMS,SUPPORTING_DOCS
 from common.config import STATUS_APPROVED, STATUS_REVIEW, STATUS_REJECTED, STATUS_PENDING
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR, STATUS_TIMEOUT
+from common.config import PROCESS_TIMEOUT_SECONDS
 from google.cloud import storage
 import datetime
 import requests
@@ -19,6 +20,14 @@ from models.search_payload import SearchPayload
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 FAILED_RESPONSE = {"status": STATUS_ERROR}
+
+PROCESS_NEXT_STAGE = {
+    "uploaded": "classifying",
+    "classification": "extracting",
+    "extraction": "validating",
+    "validation": "matching",
+    "matching": "Auto-approval checking",
+}
 
 
 def get_doc_list_data(docs_list: list):
@@ -33,24 +42,33 @@ def get_doc_list_data(docs_list: list):
             name = entity["value"]
     doc["applicant_name"] = name
 
-    process_status = "-"
+    process_stage = "-"
     current_status = "-"
     status_last_updated_by = "-"
+    last_status = None
     last_update_timestamp = None
+    last_system_status = ""
 
     all_status_list = (doc.get("hitl_status", []) or []) + (
         doc.get("system_status", []) or [])
     audit_trail = sorted(all_status_list, key=lambda d: d["timestamp"])
     if audit_trail and len(audit_trail) > 0:
-      last_update_timestamp = audit_trail[-1]["timestamp"]
+      last_status = audit_trail[-1]
+      last_update_timestamp = last_status["timestamp"]
+      status_last_updated_by = last_status.get("last_status", "System")
+
+    system_status = doc.get("system_status", None)
+    if system_status:
+      last_system_status = system_status[-1]
+      process_stage = (last_system_status["stage"]).lower()
+
+    hitl_status = doc.get("hitl_status", None)
+    last_hitl_status = hitl_status[-1] if hitl_status else None
 
     if doc["system_status"]:
       system_status = doc["system_status"]
       last_system_status = system_status[-1]
       status_last_updated_by = "System"
-
-      process_status = ((last_system_status["stage"]).replace("_"," ")+\
-        " "+last_system_status["status"]).title()
 
       # If there's HITL status, use the latest HITL status.
       if doc["hitl_status"]:
@@ -87,7 +105,22 @@ def get_doc_list_data(docs_list: list):
         else:
           current_status = STATUS_ERROR
 
-    doc["process_status"] = process_status
+    # Show next stage process status.
+    if current_status == STATUS_IN_PROGRESS and process_stage in PROCESS_NEXT_STAGE:
+      process_stage = PROCESS_NEXT_STAGE[process_stage.lower()] + "..."
+
+    # Update process detail status
+    if current_status == STATUS_IN_PROGRESS:
+      time_difference = datetime.datetime.now() - last_update_timestamp.replace(
+          tzinfo=None)
+      if time_difference.seconds > PROCESS_TIMEOUT_SECONDS:
+        process_stage = last_system_status["stage"] + " " + STATUS_TIMEOUT
+        current_status = STATUS_ERROR
+
+    else:
+      process_stage = process_stage + " " + last_system_status["status"]
+
+    doc["process_status"] = process_stage.title()
     doc["current_status"] = current_status
     doc["status_last_updated_by"] = status_last_updated_by
     doc["last_update_timestamp"] = last_update_timestamp

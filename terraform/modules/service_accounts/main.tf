@@ -28,6 +28,7 @@ module "service_accounts" {
     "roles/logging.admin",
     "roles/logging.viewer",
     "roles/run.admin",
+    "roles/run.invoker",
     "roles/secretmanager.secretAccessor",
     "roles/storage.admin",
     "roles/viewer",
@@ -43,8 +44,9 @@ module "cloudbuild_sa_iam_bindings" {
   mode     = "additive"
 
   bindings = {
-    "roles/run.admin" = [local.compute_engine_sa, local.cloud_services_sa]
+    "roles/run.admin"              = [local.compute_engine_sa, local.cloud_services_sa]
     "roles/iam.serviceAccountUser" = [local.compute_engine_sa, local.cloud_services_sa]
-    "roles/compute.admin" = [local.compute_engine_sa, local.cloud_services_sa]
+    "roles/compute.admin"          = [local.compute_engine_sa, local.cloud_services_sa]
+    "roles/storage.admin"          = [local.compute_engine_sa, local.cloud_services_sa]
   }
 }

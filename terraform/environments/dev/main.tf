@@ -1,6 +1,6 @@
 # project-specific locals
 locals {
-  env              = var.env
+  env = var.env
   #TODO: change
   region           = var.region
   firestore_region = var.firestore_region
@@ -32,7 +32,7 @@ data "google_project" "project" {}
 
 # Displaying the cloudrun endpoint
 data "google_cloud_run_service" "queue-run" {
-  name = "queue-cloudrun"
+  name     = "queue-cloudrun"
   location = var.region
 }
 
@@ -50,7 +50,7 @@ module "service_accounts" {
 }
 
 module "firebase" {
-  depends_on = [module.project_services]
+  depends_on       = [module.project_services]
   source           = "../../modules/firebase"
   project_id       = var.project_id
   firestore_region = var.firestore_region
@@ -64,7 +64,7 @@ module "vpc_network" {
 }
 
 module "gke" {
-  depends_on = [module.project_services, module.vpc_network]
+  depends_on     = [module.project_services, module.vpc_network]
   source         = "../../modules/gke"
   project_id     = var.project_id
   cluster_name   = "main-cluster"
@@ -76,7 +76,7 @@ module "gke" {
 }
 
 module "ingress" {
-  depends_on = [module.gke]
+  depends_on        = [module.gke]
   source            = "../../modules/ingress"
   project_id        = var.project_id
   cert_issuer_email = var.admin_email
@@ -102,20 +102,22 @@ module "pubsub" {
     module.cloudrun,
     data.google_cloud_run_service.queue-run
   ]
-  source     = "../../modules/pubsub"
-  topic      = "queue-topic"
-  project_id = var.project_id
-  region     = var.region
-  cloudrun_name     = module.cloudrun.name
-  cloudrun_location = module.cloudrun.location
-  cloudrun_endpoint = module.cloudrun.endpoint
+  source                = "../../modules/pubsub"
+  topic                 = "queue-topic"
+  project_id            = var.project_id
+  region                = var.region
+  cloudrun_name         = module.cloudrun.name
+  cloudrun_location     = module.cloudrun.location
+  cloudrun_endpoint     = module.cloudrun.endpoint
+  service_account_email = module.cloudrun.service_account_email
+  # service_account_email = "${data.google_project.project.number}-compute@developer.gserviceaccount.com"
 }
 
 module "validation_bigquery" {
   depends_on = [
     module.project_services,
   ]
-  source     = "../../modules/bigquery"
+  source = "../../modules/bigquery"
 }
 
 # ================= Document AI Parsers ====================
@@ -129,41 +131,41 @@ module "docai" {
   # Once applied Terraform changes, please run /setup/update_parser_config.sh
   # to automatically update common/src/common/parser_config.json.
   processors = {
-    driver_license = "US_DRIVER_LICENSE_PROCESSOR"
-    utility_bill = "UTILITY_PROCESSOR"
-    pay_stub = "PAYSTUB_PROCESSOR"
+    driver_license    = "US_DRIVER_LICENSE_PROCESSOR"
+    utility_bill      = "UTILITY_PROCESSOR"
+    pay_stub          = "PAYSTUB_PROCESSOR"
     unemployment_form = "FORM_PARSER_PROCESSOR"
-    claims_form = "FORM_PARSER_PROCESSOR"
+    claims_form       = "FORM_PARSER_PROCESSOR"
   }
 }
 
 # ================= Storage buckets ====================
 
 resource "google_storage_bucket" "default" {
-  name          = "${local.project_id}"
-  location      = local.multiregion
-  storage_class = "STANDARD"
+  name                        = local.project_id
+  location                    = local.multiregion
+  storage_class               = "STANDARD"
   uniform_bucket_level_access = true
 }
 
 resource "google_storage_bucket" "document-upload" {
-  name          = "${local.project_id}-document-upload"
-  location      = local.multiregion
-  storage_class = "STANDARD"
+  name                        = "${local.project_id}-document-upload"
+  location                    = local.multiregion
+  storage_class               = "STANDARD"
   uniform_bucket_level_access = true
 }
 
 resource "google_storage_bucket" "docai-output" {
-  name          = "${local.project_id}-docai-output"
-  location      = local.multiregion
-  storage_class = "STANDARD"
+  name                        = "${local.project_id}-docai-output"
+  location                    = local.multiregion
+  storage_class               = "STANDARD"
   uniform_bucket_level_access = true
 }
 
 resource "google_storage_bucket" "assets" {
-  name          = "${local.project_id}-assets"
-  location      = local.multiregion
-  storage_class = "STANDARD"
+  name                        = "${local.project_id}-assets"
+  location                    = local.multiregion
+  storage_class               = "STANDARD"
   uniform_bucket_level_access = true
 }
 

@@ -27,8 +27,11 @@ async def process_task(payload: ProcessTask,
     202 : Documents are being processed
     422 : Invalid json provided
     """
+
   payload = payload.dict()
   Logger.info(f"Processing the documents : {payload}")
+  print(f"Processing the documents : {payload}")
+
   # Run the pipeline in the background
   background_task.add_task(run_pipeline, payload, is_hitl, is_reassign)
   return {"message": "Processing your document"}

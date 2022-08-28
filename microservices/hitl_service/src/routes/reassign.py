@@ -9,6 +9,7 @@ from common.utils.copy_gcs_documents import copy_blob
 from common.utils.logging_handler import Logger
 from common.config import BUCKET_NAME
 from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+from common.config import PROCESS_TASK_API_PATH
 
 # disabling for linting to pass
 # pylint: disable = broad-except
@@ -52,12 +53,12 @@ async def reassign_case_id(reassign: Reassign, response: Response):
 
     #Check if the old case_id and new_case_id is same
     #send bad request error
-    if old_case_id == new_case_id:
-      response.status_code = status.HTTP_400_BAD_REQUEST
-      response.body = f"The  existing case_id {old_case_id}and new " \
-                  f"case_id {new_case_id} is" \
-                  f" same enter different case_id"
-      return {"message": response.body}
+    # if old_case_id == new_case_id:
+    #   response.status_code = status.HTTP_400_BAD_REQUEST
+    #   response.body = f"The  existing case_id {old_case_id}and new " \
+    #               f"case_id {new_case_id} is" \
+    #               f" same enter different case_id"
+    #   return {"message": response.body}
 
     document = Document.find_by_uid(uid)
     #If document with given uid does not exist send 404
@@ -188,8 +189,7 @@ def call_process_task(case_id: str, uid: str, document_class: str,
       "extraction_entities": entities
   }
   payload = {"configs": [data]}
-  base_url = "http://upload-service/upload_service" \
-            "/v1/process_task?is_reassign=true"
+  base_url = f"http://upload-service/{PROCESS_TASK_API_PATH}?is_reassign=true"
   Logger.info(f"Params for process task {payload}")
   response = requests.post(base_url, json=payload)
   return response

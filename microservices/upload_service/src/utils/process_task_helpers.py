@@ -16,6 +16,8 @@ def run_pipeline(payload: List[Dict], is_hitl: bool, is_reassign: bool):
     is_reassign : It is used to run the pipeline for reassigned document
   """
   Logger.info(f"Processing the documents: {payload}")
+  print(f"Processing the documents: {payload}")
+
   try:
     extraction_score = None
     applications = []
@@ -120,6 +122,9 @@ def update_autoapproval_status(case_id: str, uid: str, a_status: str,
 
 def filter_documents(configs: List[Dict]):
   """Filter the supporting documents and application form"""
+  print("filter_documents")
+  print(configs)
+
   supporting_docs = []
   application_form = []
   for config in configs:
