@@ -1,10 +1,39 @@
 # Enabling a firbase project
 
-resource "google_app_engine_application" "firebase_init" {
-  provider      = google-beta
-  project       = var.project_id
-  location_id   = var.firestore_region
-  database_type = "CLOUD_FIRESTORE"
+# resource "google_app_engine_application" "firebase_init" {
+#   provider      = google-beta
+#   project       = var.project_id
+#   location_id   = var.firestore_region
+#   database_type = "CLOUD_FIRESTORE"
+# }
+
+resource "google_firebase_project" "default" {
+  provider = google-beta
+  project  = var.project_id
+}
+
+resource "google_firebase_project_location" "default" {
+  provider    = google-beta
+  location_id = var.firestore_region
+
+  depends_on = [
+    google_firebase_project.default,
+  ]
+}
+
+resource "google_firebase_web_app" "adp_ui" {
+  provider     = google-beta
+  display_name = "Auto Document Processing"
+
+  depends_on = [google_firebase_project.default]
+}
+
+resource "null_resource" "enable_firestore" {
+  provisioner "local-exec" {
+    command = "make firestore"
+  }
+
+  depends_on = [google_firebase_project_location.default]
 }
 
 resource "google_storage_bucket" "firestore-backup-bucket" {

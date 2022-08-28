@@ -2,7 +2,16 @@
 
 Please contact jonchen@google.com for any questions.
 
-## Deployment
+## Getting Started to Deploy ADP
+
+### Prerequisites
+```
+export PROJECT_ID=<GCP Project ID>
+export ADMIN_EMAIL=<Your Email>
+export REGION=us-central1
+gcloud auth application-default set-quota-project $PROJECT_ID
+gcloud auth application-default login
+```
 
 ### For Argolis project
 
@@ -15,10 +24,8 @@ Change the following Organization policy constraints in [GCP Console](https://co
 Set up Terraform environment variables and GCS bucket for state file:
 
 ```
-export PROJECT_ID=<GCP Project ID>
-export REGION=us-central1
 export TF_VAR_api_domain=<Your API Domain>
-export TF_VAR_admin_email=<Your Email>
+export TF_VAR_admin_email=$ADMIN_EMAIL
 export TF_VAR_project_id=$PROJECT_ID
 
 # Create Terraform Statefile in GCS bucket.
