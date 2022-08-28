@@ -4,17 +4,24 @@ Please contact jonchen@google.com for any questions.
 
 ## Deployment
 
+### For Argolis project
+
+Change the following Organization policy constraints in [GCP Console](https://console.cloud.google.com/iam-admin/orgpolicies/compute-requireOsLogin)
+- constraints/compute.requireOsLogin - Enforced Off
+- constraints/compute.vmExternalIpAccess - Allow All
+
 ### GCP foundation - Terraform
 
 Set up Terraform environment variables and GCS bucket for state file:
 
 ```
 export PROJECT_ID=<GCP Project ID>
+export REGION=us-central1
 export TF_VAR_api_domain=<Your API Domain>
 export TF_VAR_admin_email=<Your Email>
 export TF_VAR_project_id=$PROJECT_ID
 
-# Create Terraform Statefile GCS bucket.
+# Create Terraform Statefile in GCS bucket.
 bash setup/setup_terraform.sh
 ```
 
@@ -36,7 +43,15 @@ Do you want to perform these actions?
 
 ### Deploying Kubernetes Microservices
 
+Connect to the `default-cluster`:
+```
+gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
+```
 
+Build all microservices (including web app) and deploy to the cluster:
+```
+skaffold run -p prod --default-repo=gcr.io/$PROJECT_ID
+```
 
 ## Configuration
 
