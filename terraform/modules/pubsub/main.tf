@@ -6,21 +6,6 @@ resource "google_pubsub_topic" "queue" {
   name = var.topic
 }
 
-# data "google_project" "project" {}
-
-# resource "google_project_iam_policy" "project" {
-#   project     = var.project_id
-#   policy_data = data.google_iam_policy.admin.policy_data
-# }
-# data "google_iam_policy" "admin" {
-#   binding {
-#     role = "roles/iam.serviceAccountTokenCreator"
-#     members = [
-#       "serviceAccount:service-${data.google_project.project.number}@gcp-sa-pubsub.iam.gserviceaccount.com",
-#     ]
-#   }
-# }
-
 # # Creating a custom service account for pubsub
 # module "pubsub-service-account" {
 #     source     = "github.com/terraform-google-modules/cloud-foundation-fabric/modules/iam-service-account/"
@@ -64,9 +49,9 @@ resource "google_pubsub_subscription" "queue-sub" {
   }
 }
 
-resource "google_eventarc_trigger" "pubsub-trigger" {
+resource "google_eventarc_trigger" "default-trigger" {
   provider        = google-beta
-  name            = "pubsub-trigger"
+  name            = "default-trigger"
   project         = var.project_id
   location        = var.region
   service_account = var.service_account_email

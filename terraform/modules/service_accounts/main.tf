@@ -1,6 +1,9 @@
 locals {
-  compute_engine_sa = "serviceAccount:${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
-  cloud_services_sa = "serviceAccount:${data.google_project.project.number}@cloudservices.gserviceaccount.com"
+  default_sa_list = [
+    "serviceAccount:${data.google_project.project.number}@cloudbuild.gserviceaccount.com",
+    "serviceAccount:${data.google_project.project.number}@cloudservices.gserviceaccount.com",
+    "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com",
+  ]
 }
 
 data "google_project" "project" {}
@@ -21,6 +24,9 @@ module "service_accounts" {
     "roles/container.admin",
     "roles/containerregistry.ServiceAgent",
     "roles/datastore.owner",
+    "roles/eventarc.admin",
+    "roles/eventarc.eventReceiver",
+    "roles/eventarc.serviceAgent",
     "roles/firebase.admin",
     "roles/iam.serviceAccountTokenCreator",
     "roles/iam.serviceAccountUser",
@@ -36,18 +42,22 @@ module "service_accounts" {
   generate_keys = false
 }
 
-module "cloudbuild_sa_iam_bindings" {
-  source  = "terraform-google-modules/iam/google//modules/projects_iam"
-  version = "7.4.1"
-
-  projects = [var.project_id]
-  mode     = "additive"
+module "default_sa_iam_bindings" {
+  source  = "terraform-google-modules/iam/google//modules/service_accounts_iam"
+  project = var.project_id
+  mode    = "additive"
 
   bindings = {
-    "roles/run.admin"              = [local.compute_engine_sa, local.cloud_services_sa]
-    "roles/iam.serviceAccountUser" = [local.compute_engine_sa, local.cloud_services_sa]
-    "roles/compute.admin"          = [local.compute_engine_sa, local.cloud_services_sa]
-    "roles/compute.serviceAgent"   = [local.compute_engine_sa, local.cloud_services_sa]
-    "roles/storage.admin"          = [local.compute_engine_sa, local.cloud_services_sa]
+    "roles/compute.admin"                     = local.default_sa_list
+    "roles/compute.serviceAgent"              = local.default_sa_list
+    "roles/eventarc.admin"                    = local.default_sa_list
+    "roles/eventarc.eventReceiver"            = local.default_sa_list
+    "roles/eventarc.serviceAgent"             = local.default_sa_list
+    "roles/iam.serviceAccountTokenCreator"    = local.default_sa_list
+    "roles/iam.serviceAccountUser"            = local.default_sa_list
+    "roles/run.admin"                         = local.default_sa_list
+    "roles/run.invoker"                       = local.default_sa_list
+    "roles/serviceusage.serviceUsageConsumer" = local.default_sa_list
+    "roles/storage.admin"                     = local.default_sa_list
   }
 }

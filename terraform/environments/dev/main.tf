@@ -99,6 +99,7 @@ module "cloudrun" {
 module "pubsub" {
   depends_on = [
     module.project_services,
+    module.service_accounts,
     module.cloudrun,
     data.google_cloud_run_service.queue-run
   ]
@@ -109,7 +110,7 @@ module "pubsub" {
   cloudrun_name         = module.cloudrun.name
   cloudrun_location     = module.cloudrun.location
   cloudrun_endpoint     = module.cloudrun.endpoint
-  service_account_email = module.cloudrun.service_account_email
+  service_account_email = "${data.google_project.project.number}-compute@developer.gserviceaccount.com"
   # service_account_email = "${data.google_project.project.number}-compute@developer.gserviceaccount.com"
 }
 

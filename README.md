@@ -50,6 +50,17 @@ Do you want to perform these actions?
 
 ### Human-In-The-Loop Web Application
 
+## Deployment Troubleshoot
+
+### Error 400/403: Missing edit permissions on account
+If you're seeing the following GKE permission error regarding Comopute Engine read permission, run the following to fix
+
+```
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format 'get(projectNumber)')
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+ --member "serviceAccount:service-${PROJECT_NUMBER?}@container-engine-robot.iam.gserviceaccount.com" \
+ --role roles/container.serviceAgent
+ ```
 
 ## Development
 
