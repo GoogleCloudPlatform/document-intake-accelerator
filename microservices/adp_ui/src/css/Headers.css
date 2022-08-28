@@ -1,0 +1,50 @@
+.haContainer {
+  display: flex;
+  align-items: center;
+}
+
+.dropdown {
+  width: 100px;
+}
+
+.dropdown .item {
+  display: none;
+}
+
+.dropdown:hover .item {
+  display: block;
+}
+
+.cardName {
+  border-radius: 0 !important;
+  margin: 0;
+  padding: 0;
+  height: 5rem;
+  border-bottom: 1px solid #E8E8E8;
+  width: 100% !important;
+}
+
+.overviewLabel {
+  text-decoration: none;
+  vertical-align: -webkit-baseline-middle;
+  cursor: pointer;
+}
+
+.userIcon {
+  float: right;
+  width: 30px;
+  height: 30px
+}
+
+.userName {
+  text-transform: capitalize;
+  vertical-align: -webkit-baseline-middle
+}
+
+@media(max-width:1350px) {
+  .userName {
+    font-size: 10px;
+    max-width: 70px;
+  }
+
+}

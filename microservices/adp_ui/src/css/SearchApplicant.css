@@ -1,0 +1,29 @@
+.datatable-style-demo .p-datatable.p-datatable-tbody>tr.p-highlight {
+    background: #EEF2FF;
+    color: #4285F4 !important;
+}
+.datatable-style-demo .p-highlight.p-selectable-row{
+    color: #4285F4 !important;
+}
+
+.datatable-style-demo .p-radiobutton .p-radiobutton-box.p-highlight {
+    border-color: #4285F4 !important;
+    background: #4285F4 !important;
+}
+
+.searchInputButton{
+    border-radius: 13px !important;
+	padding: 5px 15px;
+	border: none;
+	font-size:12px;
+	box-shadow:none;
+}
+
+.saActionButton{
+    text-decoration:none !important;
+    font-size:14px;
+}
+
+.saContainer{
+    padding-top: 10px;;
+}

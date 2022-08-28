@@ -2,50 +2,57 @@
 apiVersion: skaffold/v2beta12
 kind: Config
 metadata:
-  name: backends
+  name: all-services
 requires:
 - path: ./common
   configs: [common]
-  activeProfiles: &dev_and_custom_backends
+  activeProfiles: &all_profiles
   - name: custom
     activatedBy: [custom]
+  - name: prod
+    activatedBy: [prod]
   - name: dev
     activatedBy: [dev]
 
 - path: ./microservices/sample_service
   configs: [sample-service]
-  activeProfiles:  *dev_and_custom_backends
+  activeProfiles:  *all_profiles
 
 - path: ./microservices/upload_service
   configs: [upload-service]
-  activeProfiles:  *dev_and_custom_backends
+  activeProfiles:  *all_profiles
 
 - path: ./microservices/classification_service
   configs: [classification-service]
-  activeProfiles:  *dev_and_custom_backends
+  activeProfiles:  *all_profiles
 
 - path: ./microservices/extraction_service
   configs: [ extraction-service ]
-  activeProfiles: *dev_and_custom_backends
+  activeProfiles: *all_profiles
 
 - path: ./microservices/validation_service
   configs: [validation-service]
-  activeProfiles:  *dev_and_custom_backends
+  activeProfiles:  *all_profiles
 
 - path: ./microservices/hitl_service
   configs: [hitl-service]
-  activeProfiles:  *dev_and_custom_backends
+  activeProfiles:  *all_profiles
 
 - path: ./microservices/document_status_service
   configs: [document-status-service]
-  activeProfiles:  *dev_and_custom_backends
+  activeProfiles:  *all_profiles
 
 - path: ./microservices/matching_service
   configs: [matching-service]
-  activeProfiles:  *dev_and_custom_backends
+  activeProfiles:  *all_profiles
+
+- path: ./microservices/adp_ui
+  configs: [adp-ui]
+  activeProfiles:  *all_profiles
 
 profiles:
 - name: custom
+- name: prod
 - name: dev
   activation:
   - kubeContext: gke_claims-processing-dev_us-central1_default-cluster

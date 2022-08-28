@@ -146,10 +146,10 @@ module "docai" {
   # Once applied Terraform changes, please run /setup/update_parser_config.sh
   # to automatically update common/src/common/parser_config.json.
   processors = {
-    driver_license    = "US_DRIVER_LICENSE_PROCESSOR"
-    utility_bill      = "UTILITY_PROCESSOR"
     unemployment_form = "FORM_PARSER_PROCESSOR"
     claims_form       = "FORM_PARSER_PROCESSOR"
+    driver_license    = "US_DRIVER_LICENSE_PROCESSOR"
+    # utility_bill      = "UTILITY_PROCESSOR"
     # pay_stub        = "PAYSTUB_PROCESSOR"
   }
 }
