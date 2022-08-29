@@ -33,7 +33,13 @@ async def publish_msg(request: Request, response: Response):
     print(response.body)
     return response
 
-  envelope = await request.json()
+  try:
+    envelope = await request.json()
+  except json.JSONDecodeError:
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    response.body = f"Unable to parse to JSON: {body}"
+    return response
+
   print(type(envelope))
   print(envelope)
   if not envelope:

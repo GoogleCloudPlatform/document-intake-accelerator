@@ -36,7 +36,7 @@ module "cloud-run-service-account" {
 data "archive_file" "common-zip" {
   type        = "zip"
   source_dir  = "../../../common"
-  output_path = "common.zip"
+  output_path = ".terraform/common.zip"
 }
 resource "null_resource" "build-common-image" {
   triggers = {
@@ -62,7 +62,7 @@ resource "null_resource" "build-common-image" {
 data "archive_file" "cloudrun-queue-zip" {
   type        = "zip"
   source_dir  = "../../../cloudrun/queue"
-  output_path = "cloudrun-queue.zip"
+  output_path = ".terraform/cloudrun-queue.zip"
 }
 resource "null_resource" "build-cloudrun-image" {
   depends_on = [
@@ -90,7 +90,7 @@ resource "null_resource" "build-cloudrun-image" {
 
 resource "google_cloud_run_service" "cloudrun-service" {
   # Run the following to Re-deploy this CloudRun service.
-  # terraform apply -replace=module.cloudrun.google_cloud_run_service.cloudrun-service
+  # terraform apply -replace=module.cloudrun.google_cloud_run_service.cloudrun-service -auto-approve
 
   depends_on = [
     # module.cloud-run-service-account,
