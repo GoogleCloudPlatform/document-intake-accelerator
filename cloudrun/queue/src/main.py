@@ -13,23 +13,6 @@ from routes import queue
 # app = FastAPI(docs_url="/docs", redoc_url="/redoc", openapi_url="/openapi.json")
 app = FastAPI(title="Queue Task Dispatcher")
 
-# @app.on_event("startup")
-# def set_default_executor():
-#   loop = asyncio.get_running_loop()
-#   loop.set_default_executor(ThreadPoolExecutor(max_workers=1000))
-
-# @app.middleware("http")
-# async def add_process_time_header(request: Request, call_next):
-#   method = request.method
-#   path = request.scope.get("path")
-#   start_time = time.time()
-#   response = await call_next(request)
-#   if path != "/ping":
-#     process_time = time.time() - start_time
-#     time_elapsed = round(process_time * 1000)
-#     Logger.info(f"{method} {path} Time elapsed: {str(time_elapsed)} ms")
-#   return response
-
 
 @app.get("/ping")
 def health_check():

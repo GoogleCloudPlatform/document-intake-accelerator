@@ -85,10 +85,11 @@ async def publish_msg(request: Request, response: Response):
       print(f"Sending data to {PROCESS_TASK_URL}:")
       print(request_body)
 
-      response = requests.post(PROCESS_TASK_URL, json=request_body)
-      print("Response:")
-      print(response)
+      process_task_response = requests.post(PROCESS_TASK_URL, json=request_body)
+      print(f"Response from {PROCESS_TASK_URL}")
+      print(process_task_response.json())
 
+      response.status_code = process_task_response.status_code
       return response
 
   if doc_count > int(os.environ["MAX_UPLOADED_DOCS"]):
