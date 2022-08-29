@@ -35,13 +35,14 @@ async def publish_msg(request: Request, response: Response):
 
   try:
     envelope = await request.json()
+    print("Pub/Sub envelope:")
+    print(envelope)
+
   except json.JSONDecodeError:
     response.status_code = status.HTTP_400_BAD_REQUEST
     response.body = f"Unable to parse to JSON: {body}"
     return response
 
-  print(type(envelope))
-  print(envelope)
   if not envelope:
     response.status_code = status.HTTP_400_BAD_REQUEST
     response.body = "No Pub/Sub message received"
@@ -57,26 +58,24 @@ async def publish_msg(request: Request, response: Response):
   result = get_count()
   pubsub_message = envelope["message"]
   if result < int(os.environ["t"]):
-    name = "World"
+    print("Pub/Sub message:")
     print(pubsub_message)
-    print(type(pubsub_message))
+
     if isinstance(pubsub_message, dict) and "data" in pubsub_message:
-      print("Hello")
-      name = base64.b64decode(pubsub_message["data"]).decode("utf-8").strip()
-      print("Check type")
-      print(type(name))
-      name1 = json.loads(name)
-      print(type(name1))
-      print(name1)
-      payload = name1.get("message_list")
-      data = {"configs": payload}
-      #data={"case_id": name1.get("caseid"),"uid": name1.get("uid"),"gcs_url": name1.get("gcs_url"),"context": name1.get("context")}
-      #data=name1.get("message_list")
-      print("This is data")
-      print(data)
-      response = requests.post(PROCESS_TASK_URL, json=data)
+      msg_data = base64.b64decode(
+          pubsub_message["data"]).decode("utf-8").strip()
+      name = json.loads(msg_data)
+      payload = name.get("message_list")
+      request_body = {"configs": payload}
+
+      #data={"case_id": name.get("caseid"),"uid": name.get("uid"),"gcs_url": name.get("gcs_url"),"context": name.get("context")}
+      #data=name.get("message_list")
+
+      print(f"Sending data to {PROCESS_TASK_URL}:")
+      print(request_body)
+
+      response = requests.post(PROCESS_TASK_URL, json=request_body)
       print(result)
-      print(f"Hello {name}")
       return response
 
   if result > int(os.environ["t"]):
