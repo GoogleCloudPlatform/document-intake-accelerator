@@ -93,7 +93,7 @@ module "ingress" {
   # Domains for API endpoint, excluding protocols.
   domain            = var.api_domain
   region            = var.region
-  cors_allow_origin = "http://localhost:4200,http://localhost:3000,${var.api_domain}"
+  cors_allow_origin = "http://localhost:4200,http://localhost:3000,http://${var.api_domain},https://${var.api_domain}"
 }
 
 module "cloudrun" {
