@@ -55,9 +55,12 @@ async def publish_msg(request: Request, response: Response):
     print(f"error: {response.body}")
     return response
 
-  result = get_count()
+  doc_count = get_count()
+  print(f"doc_count = {doc_count}")
+
   pubsub_message = envelope["message"]
-  if result < int(os.environ["t"]):
+
+  if doc_count < int(os.environ["MAX_UPLOADED_DOCS"]):
     print("Pub/Sub message:")
     print(pubsub_message)
 
@@ -68,24 +71,34 @@ async def publish_msg(request: Request, response: Response):
       payload = name.get("message_list")
       request_body = {"configs": payload}
 
-      #data={"case_id": name.get("caseid"),"uid": name.get("uid"),"gcs_url": name.get("gcs_url"),"context": name.get("context")}
-      #data=name.get("message_list")
-
+      # Sample request body
+      # {
+      #   "configs": [
+      #     {
+      #       "case_id": "6075e034-2763-11ed-8345-aa81c3a89f04",
+      #       "uid": "jcdQmUqUKrcs8GGsmojp",
+      #       "gcs_url": "gs://jonchen-adp-dev-document-upload/6075e034-2763-11ed-8345-aa81c3a89f04/jcdQmUqUKrcs8GGsmojp/arizona-application-form.pdf",
+      #       "context": "arizona"
+      #     }
+      #   ]
+      # }
       print(f"Sending data to {PROCESS_TASK_URL}:")
       print(request_body)
 
       response = requests.post(PROCESS_TASK_URL, json=request_body)
-      print(result)
+      print("Response:")
+      print(response)
+
       return response
 
-  if result > int(os.environ["t"]):
+  if doc_count > int(os.environ["MAX_UPLOADED_DOCS"]):
     print(f"unacknowledge: {response.body}")
     response.body = "Message not acknowledged"
     response.status_code = status.HTTP_400_BAD_REQUEST
     return response
 
   # No Content
-  return ("", 204)
+  return ("", status.HTTP_204_NO_CONTENT)
 
 
 def get_count():

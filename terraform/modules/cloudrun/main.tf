@@ -109,7 +109,7 @@ resource "google_cloud_run_service" "cloudrun-service" {
           container_port = 8000
         }
         env {
-          name  = "t" #thresold value for comparison with the number of uploaded docs in firesotre collection
+          name  = "MAX_UPLOADED_DOCS" #thresold value for comparison with the number of uploaded docs in firesotre collection
           value = "10"
         }
         env {
