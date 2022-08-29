@@ -101,11 +101,12 @@ module "cloudrun" {
     time_sleep.wait_for_project_services,
     module.vpc_network
   ]
-  source     = "../../modules/cloudrun"
-  project_id = var.project_id
-  name       = "queue-cloudrun"
-  region     = var.region
-  api_domain = var.api_domain
+  source                = "../../modules/cloudrun"
+  project_id            = var.project_id
+  name                  = "queue-cloudrun"
+  region                = var.region
+  api_domain            = var.api_domain
+  service_account_email = "${data.google_project.project.number}-compute@developer.gserviceaccount.com"
 }
 
 module "pubsub" {
@@ -123,7 +124,6 @@ module "pubsub" {
   cloudrun_location     = module.cloudrun.location
   cloudrun_endpoint     = module.cloudrun.endpoint
   service_account_email = "${data.google_project.project.number}-compute@developer.gserviceaccount.com"
-  # service_account_email = "${data.google_project.project.number}-compute@developer.gserviceaccount.com"
 }
 
 module "validation_bigquery" {
@@ -181,6 +181,13 @@ resource "google_storage_bucket" "assets" {
   name                        = "${local.project_id}-assets"
   location                    = local.multiregion
   storage_class               = "STANDARD"
+  uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket" "queue-log-bucket" {
+  name                        = "${var.project_id}-queue-log"
+  location                    = local.multiregion
+  storage_class               = "NEARLINE"
   uniform_bucket_level_access = true
 }
 

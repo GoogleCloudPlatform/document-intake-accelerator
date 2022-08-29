@@ -1,35 +1,28 @@
 #Creating a cloud run service
 
-resource "google_storage_bucket" "queue-log-bucket" {
-  name                        = "${var.project_id}-queue-log"
-  location                    = var.region
-  storage_class               = "NEARLINE"
-  uniform_bucket_level_access = true
-}
+# # Creating a custom service account for cloud run
+# module "cloud-run-service-account" {
+#   source       = "github.com/terraform-google-modules/cloud-foundation-fabric/modules/iam-service-account/"
+#   project_id   = var.project_id
+#   name         = "cloudrun-sa"
+#   display_name = "This is service account for cloud run"
 
-# Creating a custom service account for cloud run
-module "cloud-run-service-account" {
-  source       = "github.com/terraform-google-modules/cloud-foundation-fabric/modules/iam-service-account/"
-  project_id   = var.project_id
-  name         = "cloudrun-sa"
-  display_name = "This is service account for cloud run"
+#   iam = {
+#     "roles/iam.serviceAccountUser" = []
+#   }
 
-  iam = {
-    "roles/iam.serviceAccountUser" = []
-  }
-
-  iam_project_roles = {
-    (var.project_id) = [
-      "roles/eventarc.eventReceiver",
-      "roles/firebase.admin",
-      "roles/firestore.serviceAgent",
-      "roles/iam.serviceAccountUser",
-      "roles/iam.serviceAccountTokenCreator",
-      "roles/run.invoker",
-      "roles/pubsub.serviceAgent",
-    ]
-  }
-}
+#   iam_project_roles = {
+#     (var.project_id) = [
+#       "roles/eventarc.eventReceiver",
+#       "roles/firebase.admin",
+#       "roles/firestore.serviceAgent",
+#       "roles/iam.serviceAccountUser",
+#       "roles/iam.serviceAccountTokenCreator",
+#       "roles/run.invoker",
+#       "roles/pubsub.serviceAgent",
+#     ]
+#   }
+# }
 
 # Build Cloudrun image
 data "archive_file" "common-zip" {
@@ -89,7 +82,7 @@ resource "null_resource" "build-cloudrun-image" {
 
 resource "google_cloud_run_service" "cloudrun-service" {
   depends_on = [
-    module.cloud-run-service-account,
+    # module.cloud-run-service-account,
     null_resource.build-common-image,
     null_resource.build-cloudrun-image,
   ]
@@ -118,7 +111,7 @@ resource "google_cloud_run_service" "cloudrun-service" {
           value = var.api_domain
         }
       }
-      service_account_name = module.cloud-run-service-account.email
+      service_account_name = var.service_account_email
     }
   }
   traffic {
