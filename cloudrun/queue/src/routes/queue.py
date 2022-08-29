@@ -6,7 +6,7 @@ from firebase_admin import credentials, firestore, initialize_app
 import requests
 import json
 from fastapi import status, Response
-from config.config import PROCESS_TASK_URL, API_DOMAIN
+from config import PROCESS_TASK_URL, API_DOMAIN
 from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 from common.utils.logging_handler import Logger
 
@@ -19,7 +19,6 @@ firebase_admin.initialize_app(credentials.ApplicationDefault(), {
 db = firestore.client()
 
 router = APIRouter(prefix="/queue", tags=["Queue"])
-req_url = PROCESS_TASK_URL
 
 
 @router.post("/publish")
@@ -27,24 +26,31 @@ async def publish_msg(request: Request, response: Response):
   Logger.info(f"PROCESS_TASK_URL = {PROCESS_TASK_URL}")
   print("PROCESS_TASK_URL = {PROCESS_TASK_URL}")
 
+  body = await request.body()
+  if not body or body == "":
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    response.body = "Request has no body"
+    print(response.body)
+    return response
+
   envelope = await request.json()
   print(type(envelope))
   print(envelope)
   if not envelope:
-    msg = "no Pub/Sub message received"
-    print(f"error: {msg}")
     response.status_code = status.HTTP_400_BAD_REQUEST
-    return response.status_code
+    response.body = "No Pub/Sub message received"
+    print(f"error: {response.body}")
+    return response
 
   if not isinstance(envelope, dict) or "message" not in envelope:
-    msg = "invalid Pub/Sub message format"
-    print(f"error: {msg}")
     response.status_code = status.HTTP_400_BAD_REQUEST
-    return response.status_code
+    response.body = "invalid Pub/Sub message format"
+    print(f"error: {response.body}")
+    return response
 
   result = get_count()
   pubsub_message = envelope["message"]
-  if result < int(os.environ['t']):
+  if result < int(os.environ["t"]):
     name = "World"
     print(pubsub_message)
     print(type(pubsub_message))
@@ -62,35 +68,35 @@ async def publish_msg(request: Request, response: Response):
       #data=name1.get("message_list")
       print("This is data")
       print(data)
-      response = requests.post(req_url, json=data)
+      response = requests.post(PROCESS_TASK_URL, json=data)
       print(result)
       print(f"Hello {name}")
-      return response.status_code
+      return response
 
-  if result > int(os.environ['t']):
-    msg = "Message not acknowledged"
-    print(f"unacknowledge: {msg}")
-    print("***********")
+  if result > int(os.environ["t"]):
+    print(f"unacknowledge: {response.body}")
+    response.body = "Message not acknowledged"
     response.status_code = status.HTTP_400_BAD_REQUEST
-    return response.status_code
+    return response
 
+  # No Content
   return ("", 204)
 
 
 def get_count():
   ct = 0
-  docs = db.collection(u'document').stream()
+  docs = db.collection(u"document").stream()
   for doc in docs:
     a = doc.to_dict()
     #print(a)
-    #print('loop')
+    #print("loop")
     b = a["system_status"]
     if type(b) == list:
-      #print('in loop')
+      #print("in loop")
       for i in b:
         l = len(b)
         if l == 1:
-          #print('loop')
+          #print("loop")
           if i["stage"] == "uploaded" and i["status"] == STATUS_SUCCESS:
             ct = ct + 1
 

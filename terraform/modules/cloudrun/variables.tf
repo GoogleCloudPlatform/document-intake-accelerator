@@ -17,7 +17,3 @@ variable "api_domain" {
   type        = string
   description = "API domain"
 }
-
-variable "service_account_email" {
-  type = string
-}

@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: queue
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: queue
+        image: queue
+        imagePullPolicy: Always
+        env:
+        - name: PROJECT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: env-vars
+              key: PROJECT_ID
+        - name: API_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: env-vars
+              key: API_DOMAIN

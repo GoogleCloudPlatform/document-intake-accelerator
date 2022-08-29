@@ -9,3 +9,7 @@ output "name" {
 output "location" {
   value = google_cloud_run_service.cloudrun-service.location
 }
+
+output "service_account_email" {
+  value = module.cloud-run-service-account.email
+}

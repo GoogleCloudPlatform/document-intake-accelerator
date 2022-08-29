@@ -49,9 +49,9 @@ resource "google_pubsub_subscription" "queue-sub" {
   }
 }
 
-resource "google_eventarc_trigger" "default-trigger" {
+resource "google_eventarc_trigger" "queue-topic-trigger" {
   provider        = google-beta
-  name            = "default-trigger"
+  name            = "queue-topic-trigger"
   project         = var.project_id
   location        = var.region
   service_account = var.service_account_email
@@ -64,6 +64,7 @@ resource "google_eventarc_trigger" "default-trigger" {
     cloud_run_service {
       service = var.cloudrun_name
       region  = var.cloudrun_location
+      path    = "/queue/publish"
     }
   }
   transport {
