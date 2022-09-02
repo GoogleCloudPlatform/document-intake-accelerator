@@ -11,7 +11,7 @@ gcloud auth application-default set-quota-project $PROJECT_ID
 gcloud auth application-default login
 ```
 
-### For Argolis project
+### GCP Orgnization policy
 
 Change the following Organization policy constraints in [GCP Console](https://console.cloud.google.com/iam-admin/orgpolicies/compute-requireOsLogin)
 - constraints/compute.requireOsLogin - Enforced Off
