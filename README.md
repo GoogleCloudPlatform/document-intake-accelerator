@@ -1,7 +1,5 @@
 # Google Solutions - Automated Document Processing (ADP)
 
-Please contact jonchen@google.com for any questions.
-
 ## Getting Started to Deploy ADP
 
 ### Prerequisites
@@ -60,18 +58,6 @@ Build all microservices (including web app) and deploy to the cluster:
 ```
 skaffold run -p prod --default-repo=gcr.io/$PROJECT_ID
 ```
-
-## Configuration
-
-### Classification
-
-### Extraction
-
-### Validation
-
-### Matching
-
-### Human-In-The-Loop Web Application
 
 ## Deployment Troubleshoot
 
