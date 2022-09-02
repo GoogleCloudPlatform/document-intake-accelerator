@@ -32,61 +32,54 @@ variable "dataset_location" {
 }
 
 variable "multiregion" {
-  type        = string
-  default     = "us"
+  type    = string
+  default = "us"
 }
 
 variable "env" {
-  type        = string
-  default     = "dev"
+  type    = string
+  default = "dev"
 }
 
 variable "cluster_name" {
-    type = string
-    default = "adp-cluster"
+  type    = string
+  default = "adp-cluster"
 }
 
 variable "network" {
-    type = string
-    default = "adp-vpc"
+  type    = string
+  default = "adp-vpc"
 }
 
 variable "subnetwork" {
-    type = string
-    default = "adp-subnetwork"  
+  type    = string
+  default = "adp-subnetwork"
 }
 
 #adding new variables for the updated scripts
 
-variable "dataset_name" {
-    type = string
-    default = "entity_extraction"
-    description = "bigquery dataset"
-}
-
-variable "table_name" {
-    type = string
-    default = "entity"
-    description = "bigquery table"
-}
-
 variable "project_name" {
-    type = string
-    default = ""
-    description = "This project name"
+  type        = string
+  default     = ""
+  description = "This project name"
 }
 
 variable "org_id" {
-    default = ""
-    description = "This project organization id"
+  default     = ""
+  description = "This project organization id"
 }
 
 variable "firebase_init" {
-    default = true
-    description = "Whether to run Firebase init resource"
+  default     = false
+  description = "Whether to run Firebase init resource"
 }
 
-variable "cert_issuer_email" {
+variable "cloudrun_deploy" {
+  default     = false
+  description = "Whether to deploy Queue cloudrun service resource"
+}
+
+variable "admin_email" {
   type        = string
   description = "email of the cert issuer"
 }
@@ -94,9 +87,4 @@ variable "cert_issuer_email" {
 variable "api_domain" {
   type        = string
   description = "api domain name"
-}
-
-variable "web_app_domain" {
-  type        = string
-  description = "web app domain name"
 }

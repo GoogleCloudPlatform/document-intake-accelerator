@@ -1,0 +1,24 @@
+.p-datatable .p-datatable-header {
+    background-color: transparent;
+    border: none;
+    font-size: 16px;
+}
+
+.searchInput {
+    border-radius: 13px;
+    padding: 5px 15px;
+    width: calc(100% - 100px);
+}
+
+.searchButton {
+    background-color: #2196F3;
+    color: white;
+}
+
+input[type="text"] {
+    height: 30px;
+}
+
+.p-datatable-header {
+    margin-bottom: -50px !important;
+}

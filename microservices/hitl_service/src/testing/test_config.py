@@ -4,7 +4,7 @@ supporting_document_data  = {
   "uid": "7CBdJrVpbKolmbm2MYLxx",
   "context": "arkansas",
   "document_type": "supporting_documents",
-  "document_class": "driving_licence",
+  "document_class": "driver_license",
   "url": "gs://document-upload-test/123A1/"
          "7CBdJrVpbKolmbm2MYLxx/Illinois2.pdf",
   "entities": [{

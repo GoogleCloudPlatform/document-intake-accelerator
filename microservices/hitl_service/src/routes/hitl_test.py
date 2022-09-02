@@ -9,13 +9,14 @@ from unittest.mock import Mock, patch
 from testing.fastapi_fixtures import client_with_emulator
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
 from common.models.document import Document
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 # assigning url
 api_url = "http://localhost:8080/hitl_service/v1/"
 
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
-SUCCESS_RESPONSE = {"status": "Success"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 
 
 def test_report_data_api(client_with_emulator):
@@ -48,17 +49,21 @@ def test_get_document_api_invalid_uid(client_with_emulator):
     response = client_with_emulator.post(f"{api_url}get_document?uid=u12")
     json_response = json.loads(response.text)
     assert response.status_code == 200
-    assert json_response["status"] == "Failed"
+    assert json_response["status"] == STATUS_ERROR
 
 
 def test_get_queue_api(client_with_emulator):
   """Test case to check the get_queue hitl endpoint"""
 
   d = Document()
-  d.hitl_status = [{"status": "approved","user": "Adam","timestamp": "12.00"}]
+  d.hitl_status = [{
+      "status": STATUS_APPROVED,
+      "user": "Adam",
+      "timestamp": "12.00"
+  }]
   d.system_status = [{
       "stage": "auto_approval",
-      "status": "success",
+      "status": STATUS_SUCCESS,
       "timestamp": "11.57"
   }]
   d.auto_approval = "Rejected"
@@ -75,7 +80,11 @@ def test_get_queue_api_invalid_status(client_with_emulator):
 
   d = Document()
   d.active = "active"
-  d.hitl_status = [{"status": "approved","user": "Adam","timestamp": "12.00"}]
+  d.hitl_status = [{
+      "status": STATUS_APPROVED,
+      "user": "Adam",
+      "timestamp": "12.00"
+  }]
   d.save()
   with patch("routes.hitl.Logger"):
     response = client_with_emulator.post(
@@ -113,7 +122,7 @@ def test_update_hitl_status_api_invalid_uid(client_with_emulator):
     )
     assert response.status_code == 200
     json_response = json.loads(response.text)
-    assert json_response["status"] == "Failed"
+    assert json_response["status"] == STATUS_ERROR
 
 
 def test_update_hitl_status_api_invalid_status(client_with_emulator):
@@ -172,7 +181,7 @@ def test_update_entity_api_invalid_uid(client_with_emulator):
         f"{api_url}update_entity?uid=u12", json=data)
     assert response.status_code == 200
     json_response = json.loads(response.text)
-    assert json_response["status"] == "Failed"
+    assert json_response["status"] == STATUS_ERROR
 
 
 def test_fetch_api(client_with_emulator):
@@ -245,7 +254,7 @@ def test_update_hitl_classification_api(client_with_emulator):
 
   case_id = "test_case"
   uid = "u123"
-  document_class = "driving_licence"
+  document_class = "driver_license"
 
   mockresponse = Mock()
   mockresponse.status_code = 200

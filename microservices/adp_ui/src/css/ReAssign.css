@@ -1,0 +1,86 @@
+.subHeaderReassign {
+    background-color: #fff;
+    height: 4.5rem;
+    padding: 12px;
+}
+
+.reassignButton {
+    border-radius: 10px;
+    border: none;
+    background-color: #2196F3;
+    font-size: 14px
+}
+
+.notesSection {
+    border-radius: 5px 15px;
+}
+
+.raSubTitle {
+    text-transform: capitalize;
+    font-weight: bolder;
+    position: relative;
+    bottom: 8px;
+
+}
+
+.raLabels {
+    font-size: 1.2em;
+    font-weight: bolder;
+}
+
+.raSubContainer {
+    padding: 0px;
+    border-radius: 15px;
+    border: 0px;
+}
+
+.raContainer {
+    background-color: #fff;
+    border-radius: 29px 29px 0 0;
+}
+
+.raSearchCard {
+    border: 0px;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.raCard {
+    height: 4rem !important;
+    border-radius: 17px 17px 0 0;
+    padding: 0px;
+    border: none;
+    border-bottom: 1px solid #D3D3D3;
+}
+
+.raPdfView {
+    overflow: scroll;
+    height: calc(100vh - 150px);
+}
+
+.raData {
+    overflow: scroll;
+    height: calc(100vh - 400px);
+}
+
+.ralabelBold {
+    font-weight: bolder;
+}
+
+.raCurvedBorderContainer {
+    background-color: #fff;
+}
+
+.raBack {
+    text-decoration: none;
+    color: #4285F4;
+    margin-left: 25px
+}
+
+.raSpace {
+    margin-left: 24px
+}
+
+.pdf-page-canvas-1 {
+    width: -webkit-fill-available;
+}

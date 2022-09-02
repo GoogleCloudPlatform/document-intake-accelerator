@@ -1,5 +1,5 @@
 {
-  "driving_licence": {
+  "driver_license": {
     "parser_name": "DriverLicenseParser",
     "location": "us",
     "processor_id": "baf0cf598e3ddd6b"

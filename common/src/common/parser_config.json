@@ -1,0 +1,32 @@
+{
+    "claims_form": {
+        "location": "us",
+        "parser_name": "claims_form",
+        "parser_type": "FORM_PARSER_PROCESSOR",
+        "processor_id": "projects/claims-processing-dev/locations/us/processors/a5f94f08d2b3b535"
+    },
+    "driver_license": {
+        "location": "us",
+        "parser_name": "driver_license",
+        "parser_type": "US_DRIVER_LICENSE_PROCESSOR",
+        "processor_id": "projects/claims-processing-dev/locations/us/processors/76349a906b4441aa"
+    },
+    "pay_stub": {
+        "location": "us",
+        "parser_name": "pay_stub",
+        "parser_type": "PAYSTUB_PROCESSOR",
+        "processor_id": "projects/claims-processing-dev/locations/us/processors/8592049e8ffd50b3"
+    },
+    "unemployment_form": {
+        "location": "us",
+        "parser_name": "unemployment_form",
+        "parser_type": "FORM_PARSER_PROCESSOR",
+        "processor_id": "projects/claims-processing-dev/locations/us/processors/77e1c5b06bf6b134"
+    },
+    "utility_bill": {
+        "location": "us",
+        "parser_name": "utility_bill",
+        "parser_type": "UTILITY_PROCESSOR",
+        "processor_id": "projects/claims-processing-dev/locations/us/processors/33d98ae9cbbc6268"
+    }
+}

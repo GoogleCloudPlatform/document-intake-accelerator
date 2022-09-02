@@ -4,6 +4,7 @@
 import os
 import json
 import datetime
+import mock
 from .config_test import API_URL, TESTDATA_FILENAME, TEST_CLAIM
 
 # disabling pylint rules that conflict with pytest fixtures
@@ -11,14 +12,14 @@ from .config_test import API_URL, TESTDATA_FILENAME, TEST_CLAIM
 from testing.fastapi_fixtures import client_with_emulator
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
 from common.models import Claim
-import mock
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 # assigning url
 api_url = API_URL
 
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
-SUCCESS_RESPONSE = {"status": "Success"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 
 
 def test_get_claim(client_with_emulator):

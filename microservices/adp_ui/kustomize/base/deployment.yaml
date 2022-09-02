@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: adp-ui
+  name: adp-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: adp-ui
+  template:
+    metadata:
+      labels:
+        run: adp-ui
+    spec:
+      containers:
+      - image: adp-ui:latest
+        name: adp-ui
+        ports:
+        - containerPort: 80

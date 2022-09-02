@@ -6,6 +6,7 @@ import requests
 from endpoint_proxy import get_baseurl
 import datetime
 from common.models.document import Document
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR, STATUS_APPROVED
 
 
 def add_records():
@@ -16,16 +17,16 @@ def add_records():
   #Inserting two documents 1 with auto approval status as approved
   #and one with hitl status as approved
 
-  timestamp = str(datetime.datetime.utcnow())
+  timestamp = datetime.datetime.utcnow()
   d = Document()
   d.case_id = "uj8_approved_test_1"
   d.uid = "uj8_approved_test_1"
   d.active = "active"
   d.upload_timestamp = timestamp
-  d.auto_approval = "Approved"
+  d.auto_approval = STATUS_APPROVED
   d.system_status = [{
       "stage": "uploaded",
-      "status": "success",
+      "status": STATUS_SUCCESS,
       "timestamp": timestamp
   }]
   d.save()
@@ -38,7 +39,7 @@ def add_records():
   d.auto_approval = "Rejected"
   d.hitl_status = [{
       "status":
-          "approved",
+          STATUS_APPROVED,
       "user":
           "John Adam",
       "comment":
@@ -48,11 +49,11 @@ def add_records():
   }]
   d.system_status = [{
       "stage": "uploaded",
-      "status": "success",
+      "status": STATUS_SUCCESS,
       "timestamp": timestamp
   }, {
       "stage": "auto_approval",
-      "status": "success",
+      "status": STATUS_SUCCESS,
       "timestamp": timestamp
   }]
   d.save()
@@ -68,7 +69,7 @@ def test_approved_queue():
   #Getting base url for hitl service
   base_url = get_baseurl("hitl-service")
 
-  status = "approved"
+  status = STATUS_APPROVED
   res = requests.post(base_url + f"/hitl_service/v1/get_queue?"\
     f"hitl_status={status}")
 

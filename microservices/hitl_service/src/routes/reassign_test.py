@@ -10,12 +10,14 @@ from common.testing.firestore_emulator import firestore_emulator, clean_firestor
 from unittest import mock
 from unittest.mock import Mock
 from common.models.document import Document
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+
 # assigning url
 api_url = "http://localhost:8080/hitl_service/v1/"
 
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
-SUCCESS_RESPONSE = {"status": "Success"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 
 
 def create_document(data):
@@ -83,14 +85,14 @@ def test_document_reassign_positive(client_with_emulator):
   mockresponse = Mock()
   mockresponse.status_code = 202
   with mock.patch("routes.reassign.Logger"):
-    with mock.patch("routes.reassign.copy_blob", return_value="success"):
+    with mock.patch("routes.reassign.copy_blob", return_value=STATUS_SUCCESS):
       with mock.patch("routes.reassign.format_data_for_bq"):
         with mock.patch(
             "routes.reassign.stream_document_to_bigquery", return_value=[]):
-          with mock.patch("routes.reassign.call_process_task",
-                            return_value=mockresponse):
+          with mock.patch(
+              "routes.reassign.call_process_task", return_value=mockresponse):
             response = client_with_emulator.post(
-                  f"{api_url}reassign_case_id", json=data)
+                f"{api_url}reassign_case_id", json=data)
     print(response)
   assert response.status_code == 200
 
@@ -133,4 +135,3 @@ def test_same_old_and_new_case_id(client_with_emulator):
               f"{api_url}reassign_case_id", json=data)
     print(response)
   assert response.status_code == 400
-

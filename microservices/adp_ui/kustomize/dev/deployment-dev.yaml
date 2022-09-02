@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adp-ui
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: adp-ui
+        image: gcr.io/claims-processing-dev/adp-ui
+        imagePullPolicy: Always
+        env:
+        - name: PROJECT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: env-vars
+              key: PROJECT_ID

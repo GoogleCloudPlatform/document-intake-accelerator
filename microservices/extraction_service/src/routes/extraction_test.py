@@ -9,13 +9,14 @@ from common.testing.firestore_emulator import firestore_emulator, clean_firestor
 from unittest import mock
 from unittest.mock import Mock, patch
 from common.models import Document
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 # assigning url
 api_url = "http://localhost:8080/extraction_service/v1/"
 
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
-SUCCESS_RESPONSE = {"status": "Success"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 
 
 def test_extraction_api_success(client_with_emulator):
@@ -36,8 +37,7 @@ def test_extraction_api_success(client_with_emulator):
       "entity": "last_name",
       "value": "xyzz"
   }]
-  extract_entities_output = tuple([entities, 0.3 ,
-                             "double_key_extraction"])
+  extract_entities_output = tuple([entities, 0.3, "double_key_extraction"])
   print(extract_entities_output)
   mockresponse = Mock()
   mockresponse.status_code = 200

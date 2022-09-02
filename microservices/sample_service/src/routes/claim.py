@@ -12,14 +12,15 @@ from common.models import Claim
 from common.utils.stream_to_bq import stream_claim_to_bigquery, delete_claim_in_bigquery
 from common.utils.logging_handler import Logger
 from common.db_client import bq_client
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 # disabling for linting to pass
 # pylint: disable = broad-except
 
 router = APIRouter(prefix="/claim", tags=["Claim"])
 
-SUCCESS_RESPONSE = {"status": "Success"}
-FAILED_RESPONSE = {"status": "Failed"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
+FAILED_RESPONSE = {"status": STATUS_ERROR}
 
 
 @router.get("/{claim_id}", response_model=ClaimModel)

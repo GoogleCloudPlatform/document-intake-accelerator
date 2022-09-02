@@ -7,12 +7,13 @@ import os
 from testing.fastapi_fixtures import client_with_emulator
 from common.models import Document
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 # assigning url
 api_url = "http://localhost:8080/document_status_service/v1/"
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
-SUCCESS_RESPONSE = {"status": "Success"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 
 
 def create_document(client_with_emulator, case_id: str):
@@ -60,23 +61,30 @@ def test_extracion_status_update(client_with_emulator):
 def test_validation_status_update(client_with_emulator):
 
   uid = create_document(client_with_emulator, "test-01")
-  entities = [{"value": "A-60544059",
-               "extraction_confidence": 0.94,
-               "manual_extraction": False,
-               "entity": "dl_no",
-               "corrected_value": None,
-               "matching_score": None,
-               "validation_score": None},
-              {"value": "1992-04-07",
-               "entity": "dob",
-               "corrected_value": None,
-               "extraction_confidence": 0.73,
-               "manual_extraction": False,
-               "matching_score": None,
-               "validation_score": 0.0}, ]
+  entities = [
+      {
+          "value": "A-60544059",
+          "extraction_confidence": 0.94,
+          "manual_extraction": False,
+          "entity": "dl_no",
+          "corrected_value": None,
+          "matching_score": None,
+          "validation_score": None
+      },
+      {
+          "value": "1992-04-07",
+          "entity": "dob",
+          "corrected_value": None,
+          "extraction_confidence": 0.73,
+          "manual_extraction": False,
+          "matching_score": None,
+          "validation_score": 0.0
+      },
+  ]
   response = client_with_emulator.post(
       f"{api_url}update_validation_status?case_id=test-01&"
-      f"uid={uid}&status=success&validation_score=9",json = entities)
+      f"uid={uid}&status=success&validation_score=9",
+      json=entities)
   print(response)
   assert response.status_code == 200
 

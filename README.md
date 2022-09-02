@@ -1,6 +1,89 @@
-# Google Solutions - Google DocAI Claims Processing
+# Google Solutions - Automated Document Processing (ADP)
 
-Please contact jonchen@google.com] for any questions.
+Please contact jonchen@google.com for any questions.
+
+## Getting Started to Deploy ADP
+
+### Prerequisites
+```
+export PROJECT_ID=<GCP Project ID>
+export ADMIN_EMAIL=<Your Email>
+export REGION=us-central1
+gcloud auth application-default set-quota-project $PROJECT_ID
+gcloud auth application-default login
+```
+
+### For Argolis project
+
+Change the following Organization policy constraints in [GCP Console](https://console.cloud.google.com/iam-admin/orgpolicies/compute-requireOsLogin)
+- constraints/compute.requireOsLogin - Enforced Off
+- constraints/compute.vmExternalIpAccess - Allow All
+
+### GCP foundation - Terraform
+
+Set up Terraform environment variables and GCS bucket for state file:
+
+```
+export TF_VAR_api_domain=<Your API Domain>
+export TF_VAR_admin_email=$ADMIN_EMAIL
+export TF_VAR_project_id=$PROJECT_ID
+
+# Create Terraform Statefile in GCS bucket.
+bash setup/setup_terraform.sh
+```
+
+Run Terraform apply
+
+```
+export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=terraform-sa@$PROJECT_ID.iam.gserviceaccount.com
+cd terraform/environments/dev
+terraform init
+terraform apply
+
+# Enter yes at the promopt to apply Terraform changes.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+```
+
+### Deploying Kubernetes Microservices
+
+Connect to the `default-cluster`:
+```
+gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
+```
+
+Build all microservices (including web app) and deploy to the cluster:
+```
+skaffold run -p prod --default-repo=gcr.io/$PROJECT_ID
+```
+
+## Configuration
+
+### Classification
+
+### Extraction
+
+### Validation
+
+### Matching
+
+### Human-In-The-Loop Web Application
+
+## Deployment Troubleshoot
+
+### Error 400/403: Missing edit permissions on account
+If you're seeing the following GKE permission error regarding Comopute Engine read permission, run the following to fix
+
+```
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format 'get(projectNumber)')
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+ --member "serviceAccount:service-${PROJECT_NUMBER?}@container-engine-robot.iam.gserviceaccount.com" \
+ --role roles/container.serviceAgent
+ ```
 
 ## Development
 

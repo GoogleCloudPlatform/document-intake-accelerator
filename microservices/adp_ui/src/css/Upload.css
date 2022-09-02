@@ -1,0 +1,64 @@
+.customRow {
+    margin-top: 20px;
+}
+
+.uploadContainer {
+    padding: 45px;
+}
+
+.p-datatable .p-datatable-header {
+    background-color: transparent;
+    border: none;
+    font-size: 16px;
+}
+
+.labels {
+    font-weight: bolder;
+    font-size: 13px;
+}
+
+.dzu-dropzone {
+    /* background-color: brown; */
+    min-height: 221px;
+    margin-top: 28px;
+    border-radius: 16px;
+    border-style: dotted;
+    font-size: 12px;
+
+}
+
+.dzu-submitButton {
+    border-radius: 32px;
+    background-color: #4285F4;
+}
+
+input {
+    /* height: 32px !important; */
+    padding-left: 10px;
+}
+
+#dropdown-basic-button {
+    height: 32px;
+    padding-left: 10px;
+}
+
+#caseid {
+    height: 32px;
+
+}
+
+.subHeaderUpload {
+    background-color: #fff;
+    height: 5rem !important;
+    padding: 14px;
+}
+
+.upBack {
+    text-decoration: none;
+    color: #4285F4;
+    margin-left: 41px
+}
+
+.upSpace {
+    margin-left: 24px
+}

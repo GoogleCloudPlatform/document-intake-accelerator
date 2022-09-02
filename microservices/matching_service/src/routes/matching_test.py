@@ -13,7 +13,7 @@ api_url = "http://localhost:8080/matching_service/v1/"
 
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
-SUCCESS_RESPONSE = {"status": "Success"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 
 
 def test_matching_api_all_ok(client_with_emulator):
@@ -51,7 +51,7 @@ def test_matching_api_all_ok(client_with_emulator):
   with patch("routes.matching.get_matching_score", return_value=([], 0)):
     with patch(
         "routes.matching.update_matching_status",
-        return_value={"status": "success"}):
+        return_value={"status": STATUS_SUCCESS}):
       with patch("routes.matching.Logger"):
         response = client_with_emulator.post(
             f"{api_url}match_document?case_id=test_id123&uid=2103")
@@ -83,7 +83,7 @@ def test_matching_api_no_af(client_with_emulator):
   with patch("routes.matching.get_matching_score", return_value=([], 0)):
     with patch(
         "routes.matching.update_matching_status",
-        return_value={"status": "success"}):
+        return_value={"status": STATUS_SUCCESS}):
       with patch("routes.matching.Logger"):
         response = client_with_emulator.post(
             f"{api_url}match_document?case_id=test_id123&uid=2103")
@@ -134,7 +134,7 @@ def test_matching_api_update_dsm_failed(client_with_emulator):
   with patch("routes.matching.get_matching_score", return_value=([], 0)):
     with patch(
         "routes.matching.update_matching_status",
-        return_value={"status": "failed"}):
+        return_value={"status": STATUS_ERROR}):
       with patch("routes.matching.Logger"):
         response = client_with_emulator.post(
             f"{api_url}match_document?case_id=test_id123&uid=2103")
@@ -174,7 +174,7 @@ def test_matching_api_get_matching_failed(client_with_emulator):
   with patch("routes.matching.get_matching_score", return_value=None):
     with patch(
         "routes.matching.update_matching_status",
-        return_value={"status": "success"}):
+        return_value={"status": STATUS_SUCCESS}):
       with patch("routes.matching.Logger"):
         response = client_with_emulator.post(
             f"{api_url}match_document?case_id=test_id123&uid=2103")

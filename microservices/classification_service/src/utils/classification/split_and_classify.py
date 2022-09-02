@@ -4,7 +4,7 @@ first page
 from utils.classification.pdf_splitter import PDFManager
 from utils.classification.vertex_predicitons import VertexPredictions
 from utils.classification.download_pdf_gcs import download_pdf_gcs
-from common.config import CONF_THRESH, ENDPOINT_ID, PROJECT_ID
+from common.config import CONF_THRESH, CLASSIFICATION_ENDPOINT_ID, PROJECT_ID
 import json
 import os
 import sys
@@ -36,7 +36,7 @@ class DocClassifier:
     self.case_id = case_id
     self.uid = uid
     self.conf = CONF_THRESH
-    self.endpoint_id = ENDPOINT_ID
+    self.endpoint_id = CLASSIFICATION_ENDPOINT_ID
 
     self.pdf_path = f'{out_folder}\\{case_id}_{uid}_' + basename(pdf_uri)
     print('PDF at ' + self.pdf_path)

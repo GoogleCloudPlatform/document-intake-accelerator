@@ -6,13 +6,14 @@ import datetime
 import requests
 from endpoint_proxy import get_baseurl
 from common.models.document import Document
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 
 def add_records():
   """
   Function to insert records into collection that can be fetched by the API
   """
-  timestamp = str(datetime.datetime.utcnow())
+  timestamp = datetime.datetime.utcnow()
   d = Document()
   d.case_id = "uj6_table_test_1"
   d.uid = "uj6_table_test_1"
@@ -20,7 +21,7 @@ def add_records():
   d.upload_timestamp = timestamp
   d.system_status = [{
       "stage": "uploaded",
-      "status": "success",
+      "status": STATUS_SUCCESS,
       "timestamp": timestamp
   }]
   d.save()

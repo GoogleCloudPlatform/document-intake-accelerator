@@ -85,7 +85,7 @@ MAPPING_DICT = {
                 "Expiration Date (EXP)": {"rule": "\sAlien Registration Number \(A#\)\n3\)\s(\d{4}-\d{2}-\d{2})\n"}}
     },
 
-    "driving_licence": {
+    "driver_license": {
         "default_entities": {
             "Document Id": ["DLN"],
             "Expiration Date": ["EXP"],

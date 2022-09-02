@@ -5,14 +5,15 @@ This Script is Used to Calculate the Validation Score
 import json
 import pandas as pd
 from google.cloud import storage
-from common.config import PATH,VALIDATION_TABLE
+from common.config import PATH, VALIDATION_TABLE
 from common.utils.logging_handler import Logger
 from common.db_client import bq_client
+import traceback
 
 bigquery_client = bq_client()
 
 
-def get_final_scores(data_list,entity):
+def get_final_scores(data_list, entity):
   keys = []
   for d in data_list:
     keys.extend(list(d.keys()))
@@ -21,12 +22,12 @@ def get_final_scores(data_list,entity):
   for key in keys:
     repeating[key] = keys.count(key)
   avg = {}
-  for key,value in repeating.items():
-    avg[key] = sum(d.get(key) for d in data_list if d.get(key) ) / value
+  for key, value in repeating.items():
+    avg[key] = sum(d.get(key) for d in data_list if d.get(key)) / value
   for i in entity:
     i["validation_score"] = None
 
-  for j,k in avg.items():
+  for j, k in avg.items():
     for i in entity:
       if i["entity"] == j:
         i["validation_score"] = k
@@ -52,7 +53,7 @@ def read_json(path):
   return data_dict
 
 
-def get_values(documentlabel,cid,uid,entity):
+def get_values(documentlabel, cid, uid, entity):
   '''
   These Values will come from the API when Ready
   Input:
@@ -67,30 +68,36 @@ def get_values(documentlabel,cid,uid,entity):
   try:
     # VALIDATION_TABLE = "claims-processing-dev.data_extraction.entities"
     # path = "gs://async_form_parser/Jsons/trial44.json"
-    path=PATH
-    data=read_json(path)
-    merge_query= f"and case_id ='{cid}' and uid='{uid}'"
+    path = PATH
+    data = read_json(path)
+    merge_query = f"and case_id ='{cid}' and uid='{uid}'"
     validation_score,final_dict = \
     get_scoring(data,merge_query,documentlabel,entity)
     Logger.info(f"Validation completed for document with case id {cid}"
-        f"and uid {uid}")
-  except Exception as e: # pylint: disable=broad-except
+                f"and uid {uid}")
+  except Exception as e:  # pylint: disable=broad-except
+    Logger.error("Validation error:")
     Logger.error(e)
+
+    err = traceback.format_exc().replace("\n", " ")
+    Logger.error(err)
+    print(err)
+
     validation_score = None
     return validation_score
-  return validation_score,final_dict
+  return validation_score, final_dict
 
 
 def get_individual_dict(query):
-  dict1={}
+  dict1 = {}
   counter = query.count("$")
-  for i in range(1,counter+1):
+  for i in range(1, counter + 1):
     key = query.split("$.")[i].split("'")[0]
     dict1[key] = None
   return dict1
 
 
-def get_scoring(data,merge_query,documentlabel,entity):
+def get_scoring(data, merge_query, documentlabel, entity):
   '''
   Fire the Rules on BQ table and calculate the Validation Scores
   input:
@@ -100,16 +107,20 @@ def get_scoring(data,merge_query,documentlabel,entity):
   output:
   validation score
   '''
-  l2=[]
+  l2 = []
   validation_score = 0
+  validation_rule = data.get(documentlabel)
+
+  assert validation_rule, f"Unable to find validation rule for document type: {documentlabel}"
+
   for i in data[documentlabel]:
     query = data[documentlabel][i] + merge_query
-    query = query.replace("project_table",VALIDATION_TABLE)
-    dict1=get_individual_dict(query)
+    query = query.replace("project_table", VALIDATION_TABLE)
+    dict1 = get_individual_dict(query)
     try:
       query_results = bigquery_client.query((query))
       df = query_results.to_dataframe()
-    except Exception as e: # pylint: disable=broad-except
+    except Exception as e:  # pylint: disable=broad-except
       Logger.error(e)
       df = pd.DataFrame()
     df = df.drop_duplicates()
@@ -117,8 +128,6 @@ def get_scoring(data,merge_query,documentlabel,entity):
     for key in dict1.copy():
       dict1[key] = len(df)
     l2.append(dict1)
-  validation_score = validation_score/len(data[documentlabel])
-  final_dict = get_final_scores(l2,entity)
-  return validation_score,final_dict
-
-
+  validation_score = validation_score / len(data[documentlabel])
+  final_dict = get_final_scores(l2, entity)
+  return validation_score, final_dict

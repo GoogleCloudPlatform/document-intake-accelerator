@@ -8,13 +8,14 @@ from unittest import mock
 from testing.fastapi_fixtures import client_with_emulator
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
 from common.models import Document
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 # assigning url
 API_URL = "http://localhost:8889/upload_service/v1/process_task"
 
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "fake-project"
-SUCCESS_RESPONSE = {"status": "Success"}
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 
 
 def test_process_task_api(client_with_emulator):
@@ -27,7 +28,7 @@ def test_process_task_api(client_with_emulator):
   doc.uid = "wZSrLgChiIR8NfWQkju5"
   doc.save()
   data={
-  "configs": [
+      "configs": [
     {
       "case_id": "case_arkansas_2001",
       "uid": "y13FLMQW4bYnHLa5t8dg",
@@ -42,16 +43,16 @@ def test_process_task_api(client_with_emulator):
       "wZSrLgChiIR8NfWQkju5/DL-arkansas-1.pdf",
       "context": "arkansas"
     }
-  ]
-}
+      ]
+  }
   with mock.patch("utils.process_task_helpers.get_classification"):
     with mock.patch("utils.process_task_helpers.get_extraction_score"):
       with mock.patch("utils.process_task_helpers.get_validation_score"):
         with mock.patch("utils.process_task_helpers.get_matching_score"):
-          with mock.patch("utils.process_task_helpers.update_autoapproval_status"):
+          with mock.patch(
+              "utils.process_task_helpers.update_autoapproval_status"):
             with mock.patch("routes.process_task.Logger"):
-              response = client_with_emulator.post(
-                  API_URL, json=data)
+              response = client_with_emulator.post(API_URL, json=data)
   assert response.status_code == 202, "Status 202"
 
 
@@ -62,7 +63,7 @@ def test_process_task_api_is_hitl(client_with_emulator):
   doc.uid = "y13FLMQW4bYnHLa5t8dg"
   doc.save()
   data={
-  "configs": [
+      "configs": [
     {
       "case_id": "case_arkansas_2001",
       "uid": "y13FLMQW4bYnHLa5t8dg",
@@ -72,18 +73,19 @@ def test_process_task_api_is_hitl(client_with_emulator):
       "document_type": "application_form",
       "document_class": "unemployment_form"
     }
-  ]
-}
+      ]
+  }
   url = f"{API_URL}?is_hitl=true"
   with mock.patch("utils.process_task_helpers.get_classification"):
     with mock.patch("utils.process_task_helpers.get_extraction_score"):
       with mock.patch("utils.process_task_helpers.get_validation_score"):
         with mock.patch("utils.process_task_helpers.get_matching_score"):
-          with mock.patch("utils.process_task_helpers.update_autoapproval_status"):
+          with mock.patch(
+              "utils.process_task_helpers.update_autoapproval_status"):
             with mock.patch("routes.process_task.Logger"):
-              response = client_with_emulator.post(
-                  url, json=data)
+              response = client_with_emulator.post(url, json=data)
   assert response.status_code == 202, "Status 202"
+
 
 def test_process_task_api_is_reassign(client_with_emulator):
   """Test case to check the test_process_task_api endpoint"""
@@ -92,7 +94,7 @@ def test_process_task_api_is_reassign(client_with_emulator):
   doc.uid = "wZSrLgChiIR8NfWQkju5"
   doc.save()
   data={
-  "configs": [
+      "configs": [
     {
       "case_id": "case_arkansas_2001",
       "uid": "wZSrLgChiIR8NfWQkju5",
@@ -100,15 +102,15 @@ def test_process_task_api_is_reassign(client_with_emulator):
       "wZSrLgChiIR8NfWQkju5/DL-arkansas-1.pdf",
       "context": "arkansas"
     }
-  ]
-}
+      ]
+  }
   url = f"{API_URL}?is_reassign=true"
   with mock.patch("utils.process_task_helpers.get_classification"):
     with mock.patch("utils.process_task_helpers.get_extraction_score"):
       with mock.patch("utils.process_task_helpers.get_validation_score"):
         with mock.patch("utils.process_task_helpers.get_matching_score"):
-          with mock.patch("utils.process_task_helpers.update_autoapproval_status"):
+          with mock.patch(
+              "utils.process_task_helpers.update_autoapproval_status"):
             with mock.patch("routes.process_task.Logger"):
-              response = client_with_emulator.post(
-                  url, json=data)
+              response = client_with_emulator.post(url, json=data)
   assert response.status_code == 202, "Status 202"

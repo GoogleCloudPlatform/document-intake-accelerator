@@ -3,44 +3,45 @@ Document Status object in the ORM
 """
 import os
 from common.models import BaseModel
-from fireo.fields import TextField,ListField ,NumberField, BooleanField
+from fireo.fields import TextField, ListField, NumberField, BooleanField, DateTime
 
 DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
+
 
 class Document(BaseModel):
   """Documentstatus ORM class  """
   case_id = TextField()
   uid = TextField()
   url = TextField()
-  document_type  = TextField()
+  document_type = TextField()
   document_class = TextField()
   context = TextField()
   system_status = ListField()
   hitl_status = ListField()
   active = TextField()
-  upload_timestamp = TextField()
+  upload_timestamp = DateTime(auto=True)
   entities = ListField()
   extraction_score = NumberField()
   validation_score = NumberField()
   matching_score = NumberField()
   auto_approval = TextField()
-  is_autoapproved =  TextField()
+  is_autoapproved = TextField()
   is_hitl_classified = BooleanField()
   external_case_id = TextField()
   extraction_status = TextField()
+  error_detail = TextField()
 
   class Meta:
     ignore_none_field = False
-    collection_name = DATABASE_PREFIX+ "document"
+    collection_name = DATABASE_PREFIX + "document"
 
   @classmethod
-  def find_by_uid(cls, uuid):
+  def find_by_uid(cls, uid):
     """Find the document  using  uid
     Args:
-        uuid (string):  UID
+        uid (string):  UID
     Returns:
         Document: Document Object
     """
-    return Document.collection.filter("uid", "==", uuid).get()
-
+    return Document.collection.filter("uid", "==", uid).get()
