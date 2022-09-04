@@ -65,7 +65,7 @@ websockets==9.1
 zipp==3.6.0
 
 # pdf splitter
-pypdf2==1.26.0
+pypdf2==1.27.5
 
 # pdf 2 image
 pdf2image==1.15.0
