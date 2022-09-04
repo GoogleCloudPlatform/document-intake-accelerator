@@ -36,7 +36,7 @@ libcst==0.3.19
 msgpack==1.0.2
 mypy-extensions==0.4.3
 neo4j==4.3.1
-numpy==1.21.1
+numpy==1.22.0
 packaging==21.0
 pandas==1.2.4
 proto-plus==1.19.0
