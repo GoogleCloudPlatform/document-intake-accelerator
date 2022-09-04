@@ -19,7 +19,7 @@
     "dotenv": "^16.0.1",
     "faker": "^5.5.3",
     "firebase": "^9.6.8",
-    "moment": "^2.29.3",
+    "moment": "^2.29.4",
     "pdfjs": "^2.4.7",
     "pdfjs-dist": "^2.13.216",
     "primeflex": "^3.1.0",
