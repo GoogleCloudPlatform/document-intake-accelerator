@@ -19,25 +19,30 @@ variable "region" {
 }
 
 variable "min_node_count" {
-  type = number
+  type        = number
   description = "Minimum number of nodes per zone"
-  default = 1
+  default     = 1
 }
 
 variable "max_node_count" {
-  type = number
+  type        = number
   description = "Maximum number of nodes per zone"
-  default = 1
+  default     = 1
 }
 
 variable "machine_type" {
-  type = string
+  type        = string
   description = "Node compute engine machine type"
-  default = "n1-standard-8"
+  default     = "n1-standard-8"
 }
 
 variable "disk_size_gb" {
-  type = number
+  type        = number
   description = "disk_size_gb"
-  default = 1000
+  default     = 1000
+}
+
+variable "node_locations" {
+  type    = string
+  default = ""
 }

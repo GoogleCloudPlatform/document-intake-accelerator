@@ -7,6 +7,7 @@ locals {
   multiregion      = var.multiregion
   project_id       = var.project_id
   services = [
+    "aiplatform.googleapis.com",           # Vertex AI
     "appengine.googleapis.com",            # AppEngine
     "artifactregistry.googleapis.com",     # Artifact Registry
     "bigquery.googleapis.com",             # BigQuery
@@ -82,6 +83,7 @@ module "gke" {
   min_node_count = 1
   max_node_count = 1
   machine_type   = "n1-standard-8"
+  node_locations = "us-central1-a,us-central1-c,us-central1-f"
 }
 
 module "ingress" {
@@ -132,6 +134,22 @@ module "validation_bigquery" {
   source = "../../modules/bigquery"
 }
 
+module "vertex_ai" {
+  depends_on = [
+    time_sleep.wait_for_project_services,
+    google_storage_bucket.default,
+  ]
+  source         = "../../modules/vertex_ai"
+  project_id     = var.project_id
+  region         = var.region
+  model_name     = "classification"
+  model_gcs_path = "gs://${google_storage_bucket.default.name}"
+  # See https://cloud.google.com/vertex-ai/docs/predictions/pre-built-containers
+  image_uri         = "${var.multiregion}-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-8:latest"
+  accelerator_param = ""
+  # accelerator_param = "--accelerator=count=2,type=nvidia-tesla-t4"
+}
+
 # ================= Document AI Parsers ====================
 
 module "docai" {
@@ -142,7 +160,7 @@ module "docai" {
   project_id = var.project_id
 
   # See modules/docai/README.md for available DocAI processor types.
-  # Once applied Terraform changes, please run /setup/update_parser_config.sh
+  # Once applied Terraform changes, please run /setup/update_config.sh
   # to automatically update common/src/common/parser_config.json.
   processors = {
     unemployment_form = "FORM_PARSER_PROCESSOR"

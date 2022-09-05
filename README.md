@@ -11,9 +11,20 @@ gcloud auth application-default set-quota-project $PROJECT_ID
 gcloud auth application-default login
 ```
 
+For MacOS, install `jq`:
+```
+brew install jq
+```
+
+Make sure to update to the latest gcloud tool:
+```
+# Tested with gcloud v400.0.0
+gcloud components update
+```
+
 ### GCP Orgnization policy
 
-Change the following Organization policy constraints in [GCP Console](https://console.cloud.google.com/iam-admin/orgpolicies/compute-requireOsLogin)
+Change the following Organization policy constraints in [GCP Console](https://console.cloud.google.com/iam-admin/orgpolicies)
 - constraints/compute.requireOsLogin - Enforced Off
 - constraints/compute.vmExternalIpAccess - Allow All
 

@@ -65,6 +65,7 @@ module "gke" {
       preemptible        = false
       initial_node_count = "1"
       enable_secure_boot = true
+      node_locations     = var.node_locations
     },
   ]
   node_pools_oauth_scopes = {

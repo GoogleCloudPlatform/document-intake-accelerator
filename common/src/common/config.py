@@ -2,7 +2,13 @@
 Config module to setup common environment
 """
 
-import os
+import os, json
+
+
+def load_config(filename):
+  json_file = open(os.path.join(os.path.dirname(__file__), ".", filename))
+  return json.load(json_file)
+
 
 # ========= Overall =============================
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
@@ -43,7 +49,11 @@ VALIDATION_TABLE = f"{PROJECT_ID}.validation.validation_table"
 # ========= Classification =======================
 # Endpoint Id where model is deployed.
 # TODO: Please update this to your deployed VertexAI model ID.
-CLASSIFICATION_ENDPOINT_ID = "4679565468279767040"
+VERTEX_AI_CONFIG = load_config("vertex_ai_config.json")
+assert VERTEX_AI_CONFIG, "Unable to locate 'vertex_ai_config.json'"
+
+CLASSIFICATION_ENDPOINT_ID = VERTEX_AI_CONFIG["endpoint_id"]
+assert CLASSIFICATION_ENDPOINT_ID, "CLASSIFICATION_ENDPOINT_ID is not defined."
 
 # Map to standardise predicted document class from classifier to
 # standard document_class values
@@ -58,6 +68,13 @@ DOC_CLASS_STANDARDISATION_MAP = {
 #Prediction Confidence threshold for the classifier to reject any prediction
 #less than the threshold value.
 CONF_THRESH = 0.98
+
+# ========= DocAI Parsers =======================
+
+# To add parsers, edit /terraform/enviroments/dev/main.tf
+
+PARSER_CONFIG = load_config("parser_config.json")
+assert PARSER_CONFIG, "Unable to locate 'parser_config.json'"
 
 # ========= HITL and Frontend UI =======================
 

@@ -24,7 +24,7 @@ from .utils_functions import entities_extraction, download_pdf_gcs,\
 from common.config import PROJECT_ID
 from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME, \
     DOCAI_ATTRIBUTES_TO_IGNORE, DOCAI_ENTITY_MAPPING
-from common.parser_config import PARSER_CONFIG_JSON
+from common.config import PARSER_CONFIG
 from common.utils.logging_handler import Logger
 import warnings
 
@@ -276,7 +276,7 @@ def extract_entities(gcs_doc_path: str, doc_type: str, context: str):
   """
 
   # read parser details from configuration json file
-  parsers_info = PARSER_CONFIG_JSON
+  parsers_info = PARSER_CONFIG
   parser_information = parsers_info.get(doc_type)
   # if parser present then do extraction else update the status
   if parser_information:
