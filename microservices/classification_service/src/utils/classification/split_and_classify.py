@@ -13,7 +13,7 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
-CLASSIFICATION_UNDETECTABLE = "Undetectable"
+CLASSIFICATION_UNDETECTABLE = "unclassified"
 
 
 class DocClassifier:

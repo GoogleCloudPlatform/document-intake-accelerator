@@ -19,7 +19,7 @@ from utils.classification.split_and_classify import DocClassifier
 router = APIRouter(prefix="/classification")
 SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 FAILED_RESPONSE = {"status": STATUS_ERROR}
-CLASSIFICATION_UNDETECTABLE = "Undetectable"
+CLASSIFICATION_UNDETECTABLE = "unclassified"
 
 
 def predict_doc_type(case_id: str, uid: str, gcs_url: str):
