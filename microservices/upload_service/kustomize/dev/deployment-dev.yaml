@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: upload-service
-        image: gcr.io/claims-processing-dev/upload-service
+        image: upload-service
         imagePullPolicy: Always
         env:
         - name: PROJECT_ID

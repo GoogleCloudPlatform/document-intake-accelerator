@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: hitl-service
-        image: gcr.io/claims-processing-dev/hitl-service
+        image: hitl-service
         imagePullPolicy: Always
         env:
         - name: PROJECT_ID

@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: validation-service
-        image: gcr.io/claims-processing-dev/validation-service
+        image: validation-service
         imagePullPolicy: Always
         env:
         - name: PROJECT_ID

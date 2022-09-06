@@ -20,7 +20,7 @@ class PDFManager:
     self.inp_file_pdf = pdf_file
     self.out_path = out_path
     self.timestamp = datetime.now().strftime('%d_%m_%Y_%H_%M_%S')
-    self.inp_doc = fitz.open(self.inp_file_pdf)
+    self.input_doc = fitz.open(self.inp_file_pdf)
 
   def split_and_save2pdf(self) -> list:
     """
@@ -37,8 +37,8 @@ class PDFManager:
     Generates an image for the first page of the PDF doc
     Returns:
     """
-    if page_num < self.inp_doc.page_count:
-      return self.save2image(page_num, self.inp_doc.load_page(page_num), True)
+    if page_num < self.input_doc.page_count:
+      return self.save2image(page_num, self.input_doc.load_page(page_num), True)
     else:
       print('Page number doesnot exist')
       sys.exit()
@@ -48,15 +48,15 @@ class PDFManager:
     Splits all the pages into images.
     Returns:
     """
-    for pg_num in range(self.inp_doc.page_count):
-      self.split_save2img(pg_num)
+    for page_num in range(self.input_doc.page_count):
+      self.split_save2img(page_num)
 
-  def save2image(self, pg_num, page, save):
+  def save2image(self, page_num, page, save):
     """
     save a page in image format
 
     Args:
-    pg_num (int): page number
+    page_num (int): page number
     page (pdf): page in pdf object type to be saved
     save (bool): whether to save or not.
 
@@ -64,11 +64,14 @@ class PDFManager:
     str: page/image
     """
     file_name = f'{self.timestamp}_{os.path.basename(self.inp_file_pdf)}'
+    print(f"save2image originla PDF: {file_name}")
+
     pix = page.get_pixmap()
-    output = os.path.join(self.out_path, f'{file_name[:-4]}_{str(pg_num)}.png')
+    output_filename = os.path.join(self.out_path,
+                                   f'{file_name[:-4]}_{str(page_num)}.png')
     if save:
-      pix.save(output)
-      return output
+      pix.save(output_filename)
+      return output_filename
     else:
       return page
 

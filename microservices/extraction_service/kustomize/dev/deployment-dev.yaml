@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: extraction-service
-        image: gcr.io/claims-processing-dev/extraction-service
+        image: extraction-service
         imagePullPolicy: Always
         env:
         - name: PROJECT_ID

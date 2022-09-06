@@ -63,18 +63,16 @@ profiles:
       - image: common
         alias: BASE_IMG
 - name: dev
-  activation:
-  - kubeContext: gke_claims-processing-dev_us-central1_default-cluster
   build:
     googleCloudBuild: {}
     artifacts:
-    - image: gcr.io/claims-processing-dev/document-status-service
+    - image: document-status-service
       docker:
         cacheFrom:
-          - gcr.io/claims-processing-dev/document-status-service
-          - gcr.io/claims-processing-dev/document-status-service:latest
+          - document-status-service
+          - document-status-service:latest
       requires:
-        - image: gcr.io/claims-processing-dev/common
+        - image: common
           alias: BASE_IMG
       sync:
         infer:

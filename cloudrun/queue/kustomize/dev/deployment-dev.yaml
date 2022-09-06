@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: queue
-        image: gcr.io/claims-processing-dev/queue
+        image: queue
         imagePullPolicy: Always
         env:
         - name: PROJECT_ID

@@ -19,6 +19,7 @@ from utils.classification.split_and_classify import DocClassifier
 router = APIRouter(prefix="/classification")
 SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 FAILED_RESPONSE = {"status": STATUS_ERROR}
+CLASSIFICATION_UNDETECTABLE = "Undetectable"
 
 
 def predict_doc_type(case_id: str, uid: str, gcs_url: str):
@@ -110,7 +111,8 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
       classification_score = doc_prediction_result["model_conf"]
       Logger.info(f"Classification confidence for {case_id} and {uid} is"\
         f" {classification_score}")
-      if doc_prediction_result["predicted_class"].lower() == "negative":
+      if doc_prediction_result["predicted_class"].lower(
+      ) == CLASSIFICATION_UNDETECTABLE.lower():
         #DocumentStatus api call
         response = update_classification_status(case_id, uid, "unclassified")
         Logger.error("Document unclassified")

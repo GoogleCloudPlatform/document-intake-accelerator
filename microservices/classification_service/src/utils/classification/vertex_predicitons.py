@@ -1,7 +1,9 @@
 """
 Modules uses GCP Vertex AI to serve online predictions
+
+https://cloud.google.com/vertex-ai/docs/predictions/online-predictions-automl#aiplatform_predict_image_classification_sample-python
 """
-import base64
+import base64, json
 from importlib_metadata import os
 
 from google.cloud import storage
@@ -25,7 +27,7 @@ class VertexPredictions:
     self.loc = location
     self.credential = credentials_json
 
-  def endpoint_image_classification(
+  def get_classification_predications(
       self,
       endpoint_id: str,
       filename: str,
@@ -34,6 +36,22 @@ class VertexPredictions:
 
     Returns:
         _type_: _description_
+
+    Sample JSON request
+    {
+        "instances": [
+            {
+                "key": "test",
+                "image_bytes": {
+                   "b64": "<YOUR_BASE64_IMG_DATA>"
+                }
+            }
+        ],
+        "parameters": {
+            "confidenceThreshold": 0.5,
+            "maxPredictions": 5
+        }
+    }
     """
 
     # The AI Platform services require regional API endpoints.
@@ -47,18 +65,24 @@ class VertexPredictions:
     with open(filename, "rb") as f:
       file_content = f.read()
 
+    print(f"filename = {filename}")
+
     # The format of each instance should conform to the deployed
     # model's prediction input schema.
     encoded_content = base64.b64encode(file_content).decode("utf-8")
-    instance = predict.instance.ImageClassificationPredictionInstance(
-        content=encoded_content).to_value()
-    instances = [instance]
-    parameters = predict.params.ImageClassificationPredictionParams(
-        confidence_threshold=0.5,
-        max_predictions=5,
-    ).to_value()
+    print(f"encoded_content size: {len(encoded_content)}")
+
+    instances = [{"key": filename, "image_bytes": {"b64": encoded_content}}]
+    parameters = {"confidenceThreshold": 0.5, "maxPredictions": 5}
     endpoint = client.endpoint_path(
         project=self.project_id, location=self.loc, endpoint=endpoint_id)
+
+    print("endpoint")
+    print(json.dumps(endpoint))
+
+    print("parameters")
+    print(parameters)
+
     response = client.predict(
         endpoint=endpoint, instances=instances, parameters=parameters)
     print("response")

@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: classification-service
-        image: gcr.io/claims-processing-dev/classification-service
+        image: classification-service
         imagePullPolicy: Always
         env:
         - name: PROJECT_ID

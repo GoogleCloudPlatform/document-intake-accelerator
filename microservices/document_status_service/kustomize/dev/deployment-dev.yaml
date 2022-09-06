@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: document-status-service
-        image: gcr.io/claims-processing-dev/document-status-service
+        image: document-status-service
         imagePullPolicy: Always
         env:
         - name: PROJECT_ID

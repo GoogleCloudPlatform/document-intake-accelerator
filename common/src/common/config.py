@@ -55,6 +55,10 @@ assert VERTEX_AI_CONFIG, "Unable to locate 'vertex_ai_config.json'"
 CLASSIFICATION_ENDPOINT_ID = VERTEX_AI_CONFIG["endpoint_id"]
 assert CLASSIFICATION_ENDPOINT_ID, "CLASSIFICATION_ENDPOINT_ID is not defined."
 
+#Prediction Confidence threshold for the classifier to reject any prediction
+#less than the threshold value.
+CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.85
+
 # Map to standardise predicted document class from classifier to
 # standard document_class values
 DOC_CLASS_STANDARDISATION_MAP = {
@@ -64,10 +68,6 @@ DOC_CLASS_STANDARDISATION_MAP = {
     "Utility": "utility_bill",
     "PayStub": "pay_stub"
 }
-
-#Prediction Confidence threshold for the classifier to reject any prediction
-#less than the threshold value.
-CONF_THRESH = 0.98
 
 # ========= DocAI Parsers =======================
 

@@ -54,5 +54,4 @@ profiles:
 - name: custom
 - name: prod
 - name: dev
-  activation:
-  - kubeContext: gke_claims-processing-dev_us-central1_default-cluster
+
