@@ -61,7 +61,10 @@ function Dashboard() {
   let overallPendingTimeCountTrends = 0
   let overallUnclassifiedTimeCountTrends = 0
 
-
+  let statusApproved = 'Approved';
+  let statusRejected = 'Rejected';
+  let statusPending = 'Pending';
+  let statusReview = 'Need Review';
 
   let rejectedArr = [];
   let approvedArr = [];
@@ -256,7 +259,7 @@ function Dashboard() {
 
   const forEachDataPendingTrends = (pendingDataa, yesterdayDate) => {
     pendingTimeCountTrends = 0;
-    console.log("PENFING DATAAAAAAAAAAAA", pendingDataa.length)
+    console.log("PENDING DATA", pendingDataa.length)
     if (pendingDataa.length === 0) {
       pendingArr.push(pendingTimeCountTrends);
     }
@@ -340,11 +343,11 @@ function Dashboard() {
     Title);
   useEffect(() => {
     setIsChartLoading(true);
-    axios.post(`${baseURL}/hitl_service/v1/get_queue?hitl_status=pending`).then((pendingData) => {
+    axios.post(`${baseURL}/hitl_service/v1/get_queue?hitl_status=${statusPending}`).then((pendingData) => {
       console.log("API Data pending", pendingData.data.data.length)
-      axios.post(`${baseURL}/hitl_service/v1/get_queue?hitl_status=rejected`).then((rejectedData) => {
+      axios.post(`${baseURL}/hitl_service/v1/get_queue?hitl_status=${statusRejected}`).then((rejectedData) => {
         console.log("API Data rejected", rejectedData.data.data);
-        axios.post(`${baseURL}/hitl_service/v1/get_queue?hitl_status=approved`).then((approvedData) => {
+        axios.post(`${baseURL}/hitl_service/v1/get_queue?hitl_status=${statusApproved}`).then((approvedData) => {
           console.log("API Data approved", approvedData.data.data.length);
 
           axios.get(`${baseURL}/hitl_service/v1/get_unclassified`).then((unclassifiedData) => {

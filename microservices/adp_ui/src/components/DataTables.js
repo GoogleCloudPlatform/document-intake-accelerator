@@ -141,7 +141,7 @@ function DataTables() {
     setActiveManualClassify(false)
     setActiveUnclassifiedButton(false);
     setActiveReviewButton(true);
-    tableAPICall(searchTerm, 'Review').then((responseData) => {
+    tableAPICall(searchTerm, 'Need Review').then((responseData) => {
       console.log("review responseData", responseData)
       setTableLength(responseData[0].length + ' documents found')
       setDataTableBody(responseData[0]);
@@ -248,7 +248,9 @@ function DataTables() {
   // To set the table headers and body
   const tableAPICall = (searchTerms, status) => {
     return new Promise((resolve, reject) => {
-      console.log("^^^^^^^^^^^^^", searchTerms, status);
+      console.info(`searchTerms: ${searchTerms}`);
+      console.info(`status: ${status}`);
+
       let sendObj = {
         term: searchTerms
       }
@@ -339,7 +341,7 @@ function DataTables() {
         })
       }
       //For Review/Pending/Rejected/Approved Queues
-      else if (status === 'pending' || status === 'rejected' || status === 'approved' || status === 'review') {
+      else if (['Need Review', 'Pending', 'Rejected', 'Approved'].includes(status)) {
         axios.post(`${baseURL}/hitl_service/v1/get_queue?hitl_status=${status}`).then((hitlStatus) => {
           let apiData = hitlStatus.data.data;
           console.log("tableData Accepted", apiData);
@@ -630,7 +632,7 @@ function DataTables() {
               backgroundColor: activeReviewButton === true ? '#2196F3' : '#E9ECEF',
               color: activeReviewButton === true ? 'white' : 'black',
             }}>
-            Review
+            Need Review
           </Button>{' '}
 
           <Button

@@ -77,7 +77,7 @@ async def publish_msg(request: Request, response: Response):
       #     {
       #       "case_id": "6075e034-2763-11ed-8345-aa81c3a89f04",
       #       "uid": "jcdQmUqUKrcs8GGsmojp",
-      #       "gcs_url": "gs://jonchen-adp-dev-document-upload/6075e034-2763-11ed-8345-aa81c3a89f04/jcdQmUqUKrcs8GGsmojp/arizona-application-form.pdf",
+      #       "gcs_url": "gs://sample-project-dev-document-upload/6075e034-2763-11ed-8345-aa81c3a89f04/jcdQmUqUKrcs8GGsmojp/arizona-application-form.pdf",
       #       "context": "arizona"
       #     }
       #   ]
