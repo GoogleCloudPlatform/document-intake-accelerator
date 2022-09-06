@@ -16,7 +16,7 @@ from common.matching_config import APPLICATION_DOC_DATE_FORMAT
 from common.utils.logging_handler import Logger
 
 
-def compare_dates(date1: str,date2: str,date1_format: str,date2_format: str):
+def compare_dates(date1: str, date2: str, date1_format: str, date2_format: str):
   """Dates are compared after converting them to a specific format
   For this each dates format should be provided.
 
@@ -90,8 +90,7 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
       # check if the user provided key is present in the both the docs
       # if found compare their respectives values
       if u_key in app_keys and u_key in support_keys:
-        app_val = list(app_df.loc[app_df['entity'] == u_key,
-                                  'value'])[0]
+        app_val = list(app_df.loc[app_df['entity'] == u_key, 'value'])[0]
         support_val = list(support_df.loc[support_df['entity'] == u_key,
                                           'value'])[0]
         if app_val and support_val:
@@ -104,7 +103,8 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
             support_val = support_val[:-1]
 
           # 1. check for dates. date related keys contains value in tuple format
-          if isinstance(support_doc_dict[u_key], tuple):# a key signifies a date
+          if isinstance(support_doc_dict[u_key],
+                        tuple):  # a key signifies a date
             raw_score = compare_dates(
                 app_val, support_val,
                 APPLICATION_DOC_DATE_FORMAT[app_doc_type][state],

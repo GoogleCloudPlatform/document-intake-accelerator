@@ -15,6 +15,7 @@ import { ReactComponent as Check } from '../images/check-circle.svg';
 import { ReactComponent as File } from '../images/file.svg';
 import { ReactComponent as Cross } from '../images/cancel.svg';
 import Headers from './Headers';
+import { ReactComponent as Back } from '../images/arrow-back.svg';
 import '../App.css'
 import '../css/DocumentReview.css'
 
@@ -126,11 +127,11 @@ function Classified() {
   return (
     <div>
       <Headers />
-      <div className="subHeaderReview">
-        <Link to={{ pathname: '/', }} className="drBack"> {'<'} Back</Link>{' '}
-        <div className='row'>
-          <label className="classifyDocLabel" style={{ paddingLeft: '24px' }}> <span><File /></span>Classify Document</label>
-        </div>
+      <div className="subHeaderReassign">
+        <Link to={{ pathname: '/', }} className="drBack">
+          <Back fill="#aaa" />
+        </Link>{' '}
+        <label className={["raLabels", "raSpace"].join(" ")}> Classify Document</label>
       </div>
       <Container style={{ padding: '45px' }}>
         <Card style={{ borderRadius: '1.25rem' }}>

@@ -5,12 +5,12 @@ from common.models import Document
 from common.db_client import bq_client
 from common.utils.format_data_for_bq import format_data_for_bq
 from common.utils.stream_to_bq import stream_document_to_bigquery
-from common.utils.copy_gcs_documents import copy_blob
+# from common.utils.copy_gcs_documents import copy_blob
 from common.utils.logging_handler import Logger
 from common.config import BUCKET_NAME
 from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 from common.config import PROCESS_TASK_API_PATH
-
+from google.cloud import storage
 # disabling for linting to pass
 # pylint: disable = broad-except
 import re
@@ -84,7 +84,7 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     new_case_id_document  = Document.collection.filter(case_id=new_case_id).\
       filter(document_type ="application_form").get()
     print("After new case_id check")
-    print(new_case_id_document)
+    print(f"new_case_id_document: {new_case_id_document}")
     #application with new case case_id does not exist in db
     #send 404 not found error
     if not new_case_id_document:
@@ -107,13 +107,17 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     #remove the prefix of bucket name from gcs_url to get blob name
     prefix_name = f"gs://{BUCKET_NAME}/"
     source_blob_name = re.sub(prefix_name, "", gcs_source_url, 1)
+    print(f"source_blob_name: {source_blob_name}")
 
     #remove the prefix of old_case_id and give new case_id for
     # destination folder in gcs
     destination_blob_name = re.sub(old_case_id, new_case_id, source_blob_name,
                                    1)
-    print("-----------destination blob name in api------",
-          destination_blob_name)
+    print(f"destination_blob_name: {destination_blob_name}")
+
+    if source_blob_name == destination_blob_name:
+      return {"status": STATUS_SUCCESS, "url": document.url}
+
     status_copy_blob = copy_blob(BUCKET_NAME, source_blob_name,
                                  destination_blob_name)
 
@@ -124,6 +128,7 @@ async def reassign_case_id(reassign: Reassign, response: Response):
      f"gcs bucket from source folder {old_case_id},destination" \
           f" {new_case_id} "
       return {"message": response.body}
+
     print("----------Updating firestore-----------")
     #Update Firestore databse
     document.case_id = new_case_id
@@ -161,14 +166,29 @@ async def reassign_case_id(reassign: Reassign, response: Response):
       print("inside else")
       response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
       response.body = "Error in updating bigquery database"
+
   except Exception as e:
-    print("Inside except")
-    Logger.error(e)
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
     raise HTTPException(
-        status_code=500, detail="Error "
-        "in reassigning document") from e
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
+
+
+# disabling for linting to pass for blob_copy variable
+# pylint: disable = unused-variable
+def copy_blob(bucket_name, source_blob_name, destination_blob_name):
+  print(f"copy_blob: bucket_name = {bucket_name}")
+  print(f"copy_blob: source_blob_name = {source_blob_name}")
+  print(f"copy_blob: destination_blob_name = {destination_blob_name}")
+
+  storage_client = storage.Client()
+  source_bucket = storage_client.bucket(bucket_name)
+  source_blob = source_bucket.blob(source_blob_name)
+  destination_bucket = storage_client.bucket(bucket_name)
+  source_bucket.copy_blob(source_blob, destination_bucket,
+                          destination_blob_name)
+  source_bucket.delete_blob(source_blob_name)
+  return STATUS_SUCCESS
 
 
 def call_process_task(case_id: str, uid: str, document_class: str,

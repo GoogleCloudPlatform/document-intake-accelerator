@@ -1,5 +1,5 @@
 """ Matching endpoints"""
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 import requests
 from common.models import Document
 from common.utils.logging_handler import Logger
@@ -22,16 +22,16 @@ def get_matching_score(af_dict: dict, sd_dict: dict):
     Makes call to json matching function and returns the result
 
     Args: af_dict: Dictionary of Application form
-          sd_dict: Dictionary of Application form
+          sd_dict: Dictionary of Supporting Document
     Returns: Updated supporting document entity and avg matching score
   """
-  print("===============AF======", af_dict["entities"])
-  print("===============SD======", sd_dict["entities"])
+  print("Application form: ", af_dict["entities"])
+  print("Supporting document: ", sd_dict["entities"])
   matching = compare_json(af_dict["entities"], sd_dict["entities"],
                           sd_dict["document_class"], af_dict["document_class"],
                           af_dict["context"])
   Logger.info(matching)
-  print("========Matching OP========", matching)
+  print("Matching Output: ", matching)
   if matching:
     return (matching[:len(matching) - 1], matching[-1]["Avg Matching Score"])
   else:
@@ -47,7 +47,6 @@ def update_matching_status(case_id: str,
     Makes api calls to DSM service to update document status for matching
   """
   Logger.info(f"Updating Matching status for case_id {case_id} and uid {uid}")
-  response = None
   if status == STATUS_SUCCESS:
     base_url = "http://document-status-service/document_status_service/"\
       "v1/update_matching_status"
@@ -95,6 +94,8 @@ async def match_document(case_id: str, uid: str):
       #getting json matching result
       matching_result = get_matching_score(af_dict, sd_dict)
       Logger.info(matching_result)
+      print("matching_result:")
+      print(matching_result)
 
       #If the matching result is not null update the status in DB
       if matching_result:
@@ -109,7 +110,9 @@ async def match_document(case_id: str, uid: str):
             entity=updated_entity,
             matching_score=overall_score)
 
-        if dsm_status["status"].lower() == STATUS_SUCCESS:
+        print(f"dsm_status = {dsm_status}")
+
+        if dsm_status.status_code == status.HTTP_200_OK:
           Logger.info(
               f"Matching document with case_id {case_id} and "\
                 f"uid {uid} was successful"
@@ -127,7 +130,7 @@ async def match_document(case_id: str, uid: str):
       else:
         Logger.error(f"Matching document with case_id {case_id} and uid {uid}"\
           f" Failed. Error in geting Matching score")
-        raise HTTPException(status_code=500,detail="Document Matching failed"\
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail="Document Matching failed"\
           "Error in getting matching score")
 
     else:
@@ -147,11 +150,14 @@ async def match_document(case_id: str, uid: str):
     raise e
 
   except Exception as e:
+    print("ERROR: match_document error:")
+
     dsm_status = update_matching_status(case_id, uid, STATUS_ERROR)
     Logger.error(
         f"Error while matching document with case_id {case_id} and uid {uid}")
     Logger.error(e)
-    print(e)
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
-    raise HTTPException(status_code=500, detail=f"Matching Failed: {e}") from e
+    print(err)
+
+    raise HTTPException(status_code=500, detail=str(e)) from e

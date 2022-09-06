@@ -183,19 +183,20 @@ function ReAssign() {
     }
 
     axios.post(`${baseURL}/hitl_service/v1/reassign_case_id`, sendObj).then((reassignResponse) => {
-      console.log("Reassign response", reassignResponse);
+      console.error("Reassign response", reassignResponse);
       history.push("/");
     }).catch(err => {
-      console.log("error in reassign", err);
-      toast.error('Same App Registration ID not allowed. Please select a different App Registeration ID', {
-        position: "bottom-center",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      console.error(err);
+      toast.error(err.message,
+        {
+          position: "bottom-center",
+          autoClose: 3000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
     })
   }
 

@@ -8,7 +8,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Spinner, FloatingLabel, Form, Card } from 'react-bootstrap';
+import { Container, Button, Row, Col, Spinner, FloatingLabel, Form, Card } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
 import { useHistory, Link } from 'react-router-dom'
@@ -247,13 +247,24 @@ function Upload() {
 				</Card>
 
 				<br />
-				<Row>
-					{tableComponent &&
-						<SearchForApplicantTable onSelectTableData={handleTableData} page={'uploadpage'} selectedRow={selectedCaseId} />
-					}
 
+				<Container style={{ padding: '0', marginBottom: '20px', marginTop: '20px' }}>
+					<Card className="raSearchCard">
+						<Card.Body>
+							{/** TO show a pop and select the caseid to reassign */}
 
-				</Row>
+							<label className="raSubTitle">
+								(Optional) Assign to existing applications:
+							</label>
+
+							{tableComponent &&
+								<SearchForApplicantTable onSelectTableData={handleTableData} page={'uploadpage'} selectedRow={selectedCaseId} />
+							}
+
+							<br />
+						</Card.Body>
+					</Card>
+				</Container>
 			</Container>
 		</div>
 

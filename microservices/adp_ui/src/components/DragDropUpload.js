@@ -25,7 +25,7 @@ function DragDropUpload(props) {
     // allFiles.forEach(f => f.remove())
   }
 
-  // To style the drag and drop 
+  // To style the drag and drop
   const Layout = ({ input, previews, submitButton, dropzoneProps, files, extra: { maxFiles } }) => {
     return (
       <div>
