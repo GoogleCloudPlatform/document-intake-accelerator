@@ -33,9 +33,11 @@ Change the following Organization policy constraints in [GCP Console](https://co
 Set up Terraform environment variables and GCS bucket for state file:
 
 ```
-export TF_VAR_api_domain=<Your API Domain>
+export TF_VAR_api_domain=$API_DOMAIN
 export TF_VAR_admin_email=$ADMIN_EMAIL
 export TF_VAR_project_id=$PROJECT_ID
+export TF_BUCKET_NAME="${PROJECT_ID}-tfstate"
+export TF_BUCKET_LOCATION="us"
 
 # Create Terraform Statefile in GCS bucket.
 bash setup/setup_terraform.sh
@@ -46,9 +48,14 @@ Run Terraform apply
 ```
 export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=terraform-sa@$PROJECT_ID.iam.gserviceaccount.com
 cd terraform/environments/dev
-terraform init
+
+# enabling GCP services first.
+terraform apply -target=module.project_services -auto-approve
+
+# Run the rest of Terraform
 terraform apply
 
+# ...
 # Enter yes at the promopt to apply Terraform changes.
 
 Do you want to perform these actions?
