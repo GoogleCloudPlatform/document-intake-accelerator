@@ -454,42 +454,47 @@ function DocumentReview() {
 
               <div style={{ backgroundColor: 'white', padding: '8px' }}>
                 <Row className="labelVerticalLine">
-                  <Col className={["col-6", "verticalLines"].join(" ")}>
+                  <Col className={["col", "verticalLines"].join(" ")}>
                     <label className="labelBold">Extraction Score</label> <br />
                     <label style={{ color: inputData['extraction_score'] > 0.90 ? ' #93c47d' : (inputData['extraction_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.extraction_score === null ? '-' : (inputData.extraction_score * 100).toFixed(1) + '%'}</label>
                   </Col>
 
-                  <Col className={["col-3", "verticalLines"].join(" ")}>
-                    <label className="labelBold">Matching Score</label><br />
-                    <label style={{ color: inputData['matching_score'] > 0.90 ? ' #93c47d' : (inputData['matching_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.matching_score === null ? '-' : (inputData.matching_score * 100).toFixed(1) + '%'}</label>
-                  </Col>
+                  {inputData.document_type === 'application_form' ? '' :
+                    <Col className={["col-3", "verticalLines"].join(" ")}>
+                      <label className="labelBold">Matching Score</label><br />
+                      <label style={{ color: inputData['matching_score'] > 0.90 ? ' #93c47d' : (inputData['matching_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.matching_score === null ? '-' : (inputData.matching_score * 100).toFixed(1) + '%'}</label>
+                    </Col>
+                  }
 
-                  <Col className="col-3">
-                    <label className="labelBold">Validation Score</label> <br />
-                    <label style={{ color: inputData['validation_score'] > 0.90 ? ' #93c47d' : (inputData['validation_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.validation_score === null ? '-' : (inputData.validation_score * 100).toFixed(1) + '%'} </label>
-                  </Col>
+                  {inputData.document_type === 'application_form' ? '' :
+                    <Col className="col-3">
+                      <label className="labelBold">Validation Score</label> <br />
+                      <label style={{ color: inputData['validation_score'] > 0.90 ? ' #93c47d' : (inputData['validation_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.validation_score === null ? '-' : (inputData.validation_score * 100).toFixed(1) + '%'} </label>
+                    </Col>
+                  }
                 </Row>
-
                 {inputData.entities === null ? '' :
                   <Row className="labelVerticalLine">
-                    <Col className={["col-6", "verticalLines"].join(" ")}>
+                    <Col className={["col", "verticalLines"].join(" ")}>
                       <label className="">Fields</label>
                     </Col>
 
-                    <Col className={["col-3", "verticalLines"].join(" ")}>
-                      <label className="">Matching Detail</label>
-                    </Col>
-
-                    <Col className="col-3">
-                      <label className="">Validation Detail</label>
-                    </Col>
-
+                    {inputData.document_type === 'application_form' ? '' :
+                      <Col className={["col-3", "verticalLines"].join(" ")}>
+                        <label className="">Matching Detail</label>
+                      </Col>
+                    }
+                    {inputData.document_type === 'application_form' ? '' :
+                      <Col className="col-3">
+                        <label className="">Validation Detail</label>
+                      </Col>
+                    }
                   </Row>
                 }
                 {inputList && inputList.map((x, i) => {
                   return (
                     <Row>
-                      <Col className={["col-6", "verticalLines"].join(" ")}>
+                      <Col className={["col", "verticalLines"].join(" ")}>
 
                         <div className="box" key={x['entity']}>
                           {x['corrected_value'] === null ?
@@ -520,27 +525,26 @@ function DocumentReview() {
 
                           }
                           <label style={{ fontSize: '10px', color: x['extraction_confidence'] > 0.90 ? ' #93c47d' : (x['extraction_confidence'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)') }}>Extraction Score: {(x['extraction_confidence'] * 100).toFixed(1)}{'%'}</label>
-
-
                         </div>
                       </Col>
-                      <><Col className={["col-3", "verticalLines"].join(" ")}>
-                        <Row >
-                          <Col className={["col-8", "score1"].join(" ")} style={{ textAlign: 'center' }}>
-                            {x['matching_score'] === null ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '42px' }} > - </span> :
-                              (x['matching_score'] < 0.70 ? <ProgressBar variant="danger" now={x['matching_score'] * 100} /> : x['matching_score'] > 0.90 ? <ProgressBar variant="success" now={x['matching_score'] * 100} /> : <ProgressBar now={x['matching_score'] * 100} variant="warning" />)}
+                      {inputData.document_type === 'application_form' ? '' :
+                        <Col className={["col-3", "verticalLines"].join(" ")}>
+                          <Row >
+                            <Col className={["col-8", "score1"].join(" ")} style={{ textAlign: 'center' }}>
+                              {x['matching_score'] === null ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '42px' }} > - </span> :
+                                (x['matching_score'] < 0.70 ? <ProgressBar variant="danger" now={x['matching_score'] * 100} /> : x['matching_score'] > 0.90 ? <ProgressBar variant="success" now={x['matching_score'] * 100} /> : <ProgressBar now={x['matching_score'] * 100} variant="warning" />)}
 
-                          </Col>
-                          <Col className="col-4 score" >
+                            </Col>
+                            <Col className="col-4 score" >
 
-                            {x['matching_score'] === null ? '' : <label>{(x['matching_score'] * 100).toFixed(0)} % </label>}
+                              {x['matching_score'] === null ? '' : <label>{(x['matching_score'] * 100).toFixed(0)} % </label>}
 
-
-                          </Col>
-                        </Row>
-                      </Col>
-                        <Col>
-
+                            </Col>
+                          </Row>
+                        </Col>
+                      }
+                      {inputData.document_type === 'application_form' ? '' :
+                        <Col className="col-3">
                           <Row>
                             <Col style={{ textAlign: 'center' }}>
                               {x['validation_score'] === null ? <span> - </span> : (x['validation_score'] === 1 ? <Check fill="#93c47d" /> : <Cross fill="#DB4437" />)}
@@ -548,7 +552,8 @@ function DocumentReview() {
                           </Row>
                           <Row>
                           </Row>
-                        </Col></>
+                        </Col>
+                      }
                     </Row>
                   );
                 })}

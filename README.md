@@ -16,11 +16,6 @@ gcloud auth application-default set-quota-project $PROJECT_ID
 gcloud auth application-default login
 ```
 
-For MacOS, install `jq`:
-```
-brew install jq
-```
-
 Make sure to update to the latest gcloud tool:
 ```
 # Tested with gcloud v400.0.0
@@ -55,7 +50,7 @@ export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=terraform-sa@$PROJECT_ID.iam.gservicea
 cd terraform/environments/dev
 
 # enabling GCP services first.
-terraform apply -target=module.project_services -auto-approve
+terraform apply -target=module.project_services –-auto-approve
 
 # Run the rest of Terraform
 terraform apply
@@ -70,7 +65,7 @@ Do you want to perform these actions?
   Enter a value: yes
 ```
 
-IMPORTANT: Run the script to update config JSON based on terraform output.
+**IMPORTANT**: Run the script to update config JSON based on terraform output.
 ```
 # in terraform/environments/dev folder
 bash ../../../setup/update_config.sh
@@ -83,6 +78,13 @@ kubectl describe ingress | grep Address
 - This will print the Ingress IP like below:
   ```
   Address: 123.123.123.123
+  ```
+
+**NOTE**: If you don’t have a custom domain, and want to use the Ingress IP address as the API endpoint:
+- Change the TF_VAR_api_domain to this Ingress endpoint, and re-deploy CloudRun.
+  ```
+  export TF_VAR_api_domain=$(kubectl describe ingress | grep Address | awk '{print $2}')
+  terraform apply -target=module.cloudrun
   ```
 
 ### Enable Firebase Auth
