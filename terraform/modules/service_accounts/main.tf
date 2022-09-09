@@ -20,6 +20,7 @@ locals {
     "serviceAccount:${data.google_project.project.number}@cloudbuild.gserviceaccount.com",
     "serviceAccount:${data.google_project.project.number}@cloudservices.gserviceaccount.com",
     "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com",
+    "serviceAccount:service-${data.google_project.project.number}@gcp-sa-aiplatform.iam.gserviceaccount.com",
   ]
 }
 

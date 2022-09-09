@@ -55,16 +55,19 @@ module "project_services" {
   services   = local.services
 }
 
-resource "time_sleep" "wait_for_project_services" {
-  depends_on      = [module.project_services]
-  create_duration = "60s"
-}
-
 module "service_accounts" {
-  depends_on = [time_sleep.wait_for_project_services]
+  depends_on = [module.project_services]
   source     = "../../modules/service_accounts"
   project_id = var.project_id
   env        = var.env
+}
+
+resource "time_sleep" "wait_for_project_services" {
+  depends_on = [
+    module.project_services,
+    module.service_accounts
+  ]
+  create_duration = "60s"
 }
 
 module "firebase" {
