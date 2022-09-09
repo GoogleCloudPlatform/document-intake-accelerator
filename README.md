@@ -5,8 +5,11 @@
 ### Prerequisites
 ```
 export PROJECT_ID=<GCP Project ID>
-export ADMIN_EMAIL=<Your Email>
 export REGION=us-central1
+export API_DOMAIN=<Your Domain> # No protocol, this can be your altostrat domain.
+export ADMIN_EMAIL=<Your Email>
+export BASE_DIR=$(pwd)
+
 gcloud auth application-default set-quota-project $PROJECT_ID
 gcloud auth application-default login
 ```
@@ -74,6 +77,7 @@ gcloud container clusters get-credentials main-cluster --region $REGION --projec
 
 Build all microservices (including web app) and deploy to the cluster:
 ```
+cd $BASE_DIR
 skaffold run -p prod --default-repo=gcr.io/$PROJECT_ID
 ```
 
