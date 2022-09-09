@@ -20,7 +20,7 @@ terraform {
   required_version = ">= 0.13"
   required_providers {
     kubectl = {
-      source = "gavinbunney/kubectl"
+      source  = "gavinbunney/kubectl"
       version = ">= 1.14.0"
     }
     helm = {
@@ -45,7 +45,7 @@ resource "kubernetes_namespace" "ingress_nginx" {
 }
 
 resource "google_compute_address" "ingress_ip_address" {
-  name = "nginx-controller"
+  name   = "nginx-controller"
   region = var.region
 }
 
@@ -70,13 +70,13 @@ resource "kubernetes_ingress_v1" "default_ingress" {
   metadata {
     name = "default-ingress"
     annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-      "cert-manager.io/cluster-issuer" = "module.cert_manager.cluster_issuer_name"
-      "nginx.ingress.kubernetes.io/enable-cors" = "true"
-      "nginx.ingress.kubernetes.io/cors-allow-methods" = "PUT,GET,POST,DELETE,OPTIONS"
-      "nginx.ingress.kubernetes.io/cors-allow-origin" = var.cors_allow_origin
+      "kubernetes.io/ingress.class"                        = "nginx"
+      "cert-manager.io/cluster-issuer"                     = "module.cert_manager.cluster_issuer_name"
+      "nginx.ingress.kubernetes.io/enable-cors"            = "true"
+      "nginx.ingress.kubernetes.io/cors-allow-methods"     = "PUT,GET,POST,DELETE,OPTIONS"
+      "nginx.ingress.kubernetes.io/cors-allow-origin"      = var.cors_allow_origin
       "nginx.ingress.kubernetes.io/cors-allow-credentials" = "true"
-      "nginx.ingress.kubernetes.io/proxy-read-timeout" = "3600"
+      "nginx.ingress.kubernetes.io/proxy-read-timeout"     = "3600"
     }
   }
 
@@ -104,7 +104,7 @@ resource "kubernetes_ingress_v1" "default_ingress" {
             }
           }
           path_type = "Prefix"
-          path = "/upload_service"
+          path      = "/upload_service"
         }
 
         # classification Service
@@ -118,7 +118,7 @@ resource "kubernetes_ingress_v1" "default_ingress" {
             }
           }
           path_type = "Prefix"
-          path = "/classification_service"
+          path      = "/classification_service"
         }
 
         # validation Service
@@ -132,7 +132,7 @@ resource "kubernetes_ingress_v1" "default_ingress" {
             }
           }
           path_type = "Prefix"
-          path = "/validation_service"
+          path      = "/validation_service"
         }
 
         # extraction Service
@@ -146,7 +146,7 @@ resource "kubernetes_ingress_v1" "default_ingress" {
             }
           }
           path_type = "Prefix"
-          path = "/extraction_service"
+          path      = "/extraction_service"
         }
 
         # hitl Service
@@ -160,7 +160,7 @@ resource "kubernetes_ingress_v1" "default_ingress" {
             }
           }
           path_type = "Prefix"
-          path = "/hitl_service"
+          path      = "/hitl_service"
         }
 
         # document-status Service
@@ -174,7 +174,7 @@ resource "kubernetes_ingress_v1" "default_ingress" {
             }
           }
           path_type = "Prefix"
-          path = "/document-status_service"
+          path      = "/document_status_service"
         }
 
         # matching Service
@@ -201,13 +201,13 @@ resource "kubernetes_ingress_v1" "default_ingress" {
             }
           }
           path_type = "Prefix"
-          path = "/sample_service"
+          path      = "/sample_service"
         }
       }
     }
 
     tls {
-      hosts = [ "${var.domain}" ]
+      hosts       = ["${var.domain}"]
       secret_name = "tls-secret"
     }
   }
