@@ -1,12 +1,17 @@
-# Google Solutions - Automated Document Processing (ADP)
+# DocAI Workflow Management
 
-## Getting Started to Deploy ADP
+> A framework to accelerate the development of document processing workflow using DocAI parsers and other GCP products (Firestore, BigQuery, GKE, etc). The goal of this framework is to accelerate the development efforts in document workflow.
+
+## Getting Started to Deploy the DocAI Workflow
 
 ### Prerequisites
 ```
 export PROJECT_ID=<GCP Project ID>
-export ADMIN_EMAIL=<Your Email>
 export REGION=us-central1
+export API_DOMAIN=<Your Domain> # No protocol, this can be your altostrat domain.
+export ADMIN_EMAIL=<Your Email>
+export BASE_DIR=$(pwd)
+
 gcloud auth application-default set-quota-project $PROJECT_ID
 gcloud auth application-default login
 ```
@@ -33,9 +38,11 @@ Change the following Organization policy constraints in [GCP Console](https://co
 Set up Terraform environment variables and GCS bucket for state file:
 
 ```
-export TF_VAR_api_domain=<Your API Domain>
+export TF_VAR_api_domain=$API_DOMAIN
 export TF_VAR_admin_email=$ADMIN_EMAIL
 export TF_VAR_project_id=$PROJECT_ID
+export TF_BUCKET_NAME="${PROJECT_ID}-tfstate"
+export TF_BUCKET_LOCATION="us"
 
 # Create Terraform Statefile in GCS bucket.
 bash setup/setup_terraform.sh
@@ -46,9 +53,14 @@ Run Terraform apply
 ```
 export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=terraform-sa@$PROJECT_ID.iam.gserviceaccount.com
 cd terraform/environments/dev
-terraform init
+
+# enabling GCP services first.
+terraform apply -target=module.project_services -auto-approve
+
+# Run the rest of Terraform
 terraform apply
 
+# ...
 # Enter yes at the promopt to apply Terraform changes.
 
 Do you want to perform these actions?
@@ -57,6 +69,44 @@ Do you want to perform these actions?
 
   Enter a value: yes
 ```
+
+IMPORTANT: Run the script to update config JSON based on terraform output.
+```
+# in terraform/environments/dev folder
+bash ../../../setup/update_config.sh
+```
+
+Get the API endpoint IP address, this will be used in Firebase Auth later.
+```
+kubectl describe ingress | grep Address
+```
+- This will print the Ingress IP like below:
+  ```
+  Address: 123.123.123.123
+  ```
+
+### Enable Firebase Auth
+
+- Before enabling firebase, make sure [Firebase Management API](https://console.cloud.google.com/apis/api/firebase.googleapis.com/metrics) should be disabled in GCP API & Services.
+- Go to Firebase Console UI to add your existing project. Select “Pay as you go” and Confirm plan.
+- On the left panel of Firebase Console UI, go to Build > Authentication, and click Get Started.
+- Select Google in the Additional providers
+- Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.
+- Go to Settings > Authorized domain, add the following to the Authorized domains:
+    - Web App Domain (e.g. adp-dev.cloudpssolutions.com)
+    - API endpoint IP address (from kubectl describe ingress | grep Address)
+    - localhost
+- Go to Project Overview > Project settings, you will use these info in the next step.
+- In the codebase, open up micorservices/adp_ui/.env in an Editor (e.g. VSCode), and change the following values accordingly.
+    - REACT_APP_BASE_URL
+      - The custom Web App Domain that you added in the previous step.
+      - Alternatively, you can use the API Domain IP Address (Ingress), e.g. http://123.123.123.123
+    - REACT_APP_API_KEY - Web API Key
+    - REACT_APP_FIREBASE_AUTH_DOMAIN - $PROJECT_ID.firebaseapp.com
+    - REACT_APP_STORAGE_BUCKET - $PROJECT_ID.appspot.com
+    - REACT_APP_MESSAGING_SENDER_ID
+      - You can find this ID in the Project settings > Cloud Messaging
+    - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
 
 ### Deploying Kubernetes Microservices
 
@@ -67,22 +117,55 @@ gcloud container clusters get-credentials main-cluster --region $REGION --projec
 
 Build all microservices (including web app) and deploy to the cluster:
 ```
+cd $BASE_DIR
 skaffold run -p prod --default-repo=gcr.io/$PROJECT_ID
 ```
 
+### Update DNS with custom Domain (Optional)
+
+Get the Ingress external IP:
+```
+kubectl describe ingress | grep Address
+```
+
+Add an A Record in your DNS setting to point to the Ingress IP Address, e.g. in https://domains.google.com/.
+- Once added, it may take 5-10 mins to populate to the DNS network.
+
 ## Deployment Troubleshoot
 
-### Error 400/403: Missing edit permissions on account
-If you're seeing the following GKE permission error regarding Comopute Engine read permission, run the following to fix
+### Terraform Troubleshoot
 
+#### App Engine already exists
 ```
-PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format 'get(projectNumber)')
-gcloud projects add-iam-policy-binding $PROJECT_ID \
- --member "serviceAccount:service-${PROJECT_NUMBER?}@container-engine-robot.iam.gserviceaccount.com" \
- --role roles/container.serviceAgent
- ```
+│ Error: Error creating App Engine application: googleapi: Error 409: This application already exists and cannot be re-created., alreadyExists
+│
+│   with module.firebase.google_app_engine_application.firebase_init,
+│   on ../../modules/firebase/main.tf line 3, in resource "google_app_engine_application" "firebase_init":
+│    3: resource "google_app_engine_application" "firebase_init" {
+```
 
-## Development
+**Solution**: Import the existing project in Terraform:
+```
+terraform import module.firebase.google_app_engine_application.firebase_init $PROJECT_ID
+```
+
+### CloudRun Troubleshoot
+
+The CloudRun service “queue” is used as the task dispatcher from listening to Pub/Sub “queue-topic”
+- Go to CloudRun logging to see the errors
+
+### Frontend Web App
+
+- When opening up the ADP UI for the first time, you’ll see the HTTPS not secure error, like below:
+```
+Your connection is not private
+```
+
+- Open the chrome://net-internals/#hsts in URL, and delete the domain HSTS.
+- (Optional) Click the “Not Secure” icon on the top, and select the “Certificate is not valid” option, and select “Always Trust”.
+
+
+# Development
 
 ### Prerequisites
 

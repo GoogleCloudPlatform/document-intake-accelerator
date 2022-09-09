@@ -49,28 +49,25 @@ locals {
 
 data "google_project" "project" {}
 
-# Displaying the cloudrun endpoint
-data "google_cloud_run_service" "queue-run" {
-  name     = "queue-cloudrun"
-  location = var.region
-}
-
 module "project_services" {
   source     = "../../modules/project_services"
   project_id = var.project_id
   services   = local.services
 }
 
-resource "time_sleep" "wait_for_project_services" {
-  depends_on      = [module.project_services]
-  create_duration = "60s"
-}
-
 module "service_accounts" {
-  depends_on = [time_sleep.wait_for_project_services]
+  depends_on = [module.project_services]
   source     = "../../modules/service_accounts"
   project_id = var.project_id
   env        = var.env
+}
+
+resource "time_sleep" "wait_for_project_services" {
+  depends_on = [
+    module.project_services,
+    module.service_accounts
+  ]
+  create_duration = "60s"
 }
 
 module "firebase" {
@@ -125,6 +122,15 @@ module "cloudrun" {
   name       = "queue-cloudrun"
   region     = var.region
   api_domain = var.api_domain
+}
+# Displaying the cloudrun endpoint
+data "google_cloud_run_service" "queue-run" {
+  depends_on = [
+    time_sleep.wait_for_project_services,
+    module.vpc_network
+  ]
+  name     = "queue-cloudrun"
+  location = var.region
 }
 
 module "pubsub" {

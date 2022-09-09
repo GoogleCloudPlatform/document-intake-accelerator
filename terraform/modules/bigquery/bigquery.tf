@@ -25,6 +25,10 @@ resource "google_bigquery_dataset" "data_set" {
 }
 
 resource "google_bigquery_table" "table_id" {
+  depends_on = [
+    google_bigquery_dataset.data_set
+  ]
+
   deletion_protection = false
   dataset_id          = "validation"
   table_id            = "validation_table"
