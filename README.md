@@ -50,7 +50,7 @@ export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=terraform-sa@$PROJECT_ID.iam.gservicea
 cd terraform/environments/dev
 
 # enabling GCP services first.
-terraform apply -target=module.project_services –-auto-approve
+terraform apply -target=module.project_services -target=module.service_accounts -auto-approve
 
 # Run the rest of Terraform
 terraform apply
