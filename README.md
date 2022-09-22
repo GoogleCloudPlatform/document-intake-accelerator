@@ -8,12 +8,15 @@
 ```
 export PROJECT_ID=<GCP Project ID>
 export REGION=us-central1
-export API_DOMAIN=<Your Domain> # No protocol, this can be your altostrat domain.
 export ADMIN_EMAIL=<Your Email>
 export BASE_DIR=$(pwd)
 
-gcloud auth application-default set-quota-project $PROJECT_ID
+# A custom domain like your-domain.com, or leave it blank for using the Ingress IP address instead.
+export API_DOMAIN=<Your Domain>
+
 gcloud auth application-default login
+gcloud auth application-default set-quota-project $PROJECT_ID
+gcloud config set project $PROJECT_ID
 ```
 
 Make sure to update to the latest gcloud tool:
@@ -24,7 +27,14 @@ gcloud components update
 
 ### GCP Orgnization policy
 
-Change the following Organization policy constraints in [GCP Console](https://console.cloud.google.com/iam-admin/orgpolicies)
+Run the following commands to update Organization policies:
+```
+export ORGANIZATION_ID=<your organization ID>
+gcloud resource-manager org-policies disable-enforce constraints/compute.requireOsLogin --organization=$ORGANIZATION_ID
+gcloud resource-manager org-policies delete constraints/compute.vmExternalIpAccess --organization=$ORGANIZATION_ID
+```
+
+Or, change the following Organization policy constraints in [GCP Console](https://console.cloud.google.com/iam-admin/orgpolicies)
 - constraints/compute.requireOsLogin - Enforced Off
 - constraints/compute.vmExternalIpAccess - Allow All
 
