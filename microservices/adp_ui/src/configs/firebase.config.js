@@ -25,9 +25,9 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 // const firebaseConfig = {
 //   apiKey: "",
-//   authDomain: "claims-processing-dev.firebaseapp.com",
-//   projectId: "claims-processing-dev",
-//   storageBucket: "claims-processing-dev.appspot.com",
+//   authDomain: "autodocprocessing-demo.firebaseapp.com",
+//   projectId: "autodocprocessing-demo",
+//   storageBucket: "autodocprocessing-demo.appspot.com",
 //   messagingSenderId: "",
 //   appId: "",
 //   measurementId: "G-5B385RL5MS"

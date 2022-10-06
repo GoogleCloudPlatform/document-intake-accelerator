@@ -16,16 +16,16 @@ on:
       - 'utils/**'
   workflow_dispatch:
 env:
-  PROJECT_ID: claims-processing-dev
-  GCP_PROJECT: claims-processing-dev
-  SKAFFOLD_DEFAULT_REPO: gcr.io/claims-processing-dev
+  PROJECT_ID: autodocprocessing-demo
+  GCP_PROJECT: autodocprocessing-demo
+  SKAFFOLD_DEFAULT_REPO: gcr.io/autodocprocessing-demo
   SKAFFOLD_PROFILE: dev
   SKAFFOLD_NAMESPACE: default
   GKE_CLUSTER: default-cluster
   GKE_REGION: us-central1
   KUSTOMIZE_VERSION: 4.1.3
   SKAFFOLD_VERSION: 1.29.0
-  SKAFFOLD_CACHE_GCS: gs://claims-processing-dev/skaffold/cache
+  SKAFFOLD_CACHE_GCS: gs://autodocprocessing-demo/skaffold/cache
   SKIP_NEO4J: true
 
 

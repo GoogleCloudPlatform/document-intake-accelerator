@@ -31,7 +31,7 @@ jobs:
     - name: Install gcloud
       uses: google-github-actions/setup-gcloud@v0
       with:
-        project_id: claims-processing-dev
+        project_id: autodocprocessing-demo
         service_account_key: ${{ secrets.FIREBASE_EMULATOR_SA_KEY }}
         export_default_credentials: true
 

@@ -82,7 +82,7 @@ def get_values(documentlabel, cid, uid, entity):
   '''
   # path=PATH
   try:
-    # VALIDATION_TABLE = "claims-processing-dev.data_extraction.entities"
+    # VALIDATION_TABLE = "autodocprocessing-demo.data_extraction.entities"
     # path = "gs://async_form_parser/Jsons/trial44.json"
     path = PATH
     data = read_json(path)
