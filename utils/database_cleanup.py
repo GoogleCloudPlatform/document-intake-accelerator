@@ -22,7 +22,7 @@ import os
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-PROJECT_ID = "claims-processing-dev"
+PROJECT_ID = "autodocprocessing-demo"
 DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", None)
 
 # Initializing Firebase client.

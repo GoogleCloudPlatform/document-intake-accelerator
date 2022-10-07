@@ -56,7 +56,6 @@ bash setup/setup_terraform.sh
 Run Terraform apply
 
 ```
-export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=terraform-sa@$PROJECT_ID.iam.gserviceaccount.com
 cd terraform/environments/dev
 
 # enabling GCP services first.
@@ -213,7 +212,7 @@ After cloning the repo, please set up for local development.
   ./setup/setup_local.sh
   ```
   This shell script does the following:
-  - Set the current context to `gke_claims-processing-dev_us-central1_default_cluster`. The default cluster name is `default_cluster`.
+  - Set the current context to `gke_autodocprocessing-demo_us-central1_default_cluster`. The default cluster name is `default_cluster`.
     > **IMPORTANT**: Please do not change this context name.
   - Create the namespace $SKAFFOLD_NAMESPACE and set this namespace for any further kubectl operations. It's okay if the namespace already exists.
 

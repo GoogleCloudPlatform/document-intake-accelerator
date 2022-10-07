@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-GSA_NAME="claims-processing-dev-sa"
+GSA_NAME="autodocprocessing-demo-sa"
 KSA_NAME="ksa"
 
 declare EXISTING_KSA=`kubectl get sa -n ${NAMESPACE} | egrep -i "^${KSA_NAME} "`
