@@ -1,6 +1,12 @@
 # Document Intake Accelerator
 
-> A pre-packaged and customizable solution to accelerate the development of document processing workflow using DocAI parsers and other GCP products (Firestore, BigQuery, GKE, etc). The goal of this framework is to accelerate the development efforts in document workflow.
+> A pre-packaged and customizable solution to accelerate the development of end-to-end document processing workflow incorporating Document AI parsers and other GCP products (Firestore, BigQuery, GKE, etc). The goal is to accelerate the development efforts in document workflow with many ready-to-use components.
+
+## Key features
+- End-to-end workflow management: document classification, extraction, validation, profile matching and Human-in-the-loop review.
+- API endpoints for integration with other systems.
+- Customizable components in microservice structure.
+- Solution architecture with best practices on Google Cloud Platform.
 
 ## Getting Started to Deploy the DocAI Workflow
 
