@@ -63,3 +63,8 @@ variable "node_locations" {
   type    = string
   default = ""
 }
+
+variable "kubernetes_version" {
+  type    = string
+  default = "1.22.12-gke.2300	"
+}

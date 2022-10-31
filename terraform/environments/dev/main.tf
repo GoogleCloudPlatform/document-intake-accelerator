@@ -89,15 +89,16 @@ module "gke" {
     time_sleep.wait_for_project_services,
     module.vpc_network
   ]
-  source         = "../../modules/gke"
-  project_id     = var.project_id
-  cluster_name   = "main-cluster"
-  vpc_network    = "default-vpc"
-  region         = var.region
-  min_node_count = 1
-  max_node_count = 1
-  machine_type   = "n1-standard-8"
-  node_locations = "us-central1-a,us-central1-c,us-central1-f"
+  source             = "../../modules/gke"
+  project_id         = var.project_id
+  cluster_name       = "main-cluster"
+  vpc_network        = "default-vpc"
+  region             = var.region
+  kubernetes_version = "1.22.12-gke.2300"
+  min_node_count     = 1
+  max_node_count     = 1
+  machine_type       = "n1-standard-8"
+  node_locations     = "us-central1-a,us-central1-c,us-central1-f"
 }
 
 module "ingress" {

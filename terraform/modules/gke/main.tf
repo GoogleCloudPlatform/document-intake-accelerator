@@ -54,7 +54,7 @@ module "gke" {
   version                    = "v22.1.0"
   project_id                 = var.project_id
   name                       = var.cluster_name
-  kubernetes_version         = "1.22.10-gke.600"
+  kubernetes_version         = var.kubernetes_version
   region                     = var.region
   regional                   = true
   network                    = var.vpc_network
