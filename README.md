@@ -59,10 +59,11 @@ export TF_BUCKET_LOCATION="us"
 bash setup/setup_terraform.sh
 ```
 
-Run Terraform apply
+Run Terraform
 
 ```
 cd terraform/environments/dev
+terraform init
 
 # enabling GCP services first.
 terraform apply -target=module.project_services -target=module.service_accounts -auto-approve
