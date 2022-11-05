@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: skaffold/v2beta26
+apiVersion: skaffold/v3
 kind: Config
 metadata:
   name: adp-ui
@@ -23,12 +23,16 @@ build:
     docker:
       dockerfile: Dockerfile
 deploy:
+  kubectl: { }
+manifests:
   kustomize:
     paths:
     - ./kustomize/dev
 profiles:
 - name: prod
   deploy:
+    kubectl: { }
+  manifests:
     kustomize:
       paths:
       - ./kustomize/prod
@@ -49,6 +53,8 @@ profiles:
       docker:
         dockerfile: Dockerfile-dev
   deploy:
+    kubectl: { }
+  manifests:
     kustomize:
       paths:
       - ./kustomize/dev
