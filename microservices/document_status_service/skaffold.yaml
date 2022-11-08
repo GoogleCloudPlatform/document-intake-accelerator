@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: skaffold/v2beta12
+apiVersion: skaffold/v3
 kind: Config
 metadata:
   name: document-status-service
@@ -39,6 +39,8 @@ portForward:
   port: 80
   localPort: 8894
 deploy:
+  kubectl: { }
+manifests:
   kustomize:
     paths:
     - ./kustomize/minikube
@@ -52,16 +54,22 @@ profiles:
       - image: common
         alias: BASE_IMG
   deploy:
+    kubectl: { }
+  manifests:
     kustomize:
       paths:
       - ./kustomize/custom
 - name: prod_non_cloudbuild
   deploy:
+    kubectl: { }
+  manifests:
     kustomize:
       paths:
       - ./kustomize/prod
 - name: prod
   deploy:
+    kubectl: { }
+  manifests:
     kustomize:
       paths:
       - ./kustomize/prod
@@ -93,6 +101,8 @@ profiles:
           - '**/*.py'
           - '**/*.json'
   deploy:
+    kubectl: { }
+  manifests:
     kustomize:
       paths:
       - ./kustomize/dev
