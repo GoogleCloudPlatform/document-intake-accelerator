@@ -1,0 +1,274 @@
+{
+  "languages": [
+    "en_US"
+  ],
+  "fields": [
+    {
+      "name": "name",
+      "faker_function": "company"
+    },
+    {
+      "name": "phone",
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 10
+    },
+    {
+      "name": "fax",
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 10
+    },
+    {
+      "name": "date",
+      "faker_function": "date_between",
+      "date_format": "%m/%d/%Y"
+    },
+    {
+      "name": "isUrgent",
+      "faker_function": "boolean",
+      "faker_params": {
+        "chance_of_getting_true": "25"
+      }
+    },
+    {
+      "name": "urgencyReason",
+      "faker_function": "pystr",
+      "faker_params": {
+        "max_chars": "25"
+      }
+    },
+    {
+      "name": "isInitialRequest",
+      "faker_function": "boolean",
+      "faker_params": {
+        "chance_of_getting_true": "25"
+      }
+    },
+    {
+      "name": "paNumber",
+      "faker_function": "isbn10"
+    },
+    {
+      "name": "beneficiaryName",
+      "faker_function": "name"
+    },
+    {
+      "name": "beneficiaryPhone",
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 10
+    },
+    {
+      "name": "beneficiaryDateOfBirth",
+      "faker_function": "date_of_birth",
+      "faker_params": {
+        "tzinfo": null,
+        "minimum_age": 0,
+        "maximum_age": 100
+      },
+      "date_format": "%m/%d/%Y"
+    },
+    {
+      "name": "gender",
+      "faker_function": "gender"
+    },
+    {
+      "name": "subscriberName",
+      "faker_function": "name"
+    },
+    {
+      "name": "subscriberID",
+      "faker_function": "member_id"
+    },
+    {
+      "name": "subscriberGroupNumber",
+      "faker_function": "isbn13"
+    },
+    {
+      "name": "rpName",
+      "faker_function": "healthcare_professional"
+    },
+    {
+      "name": "rpNpi",
+      "faker_function": "provider_id"
+    },
+    {
+      "name": "rpSpecialty",
+      "faker_function": "healthcare_specialty"
+    },
+    {
+      "name": "rpPhone",
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 10
+    },
+    {
+      "name": "rpFax",
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 10
+    },
+    {
+      "name": "rpContactName",
+      "faker_function": "healthcare_professional"
+    },
+    {
+      "name": "rpContactPhone",
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 10
+    },
+    {
+      "name": "rpDate",
+      "faker_function": "date_between",
+      "date_format": "%m/%d/%Y"
+    },
+    {
+      "name": "spName",
+      "faker_function": "healthcare_professional"
+    },
+    {
+      "name": "spNpi",
+      "faker_function": "provider_id"
+    },
+    {
+      "name": "spSpecialty",
+      "faker_function": "healthcare_specialty"
+    },
+    {
+      "name": "spPhone",
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 10
+    },
+    {
+      "name": "spFax",
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 10
+    },
+    {
+      "name": "pcpName",
+      "faker_function": "company"
+    },
+    {
+      "name": "pcpPhone",
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 10
+    },
+    {
+      "name": "pcpFax",
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 10
+    },
+    {
+      "name": "procedure1",
+      "faker_function": "healthcare_procedure"
+    },
+    {
+      "name": "startDate1",
+      "faker_function": "date_between",
+      "date_format": "%m/%d/%Y"
+    },
+    {
+      "name": "diagnosis1",
+      "faker_function": "healthcare_diagnosis"
+    },
+    {
+      "name": "procedure2",
+      "faker_function": "healthcare_procedure"
+    },
+    {
+      "name": "startDate2",
+      "faker_function": "date_between",
+      "date_format": "%m/%d/%Y"
+    },
+    {
+      "name": "diagnosis2",
+      "faker_function": "healthcare_diagnosis"
+    },
+    {
+      "name": "procedure3",
+      "faker_function": "healthcare_procedure"
+    },
+    {
+      "name": "startDate3",
+      "faker_function": "date_between",
+      "date_format": "%m/%d/%Y"
+    },
+    {
+      "name": "diagnosis3",
+      "faker_function": "healthcare_diagnosis"
+    },
+    {
+      "name": "procedure4",
+      "faker_function": "healthcare_procedure"
+    },
+    {
+      "name": "startDate4",
+      "faker_function": "date_between",
+      "date_format": "%m/%d/%Y"
+    },
+    {
+      "name": "diagnosis4",
+      "faker_function": "healthcare_diagnosis"
+    },
+    {
+      "name": "procedureType",
+      "faker_function": "procedure_type"
+    },
+    {
+      "name": "serviceType",
+      "faker_function": "service_type"
+    },
+    {
+      "name": "ptSessions",
+      "faker_function": "hc_sessions"
+    },
+    {
+      "name": "ptDuration",
+      "faker_function": "hc_duration"
+    },
+    {
+      "name": "ptFrequency",
+      "faker_function": "hc_frequency"
+    },
+    {
+      "name": "ptOther",
+      "faker_function": "pystr",
+      "faker_params": {
+        "max_chars": "20"
+      }
+    },
+    {
+      "name": "isHomeHealth",
+      "faker_function": "boolean",
+      "faker_params": {
+        "chance_of_getting_true": "25"
+      }
+    },
+    {
+      "name": "isDME",
+      "faker_function": "boolean",
+      "faker_params": {
+        "chance_of_getting_true": "25"
+      }
+    },
+    {
+      "name": "otherNotes",
+      "faker_function": "pystr",
+      "faker_params": {
+        "max_chars": "200"
+      }
+    },
+    {
+      "name": "rpContactPhone",
+      "faker_function": "phone_number",
+      "country_code": "+1",
+      "num_digits": 10
+    }
+  ]
+}
