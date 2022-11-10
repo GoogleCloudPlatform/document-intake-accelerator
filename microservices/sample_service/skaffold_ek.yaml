@@ -15,31 +15,31 @@
 apiVersion: skaffold/v3
 kind: Config
 metadata:
-  name: queue
+  name: sample-service
 requires:
-  - path: ../../common
-    configs: [common]
+- path: ../../common
+  configs: [common]
 build:
   tagPolicy:
     gitCommit: {}
   local:
     concurrency: 0
   artifacts:
-  - image: queue
+  - image: sample-service
     requires:
-      - image: common
-        alias: BASE_IMG
+    - image: common
+      alias: BASE_IMG
     sync:
       infer:
-        - '**/*.py'
-        - '**/*.json'
+      - '**/*.py'
+      - '**/*.json'
 portForward:
 - resourceType: service
-  resourceName: queue
+  resourceName: sample-service
   port: 80
-  localPort: 8000
+  localPort: 8888
 deploy:
-  kubectl: { }
+  kubectl: {}
 manifests:
   kustomize:
     paths:
@@ -49,7 +49,7 @@ profiles:
   build:
     googleCloudBuild: {}
     artifacts:
-    - image: queue
+    - image: sample-service
       requires:
       - image: common
         alias: BASE_IMG
@@ -76,11 +76,11 @@ profiles:
   build:
     googleCloudBuild: {}
     artifacts:
-    - image: queue
+    - image: sample-service
       docker:
         cacheFrom:
-          - queue
-          - queue:latest
+        - sample-service
+        - sample-service:latest
       requires:
       - image: common
         alias: BASE_IMG
@@ -88,18 +88,18 @@ profiles:
   build:
     googleCloudBuild: {}
     artifacts:
-    - image: queue
+    - image: sample-service
       docker:
         cacheFrom:
-          - queue
-          - queue:latest
+        - sample-service
+        - sample-service:latest
       requires:
-        - image: common
-          alias: BASE_IMG
+      - image: common
+        alias: BASE_IMG
       sync:
         infer:
-          - '**/*.py'
-          - '**/*.json'
+        - '**/*.py'
+        - '**/*.json'
   deploy:
     kubectl: { }
   manifests:
