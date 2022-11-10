@@ -2,14 +2,6 @@
 
 Use this tool to generate Healthcare Prior Authorization forms with synthetic test data.
 
-## Getting Started
-
-Install python dependencies.
-
-```
-pip install -r requirements.txt
-```
-
 ## 1. Generate fake data to CSV file
 
 ```
@@ -29,7 +21,7 @@ Run the following to generate form images based on the given CSV file. It will
 generate a number of images based on the rows in CSV file.
 
 ```
-python generate_fake_images.py --config=form_image_config.json --data=./out/test.csv --output-folder=./out
+python ../../generate_images.py --config=form_image_config.json --data=./out/test.csv --output-folder=./out
 ```
 You will see the list of images generated in the output folder.
 * Please note that it will overwrite any existing files with the same file names.
