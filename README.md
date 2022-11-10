@@ -19,7 +19,8 @@ export REGION=us-central1
 export ADMIN_EMAIL=<Your Email>
 export BASE_DIR=$(pwd)
 
-# A custom domain like your-domain.com, or leave it blank for using the Ingress IP address instead.
+# A custom domain like your-domain.com. If you do not have one, use temporally a legal name as a placeholder, do not leave it blank,
+and later follow steps as described below for using the Ingress IP address instead.
 export API_DOMAIN=<Your Domain>
 
 gcloud auth application-default login
@@ -33,7 +34,7 @@ Make sure to update to the latest gcloud tool:
 gcloud components update
 ```
 
-### GCP Orgnization policy
+### GCP Organization policy
 
 Run the following commands to update Organization policies:
 ```
@@ -89,6 +90,12 @@ Do you want to perform these actions?
 bash ../../../setup/update_config.sh
 ```
 
+Connect to the `default-cluster`:
+```
+gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
+```
+
+
 Get the API endpoint IP address, this will be used in Firebase Auth later.
 ```
 kubectl describe ingress | grep Address
@@ -116,8 +123,8 @@ kubectl describe ingress | grep Address
     - Web App Domain (e.g. adp-dev.cloudpssolutions.com)
     - API endpoint IP address (from kubectl describe ingress | grep Address)
     - localhost
-- Go to Project Overview > Project settings, you will use these info in the next step.
-- In the codebase, open up micorservices/adp_ui/.env in an Editor (e.g. VSCode), and change the following values accordingly.
+- Go to Project Overview > Project settings, you will use this info in the next step.
+- In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. VSCode), and change the following values accordingly.
     - REACT_APP_BASE_URL
       - The custom Web App Domain that you added in the previous step.
       - Alternatively, you can use the API Domain IP Address (Ingress), e.g. http://123.123.123.123
@@ -129,11 +136,6 @@ kubectl describe ingress | grep Address
     - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
 
 ### Deploying Kubernetes Microservices
-
-Connect to the `default-cluster`:
-```
-gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
-```
 
 Build all microservices (including web app) and deploy to the cluster:
 ```
@@ -414,7 +416,7 @@ kubectl config set-context --current --namespace=<Your namespace>
   ```
   - This will submit the changes to your fork repo on Github.
 
-* Go to the your Github fork repo web page, click the “Compare & Pull Request” in the notification. In the Pull Request form, make sure that:
+* Go to your Github fork repo web page, click the “Compare & Pull Request” in the notification. In the Pull Request form, make sure that:
   - The upstream repo name is correct
   - The destination branch is set to master.
   - The source branch is your custom branch. (e.g. feature_xyz in the example above.)
@@ -443,6 +445,6 @@ branch.
 
 Test for PR changes
 
-### (For Develpers) Microservices Assumptions
+### (For Developers) Microservices Assumptions
 * app_registration_id used on the ui is referred as case_id in the API code
 * case_id is referred as external case_id in the firestore
