@@ -64,7 +64,7 @@ Run Terraform
 
 ```
 cd terraform/environments/dev
-terraform init
+terraform init -backend-config=bucket=$TF_BUCKET_NAME
 
 # enabling GCP services first.
 terraform apply -target=module.project_services -target=module.service_accounts -auto-approve
