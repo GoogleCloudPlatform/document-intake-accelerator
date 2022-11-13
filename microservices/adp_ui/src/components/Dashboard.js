@@ -586,6 +586,10 @@ function Dashboard() {
       </Container>
       <br />
 
+      <DataTables />
+
+      <br />
+
       <Container className="overviewTrendsContainer">
         <Accordion defaultActiveKey="0">
           <Accordion.Item eventKey="0">
@@ -593,12 +597,12 @@ function Dashboard() {
             <Accordion.Body>
 
               <Row className="chart1">
-                <Col className='col-8'>
+                <Col className='col-6'>
                   {isChartLoading ? <Spinner animation="border" variant="primary" /> :
                     <div>
                       <Card className="docTrends">
                         <Card.Body>
-                          <Card.Title>Document Trends <br /> (Weekly Trends)</Card.Title>
+                          <Card.Title>Document Trends (Weekly Trends)</Card.Title>
                           <br />
                           <Card.Text as='div'>
                             <Line data={documentDataTrends}
@@ -630,12 +634,12 @@ function Dashboard() {
                     </div>
                   }
                 </Col>
-                <Col className='col-4'>
+                <Col className='col-6'>
                   {isChartLoading ? <Spinner animation="border" variant="primary" /> :
                     <div>
                       <Card className="dailyDoc">
                         <Card.Body>
-                          <Card.Title>Daily Document <br />(Previous Day)</Card.Title>
+                          <Card.Title>Daily Document (Previous Day)</Card.Title>
                           <Card.Text as='div'>
                             <Doughnut
                               data={dailyDocumentData}
@@ -686,9 +690,6 @@ function Dashboard() {
       </Container>
       {' '}
       {/* Table data render on the UI */}
-
-      <br />
-      <DataTables />
 
     </div>
 
