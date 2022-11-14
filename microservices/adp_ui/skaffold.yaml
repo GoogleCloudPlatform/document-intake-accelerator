@@ -51,7 +51,7 @@ profiles:
           - '**/*.json'
           - '**/*.css'
       docker:
-        dockerfile: Dockerfile-dev
+        dockerfile: Dockerfile
   deploy:
     kubectl: { }
   manifests:
