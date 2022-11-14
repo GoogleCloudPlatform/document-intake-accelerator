@@ -20,10 +20,15 @@ else
 fi
 
 gsutil iam ch serviceAccount:"${SERVICE_ACCOUNT}":objectViewer "${INPUT_BUCKET}"
-gcloud builds submit --region=$REGION --substitutions=_IMAGE=$START_PIPELINE_IMAGE,_PROJECT_ID=$PROJECT_ID
+
+gcloud builds submit --region=$REGION \
+  --substitutions=_IMAGE=${START_PIPELINE_IMAGE},_PROJECT_ID=${PROJECT_ID}
+  #,_SERVICE_NAME=${START_PIPELINE_RUN},_API_DOMAIN=${API_DOMAIN},_SERVICE_ACCOUNT=${SERVICE_ACCOUNT}
+
 gcloud run deploy ${START_PIPELINE_RUN} --image="gcr.io/${PROJECT_ID}/${START_PIPELINE_IMAGE}" --allow-unauthenticated \
   --service-account=${SERVICE_ACCOUNT} \
-  --set-env-vars=API_DOMAIN=${API_DOMAIN}
+  --set-env-vars=API_DOMAIN=${API_DOMAIN} \
+  --set-env-vars=PROJECT_ID=${PROJECT_ID}
 
 # In order to use Cloud Storage triggers, the Cloud Storage service agent
 # must have the Pub/Sub Publisher (roles/pubsub.publisher) IAM role on your project.

@@ -2,8 +2,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${DIR}"/SET
 
 gcloud config set project $PROJECT_ID
-gcloud auth login
-gcloud auth application-default login
+#gcloud auth login
+#gcloud auth application-default login
 
 
 export ORGANIZATION_ID=$(gcloud organizations list --format="value(name)")
@@ -11,16 +11,13 @@ gcloud resource-manager org-policies disable-enforce constraints/compute.require
 gcloud resource-manager org-policies delete constraints/compute.vmExternalIpAccess --organization=$ORGANIZATION_ID
 #
 
-
 bash "${DIR}"/setup/setup_terraform.sh
 
-export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=terraform-sa@$PROJECT_ID.iam.gserviceaccount.com
-
-exit
-
 cd "${DIR}/terraform/environments/dev" || exit
-terraform init
-terraform apply
+terraform init -backend-config=bucket=$TF_BUCKET_NAME
+
+terraform apply -target=module.project_services -target=module.service_accounts -auto-approve
+# TODO Add instructions on Cloud DNS Setup for API_DOMAIN
 
 # Cloud DNS
 # Enable Cloud DNS API

@@ -37,11 +37,6 @@ def health_check_post():
   return True
 
 
-@app.get("/hello")
-def hello():
-  return "Hello World."
-
-
 @app.get("/", tags=["Index"], status_code=status.HTTP_200_OK)
 async def index():
   return {"message": "GET request received!"}

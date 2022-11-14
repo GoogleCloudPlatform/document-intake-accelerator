@@ -16,3 +16,5 @@ steps:
     args:
       - push
       - 'gcr.io/${_PROJECT_ID}/${_IMAGE}'
+images:
+- 'gcr.io/$PROJECT_ID/${_IMAGE}:latest'

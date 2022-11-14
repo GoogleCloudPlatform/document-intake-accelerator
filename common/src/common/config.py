@@ -32,7 +32,7 @@ if PROJECT_ID != "":
   os.environ["GOOGLE_CLOUD_PROJECT"] = PROJECT_ID
 assert PROJECT_ID, "Env var PROJECT_ID is not set."
 
-REGOIN = "us-central1"
+REGION = "us-central1"
 PROCESS_TIMEOUT_SECONDS = 600
 
 #List of application forms and supporting documents
@@ -54,6 +54,7 @@ STATUS_TIMEOUT = "Timeout"
 BUCKET_NAME = f"{PROJECT_ID}-document-upload"
 TOPIC_ID = "queue-topic"
 PROCESS_TASK_API_PATH = "/upload_service/v1/process_task"
+DOCUMENT_STATUS_API_PATH = "/document_status_service/v1"
 
 # ========= Validation ===========================
 BUCKET_NAME_VALIDATION = PROJECT_ID
