@@ -169,6 +169,18 @@ Add an A Record in your DNS setting to point to the Ingress IP Address, e.g. in 
 terraform import module.firebase.google_app_engine_application.firebase_init $PROJECT_ID
 ```
 
+
+#### Terraform apply exits with Error
+Most likely, you will get following error when running terraform apply: 
+```
+Error: Post "http://localhost/api/v1/namespaces/default/serviceaccounts": dial tcp [::1]:80: connect: connection refused
+│
+│   with module.gke.kubernetes_service_account.ksa,
+│   on ../../modules/gke/main.tf line 111, in resource "kubernetes_service_account" "ksa":
+│  111: resource "kubernetes_service_account" "ksa" {
+```
+This is due to racing conditions, and to resolve the error, just re-run `terraform apply` command.
+
 ### CloudRun Troubleshoot
 
 The CloudRun service “queue” is used as the task dispatcher from listening to Pub/Sub “queue-topic”
