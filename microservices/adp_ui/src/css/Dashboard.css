@@ -16,7 +16,7 @@
  */
 
 .chart {
-  margin-top: 4rem;
+  margin-top: 2rem;
 }
 
 
@@ -50,6 +50,7 @@
   border-radius: 10px;
   border: 0px;
   padding: 10px;
+  min-height: 800px;
 }
 
 .container {

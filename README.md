@@ -2,6 +2,8 @@
 
 > A pre-packaged and customizable solution to accelerate the development of end-to-end document processing workflow incorporating Document AI parsers and other GCP products (Firestore, BigQuery, GKE, etc). The goal is to accelerate the development efforts in document workflow with many ready-to-use components.
 
+<img width="856" alt="image" src="https://user-images.githubusercontent.com/1644724/201716657-00b070e7-728a-42f8-98a5-7520ee43e54d.png">
+
 ## Key features
 - End-to-end workflow management: document classification, extraction, validation, profile matching and Human-in-the-loop review.
 - API endpoints for integration with other systems.

@@ -445,6 +445,16 @@ function DataTables() {
 
               {element.document_type !== null ?
                 <div>
+                  <Link to={{
+                    pathname: `/documentreview/${element.uid}/${element.case_id}`,
+                    //  state: {
+                    //    uid: `${element.uid}`,
+                    //    caseid: `${element.case_id}`
+                    //  }
+                  }} style={{ ...actionButtonStyles }}>View</Link>
+
+                  {' | '}
+
                   <OverlayTrigger trigger="click" rootClose={true} onHide={200} placement="top" overlay={popover}>
                     <Link to={{
                       pathname: `${element.document_type === 'application_form' ? '' : '/reassign'}`,
@@ -607,7 +617,7 @@ function DataTables() {
       {/* <Row style={{padding:'30px'}}> */}
       <Row>
         <Col className="col-5">
-          <label style={{ fontSize: '14px', paddingLeft: '5px' }}>Search documents:</label>
+          <label className="labels" style={{ fontSize: '14px', paddingLeft: '5px' }}>Search documents:</label>
           <br />
           <div>
             <input type="text" onChange={onFilter} className="searchInput" onKeyPress={enterKeyPressed} id='searchterm' value={searchTerm} name="searchterm" placeholder="Search by Case ID, applicatns or other attributes..." />
@@ -627,7 +637,7 @@ function DataTables() {
 
         </Col>
         <Col>
-          <label style={{ fontSize: '14px', paddingLeft: '5px' }}>Filter document list by:</label>
+          <label className="labels" style={{ fontSize: '14px', paddingLeft: '5px' }}>Filter document list by:</label>
           <br />
           <Button
             variant="secondary"
@@ -651,7 +661,7 @@ function DataTables() {
             }}>
             Need Review
           </Button>{' '}
-
+          {/*
           <Button
             variant="secondary"
             className="buttonStyles"
@@ -661,7 +671,7 @@ function DataTables() {
               color: activePendingButton === true ? 'white' : 'black',
             }}>
             Pending
-          </Button>{' '}
+          </Button>{' '} */}
 
           <Button
             variant="secondary"
@@ -722,14 +732,14 @@ function DataTables() {
               <DataTable value={dataTableBody} sortMode="multiple" header={tableLength} size="small" responsiveLayout="scroll"
                 paginator paginatorTemplate={template1} first={first1} rows={rows1} onPage={onCustomPage1} paginatorPosition="both" paginatorClassName="justify-content-end"
               >
-                <Column field="uid" header="Document ID" body={documentIdBodyTemplate} sortable></Column>
+                {/* <Column field="uid" header="Document ID" body={documentIdBodyTemplate} sortable></Column> */}
                 <Column field="actions" header="Actions"></Column>
-                <Column field="documenttype" header="Document Type / Class" body={doctypeBodyTemplate} sortable></Column>
-                <Column field="last_update_timestamp" header="Last Modified" body={lastUpdateTimestampBodyTemplate} sortable></Column>
-                <Column field="caseid" header="Case ID" sortable></Column>
                 <Column field="applicantname" header="Applicant Name" sortable></Column>
+                <Column field="documenttype" header="Document Type / Class" body={doctypeBodyTemplate} sortable></Column>
                 <Column field="current_status" header="Status" body={statusBodyTemplate} sortable></Column>
                 <Column field="process_status" header="Process Detail" sortable></Column>
+                <Column field="caseid" header="Case ID" sortable></Column>
+                <Column field="last_update_timestamp" header="Last Modified" body={lastUpdateTimestampBodyTemplate} sortable></Column>
                 <Column field="statuslastupdate" header="Last Updated By" sortable></Column>
                 <Column field="extractionscore" header="Extraction" sortable></Column>
                 <Column field="extractionstatus" header="Extraction Status" body={extractionStatusBodyTemplate}></Column>
