@@ -1,9 +1,11 @@
 import re
 
 from google.cloud import storage
-
+from fastapi import Request, status, Response
+import json
 from fastapi import APIRouter
 import os
+from config import DOCUMENT_STATUS_URL
 from common.utils.copy_gcs_documents import copy_blob
 import uuid
 import requests
@@ -33,6 +35,7 @@ MIME_TYPES = [
 START_PIPELINE_FILENAME = os.environ.get("START_PIPELINE_NAME", "START_PIPELINE")
 router = APIRouter(prefix="/start-pipeline", tags=["Start Pipeline"])
 
+
 def split_uri(uri: str):
   match = re.match(r"([^/]+)/(.+)", uri)
   if not match:
@@ -41,19 +44,50 @@ def split_uri(uri: str):
   file = match.group(2)
   return dirs, file
 
+
 @router.post("/run")
-async def start_pipeline(event, context):
-  print(f"This Function was triggered by messageId {context.event_id} published at {context.timestamp}")
-  bucket_name = event['bucket']
-  file_uri = event['name']
+async def start_pipeline(request: Request, response: Response):
+  body = await request.body()
+  if not body or body == "":
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    response.body = "Request has no body"
+    Logger.warning(response.body)
+    return response
+
+  try:
+    envelope = await request.json()
+    Logger.info("Pub/Sub envelope:")
+    Logger.info(envelope)
+
+  except json.JSONDecodeError:
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    response.body = f"Unable to parse to JSON: {body}"
+    return response
+
+  if not envelope:
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    response.body = "No Pub/Sub message received"
+    Logger.error(f"error: {response.body}")
+    return response
+
+  if not isinstance(envelope, dict) or "bucket" not in envelope or "name" not in envelope:
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    response.body = "invalid Pub/Sub message format"
+    Logger.error(f"error: {response.body}")
+    return response
+
+  bucket_name = envelope['bucket']
+  file_uri = envelope['name']
+  Logger.info(f"bucket_name={bucket_name}, file_uri={file_uri}")
   comment = ""
+  context = ""
   dirs, filename = split_uri(file_uri)
 
-  print(f"Received event for  bucket - {bucket_name}, file added {file_uri} , filename:  {filename}")
-  print(f"Starting Pipeline To process documents inside {bucket_name} bucket and {dirs} folder")
+  Logger.info(f"Received event for  bucket - {bucket_name}, file added {file_uri} , filename:  {filename}")
+  Logger.info(f"Starting Pipeline To process documents inside {bucket_name} bucket and {dirs} folder")
 
   if filename != START_PIPELINE_FILENAME:
-    return
+    return "", status.HTTP_204_NO_CONTENT
 
   global gcs
   if not gcs:
@@ -64,7 +98,7 @@ async def start_pipeline(event, context):
   blob_list = list(source_bucket.list_blobs(prefix=dirs))
   uid_list = []
   message_list = []
-  #generate a case_id if not provided by the user
+  # generate a case_id
   case_id = str(uuid.uuid1())
 
   try:
@@ -74,10 +108,8 @@ async def start_pipeline(event, context):
         mime_type = blob.content_type
         if mime_type not in MIME_TYPES:
           continue
-        # gcs_document = {
-        #     "gcs_uri": gcs_doc_path,
-        #     "mime_type": blob.content_type
-        # }
+
+        Logger.info(f"case_id={case_id}, file_name={blob.name}")
 
         # Copy file into gs bucket
         #TODO do it async
@@ -85,19 +117,19 @@ async def start_pipeline(event, context):
         output = create_document(case_id, blob.name, context)
         uid = output
         uid_list.append(uid)
+
         #Copy document in GCS bucket
-        #TODO do it async
         new_file_name = f"{case_id}/{uid}/{blob.name}"
-        print(f"Copying {blob.name} from {bucket_name} bucket as "
+        Logger.info(f"Copying {blob.name} from {bucket_name} bucket as "
               f"{new_file_name} into {BUCKET_NAME} bucket")
-        # status = await run_in_threadpool(copy_blob, bucket_name, blob.name, new_file_name, BUCKET_NAME)
-        status = copy_blob(bucket_name=bucket_name, source_blob_name=blob.name,
+
+        result = copy_blob(bucket_name=bucket_name, source_blob_name=blob.name,
                            destination_blob_name=new_file_name,
                            dest_bucket_name=BUCKET_NAME)
-        # status = await run_in_threadpool(ug.upload_file, case_id, uid, file)
-        if status != STATUS_SUCCESS:
-
-          #Update the document upload in GCS as failed
+        #TODO do it async
+        # result = await run_in_threadpool(copy_blob, bucket_name, blob.name, new_file_name, BUCKET_NAME)
+        if result != STATUS_SUCCESS:
+          # Update the document upload in GCS as failed
           document = Document.find_by_uid(uid)
           system_status = {
               "stage": "upload",
@@ -107,7 +139,7 @@ async def start_pipeline(event, context):
           }
           document.system_status = [system_status]
           document.update()
-
+          Logger.error(f"Error: {result}")
           raise HTTPException(
               status_code=500,
               detail="Error "
@@ -116,26 +148,25 @@ async def start_pipeline(event, context):
         Logger.info(f"File with case_id {case_id} and uid {uid}"
                     f" uploaded successfully in GCS bucket")
 
-
         #Update the document upload as success in DB
         document = Document.find_by_uid(uid)
-
-        gcs_base_url = f"gs://{BUCKET_NAME}"
-        document.url = f"{gcs_base_url}/{case_id}/{uid}/{blob.name}"
-        system_status = {
-            "stage": "uploaded",
-            "status": STATUS_SUCCESS,
-            "timestamp": datetime.datetime.utcnow(),
-            "comment": comment
-        }
-        document.system_status = [system_status]
-        document.update()
-        message_list.append({
-            "case_id": case_id,
-            "uid": uid,
-            "gcs_url": document.url,
-            "context": context
-        })
+        if document is not None:
+          gcs_base_url = f"gs://{BUCKET_NAME}"
+          document.url = f"{gcs_base_url}/{case_id}/{uid}/{blob.name}"
+          system_status = {
+              "stage": "uploaded",
+              "status": STATUS_SUCCESS,
+              "timestamp": datetime.datetime.utcnow(),
+              "comment": comment
+          }
+          document.system_status = [system_status]
+          document.update()
+          message_list.append({
+              "case_id": case_id,
+              "uid": uid,
+              "gcs_url": document.url,
+              "context": context
+          })
 
     # Pushing Message To Pubsub
     pubsub_msg = f"batch for {case_id} moved to bucket"
@@ -151,11 +182,7 @@ async def start_pipeline(event, context):
         "uid_list": uid_list,
         "configs": message_list
     }
-    # message_json = json.dumps({
-    #                            'uri': gcs_doc_path,
-    #                            })
-    # data = message_json.encode('utf-8')
-    # publish_message(topic_path, data)
+
   except Exception as e:
     Logger.error(e)
     err = traceback.format_exc().replace("\n", " ")
@@ -165,39 +192,18 @@ async def start_pipeline(event, context):
                                 "in uploading document") from e
 
 
-# TODO Refactor to common
 def create_document(case_id, filename, context, user=None):
-  base_url = "http://document-status-service/document_status_service/v1/"
-  req_url = f"{base_url}create_document"
-  response = requests.post(
-      f"{req_url}?case_id={case_id}&filename={filename}&context={context}&user={user}"
-  )
-  response = response.json()
-  uid = response["uid"]
+  uid = None
+  try:
+    base_url = f"{DOCUMENT_STATUS_URL}"
+    req_url = f"{base_url}/create_document"
+    url = f"{req_url}?case_id={case_id}&filename={filename}&context={context}&user={user}"
+    Logger.info(f"Posting request to {url}")
+    response = requests.post(url)
+    response = response.json()
+    Logger.info(f"Response received ={response}")
+    uid = response.get("uid")
+  except requests.exceptions.RequestException as err:
+    Logger.error(err)
+
   return uid
-# def process(calls):
-#   publisher = pubsub_v1.PublisherClient(batch_settings)
-#   topic_path = publisher.topic_path(project_id, pubsub_topic)
-#   publish_futures = []
-#
-#   # Resolve the publish future in a separate thread.
-#   def callback(future: pubsub_v1.publisher.futures.Future) -> None:
-#     message_id = future.result()
-#     #print(message_id)
-#
-#   for call in calls:
-#     #print(line)
-#     # Data must be a bytestring
-#     data = call[0].encode("utf-8")
-#     publish_future = publisher.publish(topic_path, data)
-#     # Non-blocking. Allow the publisher client to batch multiple messages.
-#     publish_future.add_done_callback(callback)
-#     publish_futures.append(publish_future)
-#     # TODO rate limiting
-#     time.sleep(PUBLISHING_SLEEP_TIME_BETWEEN_RECORDS)
-#
-#   futures.wait(publish_futures, return_when=futures.ALL_COMPLETED)
-#
-#   print(f"Published messages with batch settings to {topic_path}.")
-#
-#   return

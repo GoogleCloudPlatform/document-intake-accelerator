@@ -23,7 +23,7 @@ locals {
   firestore_region = var.firestore_region
   multiregion      = var.multiregion
   project_id       = var.project_id
-  forms_gcs_path   = "${var.project_id}-document-upload"
+  forms_gcs_path   = "${var.project_id}-pa-forms"
   services = [
     "aiplatform.googleapis.com",           # Vertex AI
     "appengine.googleapis.com",            # AppEngine
@@ -281,7 +281,7 @@ resource "google_storage_bucket" "document-upload" {
 
 # Bucket to process batch documents on START_PIPELINE
 resource "google_storage_bucket" "document-load" {
-  name                        = "${local.project_id}-documents"
+  name                        = local.forms_gcs_path
   location                    = local.multiregion
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
