@@ -379,7 +379,7 @@ function DocumentReview() {
       <div className="subHeaderReview">
 
         <div className="row">
-          <div className="col-7" style={{ position: "relative", paddingBottom: '0px' }}>
+          <div className="col-8" style={{ position: "relative", paddingBottom: '0px' }}>
             <Link to={{ pathname: '/', }} className="drBack">
               <Back fill="#aaa" />
             </Link>{' '}
@@ -403,14 +403,13 @@ function DocumentReview() {
                 <label className={["subTitle", "drSpace"].join(" ")}> <span> <File /></span>{(inputDocType || 'No Type') + ' > ' + (inputDocClass || 'Unclassfied') + ' > ' + caseid} </label>
               </>}
           </div>
-          <div className="col-3" style={{ paddingBottom: '0px', textAlign: 'end' }}>
+          <div className="col-4" style={{ paddingBottom: '0px', textAlign: 'end', width: '20%;' }}>
             <label className="approveLeftVerticalLine">&nbsp;</label>
             <Button type="button" className="buttonStyles" style={{ backgroundColor: "#4285F4" }} onClick={() => hitlStatusButton('Approved')}>Approve</Button>
             <Button type="button" className="buttonStyles" style={{ backgroundColor: "#4285F4" }} onClick={() => hitlStatusButton('Pending')}>Pend</Button>
             <Button type="button" className="buttonStyles" variant="danger" onClick={() => hitlStatusButton('Rejected')}>Reject</Button>
 
-          </div>
-          <div className="col-2 verticalLinesButton" style={{ position: 'relative', paddingBottom: '0px' }}>
+            <label className="approveLeftVerticalLine">&nbsp;</label>
 
             {/* <Button type="button" className="buttonStyles" style={{backgroundColor:"#4285F4"}} >Reassign</Button>  */}
             <Link to={{
@@ -419,10 +418,11 @@ function DocumentReview() {
                 uid: `${inputData.uid}`,
                 caseid: `${inputData.case_id}`
               }
-            }} style={{ backgroundColor: '#4285F4', color: "#fff", borderRadius: '13px', lineHeight: '1.5', display: 'inline-block', fontWeight: '400', padding: '5px 10px', fontSize: '12px', textDecoration: 'none', marginRight: "5px" }}>Reassign</Link>
+            }} style={{ backgroundColor: '#4285F4', color: "#fff", borderRadius: '20px', lineHeight: '1.7', display: 'inline-block', fontWeight: '400', padding: '4px', fontSize: '15px', textDecoration: 'none', marginRight: "5px" }}>Reassign</Link>
+
 
             {/* <Button type="button" className="buttonStyles" style={{backgroundColor:"#4285F4"}} onClick={downloadPDF}>Download</Button> */}
-            <a style={{ backgroundColor: '#4285F4', color: "#fff", borderRadius: '13px', lineHeight: '1.5', display: 'inline-block', fontWeight: '400', padding: '5px 10px', fontSize: '12px', textDecoration: 'none' }} href={`${baseURL}/hitl_service/v1/fetch_file?case_id=${inputData.case_id}&uid=${inputData.uid}&download=true`} target={"_blank"}>
+            <a style={{ backgroundColor: '#4285F4', color: "#fff", borderRadius: '20px', lineHeight: '1.7', display: 'inline-block', fontWeight: '400', padding: '4px', fontSize: '15px', textDecoration: 'none' }} href={`${baseURL}/hitl_service/v1/fetch_file?case_id=${inputData.case_id}&uid=${inputData.uid}&download=true`} target={"_blank"}>
               Download
             </a>
             <Button type="button" className="buttonStyles" style={{ backgroundColor: "#4285F4" }} onClick={saveUpdatedButton}>Save</Button>
