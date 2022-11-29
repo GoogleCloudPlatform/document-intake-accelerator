@@ -29,7 +29,7 @@ import proto
 import random
 import string
 from google.cloud import documentai_v1 as documentai
-from google.cloud import storage
+from common.utils.helper import split_uri_2_bucket_prefix
 from .change_json_format import get_json_format_for_processing, \
     correct_json_format_for_db
 from .correct_key_value import data_transformation
@@ -40,9 +40,10 @@ from .utils_functions import entities_extraction, download_pdf_gcs,\
 from common.config import PROJECT_ID
 from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME, \
     DOCAI_ATTRIBUTES_TO_IGNORE, DOCAI_ENTITY_MAPPING
-from common.config import PARSER_CONFIG
+from common.config import get_parser_config
 from common.utils.logging_handler import Logger
 import warnings
+from google.cloud import storage
 
 warnings.simplefilter(action="ignore")
 
@@ -94,6 +95,8 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
   parser_doc_data = result.document
   # convert to json
   json_string = proto.Message.to_json(parser_doc_data)
+  print("Extracted data:")
+  print(json.dumps(json_string))
   data = json.loads(json_string)
   # remove unnecessary entities from parser
   for each_attr in DOCAI_ATTRIBUTES_TO_IGNORE:
@@ -121,6 +124,17 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
   #     json.dump(specialized_parser_entity_list, outfile, indent=4)
   Logger.info("Required entities created from Specialized parser response")
   return specialized_parser_entity_list
+
+
+def write_config(bucket_name, blob_name, keys):
+  storage_client = storage.Client()
+  bucket = storage_client.bucket(bucket_name)
+  blob = bucket.blob(blob_name)
+  with blob.open("w") as f:
+    f.write('"default_entities": {\n')
+    for key in set(keys):
+        f.write(f'  "{key}": ["{key.upper().replace(" ","_").replace("/", "_").replace(".", "_").replace("(", "").replace(")", "") }"],\n')
+    f.write('}\n')
 
 
 def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
@@ -221,6 +235,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
       # print(f"Fetched file {i + 1}")
       form_parser_text += document.text
       # Read the text recognition output from the processor
+      keys = []
       for page in document.pages:
         for form_field in page.form_fields:
           field_name, field_name_confidence, field_coordinates = \
@@ -242,8 +257,17 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
               "page_height": int(page.dimension.height)
           }
 
+          print(f"Extracted Entities: key={field_name}"
+                f" value={field_value}, "
+                f" key_confidence={round(field_name_confidence, 2)},"
+                f" value_confidence={round(field_value_confidence, 2)}")
+          keys.append(field_name)
           extracted_entity_list.append(temp_dict)
 
+      config_file = f"{gcs_doc_path.split('.')[-2]}.json"
+      none, prefix = split_uri_2_bucket_prefix(config_file)
+      print(f"Writing config to gs://{DOCAI_OUTPUT_BUCKET_NAME}/{prefix}")
+      write_config(DOCAI_OUTPUT_BUCKET_NAME, prefix, keys)
       print("Extraction completed")
     else:
       print(f"Skipping non-supported file type {blob.name}")
@@ -261,11 +285,11 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   try:
     form_parser_entities_list, flag = form_parser_entities_mapping(
         extracted_entity_list, mapping_dict, form_parser_text, temp_folder)
-
+    print(f"form_parser_entities_list={form_parser_entities_list}, flag={flag}")
     # delete temp folder
-    if os.path.exists(temp_folder):
-      shutil.rmtree(temp_folder)
-    del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
+    # if os.path.exists(temp_folder):
+    #   shutil.rmtree(temp_folder)
+    # del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
     Logger.info("Required entities created from Form parser response")
     return form_parser_entities_list, flag
   except Exception as e:
@@ -290,9 +314,10 @@ def extract_entities(gcs_doc_path: str, doc_type: str, context: str):
            manual_extraction information.
     Extraction accuracy
   """
-
+  Logger.info(f"extract_entities with gcs_doc_path={gcs_doc_path}, "
+              f"doc_type={doc_type}, context={context}")
   # read parser details from configuration json file
-  parsers_info = PARSER_CONFIG
+  parsers_info = get_parser_config()
   parser_information = parsers_info.get(doc_type)
   # if parser present then do extraction else update the status
   if parser_information:
@@ -326,13 +351,13 @@ def extract_entities(gcs_doc_path: str, doc_type: str, context: str):
     #     json.dump(final_extracted_entities, outfile, indent=4)
 
     # extraction accuracy calculation
-    document_extraction_confidence,extraction_status = \
-      extraction_accuracy_calc(final_extracted_entities,flag)
+    document_extraction_confidence, extraction_status = \
+      extraction_accuracy_calc(final_extracted_entities, flag)
     # print(final_extracted_entities)
     # print(document_extraction_confidence)
     Logger.info(f"Extraction completed for this document:{doc_type}")
     return final_extracted_entities, \
-          document_extraction_confidence,extraction_status
+          document_extraction_confidence, extraction_status
   else:
     # Parser not available
     Logger.error(f"Parser not available for this document:{doc_type}")

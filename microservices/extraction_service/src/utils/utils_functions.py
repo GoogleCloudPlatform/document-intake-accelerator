@@ -116,6 +116,10 @@ def default_entities_extraction(parser_entities, default_entities,doc_type):
                  "extraction_confidence": None,
                  "manual_extraction": False,
                  "corrected_value": None}
+
+    print(f"{key}=default_entities[key][0], "
+          f"value={parser_entities_dict[key][0]} "
+          f"extraction_confidence={parser_entities_dict[key][1]}")
   if doc_type == "utility_bill":
     if "supplier_address" in parser_entities_dict:
       if parser_entities_dict["supplier_address"][0] == "":
@@ -300,8 +304,9 @@ def standard_entity_mapping(desired_entities_list, parser_name):
     Returns: Standard entities list
     -------
   """
+  print(f"desired_entities_list={desired_entities_list}")
   # convert extracted json to pandas dataframe
-  df_json = pd.DataFrame.from_dict(desired_entities_list)
+  df_json = pd.DataFerame.from_dict(desired_entities_list)
   # read entity standardization csv
   entity_standardization = os.path.join(
         os.path.dirname(__file__), ".", "entity-standardization.csv")
@@ -320,14 +325,22 @@ def standard_entity_mapping(desired_entities_list, parser_name):
             entities_standardization_csv["standard_entity_name"]))
   # Get( all the entity (key column) from the json as a list
   key_list = list(df_json["entity"])
+  print(f"key_list={', '.join(key_list)}")
   # Replace the value by creating a list by looking up the value and assign
   # to json entity
-  for index,item in enumerate(key_list):
+  print(f"df_json={df_json}, dict_lookup={dict_lookup}")
+  for index, item in enumerate(key_list):
+    print(f"item={item}")
     if item in dict_lookup:
+      print(f"index={index}, item={dict_lookup[item]}")
       df_json["entity"][index]=dict_lookup[item]
     else:
-      df_json = df_json.drop(index)
-      df_json.reset_index(inplace=True, drop=True)
+      print(f"Dropping {index}")
+      try:
+        df_json = df_json.drop(index)
+        df_json.reset_index(inplace=True, drop=True)
+      except Exception as err:
+        print(f"Caught Exception {err} when dropping {index}")
   # convert datatype from object to int for column "extraction_confidence"
   df_json["extraction_confidence"] = pd.to_numeric\
       (df_json["extraction_confidence"],errors="coerce")
@@ -397,6 +410,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   required_entities_list = []
   # loop through one by one deafult entities mentioned in the config file
   for each_ocr_key, each_ocr_val in default_entities.items():
+    print(f"each_ocr_key={each_ocr_key}, each_ocr_val={each_ocr_val}")
     try:
       idx_list = df.index[df["key"] == each_ocr_key].tolist()
     except: # pylint: disable=bare-except
@@ -420,6 +434,8 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
              "page_width": int(df["page_width"][idx_list[idx]]),
              "page_height": int(df["page_height"][idx_list[idx]])
              }
+
+          print(f" ==> entity: {each_val}, value: {df['value'][idx_list[idx]]}")
 
         except: # pylint: disable=bare-except
           Logger.info("Key not found in parser output,"
@@ -450,7 +466,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
                          "page_height": None
                          }
         required_entities_list.append(temp_dict)
-  Logger.info("Default entities created from Form parser response")
+  Logger.info("======== Default entities created from Form parser response ========")
   if derived_entities:
     # this function can be used for all docs, if derived entities
     # are extracted by using regex pattern
@@ -474,6 +490,8 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
     if table_response is None:
       Logger.error("No table data found")
 
+  print("Extracted list required_entities_list")
+  print(required_entities_list)
   return required_entities_list, flag
 
 

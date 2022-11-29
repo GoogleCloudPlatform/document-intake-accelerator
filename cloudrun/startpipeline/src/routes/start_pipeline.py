@@ -5,8 +5,10 @@ from fastapi import Request, status, Response
 import json
 from fastapi import APIRouter
 import os
+from fastapi.concurrency import run_in_threadpool
 from config import DOCUMENT_STATUS_URL
 from common.utils.copy_gcs_documents import copy_blob
+from common.utils.helper import split_uri_2_path_filename
 import uuid
 import requests
 import traceback
@@ -16,7 +18,7 @@ from common.utils.logging_handler import Logger
 from common.models import Document
 from common.utils.publisher import publish_document
 from common.config import BUCKET_NAME
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+from common.config import STATUS_SUCCESS, STATUS_ERROR
 
 # API clients
 gcs = None
@@ -32,17 +34,9 @@ MIME_TYPES = [
     "image/webp"
 ]
 
-START_PIPELINE_FILENAME = os.environ.get("START_PIPELINE_NAME", "START_PIPELINE")
+START_PIPELINE_FILENAME = os.environ.get("START_PIPELINE_NAME",
+                                         "START_PIPELINE")
 router = APIRouter(prefix="/start-pipeline", tags=["Start Pipeline"])
-
-
-def split_uri(uri: str):
-  match = re.match(r"([^/]+)/(.+)", uri)
-  if not match:
-    return "", ""
-  dirs = match.group(1)
-  file = match.group(2)
-  return dirs, file
 
 
 @router.post("/run")
@@ -70,7 +64,8 @@ async def start_pipeline(request: Request, response: Response):
     Logger.error(f"error: {response.body}")
     return response
 
-  if not isinstance(envelope, dict) or "bucket" not in envelope or "name" not in envelope:
+  if not isinstance(envelope,
+                    dict) or "bucket" not in envelope or "name" not in envelope:
     response.status_code = status.HTTP_400_BAD_REQUEST
     response.body = "invalid Pub/Sub message format"
     Logger.error(f"error: {response.body}")
@@ -80,11 +75,13 @@ async def start_pipeline(request: Request, response: Response):
   file_uri = envelope['name']
   Logger.info(f"bucket_name={bucket_name}, file_uri={file_uri}")
   comment = ""
-  context = ""
-  dirs, filename = split_uri(file_uri)
+  context = "california" # TODO is a temp workaround
+  dirs, filename = split_uri_2_path_filename(file_uri)
 
-  Logger.info(f"Received event for  bucket - {bucket_name}, file added {file_uri} , filename:  {filename}")
-  Logger.info(f"Starting Pipeline To process documents inside {bucket_name} bucket and {dirs} folder")
+  Logger.info(
+      f"Received event for  bucket - {bucket_name}, file added {file_uri} , filename:  {filename}")
+  Logger.info(
+      f"Starting Pipeline To process documents inside {bucket_name} bucket and {dirs} folder")
 
   if filename != START_PIPELINE_FILENAME:
     return "", status.HTTP_204_NO_CONTENT
@@ -93,7 +90,7 @@ async def start_pipeline(request: Request, response: Response):
   if not gcs:
     gcs = storage.Client()
 
-  # Get List of Document Objects from the Output Bucket
+    # Get List of Document Objects from the Output Bucket
   source_bucket = gcs.get_bucket(bucket_name)
   blob_list = list(source_bucket.list_blobs(prefix=dirs))
   uid_list = []
@@ -104,32 +101,34 @@ async def start_pipeline(request: Request, response: Response):
   try:
     # Browse through output Forms and identify matching Processor for each Form
     for i, blob in enumerate(blob_list):
-      if blob.name and not blob.name.endswith('/') and blob.name != START_PIPELINE_FILENAME:
+      if blob.name and not blob.name.endswith(
+          '/') and blob.name != START_PIPELINE_FILENAME:
         mime_type = blob.content_type
         if mime_type not in MIME_TYPES:
           continue
-
-        Logger.info(f"case_id={case_id}, file_name={blob.name}")
+        _, blob_filename = split_uri_2_path_filename(blob.name)
+        Logger.info(
+          f"case_id={case_id}, file_path={blob.name}, file_name={blob_filename}")
 
         # Copy file into gs bucket
-        #TODO do it async
-        #create a record in database for uploaded document
+        # TODO do it async
+        # create a record in database for uploaded document
         output = create_document(case_id, blob.name, context)
         uid = output
         uid_list.append(uid)
 
-        #Copy document in GCS bucket
-        new_file_name = f"{case_id}/{uid}/{blob.name}"
+        # Copy document in GCS bucket
+        new_file_name = f"{case_id}/{uid}/{blob_filename}"
         Logger.info(f"Copying {blob.name} from {bucket_name} bucket as "
-              f"{new_file_name} into {BUCKET_NAME} bucket")
+                    f"{new_file_name} into {BUCKET_NAME} bucket")
 
-        result = copy_blob(bucket_name=bucket_name, source_blob_name=blob.name,
-                           destination_blob_name=new_file_name,
-                           dest_bucket_name=BUCKET_NAME)
-        #TODO do it async
-        # result = await run_in_threadpool(copy_blob, bucket_name, blob.name, new_file_name, BUCKET_NAME)
+        # result = copy_blob(bucket_name=bucket_name, source_blob_name=blob.name,
+        #                    destination_blob_name=new_file_name,
+        #                    dest_bucket_name=BUCKET_NAME)
+        # TODO do it async
+        result = await run_in_threadpool(copy_blob, bucket_name, blob.name, new_file_name, BUCKET_NAME)
         if result != STATUS_SUCCESS:
-          # Update the document upload in GCS as failed
+            # Update the document upload in GCS as failed
           document = Document.find_by_uid(uid)
           system_status = {
               "stage": "upload",
@@ -148,11 +147,11 @@ async def start_pipeline(request: Request, response: Response):
         Logger.info(f"File with case_id {case_id} and uid {uid}"
                     f" uploaded successfully in GCS bucket")
 
-        #Update the document upload as success in DB
+        # Update the document upload as success in DB
         document = Document.find_by_uid(uid)
         if document is not None:
           gcs_base_url = f"gs://{BUCKET_NAME}"
-          document.url = f"{gcs_base_url}/{case_id}/{uid}/{blob.name}"
+          document.url = f"{gcs_base_url}/{case_id}/{uid}/{blob_filename}"
           system_status = {
               "stage": "uploaded",
               "status": STATUS_SUCCESS,
