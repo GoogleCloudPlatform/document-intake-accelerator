@@ -24,6 +24,7 @@ locals {
   multiregion      = var.multiregion
   project_id       = var.project_id
   forms_gcs_path   = "${var.project_id}-pa-forms"
+  config_path      = "${var.project_id}-config"
   services = [
     "aiplatform.googleapis.com",           # Vertex AI
     "appengine.googleapis.com",            # AppEngine
@@ -216,6 +217,7 @@ module "eventarc" {
   cloudrun_endpoint     = module.cloudrun-start-pipeline.endpoint
   service_account_email = module.cloudrun-start-pipeline.service_account_email
   gcs_bucket            = local.forms_gcs_path
+
 }
 
 module "validation_bigquery" {
@@ -256,6 +258,7 @@ module "docai" {
   processors = {
     unemployment_form = "FORM_PARSER_PROCESSOR"
     claims_form       = "FORM_PARSER_PROCESSOR"
+    prior_auth_form   = "FORM_PARSER_PROCESSOR"
     driver_license    = "US_DRIVER_LICENSE_PROCESSOR"
     # utility_bill      = "UTILITY_PROCESSOR"
     # pay_stub        = "PAYSTUB_PROCESSOR"
@@ -287,6 +290,15 @@ resource "google_storage_bucket" "document-load" {
   uniform_bucket_level_access = true
 }
 
+# Bucket to store config
+resource "google_storage_bucket" "config" {
+  name                        = local.config_path
+  location                    = local.multiregion
+  storage_class               = "STANDARD"
+  uniform_bucket_level_access = true
+}
+
+
 resource "google_storage_bucket" "docai-output" {
   name                        = "${local.project_id}-docai-output"
   location                    = local.multiregion
@@ -313,12 +325,22 @@ resource "null_resource" "validation_rules" {
   }
 }
 
-# Copying rules forms into GCS bucket.
+# Copying pa-forms forms into GCS bucket.
 resource "null_resource" "pa-forms" {
   depends_on = [
     google_storage_bucket.document-load
   ]
   provisioner "local-exec" {
-    command = "gsutil -m cp ../../../data/pa-forms/* gs://${local.forms_gcs_path}/pa-forms"
+    command = "gsutil -m cp ../../../samples_data/pa-forms/* gs://${local.forms_gcs_path}/pa-forms"
+  }
+}
+
+# Copying pa-forms forms into GCS bucket.
+resource "null_resource" "pa-forms-test" {
+  depends_on = [
+    google_storage_bucket.document-load
+  ]
+  provisioner "local-exec" {
+    command = "gsutil -m cp ../../../sample_data/test/pa-form-42.pdf gs://${local.forms_gcs_path}/test/"
   }
 }

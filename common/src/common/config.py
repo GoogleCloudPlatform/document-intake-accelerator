@@ -13,17 +13,44 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from common.utils.helper import split_uri_2_bucket_prefix
+from google.cloud import storage
 
 """
 Config module to setup common environment
 """
 
 import os, json
+# API clients
+gcs = None
 
 
 def load_config(filename):
+  if filename.startswith("gs://"):
+    return load_from_gcs(filename)
+
   json_file = open(os.path.join(os.path.dirname(__file__), ".", filename))
   return json.load(json_file)
+
+
+def load_from_gcs(gcs_uri):
+  global gcs
+  if not gcs:
+    gcs = storage.Client()
+
+  try:
+    bucket_name, prefix = split_uri_2_bucket_prefix(gcs_uri)
+    bucket = gcs.get_bucket(bucket_name)
+    blob = bucket.get_blob(prefix)
+    data = json.loads(blob.download_as_text(encoding="utf-8"))
+    return data
+  except Exception as e:
+    print(f"Error: get_image_from_GCS: while obtaining file from GCS {e}")
+    return None
+
+
+
+
 
 
 # ========= Overall =============================
@@ -32,12 +59,14 @@ if PROJECT_ID != "":
   os.environ["GOOGLE_CLOUD_PROJECT"] = PROJECT_ID
 assert PROJECT_ID, "Env var PROJECT_ID is not set."
 
+
 REGION = "us-central1"
 PROCESS_TIMEOUT_SECONDS = 600
 
 #List of application forms and supporting documents
 APPLICATION_FORMS = ["unemployment_form"]
-SUPPORTING_DOCS = ["driver_license", "claims_form", "utility_bill", "pay_stub"]
+SUPPORTING_DOCS = ["driver_license", "claims_form", "utility_bill", "pay_stub",
+                   "prior_auth_form"]
 
 # Doc approval status, will reflect on the Frontend app.
 STATUS_APPROVED = "Approved"
@@ -77,21 +106,27 @@ assert CLASSIFICATION_ENDPOINT_ID, "CLASSIFICATION_ENDPOINT_ID is not defined."
 CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.85
 
 # Map to standardise predicted document class from classifier to
-# standard document_class values
 DOC_CLASS_STANDARDISATION_MAP = {
     "UE": "unemployment_form",
     "DL": "driver_license",
     "Claim": "claims_form",
     "Utility": "utility_bill",
-    "PayStub": "pay_stub"
+    "PayStub": "pay_stub",
+    "PriorAuth": "prior_auth_form",
 }
+# standard document_class values
 
 # ========= DocAI Parsers =======================
 
 # To add parsers, edit /terraform/enviroments/dev/main.tf
+PARSER_CONFIG_FILE = os.environ.get("PARSER_CONFIG_FILE", "parser_config.json")
 
-PARSER_CONFIG = load_config("parser_config.json")
-assert PARSER_CONFIG, "Unable to locate 'parser_config.json'"
+
+def get_parser_config():
+  parser_config = load_config(PARSER_CONFIG_FILE)
+  print(f"parser_config_file={PARSER_CONFIG_FILE}")
+  assert parser_config, f"Unable to locate '{PARSER_CONFIG_FILE}'"
+  return parser_config
 
 # ========= HITL and Frontend UI =======================
 
