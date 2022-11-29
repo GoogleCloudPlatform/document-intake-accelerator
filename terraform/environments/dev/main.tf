@@ -331,7 +331,7 @@ resource "null_resource" "pa-forms" {
     google_storage_bucket.document-load
   ]
   provisioner "local-exec" {
-    command = "gsutil -m cp ../../../samples_data/pa-forms/* gs://${local.forms_gcs_path}/pa-forms"
+    command = "gsutil -m cp ../../../sample_data/pa-forms/* gs://${local.forms_gcs_path}/pa-forms"
   }
 }
 
