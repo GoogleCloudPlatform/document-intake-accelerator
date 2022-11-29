@@ -40,3 +40,8 @@ spec:
             configMapKeyRef:
               name: env-vars
               key: DATABASE_PREFIX
+        - name: PARSER_CONFIG_FILE
+          valueFrom:
+            configMapKeyRef:
+              name: env-vars
+              key: PARSER_CONFIG_FILE
