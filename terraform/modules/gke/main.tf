@@ -109,7 +109,7 @@ resource "time_sleep" "wait_30_seconds" {
 
 # Creating a Kubernetes Service account for Workload Identity
 resource "kubernetes_service_account" "ksa" {
-  depends_on = [module.gke, time_sleep.wait_180_seconds]
+  depends_on = [module.gke, time_sleep.wait_30_seconds]
 
   metadata {
     name = "ksa"
