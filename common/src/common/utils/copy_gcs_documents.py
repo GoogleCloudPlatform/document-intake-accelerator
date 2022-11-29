@@ -23,6 +23,8 @@ from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 # pylint: disable = unused-variable
 def copy_blob(bucket_name, source_blob_name, destination_blob_name,
     dest_bucket_name=None, delete_original=False):
+  dest_bucket_name_str = bucket_name if not dest_bucket_name else dest_bucket_name
+  print(f"Coppying {source_blob_name} in bucket {bucket_name} to {destination_blob_name} inside bucket {dest_bucket_name_str}")
   storage_client = storage.Client()
   source_bucket = storage_client.bucket(bucket_name)
   source_blob = source_bucket.blob(source_blob_name)

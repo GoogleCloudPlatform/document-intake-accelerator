@@ -81,6 +81,7 @@ def correct_json_format_for_db(output_dict, input_json):
     input_json: list of dictionary json
   Output:
     input_json: list of dictionary json"""
+  print(f"input: {input_json}")
   # traverse input json
   for item in input_json:
     # traverse the keys in dictionary
@@ -89,4 +90,5 @@ def correct_json_format_for_db(output_dict, input_json):
       if item.get("entity") == entity:
         # reassign input json value to new one
         item["value"] = output_dict[0][entity]
+  print(f"output: {output_dict}")
   return input_json
