@@ -82,7 +82,9 @@ resource "google_eventarc_trigger" "pipeline-topic-trigger" {
   project         = var.project_id
   location        = "us"
   service_account = var.service_account_email
-
+  labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
   matching_criteria {
     attribute = "type"
     value     = "google.cloud.storage.object.v1.finalized"

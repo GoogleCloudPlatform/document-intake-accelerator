@@ -23,6 +23,9 @@ resource "google_storage_bucket" "log-bucket" {
   storage_class               = "NEARLINE"
   uniform_bucket_level_access = true
   force_destroy               = true
+  labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
 }
 
 # Creating a custom service account for cloud run

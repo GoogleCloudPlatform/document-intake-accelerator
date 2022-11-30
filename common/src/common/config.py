@@ -94,16 +94,16 @@ VALIDATION_TABLE = f"{PROJECT_ID}.validation.validation_table"
 
 # ========= Classification =======================
 # Endpoint Id where model is deployed.
-# TODO: Please update this to your deployed VertexAI model ID.
-VERTEX_AI_CONFIG = load_config("vertex_ai_config.json")
-assert VERTEX_AI_CONFIG, "Unable to locate 'vertex_ai_config.json'"
-
-CLASSIFICATION_ENDPOINT_ID = VERTEX_AI_CONFIG["endpoint_id"]
-assert CLASSIFICATION_ENDPOINT_ID, "CLASSIFICATION_ENDPOINT_ID is not defined."
-
-#Prediction Confidence threshold for the classifier to reject any prediction
-#less than the threshold value.
-CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.85
+# # TODO: Please update this to your deployed VertexAI model ID.
+# VERTEX_AI_CONFIG = load_config("vertex_ai_config.json")
+# assert VERTEX_AI_CONFIG, "Unable to locate 'vertex_ai_config.json'"
+#
+# CLASSIFICATION_ENDPOINT_ID = VERTEX_AI_CONFIG["endpoint_id"]
+# assert CLASSIFICATION_ENDPOINT_ID, "CLASSIFICATION_ENDPOINT_ID is not defined."
+#
+# #Prediction Confidence threshold for the classifier to reject any prediction
+# #less than the threshold value.
+# CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.85
 
 # Map to standardise predicted document class from classifier to
 DOC_CLASS_STANDARDISATION_MAP = {

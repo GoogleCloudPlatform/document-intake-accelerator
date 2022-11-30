@@ -3,11 +3,12 @@ set -e # Exit if error is detected during pipeline execution
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${DIR}"/SET
 gcloud config set project $PROJECT_ID
-gcloud auth login
-gcloud auth application-default login
-
+#gcloud auth login
+#gcloud auth application-default login
 
 export ORGANIZATION_ID=$(gcloud organizations list --format="value(name)")
+
+# For Argolis Only
 gcloud resource-manager org-policies disable-enforce constraints/compute.requireOsLogin --organization=$ORGANIZATION_ID
 gcloud resource-manager org-policies delete constraints/compute.vmExternalIpAccess --organization=$ORGANIZATION_ID
 
@@ -19,16 +20,11 @@ terraform init -backend-config=bucket=$TF_BUCKET_NAME
 
 terraform apply -target=module.project_services -target=module.service_accounts -auto-approve
 
-cd "${DIR}/terraform/environments/dev" || exit
 terraform apply
 
+bash ../../../setup/update_config.sh
+
 BUCKET="gs://${PROJECT_ID}"
-if gsutil ls | grep "${BUCKET}"; then
-    :
-else
-    echo "Creating GCS bucket for pipeline: [$BUCKET]..."
-    gsutil mb -p "$PROJECT_ID" "${BUCKET}"/
-fi
 gsutil cp "${DIR}"/common/src/common/parser_config.json ${BUCKET}/config/parser_config.json
 # TODO Add instructions on Cloud DNS Setup for API_DOMAIN
 
