@@ -83,14 +83,28 @@ module "gke" {
       initial_node_count = "1"
       enable_secure_boot = true
       node_locations     = var.node_locations
+
+//      resource_labels = {
+//        goog-packaged-solution = "prior-authorization"
+//      }
     },
+
   ]
   node_pools_oauth_scopes = {
     node-pool-01 = [
       "https://www.googleapis.com/auth/cloud-platform",
     ]
   }
+  node_pools_labels = {
+    all = {
+      goog-packaged-solution = "prior-authorization"
+    }
 
+    default-node-pool = {
+      default-node-pool = true
+      goog-packaged-solution = "prior-authorization"
+    }
+  }
   node_pools_metadata = {
     node-pool-01 = {
       disable-legacy-endpoints = "true"

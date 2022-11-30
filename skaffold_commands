@@ -1,0 +1,3 @@
+skaffold build --file-output artifacts.json --default-repo=gcr.io/${PROJECT_ID}
+cat artifacts.json | jq
+skaffold deploy --profile dev -default-repo=gcr.io/${PROJECT_ID} --build-artifacts artifacts.json --tail

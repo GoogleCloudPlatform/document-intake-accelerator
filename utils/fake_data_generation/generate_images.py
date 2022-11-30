@@ -28,7 +28,7 @@ from datetime import datetime
 
 
 async def run_browser(config, data_list, **options):
-  browser = await launch(headless=False)
+  browser = await launch(headless=True)
   page = await browser.newPage()
   debug = options.get("debug", True)
   output_folder = options.get("output_folder", "./")
@@ -63,10 +63,12 @@ async def run_page(page, config, data_row, screenshot_filename, **options):
   font_option = random.choices(config.get("font_options", []))[0]
   font_tag = f'<link href="{font_option.get("font_link")}" rel="stylesheet">'
   font_size = font_option.get("font_size", 14)
+  text_color = font_option.get("text_color", "black")
   await prepend_text_to_tag(page, "head", font_tag)
 
   # Adding image width class to style tag.
   css_class = """
+
     .viewport {
       width: """ + str(viewport_width) + """px;
     }
@@ -74,6 +76,12 @@ async def run_page(page, config, data_row, screenshot_filename, **options):
     .custom-font {
       font-family: \\'""" + font_option.get("font_family") + """\\', serif;
       font-size: """ + str(font_size) + """;
+      color: """ + str(text_color) + """;
+    }
+
+    .float-text{
+      max-width: """ + str(viewport_width-120) + """;
+      overflow-wrap: break-word;
     }
   """
   css_class = "\\n" + css_class.replace("\n", " ") + "\\n"

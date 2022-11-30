@@ -17,20 +17,23 @@
 
 #Creating a cloud run service
 
-resource "google_storage_bucket" "queue-log-bucket" {
-  name                        = "${var.project_id}-queue-log"
+resource "google_storage_bucket" "log-bucket" {
+  name                        = "${var.project_id}-${var.name}-log"
   location                    = var.region
   storage_class               = "NEARLINE"
   uniform_bucket_level_access = true
   force_destroy               = true
+  labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
 }
 
 # Creating a custom service account for cloud run
 module "cloud-run-service-account" {
   source       = "github.com/terraform-google-modules/cloud-foundation-fabric/modules/iam-service-account/"
   project_id   = var.project_id
-  name         = "cloudrun-sa"
-  display_name = "This is service account for cloud run"
+  name         = "cloudrun-${var.name}-sa"
+  display_name = "This is service account for cloud run ${var.name}"
 
   iam = {
     "roles/iam.serviceAccountUser" = []
@@ -39,6 +42,7 @@ module "cloud-run-service-account" {
   iam_project_roles = {
     (var.project_id) = [
       "roles/eventarc.eventReceiver",
+      "roles/pubsub.publisher",
       "roles/firebase.admin",
       "roles/firestore.serviceAgent",
       "roles/iam.serviceAccountUser",
@@ -57,7 +61,7 @@ data "archive_file" "common-zip" {
 }
 resource "null_resource" "build-common-image" {
   triggers = {
-    src_hash = "${data.archive_file.common-zip.output_sha}"
+    src_hash = data.archive_file.common-zip.output_sha
   }
 
   provisioner "local-exec" {
@@ -65,7 +69,7 @@ resource "null_resource" "build-common-image" {
     command = join(" ", [
       "gcloud builds submit",
       "--config=cloudbuild.yaml",
-      "--gcs-log-dir=gs://${var.project_id}-queue-log",
+      "--gcs-log-dir=gs://${var.project_id}-${var.name}-log",
       join("", [
         "--substitutions=",
         "_PROJECT_ID='${var.project_id}',",
@@ -78,9 +82,10 @@ resource "null_resource" "build-common-image" {
 # Build Cloudrun image
 data "archive_file" "cloudrun-queue-zip" {
   type        = "zip"
-  source_dir  = "../../../cloudrun/queue"
-  output_path = ".terraform/cloudrun-queue.zip"
+  source_dir  = "../../../cloudrun/${var.name}"
+  output_path = ".terraform/cloudrun-${var.name}.zip"
 }
+
 resource "null_resource" "build-cloudrun-image" {
   depends_on = [
     null_resource.build-common-image,
@@ -91,15 +96,15 @@ resource "null_resource" "build-cloudrun-image" {
   }
 
   provisioner "local-exec" {
-    working_dir = "../../../cloudrun/queue"
+    working_dir = "../../../cloudrun/${var.name}"
     command = join(" ", [
       "gcloud builds submit",
       "--config=cloudbuild.yaml",
-      "--gcs-log-dir=gs://${var.project_id}-queue-log",
+      "--gcs-log-dir=gs://${var.project_id}-${var.name}-log",
       join("", [
         "--substitutions=",
         "_PROJECT_ID='${var.project_id}',",
-        "_IMAGE='queue-image'",
+        "_IMAGE='${var.name}-image'",
       ])
     ])
   }
@@ -115,13 +120,13 @@ resource "google_cloud_run_service" "cloudrun-service" {
     null_resource.build-cloudrun-image,
   ]
 
-  name     = var.name
+  name     = "${var.name}-cloudrun"
   location = var.region
 
   template {
     spec {
       containers {
-        image = "gcr.io/${var.project_id}/queue-image:latest" #Image to connect pubsub to cloud run to processtask API and fetch data from firestore
+        image = "gcr.io/${var.project_id}/${var.name}-image:latest" #Image to connect pubsub to cloud run to processtask API and fetch data from firestore
         ports {
           container_port = 8000
         }

@@ -22,6 +22,9 @@ resource "google_bigquery_dataset" "data_set" {
   friendly_name = "Validation Dataset"
   description   = "BQ dataset for validation process"
   location      = "US"
+  labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
 }
 
 resource "google_bigquery_table" "table_id" {
