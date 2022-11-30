@@ -42,10 +42,16 @@ export BASE_DIR=$(pwd)
 # A custom domain like your-domain.com. If you do not have one, use temporally a legal name as a placeholder, do not leave it blank,
 and later follow steps as described below for using the Ingress IP address instead.
 export API_DOMAIN=<Your Domain>
+```
 
+```shell
+gcloud config set project $PROJECT_ID
+```
+
+Run following commands locally (not required for Cloud Shell)
+```shell
 gcloud auth application-default login
 gcloud auth application-default set-quota-project $PROJECT_ID
-gcloud config set project $PROJECT_ID
 ```
 
 ### GCP Organization policy
