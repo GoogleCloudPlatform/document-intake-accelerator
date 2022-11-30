@@ -43,7 +43,7 @@ function Headers() {
               <Col className="col-10">
                 <Link className="overviewLabel" to="/" >
                   <Image src={gCloud} width='70px' height='40px' />
-                  <label style={{ fontSize: '18px', marginBottom: '10px', cursor: 'pointer' }}>Automated Document Processing</label>
+                  <label className="app-title" style={{ fontSize: '24px', marginBottom: '10px', cursor: 'pointer' }}>Document Intake Accelerator</label>
                 </Link>
               </Col>
 

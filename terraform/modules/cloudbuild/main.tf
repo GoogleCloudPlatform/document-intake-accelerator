@@ -21,7 +21,9 @@ resource "google_storage_bucket" "cloudbuild-logs" {
   storage_class = "NEARLINE"
 
   uniform_bucket_level_access = true
-
+  labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
   lifecycle_rule {
     condition {
       age = 356

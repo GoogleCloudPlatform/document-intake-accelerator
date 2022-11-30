@@ -1,0 +1,5 @@
+google-cloud-storage
+google-cloud-pubsub
+gunicorn==20.1.0
+uvicorn==0.13.4
+fastapi==0.62.0

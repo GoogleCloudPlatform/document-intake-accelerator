@@ -452,15 +452,15 @@ function DocumentReview() {
                 {inputData.entities === null ? '' :
                   <Row className="labelVerticalLine">
                     <Col className={["col-6", "verticalLines"].join(" ")}>
-                      <label className="labelBold">Fields</label>
+                      <label className="largeScore">Fields</label>
                     </Col>
 
                     <Col className={["col-3", "verticalLines"].join(" ")}>
-                      <label className="labelBold">Matching</label>
+                      <label className="largeScore">Matching</label>
                     </Col>
 
                     <Col className="col-3">
-                      <label className="labelBold">Validation</label>
+                      <label className="largeScore">Validation</label>
                     </Col>
 
                   </Row>

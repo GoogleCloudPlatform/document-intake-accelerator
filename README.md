@@ -2,8 +2,6 @@
 
 > A pre-packaged and customizable solution to accelerate the development of end-to-end document processing workflow incorporating Document AI parsers and other GCP products (Firestore, BigQuery, GKE, etc). The goal is to accelerate the development efforts in document workflow with many ready-to-use components.
 
-<img width="856" alt="image" src="https://user-images.githubusercontent.com/1644724/201716657-00b070e7-728a-42f8-98a5-7520ee43e54d.png">
-
 ## Key features
 - End-to-end workflow management: document classification, extraction, validation, profile matching and Human-in-the-loop review.
 - API endpoints for integration with other systems.
@@ -48,6 +46,12 @@ export API_DOMAIN=<Your Domain>
 gcloud auth application-default login
 gcloud auth application-default set-quota-project $PROJECT_ID
 gcloud config set project $PROJECT_ID
+```
+
+Make sure to update to the latest gcloud tool:
+```
+# Tested with gcloud v400.0.0
+gcloud components update
 ```
 
 ### GCP Organization policy
@@ -125,15 +129,13 @@ kubectl describe ingress | grep Address
 - Change the TF_VAR_api_domain to this Ingress endpoint, and re-deploy CloudRun.
   ```
   export TF_VAR_api_domain=$(kubectl describe ingress | grep Address | awk '{print $2}')
-  
-  # in terraform/environments/dev folder
   terraform apply -target=module.cloudrun
   ```
 
 ### Enable Firebase Auth
 
 - Before enabling firebase, make sure [Firebase Management API](https://console.cloud.google.com/apis/api/firebase.googleapis.com/metrics) should be disabled in GCP API & Services.
-- Go to [Firebase Console UI](console.firebase.google.com) to add your existing project. Select “Pay as you go” and Confirm plan.
+- Go to Firebase Console UI to add your existing project. Select “Pay as you go” and Confirm plan.
 - On the left panel of Firebase Console UI, go to Build > Authentication, and click Get Started.
 - Select Google in the Additional providers
 - Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.
@@ -188,47 +190,6 @@ Add an A Record in your DNS setting to point to the Ingress IP Address, e.g. in 
 ```
 terraform import module.firebase.google_app_engine_application.firebase_init $PROJECT_ID
 ```
-#### Terraform does not have a package available - Mac M1
-```shell
-│ Error: Incompatible provider version
-│ 
-│ Provider registry.terraform.io/hashicorp/template v2.2.0 does not have a package available for your current platform, darwin_arm64.
-│ 
-│ Provider releases are separate from Terraform CLI releases, so not all providers are available for all platforms. Other versions of this provider may have different platforms supported.
-╵
-
-```
-**Solution**: Use [m1-terraform-provider-helper](Install m1-terraform-provider-helper)
-
-Remove any existing Terraform binary (/usr/bin/terraform and/or /usr/local/bin/terraform)
-Install [m1-terraform-provider-helper](Install m1-terraform-provider-helper) 
-```shell
-brew install kreuzwerker/taps/m1-terraform-provider-helper
-```
-Install Terraform
-```shell
-brew tap hashicorp/tap
-brew install hashicorp/tap/terraform
-```
-
-Install the hashicorp/template version v2.2.0
-```shell
-m1-terraform-provider-helper activate
-4.1 m1-terraform-provider-helper install hashicorp/template -v v2.2.0
-```
-
-
-
-#### Terraform apply exits with Error
-Most likely, you will get following error when running terraform apply: 
-```
-Error: Post "http://localhost/api/v1/namespaces/default/serviceaccounts": dial tcp [::1]:80: connect: connection refused
-│
-│   with module.gke.kubernetes_service_account.ksa,
-│   on ../../modules/gke/main.tf line 111, in resource "kubernetes_service_account" "ksa":
-│  111: resource "kubernetes_service_account" "ksa" {
-```
-This is due to racing conditions, and to resolve the error, just re-run `terraform apply` command.
 
 ### CloudRun Troubleshoot
 
@@ -507,7 +468,3 @@ Test for PR changes
 ### (For Developers) Microservices Assumptions
 * app_registration_id used on the ui is referred as case_id in the API code
 * case_id is referred as external case_id in the firestore
-
-## Known Issues (TODO)
-
-* Resolve ksa terraform deploy failure, which requires to run terraform apply twice

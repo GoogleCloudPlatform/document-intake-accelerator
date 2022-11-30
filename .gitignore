@@ -25,3 +25,6 @@ ui-debug.log
 # tf lock files
 .terraform
 .terraform.lock.hcl
+.gitignore
+utils/fake_data_generation/examples/pa_form_generator/out
+utils/fake_data_generation/examples/pa_form_generator/out/*

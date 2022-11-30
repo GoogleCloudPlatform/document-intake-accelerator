@@ -22,8 +22,8 @@ import os
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-PROJECT_ID = "autodocprocessing-demo"
-DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", None)
+PROJECT_ID = os.getenv("PROJECT_ID", None)
+DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
 
 # Initializing Firebase client.
 firebase_admin.initialize_app(credentials.ApplicationDefault(), {

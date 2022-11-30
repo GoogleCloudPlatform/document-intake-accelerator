@@ -24,7 +24,8 @@ html {
 }
 
 body {
-  background-color: #F5F5F5 !important;
+  background-color: #eeeeee !important;
+  overflow: scroll;
 }
 
 .nav .nav-link.active {
@@ -231,4 +232,28 @@ input[type="submit"]:hover {
   border: 0px;
   padding: 10px;
   border-radius: 10px;
+}
+
+input,
+select,
+.dzu-submitButton,
+.labels {
+  font-size: 18px !important;
+}
+
+.app-title {
+  font-size: 24px !important;
+}
+
+.overviewLabel img {
+  margin-bottom: 10px;
+}
+
+button {
+  font-size: 18px !important;
+  border-radius: 100px !important;
+}
+
+.largeScore {
+  font-size: 30px !important;
 }

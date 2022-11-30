@@ -49,7 +49,6 @@
     border-radius: 30px;
     padding: 3px 15px;
     border: none;
-    font-Size: 15px !important;
     box-shadow: none;
     margin: 10px 3px;
 }
@@ -76,6 +75,7 @@
 .subTitle {
     text-transform: capitalize !important;
     font-weight: bolder;
+    font-size: 18px;
     padding-left: 0px;
     margin-left: -10px;
 }
@@ -151,6 +151,11 @@
     text-align: start;
     position: relative;
     /* bottom:9px; */
+}
+
+.verticalLinesButton a {
+    font-size: 18px !important;
+    border-radius: 100px !important;
 }
 
 .applicationVerticalLine {

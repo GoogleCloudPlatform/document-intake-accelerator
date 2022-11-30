@@ -41,7 +41,12 @@ const docclasstype=[
     'value':'driver_license',
     'doc_type':'Supporting Documents',
     'doc_class': 'Driver License'
-}
+},
+{
+    'value':'prior_auth_form',
+    'doc_type':'Supporting Documents',
+    'doc_class': 'Prior-authorization Form'
+},
 ]
 
 const sorting=docclasstype.sort(function (a, b) {

@@ -109,13 +109,13 @@ async def publish_msg(request: Request, response: Response):
       return response
 
   if doc_count > int(os.environ["MAX_UPLOADED_DOCS"]):
-    print(f"unacknowledge: {response.body}")
+    print(f"unacknowledged: {response.body}")
     response.body = "Message not acknowledged"
     response.status_code = status.HTTP_400_BAD_REQUEST
     return response
 
   # No Content
-  return ("", status.HTTP_204_NO_CONTENT)
+  return "", status.HTTP_204_NO_CONTENT
 
 
 def get_count():

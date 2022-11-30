@@ -23,6 +23,8 @@ locals {
   firestore_region = var.firestore_region
   multiregion      = var.multiregion
   project_id       = var.project_id
+  forms_gcs_path   = "${var.project_id}-pa-forms"
+  config_path      = "${var.project_id}-config"
   services = [
     "aiplatform.googleapis.com",           # Vertex AI
     "appengine.googleapis.com",            # AppEngine
@@ -113,17 +115,31 @@ module "ingress" {
   cors_allow_origin = "http://localhost:4200,http://localhost:3000,http://${var.api_domain},https://${var.api_domain}"
 }
 
-module "cloudrun" {
+module "cloudrun-queue" {
   depends_on = [
     time_sleep.wait_for_project_services,
     module.vpc_network
   ]
   source     = "../../modules/cloudrun"
   project_id = var.project_id
-  name       = "queue-cloudrun"
+  name       = "queue"
   region     = var.region
   api_domain = var.api_domain
 }
+
+module "cloudrun-start-pipeline" {
+  depends_on = [
+    time_sleep.wait_for_project_services,
+    module.vpc_network
+  ]
+  source     = "../../modules/cloudrun"
+  project_id = var.project_id
+  name       = "startpipeline"
+  region     = var.region
+  api_domain = var.api_domain
+}
+
+
 # Displaying the cloudrun endpoint
 data "google_cloud_run_service" "queue-run" {
   depends_on = [
@@ -134,21 +150,74 @@ data "google_cloud_run_service" "queue-run" {
   location = var.region
 }
 
+data "google_cloud_run_service" "startpipeline-run" {
+  depends_on = [
+    time_sleep.wait_for_project_services,
+    module.vpc_network
+  ]
+  name     = "startpipeline-cloudrun"
+  location = var.region
+}
+
 module "pubsub" {
   depends_on = [
     time_sleep.wait_for_project_services,
     module.service_accounts,
-    module.cloudrun,
+    module.cloudrun-queue,
     data.google_cloud_run_service.queue-run
   ]
   source                = "../../modules/pubsub"
   topic                 = "queue-topic"
   project_id            = var.project_id
   region                = var.region
-  cloudrun_name         = module.cloudrun.name
-  cloudrun_location     = module.cloudrun.location
-  cloudrun_endpoint     = module.cloudrun.endpoint
-  service_account_email = module.cloudrun.service_account_email
+  cloudrun_name         = module.cloudrun-queue.name
+  cloudrun_location     = module.cloudrun-queue.location
+  cloudrun_endpoint     = module.cloudrun-queue.endpoint
+  service_account_email = module.cloudrun-queue.service_account_email
+}
+
+# give backup SA rights on bucket
+resource "google_storage_bucket_iam_binding" "cloudrun_sa_storage_binding" {
+  bucket = google_storage_bucket.document-load.name
+  role   = "roles/storage.admin"
+  members = [
+    "serviceAccount:${module.cloudrun-start-pipeline.service_account_email}",
+  ]
+  depends_on = [
+    module.cloudrun-start-pipeline,
+    google_storage_bucket.document-load
+  ]
+}
+
+data "google_storage_project_service_account" "gcs_account" {
+}
+
+# To use GCS CloudEvent triggers, the GCS service account requires the Pub/Sub Publisher(roles/pubsub.publisher) IAM role in the specified project.
+# (See https://cloud.google.com/eventarc/docs/run/quickstart-storage#before-you-begin)
+resource "google_project_iam_member" "gcs_pubsub_publishing" {
+  project = data.google_project.project.project_id
+  role    = "roles/pubsub.publisher"
+  member  = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
+}
+
+module "eventarc" {
+  depends_on = [
+    time_sleep.wait_for_project_services,
+    module.service_accounts,
+    module.cloudrun-start-pipeline,
+    data.google_cloud_run_service.startpipeline-run,
+    google_storage_bucket_iam_binding.cloudrun_sa_storage_binding,
+    google_project_iam_member.gcs_pubsub_publishing
+  ]
+  source                = "../../modules/eventarc"
+  project_id            = var.project_id
+  region                = var.region
+  cloudrun_name         = module.cloudrun-start-pipeline.name
+  cloudrun_location     = module.cloudrun-start-pipeline.location
+  cloudrun_endpoint     = module.cloudrun-start-pipeline.endpoint
+  service_account_email = module.cloudrun-start-pipeline.service_account_email
+  gcs_bucket            = local.forms_gcs_path
+
 }
 
 module "validation_bigquery" {
@@ -158,21 +227,21 @@ module "validation_bigquery" {
   source = "../../modules/bigquery"
 }
 
-module "vertex_ai" {
-  depends_on = [
-    time_sleep.wait_for_project_services,
-    google_storage_bucket.default,
-  ]
-  source         = "../../modules/vertex_ai"
-  project_id     = var.project_id
-  region         = var.region
-  model_name     = "classification"
-  model_gcs_path = "gs://${google_storage_bucket.default.name}"
-  # See https://cloud.google.com/vertex-ai/docs/predictions/pre-built-containers
-  image_uri         = "${var.multiregion}-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-8:latest"
-  accelerator_param = ""
-  # accelerator_param = "--accelerator=count=2,type=nvidia-tesla-t4"
-}
+//module "vertex_ai" {
+//  depends_on = [
+//    time_sleep.wait_for_project_services,
+//    google_storage_bucket.default,
+//  ]
+//  source         = "../../modules/vertex_ai"
+//  project_id     = var.project_id
+//  region         = var.region
+//  model_name     = "classification"
+//  model_gcs_path = "gs://${google_storage_bucket.default.name}"
+//  # See https://cloud.google.com/vertex-ai/docs/predictions/pre-built-containers
+//  image_uri         = "${var.multiregion}-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-8:latest"
+//  accelerator_param = ""
+//  # accelerator_param = "--accelerator=count=2,type=nvidia-tesla-t4"
+//}
 
 # ================= Document AI Parsers ====================
 
@@ -189,6 +258,7 @@ module "docai" {
   processors = {
     unemployment_form = "FORM_PARSER_PROCESSOR"
     claims_form       = "FORM_PARSER_PROCESSOR"
+    prior_auth_form   = "FORM_PARSER_PROCESSOR"
     driver_license    = "US_DRIVER_LICENSE_PROCESSOR"
     # utility_bill      = "UTILITY_PROCESSOR"
     # pay_stub        = "PAYSTUB_PROCESSOR"
@@ -210,6 +280,24 @@ resource "google_storage_bucket" "document-upload" {
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
 }
+
+
+# Bucket to process batch documents on START_PIPELINE
+resource "google_storage_bucket" "document-load" {
+  name                        = local.forms_gcs_path
+  location                    = local.multiregion
+  storage_class               = "STANDARD"
+  uniform_bucket_level_access = true
+}
+
+# Bucket to store config
+resource "google_storage_bucket" "pa-config" {
+  name                        = local.config_path
+  location                    = local.multiregion
+  storage_class               = "STANDARD"
+  uniform_bucket_level_access = true
+}
+
 
 resource "google_storage_bucket" "docai-output" {
   name                        = "${local.project_id}-docai-output"
@@ -233,6 +321,27 @@ resource "null_resource" "validation_rules" {
     google_storage_bucket.default
   ]
   provisioner "local-exec" {
-    command = "gsutil cp ../../../common/src/common/validation_rules/* gs://${var.project_id}/Validation"
+    command = "gsutil -m cp ../../../common/src/common/validation_rules/* gs://${var.project_id}/Validation"
   }
 }
+
+# Copying pa-forms forms into GCS bucket.
+resource "null_resource" "pa-forms" {
+  depends_on = [
+    google_storage_bucket.document-load
+  ]
+  provisioner "local-exec" {
+    command = "gsutil -m cp ../../../sample_data/pa-forms/* gs://${local.forms_gcs_path}/pa-forms"
+  }
+}
+
+# Copying pa-forms forms into GCS bucket.
+resource "null_resource" "pa-forms-test" {
+  depends_on = [
+    google_storage_bucket.document-load
+  ]
+  provisioner "local-exec" {
+    command = "gsutil -m cp ../../../sample_data/test/CVS-Global-Prior-Authorization-Form.pdf gs://${local.forms_gcs_path}/test/"
+  }
+}
+

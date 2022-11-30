@@ -16,5 +16,11 @@
         "parser_name": "unemployment_form",
         "parser_type": "FORM_PARSER_PROCESSOR",
         "processor_id": "projects/$PROJECT_ID/locations/us/processors/$<docai-processor-id3>"
+    },
+    "prior_auth_form": {
+        "location": "us",
+        "parser_name": "prior_auth_form",
+        "parser_type": "FORM_PARSER_PROCESSOR",
+        "processor_id": "projects/$PROJECT_ID/locations/us/processors/$<docai-processor-id4>"
     }
 }
