@@ -78,7 +78,7 @@ class DocClassifier:
     """
 
     # We will classify all documents as Prior-Auth Right Now
-    predicted_class = "prior_auth_form"
+    predicted_class = "PriorAuth"
     predicted_score = 1.0
     # # contains output image path
     # img_path = self.splitter.split_save2img(page_num=page_num)

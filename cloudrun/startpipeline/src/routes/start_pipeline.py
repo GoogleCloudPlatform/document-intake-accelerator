@@ -79,7 +79,7 @@ async def start_pipeline(request: Request, response: Response):
   dirs, filename = split_uri_2_path_filename(file_uri)
 
   Logger.info(
-      f"Received event for  bucket - {bucket_name}, file added {file_uri} , filename:  {filename}")
+      f"Received event for  bucket - {bucket_name}, file added {file_uri}, filename:  {filename}")
   Logger.info(
       f"Starting Pipeline To process documents inside {bucket_name} bucket and {dirs} folder")
 
@@ -91,8 +91,7 @@ async def start_pipeline(request: Request, response: Response):
     gcs = storage.Client()
 
     # Get List of Document Objects from the Output Bucket
-  source_bucket = gcs.get_bucket(bucket_name)
-  blob_list = list(source_bucket.list_blobs(prefix=dirs))
+  blob_list = gcs.list_blobs(bucket_name, prefix=dirs + "/")
   uid_list = []
   message_list = []
   # generate a case_id
@@ -100,18 +99,15 @@ async def start_pipeline(request: Request, response: Response):
 
   try:
     # Browse through output Forms and identify matching Processor for each Form
-    for i, blob in enumerate(blob_list):
-      if blob.name and not blob.name.endswith(
-          '/') and blob.name != START_PIPELINE_FILENAME:
+    for blob in blob_list:
+      if blob.name and not blob.name.endswith('/') and blob.name != START_PIPELINE_FILENAME:
         mime_type = blob.content_type
         if mime_type not in MIME_TYPES:
           continue
-        _, blob_filename = split_uri_2_path_filename(blob.name)
+        d, blob_filename = split_uri_2_path_filename(blob.name)
         Logger.info(
           f"case_id={case_id}, file_path={blob.name}, file_name={blob_filename}")
 
-        # Copy file into gs bucket
-        # TODO do it async
         # create a record in database for uploaded document
         output = create_document(case_id, blob.name, context)
         uid = output
@@ -122,10 +118,6 @@ async def start_pipeline(request: Request, response: Response):
         Logger.info(f"Copying {blob.name} from {bucket_name} bucket as "
                     f"{new_file_name} into {BUCKET_NAME} bucket")
 
-        # result = copy_blob(bucket_name=bucket_name, source_blob_name=blob.name,
-        #                    destination_blob_name=new_file_name,
-        #                    dest_bucket_name=BUCKET_NAME)
-        # TODO do it async
         result = await run_in_threadpool(copy_blob, bucket_name, blob.name, new_file_name, BUCKET_NAME)
         if result != STATUS_SUCCESS:
             # Update the document upload in GCS as failed

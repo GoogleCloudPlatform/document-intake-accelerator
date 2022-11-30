@@ -148,6 +148,7 @@ def filter_documents(configs: List[Dict]):
     uid = config.get("uid")
     gcs_url = config.get("gcs_url")
     cl_result = get_classification(case_id, uid, gcs_url)
+    print(f"status_code={cl_result.status_code}, json={cl_result.json()}")
     if cl_result.status_code == 200:
       document_type = cl_result.json().get("doc_type")
       document_class = cl_result.json().get("doc_class")
