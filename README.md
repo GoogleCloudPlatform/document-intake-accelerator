@@ -48,12 +48,6 @@ gcloud auth application-default set-quota-project $PROJECT_ID
 gcloud config set project $PROJECT_ID
 ```
 
-Make sure to update to the latest gcloud tool:
-```
-# Tested with gcloud v400.0.0
-gcloud components update
-```
-
 ### GCP Organization policy
 
 Run the following commands to update Organization policies:
