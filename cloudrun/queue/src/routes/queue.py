@@ -40,7 +40,6 @@ router = APIRouter(prefix="/queue", tags=["Queue"])
 @router.post("/publish")
 async def publish_msg(request: Request, response: Response):
   Logger.info(f"PROCESS_TASK_URL = {PROCESS_TASK_URL}")
-  print("PROCESS_TASK_URL = {PROCESS_TASK_URL}")
 
   body = await request.body()
   if not body or body == "":

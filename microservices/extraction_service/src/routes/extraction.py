@@ -47,7 +47,7 @@ async def extraction(case_id: str, uid: str, doc_class: str, document_type: str,
             404 : Parser not available for given document
       """
   try:
-    Logger.info(f"extraction with case_id={case_id}, uid={uid}, "
+    Logger.info(f"extraction_api  with case_id={case_id}, uid={uid}, "
                 f"doc_class={doc_class}, document_type={document_type}, "
                 f"context={context}, gcs_url={gcs_url}")
     client = bq_client()
@@ -62,14 +62,17 @@ async def extraction(case_id: str, uid: str, doc_class: str, document_type: str,
     # extraction_output.append("double key extraction")
     # extraction_output =  tuple(extraction_output)
     is_tuple = isinstance(extraction_output, tuple)
+    Logger.info(f"extraction_api extraction_output={extraction_output}")
     if is_tuple and isinstance(extraction_output[0], list):
       #call the format_data_bq function to format data to be
       # inserted in Bigquery
       entities_for_bq = format_data_for_bq(extraction_output[0])
+      Logger.info("Streaming data to BigQuery...")
       #stream_document_to_bigquery updates data to bigquery
       bq_update_status = stream_document_to_bigquery(client, case_id, uid,
                                                      doc_class, document_type,
                                                      entities_for_bq)
+      Logger.info(f"returned status {bq_update_status}")
       #update_extraction_status updates data to document collection
       db_update_status = update_extraction_status(case_id, uid, STATUS_SUCCESS,
                                                   extraction_output[0],
@@ -86,7 +89,7 @@ async def extraction(case_id: str, uid: str, doc_class: str, document_type: str,
                        f"successfully extracted"
         }
       else:
-        Logger.error("Extraction database updation failed")
+        Logger.error("Extraction database update failed")
         err = traceback.format_exc().replace("\n", " ")
         Logger.error(err)
         raise HTTPException(status_code=500)

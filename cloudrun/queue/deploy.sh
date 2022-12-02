@@ -2,8 +2,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PWD=$(pwd)
 source "$DIR/../../SET"
 REGION=us-central1
-NAME="start-pipeline"
-
+NAME="queue"
 IMAGE="$NAME"
 CLOUD_RUN="${NAME}-cloudrun"
 SERVICE_ACCOUNT="cloudrun-${NAME}-sa@$PROJECT_ID.iam.gserviceaccount.com"
@@ -17,8 +16,6 @@ cd "${DIR}" || exit
 # Build
 gcloud builds submit --region=$REGION  --substitutions=_IMAGE=${IMAGE},_PROJECT_ID=${PROJECT_ID}
 gcloud run deploy ${CLOUD_RUN} --image="gcr.io/${PROJECT_ID}/${IMAGE}" \
- --allow-unauthenticated   --service-account=${SERVICE_ACCOUNT}   --set-env-vars=API_DOMAIN=${API_DOMAIN}   --set-env-vars=PROJECT_ID=${PROJECT_ID}
+ --allow-unauthenticated   --service-account=${SERVICE_ACCOUNT}   --set-env-vars=API_DOMAIN=${API_DOMAIN}   --set-env-vars=PROJECT_ID=${PROJECT_ID} --set-env-vars=MAX_UPLOADED_DOCS=10
 
-# trigger batch upload
-bash "$DIR/start_pipeline.sh" 'test'
 cd "${PWD}" || exit

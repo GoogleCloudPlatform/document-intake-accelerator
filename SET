@@ -1,22 +1,15 @@
-export PROJECT_ID=pa-document-ai
+echo "Using PROJECT_ID=$PROJECT_ID and API_DOMAIN=$API_DOMAIN"
 export REGION=us-central1
-#export ADMIN_EMAIL=evekhm@google.com
-export ADMIN_EMAIL=admin@evekhm.altostrat.com
-export API_DOMAIN=evekhm.demo.altostrat.com
-#####################################
-
-
 export BASE_DIR=$(pwd)
 
 # A custom domain like your-domain.com, or leave it blank for using the Ingress IP address instead.
 export TF_LOG_PATH="$BASE_DIR"/tf.log
 #export TF_LOG="DEBUG"
 export TF_VAR_api_domain=$API_DOMAIN
-export TF_VAR_admin_email=$ADMIN_EMAIL
 
 export TF_VAR_project_id=$PROJECT_ID
 export TF_BUCKET_NAME="${PROJECT_ID}-tfstate"
 export TF_BUCKET_LOCATION="us"
 
-# TODO put inside terraform
+# Needs terraform output
 export PARSER_CONFIG_FILE="gs://${PROJECT_ID}/config/parser_config.json"

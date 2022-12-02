@@ -83,10 +83,6 @@ module "gke" {
       initial_node_count = "1"
       enable_secure_boot = true
       node_locations     = var.node_locations
-
-//      resource_labels = {
-//        goog-packaged-solution = "prior-authorization"
-//      }
     },
 
   ]
@@ -116,14 +112,16 @@ module "gke" {
   }
 }
 
-resource "time_sleep" "wait_30_seconds" {
+
+resource "time_sleep" "wait_for_gke" {
   depends_on      = [module.gke]
-  create_duration = "30s"
+  create_duration = "120s"
 }
+
 
 # Creating a Kubernetes Service account for Workload Identity
 resource "kubernetes_service_account" "ksa" {
-  depends_on = [module.gke, time_sleep.wait_30_seconds]
+  depends_on = [module.gke, time_sleep.wait_for_gke]
 
   metadata {
     name = "ksa"

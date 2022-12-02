@@ -300,7 +300,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
 
 def extract_entities(gcs_doc_path: str, doc_type: str, context: str):
   """
-  This function calls specialed parser or form parser depends on document type
+  This function calls specialized parser or form parser depends on document type
 
   Parameters
   ----------

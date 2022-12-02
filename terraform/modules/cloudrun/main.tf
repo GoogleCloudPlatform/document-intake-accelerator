@@ -124,6 +124,11 @@ resource "google_cloud_run_service" "cloudrun-service" {
   location = var.region
 
   template {
+    metadata {
+      labels = {
+        goog-packaged-solution = "prior-authorization"
+      }
+    }
     spec {
       containers {
         image = "gcr.io/${var.project_id}/${var.name}-image:latest" #Image to connect pubsub to cloud run to processtask API and fetch data from firestore

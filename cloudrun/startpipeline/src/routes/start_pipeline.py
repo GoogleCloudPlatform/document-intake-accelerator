@@ -111,13 +111,11 @@ async def start_pipeline(request: Request, response: Response):
         # create a record in database for uploaded document
         output = create_document(case_id, blob.name, context)
         uid = output
+        Logger.info(f"Created document with uid={uid}")
         uid_list.append(uid)
 
         # Copy document in GCS bucket
         new_file_name = f"{case_id}/{uid}/{blob_filename}"
-        Logger.info(f"Copying {blob.name} from {bucket_name} bucket as "
-                    f"{new_file_name} into {BUCKET_NAME} bucket")
-
         result = await run_in_threadpool(copy_blob, bucket_name, blob.name, new_file_name, BUCKET_NAME)
         if result != STATUS_SUCCESS:
             # Update the document upload in GCS as failed
@@ -158,13 +156,15 @@ async def start_pipeline(request: Request, response: Response):
               "gcs_url": document.url,
               "context": context
           })
+        else:
+          Logger.error(f"Could not retrieve document by id {uid}")
 
     # Pushing Message To Pubsub
     pubsub_msg = f"batch for {case_id} moved to bucket"
     message_dict = {"message": pubsub_msg, "message_list": message_list}
     publish_document(message_dict)
-    Logger.info(f"Files with case id {case_id} uploaded"
-                f" successfully")
+    Logger.info(f"Message with case id {case_id} published"
+                f" successfully {uid_list}")
     return {
         "status": f"Files with case id {case_id} uploaded"
                   f"successfully, the document"
