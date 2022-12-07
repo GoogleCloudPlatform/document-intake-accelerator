@@ -118,7 +118,8 @@ gcloud container clusters get-credentials main-cluster --region $REGION --projec
 
 Get the API endpoint IP address, this will be used in Firebase Auth later.
 ```
-kubectl describe ingress | grep Address
+kubectl describe ingress default-ingress | grep Address
+
 ```
 - This will print the Ingress IP like below:
   ```
@@ -128,8 +129,8 @@ kubectl describe ingress | grep Address
 **NOTE**: If you don’t have a custom domain, and want to use the Ingress IP address as the API endpoint:
 - Change the TF_VAR_api_domain to this Ingress endpoint, and re-deploy CloudRun.
   ```
-  export TF_VAR_api_domain=$(kubectl describe ingress | grep Address | awk '{print $2}')
-  terraform apply -target=module.cloudrun
+  export TF_VAR_api_domain=$(kubectl describe ingress default-ingress | grep Address | awk '{print $2}')
+  terraform apply -target=module.cloudrun-queue -target=module.cloudrun-start-pipeline
   ```
 
 ### Enable Firebase Auth

@@ -79,13 +79,13 @@ def check_duplicate_keys(dictme,without_noise):
 
 
 
-def default_entities_extraction(parser_entities, default_entities,doc_type):
+def default_entities_extraction(parser_entities, default_entities, doc_type):
   """
    This function extracted default entities
    Parameters
    ----------
    parser_entities: Specialized parser entities
-   default_entities: Default entites that need to extract from parser entities
+   default_entities: Default entities that need to extract from parser entities
    Returns : Default entites dict
    -------
   """
@@ -93,11 +93,20 @@ def default_entities_extraction(parser_entities, default_entities,doc_type):
 
   # retrieve parser given entities
   for each_entity in parser_entities:
+    print(each_entity)
     key, val, confidence = each_entity.get("type", ""), \
                            each_entity.get("mentionText", ""), round(
         each_entity.get("confidence", 0), 2)
     val = strip_value(val)
     parser_entities_dict[key] = [val, confidence]
+
+    for prop in each_entity.get("properties", []):
+      key, val, confidence = prop.get("type", ""), \
+                             prop.get("mentionText", ""), \
+                             round(prop.get("confidence", 0), 2)
+      val = strip_value(val)
+      parser_entities_dict[key] = [val, confidence]
+
 
   entity_dict = {}
 
@@ -215,11 +224,14 @@ def entities_extraction(parser_data, required_entities, doc_type):
 
   # Read the entities from the processor
   parser_entities = parser_data["entities"]
+  print(f"parser_entities = {parser_entities}")
   default_entities = required_entities["default_entities"]
+  print(f"default_entities={default_entities}")
   derived_entities = required_entities.get("derived_entities")
+  print(f"derived_entities={derived_entities}")
   # Extract default entities
   entity_dict = default_entities_extraction(parser_entities,
-                                            default_entities,doc_type)
+                                            default_entities, doc_type)
   Logger.info("Default entities created from Specialized parser response")
   # if any derived entities then extract them
   if derived_entities:

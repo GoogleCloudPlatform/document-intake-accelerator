@@ -73,9 +73,7 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
   processor_id = parser_details["processor_id"]
   #parser_name = parser_details["parser_name"]
   project_id = PROJECT_ID
-  opts = {}
-  if location == "eu":
-    opts = {"api_endpoint": "eu-documentai.googleapis.com"}
+  opts = {"api_endpoint": f"{location}-documentai.googleapis.com"}
 
   client = documentai.DocumentProcessorServiceClient(client_options=opts)
   # parser api end point
@@ -89,7 +87,7 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
   }
   # Configure the process request
   request = {"name": name, "raw_document": document}
-  Logger.info("Specialized parser extraction api called")
+  Logger.info(f"Specialized parser extraction api called for processor {processor_id}")
   # send request to parser
   result = client.process_document(request=request)
   parser_doc_data = result.document
