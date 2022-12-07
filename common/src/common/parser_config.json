@@ -18,6 +18,9 @@
         "processor_id": "projects/$PROJECT_ID/locations/us/processors/$<docai-processor-id3>"
     },
     "prior_auth_form": {
+        "labels": {
+            "goog-packaged-solution": "prior-authorization"
+        },
         "location": "us",
         "parser_name": "prior_auth_form",
         "parser_type": "FORM_PARSER_PROCESSOR",
