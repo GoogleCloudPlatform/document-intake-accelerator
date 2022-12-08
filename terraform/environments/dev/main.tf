@@ -272,6 +272,9 @@ resource "google_storage_bucket" "default" {
   location                    = local.multiregion
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
+  labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
 }
 
 resource "google_storage_bucket" "document-upload" {
@@ -279,6 +282,9 @@ resource "google_storage_bucket" "document-upload" {
   location                    = local.multiregion
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
+  labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
 }
 
 
@@ -288,6 +294,9 @@ resource "google_storage_bucket" "document-load" {
   location                    = local.multiregion
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
+  labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
 }
 
 # Bucket to store config
@@ -304,6 +313,9 @@ resource "google_storage_bucket" "docai-output" {
   location                    = local.multiregion
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
+  labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
 }
 
 resource "google_storage_bucket" "assets" {
@@ -311,6 +323,9 @@ resource "google_storage_bucket" "assets" {
   location                    = local.multiregion
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
+  labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
 }
 
 # ================= Validation Rules ====================
