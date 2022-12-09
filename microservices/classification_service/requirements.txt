@@ -9,7 +9,7 @@ appdirs==1.4.4
 backports-datetime-fromisoformat==1.0.0
 CacheControl==0.12.6
 cachetools==4.2.2
-certifi==2021.5.30
+certifi==2022.12.7
 cffi==1.14.6
 charset-normalizer==2.0.4
 Faker==8.5.1
