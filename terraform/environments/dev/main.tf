@@ -102,7 +102,7 @@ module "gke" {
   # This service account will be created in both GCP and GKE, and will be
   # used for workload federation in all microservices.
   # See microservices/sample_service/kustomize/base/deployment.yaml for example.
-  service_account_name = "gke-ksa"
+  service_account_name = "gke-sa"
 
   # See latest stable version at https://cloud.google.com/kubernetes-engine/docs/release-notes-stable
   kubernetes_version = "1.23.13-gke.900"
