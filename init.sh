@@ -29,7 +29,7 @@ terraform apply -auto-approve
 
 # eventarc and ksa are always failing when running first time. Re-running apply command is an overcall (due re-building Cloud Run), but works
 # terraform apply -target=module.gke -target=module.eventarc -auto-approve
-terraform apply -target=module.eventarc -auto-approve
+#terraform apply -target=module.eventarc -auto-approve
 
 bash ../../../setup/update_config.sh
 

@@ -17,7 +17,7 @@
 
 # Terraform Block
 terraform {
-  required_version = ">= 0.19"
+  required_version = ">= 0.13"
   required_providers {
     kubectl = {
       source  = "gavinbunney/kubectl"
@@ -46,11 +46,7 @@ resource "kubernetes_namespace" "ingress_nginx" {
 
 resource "google_compute_address" "ingress_ip_address" {
   name   = "nginx-controller"
-  provider = google-beta
   region = var.region
-  labels = {
-    goog-packaged-solution = "prior-authorization"
-  }
 }
 
 module "nginx-controller" {
