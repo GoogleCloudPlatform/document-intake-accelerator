@@ -3,8 +3,10 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${DIR}"/SET
 gcloud config set project $PROJECT_ID
-gcloud auth login
-gcloud auth application-default login
+
+# Run following commands when executing from the local development machine (and not from Cloud Shell)
+#gcloud auth login
+#gcloud auth application-default login
 
 export ORGANIZATION_ID=$(gcloud organizations list --format="value(name)")
 export ADMIN_EMAIL=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
@@ -13,6 +15,7 @@ export TF_VAR_admin_email=${ADMIN_EMAIL}
 # For Argolis Only
 #gcloud resource-manager org-policies disable-enforce constraints/compute.requireOsLogin --organization=$ORGANIZATION_ID
 #gcloud resource-manager org-policies delete constraints/compute.vmExternalIpAccess --organization=$ORGANIZATION_ID
+#gcloud resource-manager org-policies delete constraints/compute.requireShieldedVm --organization=$ORGANIZATION_ID
 
 
 bash "${DIR}"/setup/setup_terraform.sh
@@ -26,7 +29,7 @@ terraform apply  -auto-approve
 
 # eventarc and ksa are always failing when running first time. Re-running apply command is an overcall (due re-building Cloud Run), but works
 # terraform apply -target=module.gke -target=module.eventarc -auto-approve
-terraform apply  -auto-approve
+terraform apply -target=module.gke -target=module.eventarc -auto-approve
 
 bash ../../../setup/update_config.sh
 
