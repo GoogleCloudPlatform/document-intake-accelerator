@@ -26,7 +26,7 @@ spec:
       labels:
         app: upload-service
     spec:
-      serviceAccountName: ksa
+      serviceAccountName: gke-sa
       containers:
       - name: upload-service
         image: upload-service

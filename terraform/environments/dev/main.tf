@@ -120,6 +120,7 @@ module "ingress" {
   cors_allow_origin = "http://localhost:4200,http://localhost:3000,http://${var.api_domain},https://${var.api_domain}"
 }
 
+
 module "cloudrun-queue" {
   depends_on = [
     time_sleep.wait_for_project_services,
@@ -205,14 +206,22 @@ resource "google_project_iam_member" "gcs_pubsub_publishing" {
   member  = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
 }
 
+
+resource "time_sleep" "wait_for_eventarc_service_agent_permissions" {
+  depends_on = [
+    google_storage_bucket_iam_binding.cloudrun_sa_storage_binding,
+    google_project_iam_member.gcs_pubsub_publishing
+  ]
+  create_duration = "120s"
+}
+
 module "eventarc" {
   depends_on = [
     time_sleep.wait_for_project_services,
     module.service_accounts,
     module.cloudrun-start-pipeline,
     data.google_cloud_run_service.startpipeline-run,
-    google_storage_bucket_iam_binding.cloudrun_sa_storage_binding,
-    google_project_iam_member.gcs_pubsub_publishing
+    time_sleep.wait_for_eventarc_service_agent_permissions
   ]
   source                = "../../modules/eventarc"
   project_id            = var.project_id

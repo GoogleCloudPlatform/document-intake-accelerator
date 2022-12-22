@@ -24,12 +24,12 @@ cd "${DIR}/terraform/environments/dev" || exit
 terraform init -backend-config=bucket=$TF_BUCKET_NAME
 
 terraform apply -target=module.project_services -target=module.service_accounts -auto-approve
-sleep 40
-terraform apply  -auto-approve
+
+terraform apply
 
 # eventarc and ksa are always failing when running first time. Re-running apply command is an overcall (due re-building Cloud Run), but works
 # terraform apply -target=module.gke -target=module.eventarc -auto-approve
-terraform apply -target=module.gke -target=module.eventarc -auto-approve
+terraform apply -target=module.eventarc -auto-approve
 
 bash ../../../setup/update_config.sh
 

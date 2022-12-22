@@ -68,6 +68,16 @@ module "gke_cluster" {
     }
   }
 
+  node_pools_labels = {
+    all = {
+      goog-packaged-solution = "prior-authorization"
+    }
+
+    default-node-pool = {
+      default-node-pool = true
+      goog-packaged-solution = "prior-authorization"
+    }
+  }
   node_pools_taints = {
     node-pool-01 = []
   }

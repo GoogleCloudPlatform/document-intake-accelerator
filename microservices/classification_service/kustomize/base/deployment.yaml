@@ -26,7 +26,7 @@ spec:
       labels:
         app: classification-service
     spec:
-      serviceAccountName: ksa
+      serviceAccountName: gke-sa
       containers:
       - name: classification-service
         image: classification-service
