@@ -65,6 +65,15 @@ variable "node_locations" {
 }
 
 variable "kubernetes_version" {
-  type    = string
-  default = "1.22.12-gke.2300"
+  type = string
+}
+
+variable "namespace" {
+  type        = string
+  description = "Kubernetes namespace"
+}
+
+variable "service_account_name" {
+  type        = string
+  description = "Google Service Account name"
 }

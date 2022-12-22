@@ -87,20 +87,25 @@ module "vpc_network" {
 }
 
 module "gke" {
-  depends_on = [
-    time_sleep.wait_for_project_services,
-    module.vpc_network
-  ]
-  source             = "../../modules/gke"
-  project_id         = var.project_id
-  cluster_name       = "main-cluster"
-  vpc_network        = "default-vpc"
-  region             = var.region
-  kubernetes_version = "1.22.12-gke.2300"
-  min_node_count     = 1
-  max_node_count     = 1
-  machine_type       = "n1-standard-8"
-  node_locations     = "us-central1-a,us-central1-c,us-central1-f"
+  depends_on = [module.project_services, module.vpc_network]
+
+  source         = "../../modules/gke"
+  project_id     = var.project_id
+  cluster_name   = "main-cluster"
+  namespace      = "default"
+  vpc_network    = "default-vpc"
+  region         = var.region
+  min_node_count = 1
+  max_node_count = 10
+  machine_type   = "n1-standard-8"
+
+  # This service account will be created in both GCP and GKE, and will be
+  # used for workload federation in all microservices.
+  # See microservices/sample_service/kustomize/base/deployment.yaml for example.
+  service_account_name = "ksa"
+
+  # See latest stable version at https://cloud.google.com/kubernetes-engine/docs/release-notes-stable
+  kubernetes_version = "1.23.13-gke.900"
 }
 
 module "ingress" {

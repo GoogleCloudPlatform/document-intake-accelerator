@@ -50,28 +50,23 @@ data "google_container_cluster" "default" {
 
 # Used by module.gke.
 provider "kubernetes" {
-  host  = data.google_container_cluster.default.endpoint
-  token = data.google_client_config.default.access_token
-  cluster_ca_certificate = base64decode(
-    try(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate, ""),
-  )
+  host                   = "https://${module.gke.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(module.gke.ca_certificate)
 }
+
 
 # Used by module.ingress.
 provider "kubectl" {
-  host             = data.google_container_cluster.default.endpoint
-  token            = data.google_client_config.default.access_token
-  cluster_ca_certificate = base64decode(
-    try(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate, ""),
-  )
+  host                   = "https://${module.gke.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(module.gke.ca_certificate)
 }
 
 provider "helm" {
   kubernetes {
-    host  = data.google_container_cluster.default.endpoint
-    token = data.google_client_config.default.access_token
-    cluster_ca_certificate = base64decode(
-      try(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate, ""),
-    )
+    host                   = "https://${module.gke.endpoint}"
+    token                  = data.google_client_config.default.access_token
+    cluster_ca_certificate = base64decode(module.gke.ca_certificate)
   }
 }

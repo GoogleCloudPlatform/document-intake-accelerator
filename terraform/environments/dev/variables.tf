@@ -60,7 +60,7 @@ variable "env" {
 
 variable "cluster_name" {
   type    = string
-  default = "adp-cluster"
+  default = "main-cluster"
 }
 
 variable "network" {
