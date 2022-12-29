@@ -118,7 +118,7 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
 
   try:
 
-    Logger.info(f"Starting classification for {case_id} and {uid}")
+    Logger.info(f"Starting classification for {case_id} and {uid} with gcs_url {gcs_url}")
 
     #Making prediction
     doc_prediction_result = predict_doc_type(case_id, uid, gcs_url)
@@ -173,7 +173,7 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
         #DocumentStatus api call
         update_classification_status(case_id, uid, STATUS_ERROR)
         raise HTTPException(
-            status_code=500, detail="Document status updation failed")
+            status_code=500, detail="Document status update failed")
 
       return SUCCESS_RESPONSE
 

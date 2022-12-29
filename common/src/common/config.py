@@ -49,10 +49,6 @@ def load_from_gcs(gcs_uri):
     return None
 
 
-
-
-
-
 # ========= Overall =============================
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
 if PROJECT_ID != "":
@@ -114,6 +110,14 @@ DOC_CLASS_STANDARDISATION_MAP = {
     "PayStub": "pay_stub",
     "PriorAuth": "prior_auth_form",
 }
+
+CLASSIFIER = "classifier"
+
+# Translation of the DOC AI Classifier Labels (defined in the UI) to Document Types above map, since labels cannot be renamed
+DOC_CLASS_CONFIG_MAP = {
+    "Generic": "Claim",
+    "Prior_Auth": "PriorAuth",
+}
 # standard document_class values
 
 # ========= DocAI Parsers =======================
@@ -123,10 +127,13 @@ PARSER_CONFIG_FILE = os.environ.get("PARSER_CONFIG_FILE", "parser_config.json")
 
 
 def get_parser_config():
+  assert PARSER_CONFIG_FILE, f"PARSER_CONFIG_FILE is not set '{PARSER_CONFIG_FILE}'"
+  print(f"get_parser_config using PARSER_CONFIG_FILE={PARSER_CONFIG_FILE}")
   parser_config = load_config(PARSER_CONFIG_FILE)
   print(f"parser_config_file={PARSER_CONFIG_FILE}")
   assert parser_config, f"Unable to locate '{PARSER_CONFIG_FILE}'"
   return parser_config
+
 
 # ========= HITL and Frontend UI =======================
 

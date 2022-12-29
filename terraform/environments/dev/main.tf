@@ -270,10 +270,10 @@ module "docai" {
   # Once applied Terraform changes, please run /setup/update_config.sh
   # to automatically update common/src/common/parser_config.json.
   processors = {
-    unemployment_form = "FORM_PARSER_PROCESSOR"
+//    unemployment_form = "FORM_PARSER_PROCESSOR"
     claims_form       = "FORM_PARSER_PROCESSOR"
-    prior_auth_form   = "FORM_PARSER_PROCESSOR"
-    driver_license    = "US_DRIVER_LICENSE_PROCESSOR"
+    prior_auth_form   = "CUSTOM_EXTRACTION_PROCESSOR"
+//    driver_license    = "US_DRIVER_LICENSE_PROCESSOR"
     # utility_bill      = "UTILITY_PROCESSOR"
     # pay_stub        = "PAYSTUB_PROCESSOR"
   }
@@ -370,7 +370,8 @@ resource "null_resource" "pa-forms-test" {
     google_storage_bucket.document-load
   ]
   provisioner "local-exec" {
-    command = "gsutil -m cp ../../../sample_data/test/CVS-Global-Prior-Authorization-Form.pdf gs://${local.forms_gcs_path}/test/"
+    command = "gsutil -m cp ../../../sample_data/test/pa-form-42.pdf gs://${local.forms_gcs_path}/test/"
+    command = "gsutil -m cp ../../../sample_data/test/form.pdf gs://${local.forms_gcs_path}/demo/"
   }
 }
 

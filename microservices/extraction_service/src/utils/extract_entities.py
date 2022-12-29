@@ -29,7 +29,6 @@ import proto
 import random
 import string
 from google.cloud import documentai_v1 as documentai
-from common.utils.helper import split_uri_2_bucket_prefix
 from .change_json_format import get_json_format_for_processing, \
     correct_json_format_for_db
 from .correct_key_value import data_transformation
@@ -262,10 +261,10 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
           keys.append(field_name)
           extracted_entity_list.append(temp_dict)
 
-      config_file = f"{gcs_doc_path.split('.')[-2]}.json"
-      none, prefix = split_uri_2_bucket_prefix(config_file)
-      print(f"Writing config to gs://{DOCAI_OUTPUT_BUCKET_NAME}/{prefix}")
-      write_config(DOCAI_OUTPUT_BUCKET_NAME, prefix, keys)
+      # config_file = f"{gcs_doc_path.split('.')[-2]}.json"
+      # none, prefix = split_uri_2_bucket_prefix(config_file)
+      # print(f"Writing config to gs://{DOCAI_OUTPUT_BUCKET_NAME}/{prefix}")
+
       print("Extraction completed")
     else:
       print(f"Skipping non-supported file type {blob.name}")

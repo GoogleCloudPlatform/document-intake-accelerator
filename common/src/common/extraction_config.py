@@ -206,20 +206,23 @@ DOCAI_ENTITY_MAPPING = {
         },
         "claims_form": {
             "default_entities": {
-                "SIGNATURE": ["SIGNATURE"],
-                "NAME ": ["CLAIMANT NAME", "EMPLOYEE NAME"],
-                "EMPLOYER NAME": ["EMPLOYER NAME"],
-                "SSN": ["SSN"],
-                "STREET OR BOX NO": [
-                    "EMPLOYEE STREET OR BOX NO.", "EMPLOYER STREET OR BOX NO."
-                ],
-                "CITY": ["EMPLOYEE CITY", "EMPLOYER CITY"],
-                "STATE": ["EMPLOYEE STATE", "EMPLOYER STATE"],
-                "ZIP CODE": ["EMPLOYEE ZIP CODE", "EMPLOYER ZIP CODE"],
-                "LAST DAY WORKED ": ["LAST DAY WORK"],
-                "PHONE NO": ["EMPLOYEE PHONE NO."],
-                "DATE BEGAN WORK": ["DATE BEGAN WORK"],
-                "EMPLOYER'S NAME AND ADDRESS": ["EMPLOYER'S NAME AND ADDRESS"]
+                "Date:": ["DATE"],
+                "Name:": ["NAME"],
+                "Occupation:": ["OCCUPATION"],
+                "Emergency Contact:": ["EMERGENCY_CONTACT"],
+                "Referred By:": ["REFERRED_BY"],
+                "Gender:": ["GENDER"],
+                "DOB:": ["DOB"],
+                "Email:": ["EMAIL"],
+                "City:": ["CITY"],
+                "State:": ["STATE"],
+                "Address:": ["ADDRESS"],
+                "Zip:": ["ZIP"],
+                "Emergency Contact Phone:": ["EMERGENCY_CONTACT_PHONE"],
+                "Marital Status:": ["MARITAL_STATUS"],
+                "Are you currently taking any medication? (If yes, please describe):": ["ARE_YOU_CURRENTLY_TAKING_"],
+                "Phone #:": ["PHONE_"],
+                "Describe your medical concerns (symptoms, diagnoses, etc):": ["DESCRIBE_YOUR_MEDICAL_CON"],
             }
         },
     },
@@ -338,6 +341,27 @@ DOCAI_ENTITY_MAPPING = {
                     "rule": "Regular\n.*?\n(.*?)\n"
                 }
             }
-        }
+        },
+        "claims_form": {
+            "default_entities": {
+                "Date:": ["DATE"],
+                "Name:": ["NAME"],
+                "Occupation:": ["OCCUPATION"],
+                "Emergency Contact:": ["EMERGENCY_CONTACT"],
+                "Referred By:": ["REFERRED_BY"],
+                "Gender:": ["GENDER"],
+                "DOB:": ["DOB"],
+                "Email:": ["EMAIL"],
+                "City:": ["CITY"],
+                "State:": ["STATE"],
+                "Address:": ["ADDRESS"],
+                "Zip:": ["ZIP"],
+                "Emergency Contact Phone:": ["EMERGENCY_CONTACT_PHONE"],
+                "Marital Status:": ["MARITAL_STATUS"],
+                "Are you currently taking any medication? (If yes, please describe):": ["ARE_YOU_CURRENTLY_TAKING_"],
+                "Phone #:": ["PHONE_"],
+                "Describe your medical concerns (symptoms, diagnoses, etc):": ["DESCRIBE_YOUR_MEDICAL_CON"],
+            }
+        },
     },
 }

@@ -62,7 +62,12 @@ resource "google_bigquery_table" "table_id" {
     "name": "entities",
     "type": "STRING",
     "mode": "NULLABLE"
-  }
+  },
+ {
+    "name": "timestamp",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+ }
 
 
 ]

@@ -13,22 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import common.config
 
 """Performs pdf splitting and classification on
 first page
 """
-from utils.classification.pdf_splitter import PDFManager
-from utils.classification.vertex_predicitons import VertexPredictions
-from utils.classification.download_pdf_gcs import download_pdf_gcs
+# from utils.classification.pdf_splitter import PDFManager
+from .download_pdf_gcs import download_pdf_gcs
 # from common.config import CLASSIFICATION_CONFIDENCE_THRESHOLD, CLASSIFICATION_ENDPOINT_ID, PROJECT_ID
 from common.config import PROJECT_ID
+from common.config import DOC_CLASS_CONFIG_MAP
 import json
-import os
+from google.cloud import documentai_v1 as documentai
 import sys
 from os.path import basename
-import warnings
-
-warnings.filterwarnings('ignore')
+from common.config import get_parser_config
+from common.config import CLASSIFIER
+from common.utils.logging_handler import Logger
 
 CLASSIFICATION_UNDETECTABLE = "unclassified"
 
@@ -49,22 +50,75 @@ class DocClassifier:
 
   def __init__(self, case_id, uid, pdf_uri, out_folder) -> None:
     if not pdf_uri.endswith('pdf'):
-      print('Invalid input file. Require PDF file')
+      Logger.error('Invalid input file. Require PDF file')
       sys.exit()
 
     self.case_id = case_id
     self.uid = uid
     # self.endpoint_id = CLASSIFICATION_ENDPOINT_ID
 
-    self.pdf_path = f'{out_folder}\\{case_id}_{uid}_' + basename(pdf_uri)
-    print('PDF at ' + self.pdf_path)
-    print('Downloading PDF from GCS')
-    print('PDF URI: ', pdf_uri)
+    self.pdf_path = f'{out_folder}/{case_id}_{uid}_' + basename(pdf_uri)
+    Logger.info('PDF at ' + self.pdf_path)
+    Logger.info('Downloading PDF from GCS')
+    Logger.info('PDF URI: ' + pdf_uri)
 
-    download_pdf_gcs(gcs_uri=pdf_uri, output_filename=self.pdf_path)
+    self.blob = download_pdf_gcs(gcs_uri=pdf_uri, output_filename=self.pdf_path)
     self.doc_path = self.pdf_path
-    self.splitter = PDFManager(pdf_file=self.pdf_path, out_path=out_folder)
-    self.classifier = VertexPredictions(project_id=PROJECT_ID)
+    # self.splitter = PDFManager(pdf_file=self.pdf_path, out_path=out_folder)
+    # self.classifier = VertexPredictions(project_id=PROJECT_ID)
+
+  def get_classification_predictions(self):
+    Logger.info("get_classification_predictions")
+    # read parser details from configuration json file
+    parsers_info = get_parser_config()
+    Logger.info(f"parsers_info={parsers_info}")
+    parser_details = parsers_info.get(CLASSIFIER, None)
+    Logger.info(f"parser_details={parser_details}")
+    if not parser_details:
+      Logger.error(f"No classification parser defined, exiting classification")
+      return None
+    location = parser_details["location"]
+    processor_id = parser_details["processor_id"]
+    #parser_name = parser_details["parser_name"]
+    project_id = PROJECT_ID
+    opts = {"api_endpoint": f"{location}-documentai.googleapis.com"}
+    try:
+      client = documentai.DocumentProcessorServiceClient(client_options=opts)
+      # parser api end point
+      # name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
+      name = processor_id
+      document = {
+          "content": self.blob.download_as_bytes(),
+          "mime_type": "application/pdf"
+      }
+      # Configure the process request
+      request = {"name": name, "raw_document": document}
+      Logger.info(f"Specialized parser extraction api called for processor {processor_id}")
+      # send request to parser
+      result = client.process_document(request=request)
+      parser_doc_data = result.document
+
+      scores = []
+      labels = []
+
+      for entity in parser_doc_data.entities:
+        label = entity.type_.replace("/", "_")
+        if label in DOC_CLASS_CONFIG_MAP.keys():
+          label = DOC_CLASS_CONFIG_MAP[label]
+        score = entity.confidence
+        Logger.info(f"Type = {label}, with confidence = {score}")
+        scores.append(score)
+        labels.append(label)
+      # # Sample raw prediction_result
+      # # {'scores': [0.0136728594, 0.0222843271, 0.908525527, 0.0222843271, 0.0332329459], 'labels': ['PayStub', 'Utility', 'UE', 'Claim', 'DL'],
+      # 'key': '/opt/routes/temp_files/06_09_2022_01_59_10_temp_files\\7f2ec4ee-2d87-11ed-a71c-c2c2b7b788a8_7FvQ5G3dddti02sHbBhK_arizona-application-form_0.png'}
+      prediction = {'scores': scores, 'labels': labels}
+      return prediction
+
+    except Exception as e:
+      Logger.error(f"Error while executing --get_classification_predications--")
+      Logger.error(e)
+      return None
 
   def execute_job(self, page_num=0):
     """
@@ -77,29 +131,40 @@ class DocClassifier:
         JSON: json object
     """
 
-    # We will classify all documents as Prior-Auth Right Now
-    predicted_class = "PriorAuth"
-    predicted_score = 1.0
-    # # contains output image path
-    # img_path = self.splitter.split_save2img(page_num=page_num)
-    #
-    # print(f"split_save2img: {img_path}")
-    #
-    # prediction_result = self.classifier.get_classification_predications(
-    #     endpoint_id=self.endpoint_id, filename=img_path)
-    #
-    # # Sample raw prediction_result
-    # # {'scores': [0.0136728594, 0.0222843271, 0.908525527, 0.0222843271, 0.0332329459], 'labels': ['PayStub', 'Utility', 'UE', 'Claim', 'DL'], 'key': '/opt/routes/temp_files/06_09_2022_01_59_10_temp_files\\7f2ec4ee-2d87-11ed-a71c-c2c2b7b788a8_7FvQ5G3dddti02sHbBhK_arizona-application-form_0.png'}
-    #
-    # print("prediction_result:")
-    # print(prediction_result)
-    #
-    # predicted_score = -1.0
-    # predicted_class = None
-    # for index, label in enumerate(prediction_result["labels"]):
-    #   if prediction_result["scores"][index] > predicted_score:
-    #     predicted_score = prediction_result["scores"][index]
-    #     predicted_class = label
+    try:
+      # # contains output image path
+      # img_path = self.splitter.split_save2img(page_num=page_num)
+      #
+      # print(f"split_save2img: {img_path}")
+
+      prediction_result = self.get_classification_predictions()
+      # prediction_result = self.classifier.get_classification_predications(
+      #     endpoint_id=self.endpoint_id, filename=img_path)
+      #
+      # # Sample raw prediction_result
+      # # {'scores': [0.0136728594, 0.0222843271, 0.908525527, 0.0222843271, 0.0332329459], 'labels': ['PayStub', 'Utility', 'UE', 'Claim', 'DL'], 'key': '/opt/routes/temp_files/06_09_2022_01_59_10_temp_files\\7f2ec4ee-2d87-11ed-a71c-c2c2b7b788a8_7FvQ5G3dddti02sHbBhK_arizona-application-form_0.png'}
+      #
+      print("prediction_result:")
+      print(prediction_result)
+
+      predicted_score = -1.0
+      predicted_class = None
+      for index, label in enumerate(prediction_result["labels"]):
+        if prediction_result["scores"][index] > predicted_score:
+          predicted_score = prediction_result["scores"][index]
+          predicted_class = label
+
+    # remove the image from local after prediction as it is of no use further
+    # os.remove(img_path)
+    # os.remove(self.pdf_path)
+
+    except Exception as e:
+      Logger.error(f"Error while getting predictions from classifier for {self.pdf_path}")
+      Logger.error(e)
+
+      # We will classify all documents as Claim (demo) Right Now when classifier not set
+      predicted_class = "Claim"
+      predicted_score = 1.0
 
     print(f"predicted_class: {predicted_class}")
     print(f"predicted_score: {predicted_score}")
@@ -114,8 +179,4 @@ class DocClassifier:
         'predicted_class': predicted_class,
         'model_conf': predicted_score,
     }
-
-    # remove the image from local after prediction as it is of no use further
-    # os.remove(img_path)
-    # os.remove(self.pdf_path)
     return json.dumps(output)
