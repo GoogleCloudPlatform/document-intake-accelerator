@@ -132,7 +132,7 @@ The Custom Document Extractor has been deployed, but not yet trained. The steps 
     ```
     copy config code into common/extraction_config.py
 
-  
+ 
 ### Custom Document Classifier
 Configure Custom Document Classifier (Currently feature is not available for GA and needs to be requested via the [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform))
   - Train Classifier to classify different type of documents using Labels.

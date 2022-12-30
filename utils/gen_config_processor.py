@@ -94,8 +94,11 @@ def write_config(keys):
   print("-------- START Generated Configuration to use in extraction_config.py")
   print('"default_entities": {')
   for key in set(keys):
-    key_norm = ''.join(e for e in clean_form_parser_keys(key.upper().replace(" ", "_")[:25]) if e.isalnum() or e == "_")
-    print(f'  "{clean_form_parser_keys(key)}": ["{key_norm}"],')
+    key = clean_form_parser_keys(key)[:49]
+    if len(key) >= 46:
+      key = key[:-3] + '...'
+    key_norm = ''.join(e for e in clean_form_parser_keys(key.lower().replace(" ", "_")[:25]) if e.isalnum() or e == "_")
+    print(f'  "{key}": ["{key_norm}"],')
   print('}')
   print("-------- END")
 

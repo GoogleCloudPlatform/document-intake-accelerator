@@ -358,9 +358,9 @@ DOCAI_ENTITY_MAPPING = {
                 "Zip": ["zip"],
                 "Emergency Contact Phone": ["emergency_contact_phone"],
                 "Marital Status": ["marital_status"],
-                "Are you currently taking any medication? (If yes, please describe):": ["medications"],
+                "Are you currently taking any medication? (If y...": ["medications"],
                 "_Phone": ["PHONE"],
-                "Describe your medical concerns (symptoms, diagnoses, etc):": ["medical_condition"],
+                "Describe your medical concerns (symptoms, diag...": ["medical_condition"],
             }
         },
     },
