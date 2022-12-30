@@ -112,7 +112,9 @@ An alternative way to trigger using the wrapper script:
 
 To verify the Pipeline worked, go to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
 Or run the following Query:
-
+```shell
+./utils/run_query.sh
+```
 
 ## Next Steps
 In the next steps you will setup specialized Processor and Classifier to handle Prior-Auth form. 
