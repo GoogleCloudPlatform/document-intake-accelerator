@@ -371,7 +371,18 @@ resource "null_resource" "pa-forms-test" {
   ]
   provisioner "local-exec" {
     command = "gsutil -m cp ../../../sample_data/test/pa-form-42.pdf gs://${local.forms_gcs_path}/test/"
+  }
+}
+
+# Copying pa-forms forms into GCS bucket.
+resource "null_resource" "pa-forms-demo" {
+  depends_on = [
+    google_storage_bucket.document-load
+  ]
+  provisioner "local-exec" {
     command = "gsutil -m cp ../../../sample_data/test/form.pdf gs://${local.forms_gcs_path}/demo/"
   }
 }
+
+
 
