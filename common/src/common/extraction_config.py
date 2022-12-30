@@ -28,7 +28,7 @@ DOCAI_ATTRIBUTES_TO_IGNORE = [
     "textStyles", "textChanges", "revisions", "pages.image"
 ]
 
-# Full mapping of entityes and column names, grouped by document class.
+# Full mapping of entity's and column names, grouped by document class.
 DOCAI_ENTITY_MAPPING = {
     # State or program specific docs
     "arizona": {
@@ -344,23 +344,23 @@ DOCAI_ENTITY_MAPPING = {
         },
         "claims_form": {
             "default_entities": {
-                "Date:": ["DATE"],
-                "Name:": ["NAME"],
-                "Occupation:": ["OCCUPATION"],
-                "Emergency Contact:": ["EMERGENCY_CONTACT"],
-                "Referred By:": ["REFERRED_BY"],
-                "Gender:": ["GENDER"],
-                "DOB:": ["DOB"],
-                "Email:": ["EMAIL"],
-                "City:": ["CITY"],
-                "State:": ["STATE"],
-                "Address:": ["ADDRESS"],
-                "Zip:": ["ZIP"],
-                "Emergency Contact Phone:": ["EMERGENCY_CONTACT_PHONE"],
-                "Marital Status:": ["MARITAL_STATUS"],
-                "Are you currently taking any medication? (If yes, please describe):": ["ARE_YOU_CURRENTLY_TAKING_"],
-                "Phone #:": ["PHONE_"],
-                "Describe your medical concerns (symptoms, diagnoses, etc):": ["DESCRIBE_YOUR_MEDICAL_CON"],
+                "Date": ["date"],
+                "Name": ["name"],
+                "Occupation": ["occupation"],
+                "Emergency Contact": ["emergency_contact"],
+                "Referred By": ["referred_by"],
+                "Gender": ["gender"],
+                "DOB": ["dob"],
+                "Email": ["email"],
+                "City": ["city"],
+                "State": ["state"],
+                "Address": ["address"],
+                "Zip": ["zip"],
+                "Emergency Contact Phone": ["emergency_contact_phone"],
+                "Marital Status": ["marital_status"],
+                "Are you currently taking any medication? (If yes, please describe):": ["medications"],
+                "_Phone": ["PHONE"],
+                "Describe your medical concerns (symptoms, diagnoses, etc):": ["medical_condition"],
             }
         },
     },

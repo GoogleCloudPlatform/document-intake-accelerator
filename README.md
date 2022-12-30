@@ -65,8 +65,6 @@ Or, change the following Organization policy constraints in [GCP Console](https:
 - constraints/compute.requireOsLogin - Enforced Off
 - constraints/compute.vmExternalIpAccess - Allow All
 - constraints/compute.requireShieldedVm - Enforced Off
-- 
-
 
 ### Setup and Run Demo
 
@@ -81,7 +79,7 @@ Run init step (will prepare for terraform execution and do terraform apply with 
 
 When not using custom DNS name (if you left `mydomain.com` above as API_DOMAIN, switch to using Ingress IP (shall be skipped when using custom domain name):
 ```shell
-source ./init_domian_with_ip.sh
+source ./init_domain_with_ip.sh
 ```
 
 #### Deploy microservices
@@ -93,19 +91,28 @@ source ./init_domian_with_ip.sh
 To trigger document processing and extraction of the data to further ingest in BigQuery,
  you must upload an empty file named START_PIPELINE into a batch data folder inside ${PROJECT_ID}-pa-forms GCS bucket.
 
-For example, you can run the following commands to create a START_PIPELINE file, 
-and then copy the file to the batch folder of a data source. After copying the file, the pipeline automatically triggers.
+See which pdf forms files are in the demo folder:
+```shell
+gsutil ls gs://${PROJECT_ID}-pa-forms/demo/*.pdf
+```
+
+You can run the following commands to create a START_PIPELINE file, 
+and then copy the file to the batch folder of a data source. After copying the file, the pipeline is automatically triggered and 
+all PDF documents inside the gs://${PROJECT_ID}-pa-forms/demo folder will be processed.
 ```shell
 touch START_PIPELINE
 gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/demo
 ```
 
-All PDF documents inside the gs://${PROJECT_ID}-pa-forms/demo folder will be processed. 
-
-Script to trigger the above:
+An alternative way to trigger using the wrapper script: 
 ```shell
 ./start_pipeline.sh demo
 ```
+
+
+To verify the Pipeline worked, go to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
+Or run the following Query:
+
 
 ## Next Steps
 In the next steps you will setup specialized Processor and Classifier to handle Prior-Auth form. 

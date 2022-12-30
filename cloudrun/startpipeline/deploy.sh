@@ -2,7 +2,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PWD=$(pwd)
 source "$DIR/../../SET"
 REGION=us-central1
-NAME="start-pipeline"
+NAME="startpipeline"
 
 IMAGE="$NAME"
 CLOUD_RUN="${NAME}-cloudrun"

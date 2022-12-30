@@ -411,14 +411,19 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   flag = check_duplicate_keys(default_entities,form_parser_entity_list)
 
   df = pd.DataFrame(form_parser_entity_list)
+  print("....pandas.....")
+  print(df)
   required_entities_list = []
-  # loop through one by one deafult entities mentioned in the config file
+  # loop through one by one default entities mentioned in the config file
   for each_ocr_key, each_ocr_val in default_entities.items():
     print(f"each_ocr_key={each_ocr_key}, each_ocr_val={each_ocr_val}")
     try:
+      print(f'checking {df["key"]} == {each_ocr_key}')
       idx_list = df.index[df["key"] == each_ocr_key].tolist()
+      print(f"idx_list={idx_list}")
     except: # pylint: disable=bare-except
       idx_list = []
+      print("idx_list is Empty")
     # loop for matched records of mapping dictionary
     for idx, each_val in enumerate(each_ocr_val):
       if idx_list:

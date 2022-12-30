@@ -21,6 +21,7 @@
 
 import argparse
 import os
+import re
 from typing import Any
 from typing import Dict
 
@@ -93,11 +94,36 @@ def write_config(keys):
   print("-------- START Generated Configuration to use in extraction_config.py")
   print('"default_entities": {')
   for key in set(keys):
-    key_norm = ''.join(e for e in key.upper().replace(" ", "_")[:25] if e.isalnum() or e == "_")
-    print(f'  "{key}": ["{key_norm}"],')
+    key_norm = ''.join(e for e in clean_form_parser_keys(key.upper().replace(" ", "_")[:25]) if e.isalnum() or e == "_")
+    print(f'  "{clean_form_parser_keys(key)}": ["{key_norm}"],')
   print('}')
   print("-------- END")
 
+
+def clean_form_parser_keys(text):
+  """
+    Cleaning form parser keys
+    Parameters
+    ----------
+    text: original text before noise removal - removed spaces, newlines
+    Returns: text after noise removal
+    -------
+  """
+  # removing special characters from beginning and end of a string
+  try:
+    if len(text):
+      text = text.strip()
+      text = text.replace("\n", " ")
+      text = re.sub(r"^\W+", "", text)
+      last_word = text[-1]
+      text = re.sub(r"\W+$", "", text)
+    if last_word in [")", "]"]:
+      text += last_word
+
+  except: # pylint: disable=bare-except
+    print("Exception occurred while cleaning keys")
+
+  return text
 
 def process_document_sample(
     project_id: str,
@@ -206,7 +232,8 @@ def process_document_sample(
     for key in document_entities.keys():
       #print(f"{key}:")
       for entity in document_entities[key]:
-        print(f"\"{entity[0]}\": [\"{entity[0]}\"],")
+        val = clean_form_parser_keys(entity[0])
+        print(f"\"{val}\": [\"{val}\"],")
     print("-------- END")
   elif processor.type_ == "CUSTOM_CLASSIFICATION_PROCESSOR":
 

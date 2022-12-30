@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
-#set -e # Exit if error is detected during pipeline execution => terraform failing
+set -e # Exit if error is detected during pipeline execution => terraform failing
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+if [[ -z "${API_DOMAIN}" ]]; then
+  echo "API_DOMAIN env variable is not set. It should be set to either customized domain name or using a dummy name mydomain.com".
+  exit
+fi
+
+if [[ -z "${PROJECT_ID}" ]]; then
+  echo "PROJECT_ID variable is not set".
+  exit
+fi
+
 source "${DIR}"/SET
 gcloud config set project $PROJECT_ID
 
