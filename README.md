@@ -88,6 +88,8 @@ source ./init_domain_with_ip.sh
 ```
 
 #### Trigger the pipeline
+*NB: Currently only pdf documents are supported, so if you have a jpg or png, please first convert it to pdf.*
+
 To trigger document processing and extraction of the data to further ingest in BigQuery,
  you must upload an empty file named START_PIPELINE into a batch data folder inside ${PROJECT_ID}-pa-forms GCS bucket.
 
@@ -156,6 +158,7 @@ Configure Custom Document Classifier (Currently feature is not available for GA 
   skaffold run  -p dev --default-repo=gcr.io/${PROJECT_ID}
   ```
 ### Trigger pipeline
+*NB: Currently only pdf documents are supported, so if you have a jpg or png, please first convert it to pdf.*
 - Upload test forms of PriorAuth and Generic types to the test folder in the gs bucket: `gs://${PROJECT_ID}-pa-forms/test`
 - Trigger processing of a folder the forms:
   ```shell
