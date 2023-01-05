@@ -137,7 +137,7 @@ resource "google_cloud_run_service" "cloudrun-service" {
         }
         env {
           name  = "MAX_UPLOADED_DOCS" #thresold value for comparison with the number of uploaded docs in firesotre collection
-          value = "10"
+          value = "1000"
         }
         env {
           name  = "PROJECT_ID"

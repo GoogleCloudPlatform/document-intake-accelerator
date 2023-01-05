@@ -119,36 +119,123 @@ Or run the following Query:
 ```
 
 ## Next Steps
-In the next steps you will setup specialized Processor and Classifier to handle Prior-Auth form. 
+In the next steps you will set up specialized Processor and Classifier to handle custom Prior-Auth form. 
+
+**Pre-requisite** is the existence of at least 20 (recommended 50) customer  forms with filled data (of the same type), which could be used for training the processor for extraction and classification.
+
+### Preparations
+Convert existing forms to pdf (if not in pdf format) and add them to `sample_data/<name-of-form_type>` directory.
+
+For the examples below we will be using `<name-of-form_type>=bsc-pa`. Feel free to use the name that fits better the form type instead.
+```shell
+python3 -m pip install --upgrade Pillow
+python utils/fake_data_generation/png2pdf.py -d sample_data/bsc_pa -o sample_data/bsc_pa
+```
+
+
 ### Custom Document Extractor
 The Custom Document Extractor has been deployed, but not yet trained. The steps need to be done manual and via the UI.
 - Manually Configure and [Train Custom Document Extractor](https://cloud.google.com/document-ai/docs/workbench/build-custom-processor) (currently it is deployed but not pre-trained)
 
   - Using UI Manually Label and Train Custom Document Extractor to recognize selected type of the PriorAuth forms.
   - Set a default revision for the processor.
+  - Test extraction by manually uploading document via the UI and check how entities are being extracted and assigned labels.
   - For extracted data to be properly mapped to the created Labels, you need to customize schema inside (common/extraction_config.py)[common/extraction_config.py] under prior_auth_form section. 
 
     ```shell
-    export RPOCESSOR_ID=<..>
-    python gen_config_processor.py -f path/to/file.pdf 
+    export RPOCESSOR_ID=<your_processor_id>
+    python utils/gen_config_processor.py --f sample_data/<name-of-form_type>/<my-sample-form>.pdf 
     ```
-    copy config code into common/extraction_config.py
+  - In the Python output, everything between START GENERATED CONFIGURATION and END GENERATED CONFIGURATION is to be placed inside `common/extraction_config.py` 
+    copy config code into common/extraction_config.py inside `DOCAI_ENTITY_MAPPING`
 
- 
+  ```shell
+      "all": {
+          "<name-of-form_type>_form": {
+              "default_entities": {
+                 <--- COPY_HERE ---> 
+              }
+          }
+  ```
+  For example: 
+  ```shell
+      "all": {
+          "bsc-pa_form": {
+              "default_entities": {
+                "issurerName": ["issurerName"],
+                "routineFax": ["routineFax"],
+                "modificationFax": ["modificationFax"],
+              }
+          }
+  ```
+  - Add new type of the `SUPPORTING_DOCS`  inside `common/config.py`: 
+
+  For example: 
+   ```python
+  SUPPORTING_DOCS = [
+    #----
+    "bsc_pa_form",
+  ]
+  ```
+
 ### Custom Document Classifier
 Configure Custom Document Classifier (Currently feature is not available for GA and needs to be requested via the [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform))
-  - Train Classifier to classify different type of documents using Labels.
+  - Create New Label: `<name-of-form_type>` 
+  - Train Classifier to using sample forms to classify that label.
+  - Deploy the new trained version via the UI.
+  - Set the new version as default and test it manually via the UI by uploading the test document. is it classified properly?
+  - inside `common/config.py` and the Label Mapping:
+    ```python
+    DOC_CLASS_STANDARDISATION_MAP = {
+       #---
+       "bsc_pa_form": "bsc_pa_form",
+    }
+    DOC_CLASS_CONFIG_MAP = {
+       #----
+       "bsc_pa_form": "bsc_pa_form"
+    }    
+      ```
+
+### Custom Configuration
   - Add mapping as part of DOC_CLASS_CONFIG_MAP to map Labels to the expected /supported document types inside [config.py](common/config.py).
   - Use Classifier ID to setup parser_config.json 
 
     - Config is stored in the bucket: `gs://${PROJECT_ID}/config/parser_config.json`
-  - Download config locally or edit via the Cloud Shell and set processor_id line inside `classifier` to match to the manually created Classifier.
+  - Download config locally or when using Cloud Shell, use cloud shell editor to do changes to `gs://${PROJECT_ID}/config/parser_config.json` file
 
     ```shell
-    gsutil cp "gs://${PROJECT_ID}/config/parser_config.json" .
-    <edit file step>
-    gsutil cp parser_config.json "gs://${PROJECT_ID}/config/parser_config.json"  
+    gsutil cp "gs://${PROJECT_ID}/config/parser_config.json" common/src/common/parser_config.json 
     ```
+
+  - Add or edit existing form block as below to use the processor_id line  (replace everything inside `<..>` with your data)
+  ```shell
+      "<name-of-form_type>_form": {
+          "labels": {
+              "goog-packaged-solution": "prior-authorization"
+          },
+          "location": "us",
+          "parser_name": "<name_of_parser>",
+          "parser_type": "CUSTOM_DOCUMENT_EXTRACTOR",
+          "processor_id": "projects/<project_id>/locations/us/processors/<processor_id>"
+      },
+  ```
+
+  - Add id of the classifier you have defined:
+  ```shell
+      "classifier": {
+          "labels": {
+              "goog-packaged-solution": "prior-authorization"
+          },
+          "location": "us",
+          "parser_type": "CUSTOM_CLASSIFICATION_PROCESSOR",
+          "processor_id": "projects/<project_id>/locations/us/processors/<classifier-id>"
+      }
+  ```
+
+Upload config:
+```shell
+gsutil cp common/src/common/parser_config.json "gs://${PROJECT_ID}/config/parser_config.json"
+````
 
 ### Rebuild / RE-deploy
 - Rebuild/re-dploy applications using skaffold
@@ -159,11 +246,23 @@ Configure Custom Document Classifier (Currently feature is not available for GA 
   ```
 ### Trigger pipeline
 *NB: Currently only pdf documents are supported, so if you have a jpg or png, please first convert it to pdf.*
-- Upload test forms of PriorAuth and Generic types to the test folder in the gs bucket: `gs://${PROJECT_ID}-pa-forms/test`
+- Upload test forms to the `gs://${PROJECT_ID}-pa-forms/<name-of-form_type>`
+
+For example:
+```shell
+gsutil -m cp -r sample_data/bsc_pa/* gs://${PROJECT_ID}-pa-forms/bsc_pa/
+```
+
 - Trigger processing of a folder the forms:
   ```shell
-    ./start_pipeline.sh test
+    ./start_pipeline.sh <name-of-form_type>
   ```
+
+
+For example:
+```shell
+ ./start_pipeline.sh bsc_pa
+```
 
 ## Deployment Troubleshoot
 

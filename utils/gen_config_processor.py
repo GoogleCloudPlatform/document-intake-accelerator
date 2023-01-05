@@ -228,16 +228,20 @@ def process_document_sample(
     print("Value Extraction Results:")
 
     for key in document_entities.keys():
-      print(f"{key}:")
-      for entity in document_entities[key]:
-        print(f"    - {entity[0]} = {entity[1]} ({entity[2]:.1%} confident)")
-    print("-------- START Generated Configuration to use in extraction_config.py")
+      if len(document_entities[key]) >= 3:
+        print(f"{key}:")
+        for entity in document_entities[key]:
+            print(f"    - {entity[0]} = {entity[1]} ({entity[2]:.1%} confident)")
+
+    print()
+    print("---------------- START GENERATED CONFIGURATION to use in extraction_config.py")
     for key in document_entities.keys():
+      if len(document_entities[key]) >= 3:
       #print(f"{key}:")
-      for entity in document_entities[key]:
-        val = clean_form_parser_keys(entity[0])
-        print(f"\"{val}\": [\"{val}\"],")
-    print("-------- END")
+        for entity in document_entities[key]:
+          val = clean_form_parser_keys(entity[0])
+          print(f"\"{val}\": [\"{val}\"],")
+    print("---------------- END GENERATED CONFIGURATION")
   elif processor.type_ == "CUSTOM_CLASSIFICATION_PROCESSOR":
 
     for entity in parser_doc_data.entities:
@@ -256,11 +260,10 @@ def get_parser():
       epilog="""
       Examples:
 
-      # Create images with pre-generated data and empty form image.
-      python generate_images.py --f=path-to-form.pdf
+      python gen_config_processor.py -f=path-to-form.pdf
       """)
   parser.add_argument(
-      "--f",
+      "-f",
       dest="file_path",
       help="Path to PDF form file")
 

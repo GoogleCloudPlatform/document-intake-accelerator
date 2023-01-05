@@ -71,47 +71,48 @@ async def publish_msg(request: Request, response: Response):
     return response
 
   doc_count = get_count()
-  print(f"doc_count = {doc_count}")
+  print(f"Current number of uploaded documents doc_count = {doc_count}")
 
   pubsub_message = envelope["message"]
 
-  if doc_count < int(os.environ["MAX_UPLOADED_DOCS"]):
-    print("Pub/Sub message:")
-    print(pubsub_message)
+  # if doc_count < int(os.environ["MAX_UPLOADED_DOCS"]):
+  print("Pub/Sub message:")
+  print(pubsub_message)
 
-    if isinstance(pubsub_message, dict) and "data" in pubsub_message:
-      msg_data = base64.b64decode(
-          pubsub_message["data"]).decode("utf-8").strip()
-      name = json.loads(msg_data)
-      payload = name.get("message_list")
-      request_body = {"configs": payload}
+  print(f"MAX_UPLOADED_DOCS={os.environ['MAX_UPLOADED_DOCS']}")
+  if isinstance(pubsub_message, dict) and "data" in pubsub_message:
+    msg_data = base64.b64decode(
+        pubsub_message["data"]).decode("utf-8").strip()
+    name = json.loads(msg_data)
+    payload = name.get("message_list")
+    request_body = {"configs": payload}
 
-      # Sample request body
-      # {
-      #   "configs": [
-      #     {
-      #       "case_id": "6075e034-2763-11ed-8345-aa81c3a89f04",
-      #       "uid": "jcdQmUqUKrcs8GGsmojp",
-      #       "gcs_url": "gs://sample-project-dev-document-upload/6075e034-2763-11ed-8345-aa81c3a89f04/jcdQmUqUKrcs8GGsmojp/arizona-application-form.pdf",
-      #       "context": "arizona"
-      #     }
-      #   ]
-      # }
-      print(f"Sending data to {PROCESS_TASK_URL}:")
-      print(request_body)
+    # Sample request body
+    # {
+    #   "configs": [
+    #     {
+    #       "case_id": "6075e034-2763-11ed-8345-aa81c3a89f04",
+    #       "uid": "jcdQmUqUKrcs8GGsmojp",
+    #       "gcs_url": "gs://sample-project-dev-document-upload/6075e034-2763-11ed-8345-aa81c3a89f04/jcdQmUqUKrcs8GGsmojp/arizona-application-form.pdf",
+    #       "context": "arizona"
+    #     }
+    #   ]
+    # }
+    print(f"Sending data to {PROCESS_TASK_URL}:")
+    print(request_body)
 
-      process_task_response = requests.post(PROCESS_TASK_URL, json=request_body)
-      print(f"Response from {PROCESS_TASK_URL}")
-      print(process_task_response.json())
+    process_task_response = requests.post(PROCESS_TASK_URL, json=request_body)
+    print(f"Response from {PROCESS_TASK_URL}")
+    print(process_task_response.json())
 
-      response.status_code = process_task_response.status_code
-      return response
-
-  if doc_count > int(os.environ["MAX_UPLOADED_DOCS"]):
-    print(f"unacknowledged: {response.body}")
-    response.body = "Message not acknowledged"
-    response.status_code = status.HTTP_400_BAD_REQUEST
+    response.status_code = process_task_response.status_code
     return response
+
+  # if doc_count > int(os.environ["MAX_UPLOADED_DOCS"]):
+  #   print(f"unacknowledged: {response.body}")
+  #   response.body = "Message not acknowledged"
+  #   response.status_code = status.HTTP_400_BAD_REQUEST
+  #   return response
 
   # No Content
   return "", status.HTTP_204_NO_CONTENT
