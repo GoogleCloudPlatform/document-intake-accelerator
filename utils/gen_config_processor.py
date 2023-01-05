@@ -233,15 +233,28 @@ def process_document_sample(
         for entity in document_entities[key]:
             print(f"    - {entity[0]} = {entity[1]} ({entity[2]:.1%} confident)")
 
+
     print()
-    print("---------------- START GENERATED CONFIGURATION to use in extraction_config.py")
+    print("---------------- START GENERATED QUERY ----------------")
+    print("SELECT")
+    for key in document_entities.keys():
+      if len(document_entities[key]) >= 3:
+        #print(f"{key}:")
+        for entity in document_entities[key]:
+          val = clean_form_parser_keys(entity[0])
+          print(f'  JSON_EXTRACT(entities, "$.{val}") AS {val[0].upper() + val[1:]},')
+    print(f"FROM `{os.environ['PROJECT_ID']}.validation.validation_table`")
+    print("WHERE document_class='bsc_pa_form'")
+    print("---------------- END GENERATED QUERY ----------------")
+    print()
+    print("---------------- START GENERATED CONFIGURATION to use in extraction_config.py ----------------")
     for key in document_entities.keys():
       if len(document_entities[key]) >= 3:
       #print(f"{key}:")
         for entity in document_entities[key]:
           val = clean_form_parser_keys(entity[0])
           print(f"\"{val}\": [\"{val}\"],")
-    print("---------------- END GENERATED CONFIGURATION")
+    print("---------------- END GENERATED CONFIGURATION ----------------")
   elif processor.type_ == "CUSTOM_CLASSIFICATION_PROCESSOR":
 
     for entity in parser_doc_data.entities:
