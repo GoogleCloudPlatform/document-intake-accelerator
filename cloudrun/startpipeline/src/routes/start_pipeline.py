@@ -7,7 +7,7 @@ from fastapi import APIRouter
 import os
 from fastapi.concurrency import run_in_threadpool
 from config import DOCUMENT_STATUS_URL
-from common.utils.copy_gcs_documents import copy_blob
+from common.utils.copy_gcs_documents import copy_blob, move_blob
 from common.utils.helper import split_uri_2_path_filename
 import uuid
 import requests
@@ -95,7 +95,9 @@ async def start_pipeline(request: Request, response: Response):
   uid_list = []
   message_list = []
   # generate a case_id
-  case_id = str(uuid.uuid1())
+  dirs_string = dirs.replace("/", "_")
+  case_id = str(dirs_string) + "_" + str(uuid.uuid1())
+  event_id = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
 
   try:
     # Browse through output Forms and identify matching Processor for each Form
@@ -134,8 +136,21 @@ async def start_pipeline(request: Request, response: Response):
               detail="Error "
                      "in uploading document in gcs bucket")
 
-        Logger.info(f"File with case_id {case_id} and uid {uid}"
+        Logger.info(f"File {blob.name} with case_id {case_id} and uid {uid}"
                     f" uploaded successfully in GCS bucket")
+
+        #move file to the processed folder
+
+        destination_blob_name = f"processed/{dirs}/{event_id}/{blob_filename}"
+        Logger.info(f"Moving file from {bucket_name}/{blob.name} to {bucket_name}/{destination_blob_name}")
+        result = await run_in_threadpool(move_blob, bucket_name, blob.name, destination_blob_name)
+        if result != STATUS_SUCCESS:
+          Logger.error(f"Error: {result}")
+          raise HTTPException(
+              status_code=500,
+              detail="Error "
+                     "when copying to processed folder")
+        Logger.info(f"File {blob.name} with case_id {case_id} and uid {uid} moved to {bucket_name}/{destination_blob_name}")
 
         # Update the document upload as success in DB
         document = Document.find_by_uid(uid)
@@ -165,6 +180,8 @@ async def start_pipeline(request: Request, response: Response):
     publish_document(message_dict)
     Logger.info(f"Message with case id {case_id} published"
                 f" successfully {uid_list}")
+
+
     return {
         "status": f"Files with case id {case_id} uploaded"
                   f"successfully, the document"
