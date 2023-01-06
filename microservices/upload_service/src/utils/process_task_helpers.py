@@ -148,6 +148,7 @@ def filter_documents(configs: List[Dict]):
     uid = config.get("uid")
     gcs_url = config.get("gcs_url")
     cl_result = get_classification(case_id, uid, gcs_url)
+    print(f"Processing  document with uid={uid} gcs_url={gcs_url} case_id={case_id}")
     print(f"status_code={cl_result.status_code}, json={cl_result.json()}")
     if cl_result.status_code == 200:
       document_type = cl_result.json().get("doc_type")
@@ -163,7 +164,7 @@ def filter_documents(configs: List[Dict]):
         config["document_class"] = document_class
         supporting_docs.append(config)
     else:
-      Logger.error(f"Classification FAILED for {uid}")
+      Logger.error(f"Classification FAILED for document with uid={uid} gcs_url={gcs_url} case_id={case_id}")
   print(
       f"Application form:{application_form} and"\
       f" supporting_docs:{supporting_docs}")

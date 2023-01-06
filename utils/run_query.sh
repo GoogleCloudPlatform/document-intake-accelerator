@@ -3,12 +3,14 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$DIR/../SET"
 
+BATCH=$1
 BIGQUERY_DATASET=validation
 BIGQUERY_TABLE=validation_table
 
 REGION=$(gcloud config get-value compute/region 2> /dev/null);
 PROJECT_ID=$(gcloud config get-value core/project 2> /dev/null);
 FROM_CL=' FROM `'"${PROJECT_ID}"'`.'"${BIGQUERY_DATASET}."''"${BIGQUERY_TABLE}"''
+
 
 do_query()
 {

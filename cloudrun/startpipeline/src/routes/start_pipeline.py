@@ -80,11 +80,12 @@ async def start_pipeline(request: Request, response: Response):
 
   Logger.info(
       f"Received event for  bucket - {bucket_name}, file added {file_uri}, filename:  {filename}")
-  Logger.info(
-      f"Starting Pipeline To process documents inside {bucket_name} bucket and {dirs} folder")
 
   if filename != START_PIPELINE_FILENAME:
     return "", status.HTTP_204_NO_CONTENT
+
+  Logger.info(
+      f"Starting pipeline to process documents inside {bucket_name} bucket and {dirs} folder")
 
   global gcs
   if not gcs:
