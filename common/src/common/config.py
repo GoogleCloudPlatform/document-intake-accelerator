@@ -116,7 +116,7 @@ def get_parser_config():
   print(f"get_parser_config using PARSER_CONFIG_FILE={PARSER_CONFIG_FILE}")
   config = load_config(PARSER_CONFIG_FILE)
   print(f"parser_config_file={PARSER_CONFIG_FILE}")
-  assert config, f"Unable to locate '{PARSER_CONFIG_FILE}'"
+  assert config, f"Unable to locate '{PARSER_CONFIG_FILE} or incorrect JSON file'"
   return config
 
 
@@ -125,7 +125,7 @@ def get_docai_entity_mapping():
   print(f"get_docai_entity_mapping using DOCAI_ENTITY_MAPPING_FILE={DOCAI_ENTITY_MAPPING_FILE}")
   config = load_config(DOCAI_ENTITY_MAPPING_FILE)
   print(f"get_docai_entity_mapping={DOCAI_ENTITY_MAPPING_FILE}")
-  assert config, f"Unable to locate '{DOCAI_ENTITY_MAPPING_FILE}'"
+  assert config, f"Unable to locate '{DOCAI_ENTITY_MAPPING_FILE} or incorrect JSON file'"
   return config
 
 # ========= HITL and Frontend UI =======================
