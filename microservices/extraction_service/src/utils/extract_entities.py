@@ -104,11 +104,17 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
     else:
       data.pop(each_attr, None)
 
-  # Get corresponding mapping dict, for specific context or fallback to "all"
+  # Get corresponding mapping dict, for specific context or fallback to "all" TODO duplicate code with other parser
   docai_entity_mapping = get_docai_entity_mapping()
+
+  print(f"context={context}")
   docai_entity_mapping_by_context = docai_entity_mapping.get(context)
-  mapping_dict = docai_entity_mapping_by_context.get(
-      doc_type) or docai_entity_mapping["all"][doc_type]
+  if docai_entity_mapping_by_context is None:
+    mapping_dict = docai_entity_mapping["all"][doc_type]
+  else:
+    mapping_dict = docai_entity_mapping_by_context.get(
+        doc_type) or docai_entity_mapping["all"][doc_type]
+
 
   # extract dl entities
   extracted_entity_dict = entities_extraction(data, mapping_dict, doc_type)
