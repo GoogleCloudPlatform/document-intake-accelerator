@@ -8,24 +8,6 @@
         "parser_type": "FORM_PARSER_PROCESSOR",
         "processor_id": "projects/$PROJECT_ID/locations/us/processors/<docai-processor-id1>"
     },
-    "driver_license": {
-        "labels": {
-            "goog-packaged-solution": "prior-authorization"
-        },
-        "location": "us",
-        "parser_name": "driver_license",
-        "parser_type": "US_DRIVER_LICENSE_PROCESSOR",
-        "processor_id": "projects/$PROJECT_ID/locations/us/processors/$<docai-processor-id2>"
-    },
-    "unemployment_form": {
-        "labels": {
-            "goog-packaged-solution": "prior-authorization"
-        },
-        "location": "us",
-        "parser_name": "unemployment_form",
-        "parser_type": "FORM_PARSER_PROCESSOR",
-        "processor_id": "projects/$PROJECT_ID/locations/us/processors/$<docai-processor-id3>"
-    },
     "prior_auth_form": {
         "labels": {
             "goog-packaged-solution": "prior-authorization"
@@ -33,15 +15,6 @@
         "location": "us",
         "parser_name": "prior_auth_form",
         "parser_type": "CUSTOM_EXTRACTION_PROCESSOR",
-        "processor_id": "projects/$PROJECT_ID/locations/us/processors/$<docai-processor-id4>"
-    },
-    "classifier": {
-        "labels": {
-            "goog-packaged-solution": "prior-authorization"
-        },
-        "location": "us",
-        "parser_name": "classifier",
-        "parser_type": "CUSTOM_CLASSIFICATION_PROCESSOR",
-        "processor_id": "projects/$PROJECT_ID/locations/us/processors/$<docai-processor-id5>"
+        "processor_id": "projects/$PROJECT_ID/locations/us/processors/$<docai-processor-id2>"
     }
 }

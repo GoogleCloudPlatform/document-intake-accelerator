@@ -13,3 +13,8 @@ export TF_BUCKET_LOCATION="us"
 
 # Needs terraform output
 export PARSER_CONFIG_FILE="gs://${PROJECT_ID}/config/parser_config.json"
+export DOCAI_ENTITY_MAPPING_FILE="gs://${PROJECT_ID}/config/docai_entity_mapping.json"
+
+
+# Fix Workload Identity Name
+# kubectl get serviceaccount ksa -o json | jq '.metadata.name = "gke-sa"' | kubectl apply -f -

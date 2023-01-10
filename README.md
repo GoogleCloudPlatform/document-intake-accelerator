@@ -95,21 +95,24 @@ To trigger document processing and extraction of the data to further ingest in B
 
 See which pdf forms files are in the demo folder:
 ```shell
-gsutil ls gs://${PROJECT_ID}-pa-forms/demo/*.pdf
+  ls sample_data/demo/*.pdf
 ```
 
-You can run the following commands to create a START_PIPELINE file, 
-and then copy the file to the batch folder of a data source. After copying the file, the pipeline is automatically triggered and 
-all PDF documents inside the gs://${PROJECT_ID}-pa-forms/demo folder will be processed.
+Following step will upload to GS bucket documents from the sample_data/demo directory and trigger the pipeline with `mybatch-demo` tag:
+```shell
+./start_pipeline demo mybatch-demo
+```
+
+Alternatively, you can manually upload *pdf* forms to the **gs://${PROJECT_ID}-pa-forms/<mydir>** bucket and drop empty START_PIPELINE file to trigger the pipeline execution.
+After putting START_PIPELINE, the pipeline is automatically triggered  to process  all PDF documents inside the gs://${PROJECT_ID}-pa-forms/<mydir> folder.
+
 ```shell
 touch START_PIPELINE
-gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/demo
+gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<mydir>
 ```
 
-An alternative way to trigger using the wrapper script: 
-```shell
-./start_pipeline.sh demo
-```
+This should take around two minutes for operation to complete. 
+When processed, documents are moved to `gs://${PROJECT_ID}-pa-forms/processed` directory and also copied to gs://${PROJECT_ID}-document-upload with unique identifiers. 
 
 
 To verify the Pipeline worked, go to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
@@ -118,40 +121,50 @@ Or run the following Query:
 ./utils/run_query.sh
 ```
 
-## Next Steps
-In the next steps you will set up specialized Processor and Classifier to handle custom Prior-Auth form. 
-
-**Pre-requisite** is the existence of at least 20 (recommended 50) customer  forms with filled data (of the same type), which could be used for training the processor for extraction and classification.
-
-### Preparations
-Convert existing forms to pdf (if not in pdf format) and add them to `sample_data/<name-of-form_type>` directory.
-
-For the examples below we will be using `<name-of-form_type>=bsc-pa`. Feel free to use the name that fits better the form type instead.
+Sample output:
 ```shell
-python3 -m pip install --upgrade Pillow
-python utils/fake_data_generation/png2pdf.py -d sample_data/bsc_pa -o sample_data/bsc_pa
++----------------------------------------------+----------------------+----------------+----------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+
+|                   case_id                         |         uid          | document_class |    document_type     |                                                                                                                                                                                                                entities                                                                                                                                                                                                                |      timestamp      |
++----------------------------------------------+----------------------+----------------+----------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+
+| mybatch-demo_63a8295e-90a6-11ed-83f9-fd3ef939e375 | VTnRhdt4oMH6UbeMyaQb | claims_form    | supporting_documents | {"zip": "07082", "state": "NJ", "referred_by": "None", "occupation": "Software Engineer", "name": "SALLY WALKER", "medications": null, "medical_condition": null, "marital_status": "Single", "gender": "F", "emergency_contact_phone": "(906) 334-8976", "emergency_contact": "Eva Walker", "email": "Sally, waller@cmail.com", "dob": "09/04/1986", "date": "9/14/19", "city": "Towaco", "address": "24 barney lane", "PHONE": null} | 2023-01-10 05:20:49 |
++----------------------------------------------+----------------------+----------------+----------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+
 ```
 
+## Next Steps
+In the next steps you will set up specialized Processor and Classifier to handle custom Prior-Auth form. Previously only Form parser available out-of-the-box was used.
+
+**Pre-requisite** 
+There should be at least 20 (recommended 50) customer  forms with filled data (of the same type), which could be used for training the processor for extraction and classification.
+
+### Preparations
+* Create new `sample_data/custom_forms` directory
+* Convert existing forms to pdf (if not in pdf format) and add them to the new `sample_data/custom_forms` directory.
+
+If you have png files, following script can convert them to pdf:
+```shell
+python3 -m pip install --upgrade Pillow
+python utils/fake_data_generation/png2pdf.py -d sample_data/<input-dir> -o sample_data/<output_pdf_dir>
+```
 
 ### Custom Document Extractor
-The Custom Document Extractor has been deployed, but not yet trained. The steps need to be done manual and via the UI.
+The Custom Document Extractor has already been deployed, but not yet trained. The steps need to be done manual and via the UI.
 - Manually Configure and [Train Custom Document Extractor](https://cloud.google.com/document-ai/docs/workbench/build-custom-processor) (currently it is deployed but not pre-trained)
-
   - Using UI Manually Label and Train Custom Document Extractor to recognize selected type of the PriorAuth forms.
   - Set a default revision for the processor.
   - Test extraction by manually uploading document via the UI and check how entities are being extracted and assigned labels.
-  - For extracted data to be properly mapped to the created Labels, you need to customize schema inside (common/extraction_config.py)[common/extraction_config.py] under prior_auth_form section. 
+  - For extracted data to be properly mapped to the created Labels, you need to customize schema inside (common/src/common/docai_entity_mapping.json)[common/src/common/docai_entity_mapping.json] under prior_auth_form section. 
+    - This is ued to specify which entities will be extracted and name mappings.
+  - Following utility would be handy to list all the entities the Trained processor Could extract from the document:
 
     ```shell
     export RPOCESSOR_ID=<your_processor_id>
-    python utils/gen_config_processor.py --f sample_data/<name-of-form_type>/<my-sample-form>.pdf 
+    python utils/gen_config_processor.py -f sample_data/custom_forms/<my-sample-form>.pdf 
     ```
-  - In the Python output, everything between START GENERATED CONFIGURATION and END GENERATED CONFIGURATION is to be placed inside `common/extraction_config.py` 
-    copy config code into common/extraction_config.py inside `DOCAI_ENTITY_MAPPING`
+  - In the Python output, everything between START GENERATED CONFIGURATION and END GENERATED CONFIGURATION is to be placed inside `common/src/common/docai_entity_mapping.json` (under prior_auth_form section)  and copied to GS config directory. 
 
   ```shell
       "all": {
-          "<name-of-form_type>_form": {
+          "prior_auth_form": {
               "default_entities": {
                  <--- COPY_HERE ---> 
               }
@@ -160,7 +173,7 @@ The Custom Document Extractor has been deployed, but not yet trained. The steps 
   For example: 
   ```shell
       "all": {
-          "bsc-pa_form": {
+          "prior_auth_form": {
               "default_entities": {
                 "issurerName": ["issurerName"],
                 "routineFax": ["routineFax"],
@@ -168,59 +181,45 @@ The Custom Document Extractor has been deployed, but not yet trained. The steps 
               }
           }
   ```
-  - Add new type of the `SUPPORTING_DOCS`  inside `common/config.py`: 
+
+Upload config document to GS bucket:  
+```shell
+ gsutil cp ../../../common/src/common/docai_entity_mapping.json gs://$PROJECT_ID/config/docai_entity_mapping.json
+```
+
+When adding new type (for examples, you already customized prior_auth_form and want to create a second Customized Processor for another form type, then following step needs to be done:)
+  - Add new type of the `SUPPORTING_DOCS`  inside (common/src/common/config.py)[common/src/common/config.py]: 
 
   For example: 
-   ```python
-  SUPPORTING_DOCS = [
-    #----
-    "bsc_pa_form",
-  ]
+```python
+SUPPORTING_DOCS = ["claims_form", "prior_auth_form", "my_new_form"]
   ```
 
 ### Custom Document Classifier
+Classifier allows to map form to the processor required for data extraction. 
+
+>> If you have just one sample_form.pdf, and you want to use it for classifier, use following utility to copy same form into the gcs bucket, later to use for classification. At least 10 instances are needed (all for Training set).
+```shell
+utils/copy_forms.sh -f sample_data/<path_to_form>.pdf -d gs://<path_to_gs_uri> -c 10
+```
+
 Configure Custom Document Classifier (Currently feature is not available for GA and needs to be requested via the [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform))
-  - Create New Label: `<name-of-form_type>` 
-  - Train Classifier to using sample forms to classify that label.
+  - Create New Labels for all currently active form types: `prior_auth_form` and`claims_form`.
+  - Train Classifier to using sample forms to classify the labels.
   - Deploy the new trained version via the UI.
   - Set the new version as default and test it manually via the UI by uploading the test document. is it classified properly?
-  - inside `common/config.py` and the Label Mapping:
-    ```python
-    DOC_CLASS_STANDARDISATION_MAP = {
-       #---
-       "bsc_pa_form": "bsc_pa_form",
-    }
-    DOC_CLASS_CONFIG_MAP = {
-       #----
-       "bsc_pa_form": "bsc_pa_form"
-    }    
-      ```
 
 ### Custom Configuration
-  - Add mapping as part of DOC_CLASS_CONFIG_MAP to map Labels to the expected /supported document types inside [config.py](common/config.py).
-  - Use Classifier ID to setup parser_config.json 
+  - Use Classifier ID to setup [common/src/common/parser_config.json](common/src/common/parser_config.json)
 
-    - Config is stored in the bucket: `gs://${PROJECT_ID}/config/parser_config.json`
-  - Download config locally or when using Cloud Shell, use cloud shell editor to do changes to `gs://${PROJECT_ID}/config/parser_config.json` file
+  - Config is stored in the bucket: `gs://${PROJECT_ID}/config/parser_config.json`
+    - Download config locally or when using Cloud Shell, use cloud shell editor to do changes to `gs://${PROJECT_ID}/config/parser_config.json` file
 
-    ```shell
-    gsutil cp "gs://${PROJECT_ID}/config/parser_config.json" common/src/common/parser_config.json 
-    ```
+      ```shell
+      gsutil cp "gs://${PROJECT_ID}/config/parser_config.json" common/src/common/parser_config.json 
+      ```
 
-  - Add or edit existing form block as below to use the processor_id line  (replace everything inside `<..>` with your data)
-  ```shell
-      "<name-of-form_type>_form": {
-          "labels": {
-              "goog-packaged-solution": "prior-authorization"
-          },
-          "location": "us",
-          "parser_name": "<name_of_parser>",
-          "parser_type": "CUSTOM_DOCUMENT_EXTRACTOR",
-          "processor_id": "projects/<project_id>/locations/us/processors/<processor_id>"
-      },
-  ```
-
-  - Add id of the classifier you have defined:
+  - Add id of the classifier you have created (replace:
   ```shell
       "classifier": {
           "labels": {

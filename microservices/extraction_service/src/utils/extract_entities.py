@@ -36,10 +36,10 @@ from .utils_functions import entities_extraction, download_pdf_gcs,\
     extract_form_fields, del_gcs_folder, \
     form_parser_entities_mapping, extraction_accuracy_calc, \
     clean_form_parser_keys, standard_entity_mapping, strip_value
-from common.config import PROJECT_ID
+from common.config import PROJECT_ID, get_docai_entity_mapping
 from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME, \
-    DOCAI_ATTRIBUTES_TO_IGNORE, DOCAI_ENTITY_MAPPING
-from common.config import get_parser_config
+    DOCAI_ATTRIBUTES_TO_IGNORE
+from common.config import get_parser_config, get_docai_entity_mapping
 from common.utils.logging_handler import Logger
 import warnings
 from google.cloud import storage
@@ -105,9 +105,10 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
       data.pop(each_attr, None)
 
   # Get corresponding mapping dict, for specific context or fallback to "all"
-  docai_entity_mapping_by_context = DOCAI_ENTITY_MAPPING.get(context)
+  docai_entity_mapping = get_docai_entity_mapping()
+  docai_entity_mapping_by_context = docai_entity_mapping.get(context)
   mapping_dict = docai_entity_mapping_by_context.get(
-      doc_type) or DOCAI_ENTITY_MAPPING["all"][doc_type]
+      doc_type) or docai_entity_mapping["all"][doc_type]
 
   # extract dl entities
   extracted_entity_dict = entities_extraction(data, mapping_dict, doc_type)
@@ -261,18 +262,20 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
           keys.append(field_name)
           extracted_entity_list.append(temp_dict)
 
-      # config_file = f"{gcs_doc_path.split('.')[-2]}.json"
-      # none, prefix = split_uri_2_bucket_prefix(config_file)
-      # print(f"Writing config to gs://{DOCAI_OUTPUT_BUCKET_NAME}/{prefix}")
-
       print("Extraction completed")
     else:
       print(f"Skipping non-supported file type {blob.name}")
 
   # Get corresponding mapping dict, for specific context or fallback to "all"
-  docai_entity_mapping_by_context = DOCAI_ENTITY_MAPPING.get(context)
-  mapping_dict = docai_entity_mapping_by_context.get(
-      doc_type) or DOCAI_ENTITY_MAPPING["all"][doc_type]
+  docai_entity_mapping = get_docai_entity_mapping()
+
+  print(f"context={context}")
+  docai_entity_mapping_by_context = docai_entity_mapping.get(context)
+  if docai_entity_mapping_by_context is None:
+    mapping_dict = docai_entity_mapping["all"][doc_type]
+  else:
+    mapping_dict = docai_entity_mapping_by_context.get(
+        doc_type) or docai_entity_mapping["all"][doc_type]
 
   print(f"context = {context}")
   print(f"doc_type = {doc_type}")

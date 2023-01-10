@@ -20,15 +20,13 @@ first page
 """
 # from utils.classification.pdf_splitter import PDFManager
 from .download_pdf_gcs import download_pdf_gcs
-# from common.config import CLASSIFICATION_CONFIDENCE_THRESHOLD, CLASSIFICATION_ENDPOINT_ID, PROJECT_ID
-from common.config import PROJECT_ID
-from common.config import DOC_CLASS_CONFIG_MAP
 import json
 from google.cloud import documentai_v1 as documentai
 import sys
 from os.path import basename
 from common.config import get_parser_config
-from common.config import CLASSIFIER
+from common.config import CLASSIFIER, CLASSIFICATION_CONFIDENCE_THRESHOLD, \
+  CLASSIFICATION_UNDETECTABLE_DEFAULT_CLASS
 from common.utils.logging_handler import Logger
 
 CLASSIFICATION_UNDETECTABLE = "unclassified"
@@ -99,8 +97,8 @@ class DocClassifier:
 
     for entity in parser_doc_data.entities:
       label = entity.type_.replace("/", "_")
-      if label in DOC_CLASS_CONFIG_MAP.keys():
-        label = DOC_CLASS_CONFIG_MAP[label]
+      # if label in DOC_CLASS_CONFIG_MAP.keys():
+      #   label = DOC_CLASS_CONFIG_MAP[label]
       score = entity.confidence
       Logger.info(f"Type = {label}, with confidence = {score}")
       scores.append(score)
@@ -155,15 +153,17 @@ class DocClassifier:
       Logger.error(e)
 
       # We will classify all documents as Claim (demo) Right Now when classifier not set
-      predicted_class = "Claim"
+      Logger.warning(f"Falling back on the default class {CLASSIFICATION_UNDETECTABLE_DEFAULT_CLASS}")
+      predicted_class = CLASSIFICATION_UNDETECTABLE_DEFAULT_CLASS
       predicted_score = 1.0
 
     print(f"predicted_class: {predicted_class}")
     print(f"predicted_score: {predicted_score}")
 
-    # If confidence is greater than the threshold then its a valid doc
-    # if predicted_score < CLASSIFICATION_CONFIDENCE_THRESHOLD:
-    #   predicted_class = CLASSIFICATION_UNDETECTABLE
+    # If confidence is greater than the threshold then it's a valid doc
+    if predicted_score < CLASSIFICATION_CONFIDENCE_THRESHOLD:
+      Logger.warning(f"Classifier could not pass the Classification Confidence threshhold, falling back on the default class {CLASSIFICATION_UNDETECTABLE_DEFAULT_CLASS}")
+      predicted_class = CLASSIFICATION_UNDETECTABLE_DEFAULT_CLASS
 
     output = {
         'case_id': self.case_id,
