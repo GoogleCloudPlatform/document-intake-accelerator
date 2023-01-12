@@ -44,7 +44,8 @@ terraform apply -auto-approve
 
 bash ../../../setup/update_config.sh
 
-gsutil cp "${DIR}/common/src/common/parser_config.json" "gs://${PROJECT_ID}/config/parser_config.json"
+gsutil cp "${DIR}/common/src/common/parser_config.json" "gs://${TF_VAR_config_bucket}/parser_config.json"
+
 # TODO Add instructions on Cloud DNS Setup for API_DOMAIN
 
 # Cloud DNS

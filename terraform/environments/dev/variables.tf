@@ -105,3 +105,8 @@ variable "api_domain" {
   type        = string
   description = "api domain name"
 }
+
+variable "config_bucket" {
+  type        = string
+  description = "Bucket to store solution configuration files"
+}

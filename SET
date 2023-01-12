@@ -10,10 +10,10 @@ export TF_VAR_api_domain=$API_DOMAIN
 export TF_VAR_project_id=$PROJECT_ID
 export TF_BUCKET_NAME="${PROJECT_ID}-tfstate"
 export TF_BUCKET_LOCATION="us"
+export TF_VAR_config_bucket="${PROJECT_ID}-config"
 
-# Needs terraform output
-export PARSER_CONFIG_FILE="gs://${PROJECT_ID}/config/parser_config.json"
-export DOCAI_ENTITY_MAPPING_FILE="gs://${PROJECT_ID}/config/docai_entity_mapping.json"
+export PARSER_CONFIG_FILE="gs://${TF_VAR_config_bucket}/parser_config.json"
+export DOCAI_ENTITY_MAPPING_FILE="gs://${TF_VAR_config_bucket}/docai_entity_mapping.json"
 
 
 # Fix Workload Identity Name
