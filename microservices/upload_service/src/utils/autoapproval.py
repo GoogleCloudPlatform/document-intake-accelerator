@@ -45,6 +45,13 @@ def get_autoapproval_status(validation_score, extraction_score, matching_score,
   Logger.info(f"Validation_Score:{validation_score}, Extraction_score :"
               f"{extraction_score},Matching_Score:{matching_score},"
               f"DocumentLabel:{document_label},DocumentType:{document_type}")
+  flag = "no"
+
+  if document_label not in data.keys():
+    status = STATUS_REVIEW
+    print(f"Auto-approval is not configured for {document_label}")
+    return status, flag
+
   if document_type in ("supporting_documents", "claims_form"):
     if document_type == "claims_form":
       if extraction_score == 0.0:

@@ -153,16 +153,20 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
       elif doc_class in SUPPORTING_DOCS:
         doc_type = "supporting_documents"
       else:
-        Logger.error(f"Doc class {doc_class} is not a valid doc class")
-        update_classification_status(case_id, uid, STATUS_ERROR)
-        raise HTTPException(
-            status_code=422, detail="Unidentified document class found")
+        # For development, allow each undefined form to be trwated as supporting
+        doc_type = "supporting_documents"
+        Logger.warning(f"Doc class {doc_class} is not a valid doc class, need to be configured as APPLICATION_FORM or SUPPORTING_DOCS. Assigning SUPPORTING_DOCS for now")
+        # Logger.error(f"Doc class {doc_class} is not a valid doc class")
+        # update_classification_status(case_id, uid, STATUS_ERROR)
+        # raise HTTPException(
+        #     status_code=422, detail="Unidentified document class found")
 
       SUCCESS_RESPONSE["case_id"] = doc_prediction_result["case_id"]
       SUCCESS_RESPONSE["uid"] = uid
       SUCCESS_RESPONSE["doc_type"] = doc_type
       SUCCESS_RESPONSE["doc_class"] = doc_class
 
+      Logger.info(f"Classification confidence for case_id={case_id}  uid={uid} gcs_url={gcs_url} is {classification_score}, doc_type={doc_type}, doc_class={doc_class} ")
       #DocumentStatus api call
       response = update_classification_status(
           case_id,
@@ -170,7 +174,7 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
           STATUS_SUCCESS,
           document_class=doc_class,
           document_type=doc_type)
-      print(response)
+      Logger.info(response)
       if response.status_code != 200:
         Logger.error(f"Document status update failed for {case_id} and {uid}")
         #DocumentStatus api call
@@ -186,14 +190,13 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
       raise HTTPException(status_code=500, detail="Classification Failed")
 
   except HTTPException as e:
-    print(e)
     Logger.error(f"{e} while classification {case_id} and {uid}")
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
     raise e
 
   except Exception as e:
-    print(f"{e} while classification {case_id} and {uid}")
+    Logger.error(f"{e} while classification {case_id} and {uid}")
     Logger.error(e)
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
