@@ -31,21 +31,23 @@ do_query()
     ' ORDER BY timestamp'
 }
 
-title="Waiting for first data to be ingested into the BigQuery (this might take up to three minutes)... "
-while true; do
-  str=$(do_query)
-  if [ -z "$str" ]; then
-    if [ -z "$showed_title" ]; then
-      echo $title
-      showed_title=true
-    fi
-    echo "."
-    sleep 5
-  else
-    echo "$str"
-    break
-  fi
-done
+#title="Waiting for first data to be ingested into the BigQuery (this might take up to three minutes)... "
+#while true; do
+#  str=$(do_query)
+#  if [ -z "$str" ]; then
+#    if [ -z "$showed_title" ]; then
+#      echo $title
+#      showed_title=true
+#    fi
+#    echo "."
+#    sleep 5
+#  else
+#    echo "$str"
+#    break
+#  fi
+#done
+
+do_query
 
 #while grep do_query; do sleep 6; echo "test"; done
 
