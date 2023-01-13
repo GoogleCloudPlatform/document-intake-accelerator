@@ -26,7 +26,6 @@ locals {
   forms_gcs_path     = "${var.project_id}-pa-forms"
   config_bucket_name = var.config_bucket
   services = [
-    "aiplatform.googleapis.com",           # Vertex AI
     "appengine.googleapis.com",            # AppEngine
     "artifactregistry.googleapis.com",     # Artifact Registry
     "bigquery.googleapis.com",             # BigQuery
@@ -240,22 +239,6 @@ module "validation_bigquery" {
   ]
   source = "../../modules/bigquery"
 }
-
-//module "vertex_ai" {
-//  depends_on = [
-//    time_sleep.wait_for_project_services,
-//    google_storage_bucket.default,
-//  ]
-//  source         = "../../modules/vertex_ai"
-//  project_id     = var.project_id
-//  region         = var.region
-//  model_name     = "classification"
-//  model_gcs_path = "gs://${google_storage_bucket.default.name}"
-//  # See https://cloud.google.com/vertex-ai/docs/predictions/pre-built-containers
-//  image_uri         = "${var.multiregion}-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-8:latest"
-//  accelerator_param = ""
-//  # accelerator_param = "--accelerator=count=2,type=nvidia-tesla-t4"
-//}
 
 # ================= Document AI Parsers ====================
 
