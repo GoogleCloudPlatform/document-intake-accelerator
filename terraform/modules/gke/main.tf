@@ -36,6 +36,9 @@ module "gke_cluster" {
   horizontal_pod_autoscaling = true
   remove_default_node_pool   = true
 
+  cluster_resource_labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
   node_pools = [
     {
       name               = "default-pool"
@@ -65,6 +68,7 @@ module "gke_cluster" {
   node_pools_metadata = {
     node-pool-01 = {
       disable-legacy-endpoints = "true"
+      goog-packaged-solution = "prior-authorization"
     }
   }
 
@@ -78,6 +82,8 @@ module "gke_cluster" {
       goog-packaged-solution = "prior-authorization"
     }
   }
+
+
   node_pools_taints = {
     node-pool-01 = []
   }

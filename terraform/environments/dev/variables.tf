@@ -110,3 +110,11 @@ variable "config_bucket" {
   type        = string
   description = "Bucket to store solution configuration files"
 }
+
+variable "service_account_name_gke" {
+  type        = string
+  default     = "gke-sa"
+  description = "Service account name for the GKE node."
+  # This service account will be created in both GCP and GKE, and will be
+  # used for workload federation in all microservices.
+}
