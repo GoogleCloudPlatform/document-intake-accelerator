@@ -61,6 +61,8 @@ gcloud resource-manager org-policies delete constraints/compute.vmExternalIpAcce
 gcloud resource-manager org-policies delete constraints/compute.requireShieldedVm --organization=$ORGANIZATION_ID
 ```
 
+If you have multiple Organizations, set the ORGANIZATION_ID manually to the Organization ID
+
 Or, change the following Organization policy constraints in [GCP Console](https://console.cloud.google.com/iam-admin/orgpolicies)
 - constraints/compute.requireOsLogin - Enforced Off
 - constraints/compute.vmExternalIpAccess - Allow All
@@ -84,6 +86,7 @@ source ./init_domain_with_ip.sh
 
 #### Deploy microservices
 ```shell
+
 ./deploy.sh
 ```
 
@@ -263,6 +266,22 @@ For example:
  ./start_pipeline.sh bsc_pa
 ```
 
+## Cross-Project Setup
+It is possible for the pipeline to work, accessing a separate project (within same org) with customized processor and Classifier. For that additional steps need to be done for cross project access:
+
+- GCP Project to run the Claims Data Activator - Engine (**Project CDA**)
+- GCP Project to train and serve Document AI Processors and Classifier  (**Project DocAI**)
+
+1) Inside Project DocAI [impersonate](https://medium.com/@tanujbolisetty/gcp-impersonate-service-accounts-36eaa247f87c) following service account of the Project CDA `gke-sa@{PROJECT_CDA_ID}.iam.gserviceaccount.com` (used for GKE Nodes) and grant following  [roles](https://cloud.google.com/document-ai/docs/access-control/iam-roles):
+   - **Document AI Viewer** - To grant access to view all resources and process documents in Document AI
+   Where `{PROJECT_CDA_ID}` - to be replaced with the ID of the Project CDA
+2) Inside Project CDA grant following permissions to the default Document AI service account of the Project DocAI: `service-{PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com`
+   - **Storage Object Viewer** - [To make files in Project CDA accessible to Project DocAI](https://cloud.google.com/document-ai/docs/cross-project-setup) (This could be done on the `${PROJECT_CDA_ID}-pa-forms` bucket level with the forms to handle).
+   - **Storage Object Admin**  - To allow DocAI processor to save extracted entities as json files inside `${PROJECT_CDA_ID}-output` bucket of the Project CDA  (This could be done on the `${PROJECT_CDA_ID}-output` bucket level).
+   Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the Project DocAI
+
+
+
 ## Deployment Troubleshoot
 
 ### Terraform Troubleshoot
@@ -278,7 +297,9 @@ For example:
 
 **Solution**: Import the existing project in Terraform:
 ```
+cd terraform/environments/dev
 terraform import module.firebase.google_app_engine_application.firebase_init $PROJECT_ID
+
 ```
 
 ### CloudRun Troubleshoot
