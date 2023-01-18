@@ -37,7 +37,7 @@ async def process_task(payload: ProcessTask,
   Args:
     payload (ProcessTask): Consist of configs required to run the pipeline
     background_task : It is used to run the ML tasks in the background
-    is_hitl : It is used to run the pipeline for unclassifed documents
+    is_hitl : It is used to run the pipeline for unclassified documents
     is_reassign : It is used to run the pipeline for reassigned document
   Returns:
     202 : Documents are being processed

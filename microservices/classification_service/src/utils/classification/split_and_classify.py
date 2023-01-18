@@ -134,8 +134,8 @@ class DocClassifier:
       # # Sample raw prediction_result
       # # {'scores': [0.0136728594, 0.0222843271, 0.908525527, 0.0222843271, 0.0332329459], 'labels': ['PayStub', 'Utility', 'UE', 'Claim', 'DL'], 'key': '/opt/routes/temp_files/06_09_2022_01_59_10_temp_files\\7f2ec4ee-2d87-11ed-a71c-c2c2b7b788a8_7FvQ5G3dddti02sHbBhK_arizona-application-form_0.png'}
       #
-      print("prediction_result:")
-      print(prediction_result)
+      Logger.info("prediction_result:")
+      Logger.info(prediction_result)
 
       predicted_score = -1.0
       predicted_class = None
@@ -157,9 +157,7 @@ class DocClassifier:
       predicted_class = CLASSIFICATION_UNDETECTABLE_DEFAULT_CLASS
       predicted_score = 1.0
 
-    print(f"predicted_class: {predicted_class}")
-    print(f"predicted_score: {predicted_score}")
-
+    Logger.info(f"Classification results in predicted_class= {predicted_class}, predicted_score: {predicted_score} for case_id={self.case_id}  uid={self.uid} gcs_url={self.pdf_path}")
     # If confidence is greater than the threshold then it's a valid doc
     if predicted_score < CLASSIFICATION_CONFIDENCE_THRESHOLD:
       Logger.warning(f"Classifier could not pass the Classification Confidence threshhold, falling back on the default class {CLASSIFICATION_UNDETECTABLE_DEFAULT_CLASS}")
