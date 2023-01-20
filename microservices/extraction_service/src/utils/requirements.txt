@@ -1,5 +1,5 @@
 Wand==0.6.7
-google-cloud-documentai==1.2.1
+google-cloud-documentai==2.9.0
 img2pdf==0.4.3
 flatten-json==0.1.13
 google-cloud-storage==2.1.0

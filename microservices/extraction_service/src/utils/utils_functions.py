@@ -93,7 +93,7 @@ def default_entities_extraction(parser_entities, default_entities, doc_type):
 
   # retrieve parser given entities
   for each_entity in parser_entities:
-    print(each_entity)
+    # print(each_entity)
     key, val, confidence = each_entity.get("type", ""), \
                            each_entity.get("mentionText", ""), round(
         each_entity.get("confidence", 0), 2)
@@ -215,7 +215,7 @@ def entities_extraction(parser_data, required_entities, doc_type):
     This function reads information of default and derived entities
     Parameters
     ----------
-    parser_data: specialzed parser result
+    parser_data: specialized parser result
     required_entities: required extracted entities
     doc_type: Document type
     Returns: Required entities dict
@@ -224,7 +224,7 @@ def entities_extraction(parser_data, required_entities, doc_type):
 
   # Read the entities from the processor
   parser_entities = parser_data["entities"]
-  print(f"parser_entities = {parser_entities}")
+  # print(f"parser_entities = {parser_entities}")
   default_entities = required_entities["default_entities"]
   print(f"default_entities={default_entities}")
   derived_entities = required_entities.get("derived_entities")
@@ -312,7 +312,8 @@ def standard_entity_mapping(desired_entities_list, parser_name):
     Returns: Standard entities list
     -------
   """
-  print(f"desired_entities_list={desired_entities_list}")
+  Logger.info(f"standard_entity_mapping called for desired_entities_list={desired_entities_list}")
+  # Logger.info(f"desired_entities_list={desired_entities_list}")
   # convert extracted json to pandas dataframe
   df_json = pd.DataFrame.from_dict(desired_entities_list)
   # read entity standardization csv
@@ -335,11 +336,12 @@ def standard_entity_mapping(desired_entities_list, parser_name):
   key_list = list(df_json["entity"])
   # Replace the value by creating a list by looking up the value and assign
   # to json entity
-  print(f"df_json={df_json}, dict_lookup={dict_lookup}")
+
+  # Logger.info(f"df_json={df_json}, dict_lookup={dict_lookup}")
   for index, item in enumerate(key_list):
-    print(f"item={item}")
+    # print(f"item={item}")
     if item in dict_lookup:
-      print(f"index={index}, item={dict_lookup[item]}")
+      # print(f"index={index}, item={dict_lookup[item]}")
       df_json["entity"][index]=dict_lookup[item]
     # TODO no dropping, keys are not normalized yet
     # else:
@@ -416,14 +418,14 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   required_entities_list = []
   # loop through one by one default entities mentioned in the config file
   for each_ocr_key, each_ocr_val in default_entities.items():
-    print(f"each_ocr_key={each_ocr_key}, each_ocr_val={each_ocr_val}")
+    # print(f"each_ocr_key={each_ocr_key}, each_ocr_val={each_ocr_val}")
     try:
-      print(f'checking {df["key"]} == {each_ocr_key}')
+      # print(f'checking {df["key"]} == {each_ocr_key}')
       idx_list = df.index[df["key"] == each_ocr_key].tolist()
-      print(f"idx_list={idx_list}")
+      # print(f"idx_list={idx_list}")
     except: # pylint: disable=bare-except
       idx_list = []
-      print("idx_list is Empty")
+      # print("idx_list is Empty")
     # loop for matched records of mapping dictionary
     for idx, each_val in enumerate(each_ocr_val):
       if idx_list:
@@ -499,8 +501,8 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
     if table_response is None:
       Logger.error("No table data found")
 
-  print("Extracted list required_entities_list")
-  print(required_entities_list)
+  # print("Extracted list required_entities_list")
+  # print(required_entities_list)
   return required_entities_list, flag
 
 

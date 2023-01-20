@@ -40,14 +40,15 @@ async def extraction(case_id: str, uid: str, doc_class: str, document_type: str,
         Args:
             case_id (str): Case id of the file ,
              uid (str): unique id for  each document
-             doc_class (str): class of document
+             doc_class (str): class of document (processor is configured per document class)
+             document_type (str): application_form vs supporting_documents
         Returns:
             200 : PDF files are successfully classified and database updated
             500  : HTTPException: 500 Internal Server Error if something fails
             404 : Parser not available for given document
       """
   try:
-    Logger.info(f"extraction_api  with case_id={case_id}, uid={uid}, "
+    Logger.info(f"Starting extraction for case_id={case_id}, uid={uid}, "
                 f"doc_class={doc_class}, document_type={document_type}, "
                 f"context={context}, gcs_url={gcs_url}")
     client = bq_client()
@@ -67,7 +68,7 @@ async def extraction(case_id: str, uid: str, doc_class: str, document_type: str,
       #call the format_data_bq function to format data to be
       # inserted in Bigquery
       entities_for_bq = format_data_for_bq(extraction_output[0])
-      Logger.info("Streaming data to BigQuery...")
+      Logger.info(f"Streaming data to BigQuery for case_id={case_id} document_type={document_type} doc_class={doc_class}")
       #stream_document_to_bigquery updates data to bigquery
       bq_update_status = stream_document_to_bigquery(client, case_id, uid,
                                                      doc_class, document_type,

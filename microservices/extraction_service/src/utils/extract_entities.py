@@ -15,6 +15,12 @@ limitations under the License.
 """
 
 # pylint: disable=broad-except
+import time
+from typing import Any
+from typing import Dict
+
+import pandas as pd
+
 """
 This is the main file for extraction framework, based on \
     doc type specialized parser or
@@ -30,25 +36,69 @@ import random
 import string
 from google.cloud import documentai_v1 as documentai
 from .change_json_format import get_json_format_for_processing, \
-    correct_json_format_for_db
+  correct_json_format_for_db
 from .correct_key_value import data_transformation
-from .utils_functions import entities_extraction, download_pdf_gcs,\
-    extract_form_fields, del_gcs_folder, \
-    form_parser_entities_mapping, extraction_accuracy_calc, \
-    clean_form_parser_keys, standard_entity_mapping, strip_value
-from common.config import PROJECT_ID, get_docai_entity_mapping
+from .utils_functions import entities_extraction, download_pdf_gcs, \
+  extract_form_fields, del_gcs_folder, \
+  form_parser_entities_mapping, extraction_accuracy_calc, \
+  clean_form_parser_keys, standard_entity_mapping, strip_value
+from common.config import PROJECT_ID
 from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME, \
-    DOCAI_ATTRIBUTES_TO_IGNORE
+  DOCAI_ATTRIBUTES_TO_IGNORE
 from common.config import get_parser_config, get_docai_entity_mapping
 from common.utils.logging_handler import Logger
 import warnings
 from google.cloud import storage
-
+from google.api_core.exceptions import InternalServerError
+from google.api_core.exceptions import RetryError
 warnings.simplefilter(action="ignore")
+from google.cloud import documentai_v1beta3
+
+MIME_TYPE = "application/pdf"
+
+# Handling Nested labels for CDE processor
+def get_key_values_dic(entity: documentai.Document.Entity,
+    document_entities: Dict[str, Any],
+    parent_key: str = None
+) -> None:
+
+  # Fields detected. For a full list of fields for each processor see
+  # the processor documentation:
+  # https://cloud.google.com/document-ai/docs/processors-list
+
+  entity_key = entity.type_.replace("/", "_")
+  confidence = entity.confidence
+  normalized_value = getattr(entity, "normalized_value", None)
+
+  if parent_key is not None and parent_key in document_entities.keys():
+    key = parent_key
+    new_entity_value = (
+        entity_key,
+        normalized_value.text if normalized_value else entity.mention_text,
+        confidence
+    )
+  else:
+    key = entity_key
+    new_entity_value = (
+        normalized_value.text if normalized_value else entity.mention_text,
+        confidence
+    )
+
+  existing_entity = document_entities.get(key)
+  if not existing_entity:
+    document_entities[key] = []
+    existing_entity = document_entities.get(key)
+
+  if len(entity.properties) > 0:
+    # Sub-labels (only down one level)
+    for prop in entity.properties:
+      get_key_values_dic(prop, document_entities, entity_key)
+  else:
+    existing_entity.append(new_entity_value)
 
 
 def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
-                                  doc_type: str, context: str):
+    doc_class: str, context: str):
   """
     This is specialized parser extraction main function.
     It will send request to parser and retrieve response and call
@@ -58,7 +108,7 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
     ----------
     parser_details: It has parser info like parser id, name, location, and etc
     gcs_doc_path: Document gcs path
-    doc_type: Document type
+    doc_class: Document class
 
     Returns: Specialized parser response - list of dicts having entity,
      value, confidence and manual_extraction information.
@@ -69,15 +119,13 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
   # projects/project-id/locations/location/processor/processor-id
 
   location = parser_details["location"]
-  processor_id = parser_details["processor_id"]
-  #parser_name = parser_details["parser_name"]
-  project_id = PROJECT_ID
+  processor_path = parser_details["processor_id"]
   opts = {"api_endpoint": f"{location}-documentai.googleapis.com"}
 
-  client = documentai.DocumentProcessorServiceClient(client_options=opts)
-  # parser api end point
+  dai_client = documentai_v1beta3.DocumentProcessorServiceClient(client_options=opts)
+
   # name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
-  name = processor_id
+  name = processor_path
   blob = download_pdf_gcs(gcs_uri=gcs_doc_path)
 
   document = {
@@ -86,14 +134,22 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
   }
   # Configure the process request
   request = {"name": name, "raw_document": document}
-  Logger.info(f"Specialized parser extraction api called for processor {processor_id}")
+
+  #TODO Something wrong with the docai version
+  #Getting Error: 'DocumentProcessorServiceClient' object has no attribute 'get_processor'
+  processor = dai_client.get_processor(name=processor_path)
+  Logger.info(f"Calling Specialized parser extraction api for processor with name={processor.name} type={processor.type_}, path={processor_path}")
+  start = time.time()
   # send request to parser
-  result = client.process_document(request=request)
+  result = dai_client.process_document(request=request)
+  elapsed ="{:.0f}".format(time.time() - start)
+  Logger.info(f"Elapsed time for operation {elapsed} seconds")
+
   parser_doc_data = result.document
   # convert to json
   json_string = proto.Message.to_json(parser_doc_data)
-  print("Extracted data:")
-  print(json.dumps(json_string))
+  # print("Extracted data:")
+  # print(json.dumps(json_string))
   data = json.loads(json_string)
   # remove unnecessary entities from parser
   for each_attr in DOCAI_ATTRIBUTES_TO_IGNORE:
@@ -104,20 +160,51 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
     else:
       data.pop(each_attr, None)
 
-  # Get corresponding mapping dict, for specific context or fallback to "all" TODO duplicate code with other parser
+  document_entities: Dict[str, Any] = {}
+  for entity in parser_doc_data.entities:
+    get_key_values_dic(entity, document_entities)
+
+  names = []
+  values = []
+  value_confidence = []
+  default_mappings = {}
+  print("Extracted Entities:")
+  for key in document_entities.keys():
+    for val in document_entities[key]:
+      if len(val) >= 3:  # There are Parent Key labels without values
+        key_name = val[0]
+        value = val[1]
+        names.append(key_name)
+        values.append(value)
+        value_confidence.append(val[2])
+        default_mappings[key_name] = [key_name, ]
+        print(f"Field Name = {key_name}, Value = {value}, Confidence = {val[2]}")
+  df = pd.DataFrame(
+      {
+          "Field Name": names,
+          "Field Value": values,
+          "Value Confidence": value_confidence,
+      }
+  )
+
+  print(df)
+
+  # Get corresponding mapping dict, for specific context or fallback to "all" or generate new one on the fly
   docai_entity_mapping = get_docai_entity_mapping()
-
-  print(f"context={context}")
   docai_entity_mapping_by_context = docai_entity_mapping.get(context)
+  print(f"context = {context}, {docai_entity_mapping_by_context}, {doc_class not in docai_entity_mapping['all']}")
   if docai_entity_mapping_by_context is None:
-    mapping_dict = docai_entity_mapping["all"][doc_type]
+    if doc_class not in docai_entity_mapping["all"]:
+      Logger.info(f"No mapping found for context={context} and doc_class={doc_class}, generating default mapping on the fly")
+      # Generate mapping on the fly
+      mapping_dict = {"default_entities": default_mappings}
+    else:
+      mapping_dict = docai_entity_mapping["all"][doc_class]
   else:
-    mapping_dict = docai_entity_mapping_by_context.get(
-        doc_type) or docai_entity_mapping["all"][doc_type]
-
+    mapping_dict = docai_entity_mapping_by_context.get(doc_class)
 
   # extract dl entities
-  extracted_entity_dict = entities_extraction(data, mapping_dict, doc_type)
+  extracted_entity_dict = entities_extraction(data, mapping_dict, doc_class)
   # Create a list of entities dicts
   specialized_parser_entity_list = [v for k, v in extracted_entity_dict.items()]
 
@@ -137,12 +224,12 @@ def write_config(bucket_name, blob_name, keys):
   with blob.open("w") as f:
     f.write('"default_entities": {\n')
     for key in set(keys):
-        f.write(f'  "{key}": ["{key.upper().replace(" ","_").replace("/", "_").replace(".", "_").replace("(", "").replace(")", "") }"],\n')
+      f.write(f'  "{key}": ["{key.upper().replace(" ","_").replace("/", "_").replace(".", "_").replace("(", "").replace(")", "") }"],\n')
     f.write('}\n')
 
 
 def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
-                           doc_type: str, context: str, timeout: int):
+    doc_class: str, context: str, timeout: int = 300):
   """
   This is form parser extraction main function. It will send
   request to parser and retrieve response and call
@@ -152,7 +239,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
     ----------
     parser_details: It has parser info like parser id, name, location, and etc
     gcs_doc_path: Document gcs path
-    doc_type: Document Type
+    doc_class: Document Class
     context: context name
     timeout: Max time given for extraction entities using async form parser API
 
@@ -163,13 +250,17 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
 
   location = parser_details["location"]
   processor_id = parser_details["processor_id"]
-  opts = {}
+  opts = {"api_endpoint": f"{location}-documentai.googleapis.com"}
 
-  # Location can be 'us' or 'eu'
-  if location == "eu":
-    opts = {"api_endpoint": "eu-documentai.googleapis.com"}
+  dai_client = documentai_v1beta3.DocumentProcessorServiceClient(client_options=opts)
 
-  client = documentai.DocumentProcessorServiceClient(client_options=opts)
+  gcs_documents = documentai.GcsDocuments(documents=[{
+      "gcs_uri": gcs_doc_path,
+      "mime_type": "application/pdf"
+  }])
+  input_config = documentai.BatchDocumentsInputConfig \
+    (gcs_documents=gcs_documents)
+
   # create a temp folder to store parser op, delete folder once processing done
   # call create gcs bucket function to create bucket,
   # folder will be created automatically not the bucket
@@ -181,12 +272,8 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
   # delete temp folder
   # del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
-  gcs_documents = documentai.GcsDocuments(documents=[{
-      "gcs_uri": gcs_doc_path,
-      "mime_type": "application/pdf"
-  }])
-  input_config = documentai.BatchDocumentsInputConfig\
-      (gcs_documents=gcs_documents)
+
+
   # Temp op folder location
   output_config = documentai.DocumentOutputConfig(
       gcs_output_config={"gcs_uri": destination_uri})
@@ -197,7 +284,9 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
 
   # parser api end point
   # name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
-  Logger.info("Form parser extraction api called")
+  processor = dai_client.get_processor(name=processor_id)
+  Logger.info(f"Calling Form parser extraction api for processor with name={processor.name} type={processor.type_}, path={processor_id}")
+  start = time.time()
 
   # request for Doc AI
   request = documentai.types.document_processor_service.BatchProcessRequest(
@@ -205,9 +294,28 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
       input_documents=input_config,
       document_output_config=output_config,
   )
-  operation = client.batch_process_documents(request)
-  # Wait for the operation to finish
-  operation.result(timeout=timeout)
+  operation = dai_client.batch_process_documents(request)
+
+  # Continually polls the operation until it is complete.
+  # This could take some time for larger files
+  # Format: projects/PROJECT_NUMBER/locations/LOCATION/operations/OPERATION_ID
+  try:
+    Logger.info(f"Waiting for operation {operation.operation.name} to complete...")
+    operation.result(timeout=timeout)
+  # Catch exception when operation doesn't finish before timeout
+  except (RetryError, InternalServerError) as e:
+    Logger.info(e.message)
+    Logger.info("Failed to process documents")
+    return [], False
+
+  elapsed ="{:.0f}".format(time.time() - start)
+  Logger.info(f"Elapsed time for operation {elapsed} seconds")
+
+  # Once the operation is complete,
+  # get output document information from operation metadata
+  metadata = documentai.BatchProcessMetadata(operation.metadata)
+  if metadata.state != documentai.BatchProcessMetadata.State.SUCCEEDED:
+    raise ValueError(f"Batch Process Failed: {metadata.state_message}")
 
   # Results are written to GCS. Use a regex to find
   # output files
@@ -218,11 +326,14 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   storage_client = storage.Client()
   bucket = storage_client.get_bucket(output_bucket)
   blob_list = list(bucket.list_blobs(prefix=prefix))
+
   extracted_entity_list = []
   form_parser_text = ""
   # saving form parser json, this can be removed from pipeline
   if not os.path.exists(temp_folder):
+    Logger.info(f"Output directory used for extraction locally: {temp_folder}")
     os.mkdir(temp_folder)
+
   # browse through output jsons
   for i, blob in enumerate(blob_list):
     # If JSON file, download the contents of this blob as a bytes object.
@@ -231,8 +342,9 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
       # saving the parser response to the folder, remove this while integration
       # parser_json_fname = "temp.json"
       parser_json_fname = \
-          os.path.join(temp_folder, f"res_{i}.json")
+        os.path.join(temp_folder, f"res_{i}.json")
       with open(parser_json_fname, "wb") as file_obj:
+        Logger.info(f"Copying blob {blob.name} as {parser_json_fname}")
         blob.download_to_file(file_obj)
 
       document = documentai.types.Document.from_json(blob_as_bytes)
@@ -240,62 +352,87 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
       form_parser_text += document.text
       # Read the text recognition output from the processor
       keys = []
+      values = []
+      value_confidences = []
+      key_confidences = []
       for page in document.pages:
         for form_field in page.form_fields:
           field_name, field_name_confidence, field_coordinates = \
-              extract_form_fields(form_field.field_name, document)
+            extract_form_fields(form_field.field_name, document)
           field_value, field_value_confidence, value_coordinates = \
-              extract_form_fields(form_field.field_value, document)
+            extract_form_fields(form_field.field_value, document)
           # noise removal from keys and values
           field_name = clean_form_parser_keys(field_name)
           field_value = strip_value(field_value)
+          value_confidence = round(field_value_confidence, 2)
+          key_confidence = round(field_name_confidence, 2)
           temp_dict = {
               "key": field_name,
               "key_coordinates": field_coordinates,
               "value": field_value,
               "value_coordinates": value_coordinates,
-              "key_confidence": round(field_name_confidence, 2),
-              "value_confidence": round(field_value_confidence, 2),
+              "key_confidence": key_confidence,
+              "value_confidence": value_confidence,
               "page_no": int(page.page_number),
               "page_width": int(page.dimension.width),
               "page_height": int(page.dimension.height)
           }
 
-          print(f"Extracted Entities: key={field_name}"
-                f" value={field_value}, "
-                f" key_confidence={round(field_name_confidence, 2)},"
-                f" value_confidence={round(field_value_confidence, 2)}")
           keys.append(field_name)
+          values.append(field_value)
+          value_confidences.append(value_confidence)
+          key_confidences.append(key_confidence)
           extracted_entity_list.append(temp_dict)
 
-      print("Extraction completed")
+      df = pd.DataFrame(
+          {
+              "Field Name": keys,
+              "Key Value Confidence": key_confidences,
+              "Field Value": values,
+              "Field Value Confidence": value_confidences,
+          }
+      )
+      print(df)
+
+      Logger.info(f"Extraction completed for {gcs_doc_path}")
     else:
-      print(f"Skipping non-supported file type {blob.name}")
+      Logger.info(f"Skipping non-supported file type {blob.name}")
 
-  # Get corresponding mapping dict, for specific context or fallback to "all"
   docai_entity_mapping = get_docai_entity_mapping()
-
-  print(f"context={context}")
   docai_entity_mapping_by_context = docai_entity_mapping.get(context)
+  #if mapping not specified, skip
   if docai_entity_mapping_by_context is None:
-    mapping_dict = docai_entity_mapping["all"][doc_type]
+    if doc_class not in docai_entity_mapping["all"]:
+      Logger.info(f"No mapping found for context={context} and doc_class={doc_class}, generating default mapping on the fly")
+      # Generate mapping on the fly
+      mapping_dict = {}
+      temp_dict = {}
+      for entity_dic in extracted_entity_list:
+        field_name = entity_dic.get("key")
+        temp_dict[field_name] = [field_name]
+      mapping_dict["default_entities"] = temp_dict
+      # "default_entities": {
+      #     "Date": ["date"],
+      #     "Name": ["name"],
+      #     "Occupation": ["occupation"],
+      #     "Emergency Contact": ["emergency_contact"],
+      #     "Referred By": ["referred_by"],
+    else:
+      mapping_dict = docai_entity_mapping["all"][doc_class]
   else:
-    mapping_dict = docai_entity_mapping_by_context.get(
-        doc_type) or docai_entity_mapping["all"][doc_type]
+    mapping_dict = docai_entity_mapping_by_context.get(doc_class)
 
-  print(f"context = {context}")
-  print(f"doc_type = {doc_type}")
-  print(f"mapping_dict = {mapping_dict}")
+  Logger.info(f"context={context}, doc_type={doc_class}, mapping_dict={mapping_dict}")
 
-  # Extract desired entites from form parser
+  # Extract desired entities from form parser
   try:
     form_parser_entities_list, flag = form_parser_entities_mapping(
         extracted_entity_list, mapping_dict, form_parser_text, temp_folder)
-    print(f"form_parser_entities_list={form_parser_entities_list}, flag={flag}")
+    Logger.info(f"form_parser_entities_list={form_parser_entities_list}, flag={flag}")
     # delete temp folder
-    # if os.path.exists(temp_folder):
-    #   shutil.rmtree(temp_folder)
-    # del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
+    if os.path.exists(temp_folder):
+      shutil.rmtree(temp_folder)
+    del_gcs_folder(gcs_output_uri.split("//")[1], gcs_output_uri_prefix)
     Logger.info("Required entities created from Form parser response")
     return form_parser_entities_list, flag
   except Exception as e:
@@ -304,14 +441,14 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
       shutil.rmtree(temp_folder)
 
 
-def extract_entities(gcs_doc_path: str, doc_type: str, context: str):
+def extract_entities(gcs_doc_path: str, doc_class: str, context: str):
   """
   This function calls specialized parser or form parser depends on document type
 
   Parameters
   ----------
   gcs_doc_path: Document gcs path
-  doc_type: Type of documents. Ex: unemployment_form, driver_license, and etc
+  doc_class: Type of documents. Ex: unemployment_form, driver_license, and etc
   context: context
 
   Returns
@@ -321,27 +458,31 @@ def extract_entities(gcs_doc_path: str, doc_type: str, context: str):
     Extraction accuracy
   """
   Logger.info(f"extract_entities with gcs_doc_path={gcs_doc_path}, "
-              f"doc_type={doc_type}, context={context}")
+              f"doc_class={doc_class}, context={context}")
   # read parser details from configuration json file
   parsers_info = get_parser_config()
-  parser_information = parsers_info.get(doc_type)
+  parser_information = parsers_info.get(doc_class)
   # if parser present then do extraction else update the status
   if parser_information:
     parser_name = parser_information["parser_name"]
     parser_type = parser_information["parser_type"]
 
+    # Todo Refactor, not use the type here. Makes no sense. Instead check the real processor type (not from config) and do entity extraction differently.
+    # Todo: And send all document s to batch processing universally here.
     if parser_type == "FORM_PARSER_PROCESSOR":
       Logger.info(f"Form parser extraction started for"
-                  f" this document:{doc_type}")
+                  f" document doc_class={doc_class}")
       desired_entities_list, flag = form_parser_extraction(
-          parser_information, gcs_doc_path, doc_type, context, 300)
-    else:
+          parser_information, gcs_doc_path, doc_class, context)
+    elif parser_type == "CUSTOM_EXTRACTION_PROCESSOR":
       Logger.info(f"Specialized parser extraction "
-                  f"started for this document:{doc_type}")
+                  f"started for this document doc_class={doc_class}")
       flag = True
       desired_entities_list = specialized_parser_extraction(
-          parser_information, gcs_doc_path, doc_type, context)
-
+          parser_information, gcs_doc_path, doc_class, context)
+    else:
+      Logger.error(f"Currently unsupported parser type {parser_type}, exiting")
+      return
     # calling standard entity mapping function to standardize the entities
     final_extracted_entities = standard_entity_mapping(desired_entities_list,
                                                        parser_name)
@@ -361,11 +502,11 @@ def extract_entities(gcs_doc_path: str, doc_type: str, context: str):
       extraction_accuracy_calc(final_extracted_entities, flag)
     # print(final_extracted_entities)
     # print(document_extraction_confidence)
-    Logger.info(f"Extraction completed for this document:{doc_type}")
+    Logger.info(f"Extraction completed for this document:{doc_class}")
     return final_extracted_entities, \
-          document_extraction_confidence, extraction_status
+           document_extraction_confidence, extraction_status
   else:
     # Parser not available
-    Logger.error(f"Parser not available for this document:{doc_type}")
+    Logger.error(f"Parser not available for this document:{doc_class}")
     # print("parser not available for this document")
     return None

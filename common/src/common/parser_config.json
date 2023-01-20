@@ -8,10 +8,16 @@
         "parser_type": "FORM_PARSER_PROCESSOR",
         "processor_id": "projects/$PROJECT_ID/locations/us/processors/<docai-processor-id1>"
     },
-    "prior_auth_form": {
+    "generic_form": {
         "labels": {
             "goog-packaged-solution": "prior-authorization"
         },
+        "location": "us",
+        "parser_name": "generic_form",
+        "parser_type": "FORM_PARSER_PROCESSOR",
+        "processor_id": "projects/$PROJECT_ID/locations/us/processors/<docai-processor-id1>"
+    },
+    "prior_auth_form": {
         "location": "us",
         "parser_name": "prior_auth_form",
         "parser_type": "CUSTOM_EXTRACTION_PROCESSOR",
