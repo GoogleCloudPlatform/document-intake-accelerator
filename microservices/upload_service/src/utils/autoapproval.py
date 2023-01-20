@@ -59,63 +59,65 @@ def get_autoapproval_status(validation_score, extraction_score, matching_score,
         status = STATUS_REVIEW
         return status, flag
 
+    print(f"data[document_label]={data[document_label]}")
     for i in data[document_label]:
-      if i != "Reject":
-        v_limit = data[document_label][i]["Validation_Score"]
-        e_limit = data[document_label][i]["Extraction_Score"]
-        m_limit = data[document_label][i]["Matching_Score"]
-        print(v_limit, e_limit, m_limit)
+      print(f"get_autoapproval_status i={i}, data[document_label][i]={data[document_label][i]}")
+      # if i != "Reject":
+      #   v_limit = data[document_label][i]["Validation_Score"]
+      #   e_limit = data[document_label][i]["Extraction_Score"]
+      #   m_limit = data[document_label][i]["Matching_Score"]
+      #   print(v_limit, e_limit, m_limit)
+      #
+      #   if (validation_score > v_limit and extraction_score > e_limit and
+      #       matching_score > m_limit):
+      #     flag = "yes"
+      #     status = STATUS_APPROVED
+      #     return status, flag
+      #
+      # else:
+      #   v_limit = data[document_label][i]["Validation_Score"]
+      #   e_limit = data[document_label][i]["Extraction_Score"]
+      #   m_limit = data[document_label][i]["Matching_Score"]
+      #   flag = "no"
+      #
+      #   if (validation_score > v_limit and extraction_score > e_limit and
+      #       matching_score > m_limit):
+      #     status = STATUS_REVIEW
+      #     Logger.info(f"Status :{status}")
+      #     return status, flag
+      #
+      #   else:
+      #     status = STATUS_REJECTED
+      #     Logger.info(f"Status :{status}")
+      #     return status, flag
 
-        if (validation_score > v_limit and extraction_score > e_limit and
-            matching_score > m_limit):
-          flag = "yes"
-          status = STATUS_APPROVED
-          return status, flag
+  # elif document_type == "application_form":
+  if extraction_score == 0.0:
+    flag = "no"
+    status = STATUS_REVIEW
+    return status, flag
 
-      else:
-        v_limit = data[document_label][i]["Validation_Score"]
-        e_limit = data[document_label][i]["Extraction_Score"]
-        m_limit = data[document_label][i]["Matching_Score"]
-        flag = "no"
+  for i in data[document_label]:
+    if i != "Reject":
+      e_limit = data[document_label][i]["Extraction_Score"]
+      if extraction_score > e_limit:
+        flag = "yes"
+        status = STATUS_APPROVED
+        Logger.info(f"Status :{status}")
+        return status, flag
 
-        if (validation_score > v_limit and extraction_score > e_limit and
-            matching_score > m_limit):
-          status = STATUS_REVIEW
-          Logger.info(f"Status :{status}")
-          return status, flag
-
-        else:
-          status = STATUS_REJECTED
-          Logger.info(f"Status :{status}")
-          return status, flag
-
-  elif document_type == "application_form":
-    if extraction_score == 0.0:
+    else:
+      e_limit = data[document_label][i]["Extraction_Score"]
       flag = "no"
-      status = STATUS_REVIEW
-      return status, flag
-
-    for i in data[document_label]:
-      if i != "Reject":
-        e_limit = data[document_label][i]["Extraction_Score"]
-        if extraction_score > e_limit:
-          flag = "yes"
-          status = STATUS_APPROVED
-          Logger.info(f"Status :{status}")
-          return status, flag
+      if extraction_score > e_limit:
+        status = STATUS_REVIEW
+        Logger.info(f"Status :{status}")
+        return status, flag
 
       else:
-        e_limit = data[document_label][i]["Extraction_Score"]
-        flag = "no"
-        if extraction_score > e_limit:
-          status = STATUS_REVIEW
-          Logger.info(f"Status :{status}")
-          return status, flag
-
-        else:
-          status = STATUS_REJECTED
-          Logger.info(f"Status :{status}")
-          return status, flag
+        status = STATUS_REJECTED
+        Logger.info(f"Status :{status}")
+        return status, flag
 
   else:
     status = STATUS_REVIEW

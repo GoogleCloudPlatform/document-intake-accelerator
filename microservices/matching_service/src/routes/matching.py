@@ -48,7 +48,10 @@ def get_matching_score(af_dict: dict, sd_dict: dict):
                           af_dict["context"])
   Logger.info(matching)
   print("Matching Output: ", matching)
-  if matching:
+  if matching:  # TODO fix if matching not setup, just skip
+    if len(matching) == 0:
+      # Skipp Matching
+      return 0
     return (matching[:len(matching) - 1], matching[-1]["Avg Matching Score"])
   else:
     return None
@@ -93,13 +96,15 @@ async def match_document(case_id: str, uid: str):
     """
   try:
 
+    # Temp Disable Matching For Now
+    return {"status": STATUS_SUCCESS, "score": 0}
     #Get Application form data with the same caseid
     af_doc = Document.collection.filter(case_id=case_id).filter(
         active="active").filter(document_type="application_form").get()
 
     if af_doc and af_doc.entities is not None:
       Logger.info(f"Matching document with case_id {case_id}"\
-        " and uid {uid} with the corresponding Application form")
+        f" and uid {uid} with the corresponding Application form")
 
       #Get Supporting Document data from DB
       sd_doc = Document.find_by_uid(uid)
@@ -144,16 +149,19 @@ async def match_document(case_id: str, uid: str):
               detail="Document Matching failed.Status failed to update")
 
       else:
-        Logger.error(f"Matching document with case_id {case_id} and uid {uid}"\
-          f" Failed. Error in geting Matching score")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail="Document Matching failed"\
-          "Error in getting matching score")
+        # TODO Temp workaround
+        return {"status": STATUS_SUCCESS, "score": 0}
+        # Logger.error(f"Matching document with case_id {case_id} and uid {uid}"\
+        #   f" Failed. Error in geting Matching score")
+        # raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail="Document Matching failed"\
+        #   "Error in getting matching score")
 
     else:
       Logger.error(f"Matching with case_id {case_id} and uid {uid}: "\
           f"Application form with entities not found with given case_id: {case_id}")
-      raise HTTPException(
-          status_code=404, detail="No supporting Application entities found")
+      return {"status": STATUS_SUCCESS, "score": 0}
+      # No matching => Nothing to match unless it is Configured!
+
 
   except HTTPException as e:
     dsm_status = update_matching_status(case_id, uid, STATUS_ERROR)

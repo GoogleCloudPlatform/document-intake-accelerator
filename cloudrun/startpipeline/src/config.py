@@ -18,15 +18,19 @@ limitations under the License.
 Config module to setup common environment
 """
 import os
-from common.config import DOCUMENT_STATUS_API_PATH
+from common.config import DOCUMENT_STATUS_API_PATH, UPLOAD_API_PATH
 
 PORT = os.environ.get("PORT") or 80
 
 # URL of Process Task API
 API_DOMAIN = os.getenv("API_DOMAIN")
-URL = f"{API_DOMAIN}/{DOCUMENT_STATUS_API_PATH}".replace("//", "/")
 
 # FIXME: Use HTTPS instead of HTTP
+URL = f"{API_DOMAIN}/{DOCUMENT_STATUS_API_PATH}".replace("//", "/")
 DOCUMENT_STATUS_URL = f"http://{URL}"
-assert API_DOMAIN, "API_DOMAIN is not defined."
+
+# FIXME: Use HTTPS instead of HTTP
+URL = f"{API_DOMAIN}/{UPLOAD_API_PATH}".replace("//", "/")
+UPLOAD_URL = f"http://{URL}"
+
 

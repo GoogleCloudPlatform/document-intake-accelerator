@@ -60,9 +60,8 @@ REGION = "us-central1"
 PROCESS_TIMEOUT_SECONDS = 600
 
 #List of application forms and supporting documents
-APPLICATION_FORMS = ["package_form"] # Not being used OOTB
-SUPPORTING_DOCS = ["claims_form", "prior_auth_form"]
-
+APPLICATION_FORMS = ["package_form", "bsc_package_form"] # Not being used OOTB
+SUPPORTING_DOCS = ["claims_form", "prior_auth_form", "bsc_pa_form"]
 # Doc approval status, will reflect on the Frontend app.
 STATUS_APPROVED = "Approved"
 STATUS_REVIEW = "Need Review"
@@ -77,7 +76,8 @@ STATUS_TIMEOUT = "Timeout"
 # ========= Document upload ======================
 BUCKET_NAME = f"{PROJECT_ID}-document-upload"
 TOPIC_ID = "queue-topic"
-PROCESS_TASK_API_PATH = "/upload_service/v1/process_task"
+UPLOAD_API_PATH = "/upload_service/v1"
+PROCESS_TASK_API_PATH = f"{UPLOAD_API_PATH}/process_task"
 DOCUMENT_STATUS_API_PATH = "/document_status_service/v1"
 
 # ========= Validation ===========================
@@ -93,11 +93,11 @@ VALIDATION_TABLE = f"{PROJECT_ID}.validation.validation_table"
 CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.85
 
 #When classifier is not enabled or the form cannot be classified, let's try Form Parser for the best possible Results
-CLASSIFICATION_UNDETECTABLE_DEFAULT_CLASS = "Claim"
+CLASSIFICATION_UNDETECTABLE_DEFAULT_CLASS = "Generic"
 
 # Map to standardise predicted document class from classifier to
 DOC_CLASS_STANDARDISATION_MAP = {
-    "Generic": "claims_form",
+    "Generic": "generic_form",
     "Claim": "claims_form",
     "Prior_Auth": "prior_auth_form",
 }
