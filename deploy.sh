@@ -14,7 +14,7 @@ if [[ -z "${PROJECT_ID}" ]]; then
 fi
 
 gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
-skaffold run  -p dev --default-repo=gcr.io/${PROJECT_ID}
+skaffold run  -p prod --default-repo=gcr.io/${PROJECT_ID}
 
 #TODO terraform to re-deploy cloud-run instead
 #bash "$DIR"/cloudrun/startpipeline/deploy.sh
