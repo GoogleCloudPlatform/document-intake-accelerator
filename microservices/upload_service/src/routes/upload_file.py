@@ -93,7 +93,7 @@ async def upload_file(
             detail="Error "
             "in uploading document in gcs bucket")
       Logger.info(f"File with case_id {case_id} and uid {uid}"
-                  f" uploaded successfullly in GCS bucket")
+                  f" uploaded successfully in GCS bucket")
       #Update the document upload as success in DB
       document = Document.find_by_uid(uid)
 

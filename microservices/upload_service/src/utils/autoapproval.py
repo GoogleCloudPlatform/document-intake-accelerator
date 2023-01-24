@@ -13,15 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import os
 
 """
 This code is Used to check the approval status of a document
 depending on the 3 different scores
 """
-import os
-import json
-from google.cloud import storage
-from common.config import STATUS_APPROVED, STATUS_REVIEW, STATUS_REJECTED, STATUS_PENDING, STATUS_ERROR
+from common.config import STATUS_APPROVED, STATUS_REVIEW, STATUS_REJECTED, STATUS_PENDING, STATUS_ERROR, EXTRACTION_CONFIDENCE_THRESHOLD
 from common.autoapproval_config import AUTO_APPROVAL_MAPPING
 from common.utils.logging_handler import Logger
 
@@ -39,17 +37,30 @@ def get_autoapproval_status(validation_score, extraction_score, matching_score,
   status : Accept/Reject or Review
   flag : Yes or no
   """
+  print(f"auto-approval EXTRACTION_CONFIDENCE_THRESHOLD = {os.environ.get('EXTRACTION_CONFIDENCE_THRESHOLD')}")
+
+  def check_scores():
+    return (validation_score > v_limit or v_limit == 0) and \
+      extraction_score > e_limit and \
+      (matching_score > m_limit or m_limit == 0)
 
   data = AUTO_APPROVAL_MAPPING
 
-  Logger.info(f"Validation_Score:{validation_score}, Extraction_score :"
-              f"{extraction_score},Matching_Score:{matching_score},"
-              f"DocumentLabel:{document_label},DocumentType:{document_type}")
+  Logger.info(f"get_autoapproval_status with Validation_Score:{validation_score}, Extraction_score:"
+              f"{extraction_score}, Matching_Score:{matching_score},"
+              f"DocumentLabel:{document_label}, DocumentType:{document_type}")
   flag = "no"
 
   if document_label not in data.keys():
     status = STATUS_REVIEW
-    print(f"Auto-approval is not configured for {document_label}")
+    # Use Global Extraction Score
+    print(f"Auto-approval is not configured for {document_label}, using EXTRACTION_CONFIDENCE_THRESHOLD={EXTRACTION_CONFIDENCE_THRESHOLD}")
+
+    if extraction_score > EXTRACTION_CONFIDENCE_THRESHOLD:
+      flag = "yes"
+      status = STATUS_APPROVED
+
+    Logger.info(f"Status: {status}")
     return status, flag
 
   if document_type in ("supporting_documents", "claims_form"):
@@ -59,40 +70,39 @@ def get_autoapproval_status(validation_score, extraction_score, matching_score,
         status = STATUS_REVIEW
         return status, flag
 
+    print(f"data[document_label]={data[document_label]}")
     for i in data[document_label]:
-      if i != "Reject":
-        v_limit = data[document_label][i]["Validation_Score"]
-        e_limit = data[document_label][i]["Extraction_Score"]
-        m_limit = data[document_label][i]["Matching_Score"]
-        print(v_limit, e_limit, m_limit)
+      print(f"get_autoapproval_status i={i}, data[document_label][i]={data[document_label][i]}")
+      v_limit = data[document_label][i].get("Validation_Score", 0)
+      e_limit = data[document_label][i].get("Extraction_Score", EXTRACTION_CONFIDENCE_THRESHOLD)
+      m_limit = data[document_label][i].get("Matching_Score", 0)
+      print(f"Expected Limits are: v_limit={v_limit}, e_limit={e_limit}, m_limit={m_limit}")
 
-        if (validation_score > v_limit and extraction_score > e_limit and
-            matching_score > m_limit):
+      if i != "Reject":
+        if check_scores():
           flag = "yes"
           status = STATUS_APPROVED
+          Logger.info(f"Status :{status}")
           return status, flag
 
       else:
-        v_limit = data[document_label][i]["Validation_Score"]
-        e_limit = data[document_label][i]["Extraction_Score"]
-        m_limit = data[document_label][i]["Matching_Score"]
         flag = "no"
 
-        if (validation_score > v_limit and extraction_score > e_limit and
-            matching_score > m_limit):
+        if check_scores():
           status = STATUS_REVIEW
-          Logger.info(f"Status :{status}")
+          Logger.info(f"Status: {status}")
           return status, flag
 
         else:
           status = STATUS_REJECTED
-          Logger.info(f"Status :{status}")
-          return status, flag
+          Logger.info(f"Status: {status}")
+        return status, flag
 
   elif document_type == "application_form":
     if extraction_score == 0.0:
       flag = "no"
       status = STATUS_REVIEW
+      Logger.info(f"Status: {status}")
       return status, flag
 
     for i in data[document_label]:
@@ -101,23 +111,24 @@ def get_autoapproval_status(validation_score, extraction_score, matching_score,
         if extraction_score > e_limit:
           flag = "yes"
           status = STATUS_APPROVED
-          Logger.info(f"Status :{status}")
+          Logger.info(f"Status: {status}")
           return status, flag
 
       else:
         e_limit = data[document_label][i]["Extraction_Score"]
         flag = "no"
+        Logger.info(f"extraction_score={extraction_score}, e_limit= {e_limit}")
         if extraction_score > e_limit:
           status = STATUS_REVIEW
-          Logger.info(f"Status :{status}")
+          Logger.info(f"Status: {status}")
           return status, flag
 
         else:
           status = STATUS_REJECTED
-          Logger.info(f"Status :{status}")
+          Logger.info(f"Status: {status}")
           return status, flag
 
   else:
     status = STATUS_REVIEW
-    Logger.info(f"Status :{status}")
+    Logger.info(f"Status: {status}")
     return status, flag

@@ -16,6 +16,8 @@ else
   WHERE=' WHERE STARTS_WITH(case_id, "'"$BATCH"'")'
 fi
 
+#CONTAINS_SUBSTR
+
 do_query()
 {
   bq query --location=$REGION --nouse_legacy_sql \

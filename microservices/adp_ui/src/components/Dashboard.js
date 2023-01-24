@@ -15,7 +15,7 @@
  *
  */
 
-/** This page is redirected when the user loggedin succesfully. This page comprises of 2 parts
+/** This page is redirected when the user loggedin successfully. This page comprises of 2 parts
  * a) Charts: Where we can display the count of pending,approved and rejected forms
  * b) Table data: Where it shows the details of the forms and based on the forms we can perform actions on it
  */

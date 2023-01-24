@@ -1,4 +1,6 @@
+import random
 import re
+import string
 
 from google.cloud import storage
 from fastapi import Request, status, Response
@@ -6,7 +8,7 @@ import json
 from fastapi import APIRouter
 import os
 from fastapi.concurrency import run_in_threadpool
-from config import DOCUMENT_STATUS_URL
+from config import DOCUMENT_STATUS_URL, UPLOAD_URL
 from common.utils.copy_gcs_documents import copy_blob, move_blob
 from common.utils.helper import split_uri_2_path_filename
 import uuid
@@ -19,19 +21,20 @@ from common.models import Document
 from common.utils.publisher import publish_document
 from common.config import BUCKET_NAME
 from common.config import STATUS_SUCCESS, STATUS_ERROR
+import os
+import time
 
 # API clients
 gcs = None
 
 MIME_TYPES = [
     "application/pdf",
-    "application/pdf",
-    "image/gif",
-    "image/tiff",
-    "image/jpeg",
-    "image/png",
-    "image/bmp",
-    "image/webp"
+    # "image/gif",  # TODO Add Support for all these types
+    # "image/tiff",
+    # "image/jpeg",
+    # "image/png",
+    # "image/bmp",
+    # "image/webp"
 ]
 
 START_PIPELINE_FILENAME = os.environ.get("START_PIPELINE_NAME",
@@ -79,9 +82,10 @@ async def start_pipeline(request: Request, response: Response):
   dirs, filename = split_uri_2_path_filename(file_uri)
 
   Logger.info(
-      f"Received event for  bucket - {bucket_name}, file added {file_uri}, filename:  {filename}")
+      f"Received event for bucket[{bucket_name}] file_uri=[{file_uri}], filename=[{filename}]")
 
   if filename != START_PIPELINE_FILENAME:
+    Logger.info(f"Skipping action, since waiting for {START_PIPELINE_FILENAME} to trigger pipe-line")
     return "", status.HTTP_204_NO_CONTENT
 
   Logger.info(
@@ -97,7 +101,9 @@ async def start_pipeline(request: Request, response: Response):
   message_list = []
   # generate a case_id
   dirs_string = dirs.replace("/", "_")
-  case_id = str(dirs_string) + "_" + str(uuid.uuid1())
+  uuid_str = str(uuid.uuid1())
+  ll = max(len(str(dirs_string)), int(len(uuid_str)/2))
+  case_id = str(dirs_string) + "_" + str(uuid.uuid1())[:-ll]
   event_id = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
 
   try:
@@ -109,12 +115,12 @@ async def start_pipeline(request: Request, response: Response):
           continue
         d, blob_filename = split_uri_2_path_filename(blob.name)
         Logger.info(
-          f"case_id={case_id}, file_path={blob.name}, file_name={blob_filename}")
+          f"Handling case_id={case_id}, file_path={blob.name}, file_name={blob_filename}")
 
         # create a record in database for uploaded document
         output = create_document(case_id, blob.name, context)
         uid = output
-        Logger.info(f"Created document with uid={uid}")
+        Logger.info(f"Created document with uid={uid} for case_id={case_id}, file_path={blob.name}, file_name={blob_filename}")
         uid_list.append(uid)
 
         # Copy document in GCS bucket
@@ -139,19 +145,6 @@ async def start_pipeline(request: Request, response: Response):
 
         Logger.info(f"File {blob.name} with case_id {case_id} and uid {uid}"
                     f" uploaded successfully in GCS bucket")
-
-        #move file to the processed folder
-
-        destination_blob_name = f"processed/{dirs}/{event_id}/{blob_filename}"
-        Logger.info(f"Moving file from {bucket_name}/{blob.name} to {bucket_name}/{destination_blob_name}")
-        result = await run_in_threadpool(move_blob, bucket_name, blob.name, destination_blob_name)
-        if result != STATUS_SUCCESS:
-          Logger.error(f"Error: {result}")
-          raise HTTPException(
-              status_code=500,
-              detail="Error "
-                     "when copying to processed folder")
-        Logger.info(f"File {blob.name} with case_id {case_id} and uid {uid} moved to {bucket_name}/{destination_blob_name}")
 
         # Update the document upload as success in DB
         document = Document.find_by_uid(uid)
@@ -181,6 +174,19 @@ async def start_pipeline(request: Request, response: Response):
     publish_document(message_dict)
     Logger.info(f"Message with case id {case_id} published"
                 f" successfully {uid_list}")
+
+    # TODO Temp Disabling moving to processed
+    # #move file to the processed folder
+    # destination_blob_name = f"processed/{dirs}/{event_id}/{blob_filename}"
+    # Logger.info(f"Moving file from {bucket_name}/{blob.name} to {bucket_name}/{destination_blob_name}")
+    # result = await run_in_threadpool(move_blob, bucket_name, blob.name, destination_blob_name)
+    # if result != STATUS_SUCCESS:
+    #   Logger.error(f"Error: {result}")
+    #   raise HTTPException(
+    #       status_code=500,
+    #       detail="Error "
+    #              "when copying to processed folder")
+    # Logger.info(f"File {blob.name} with case_id {case_id} and uid {uid} moved to {bucket_name}/{destination_blob_name}")
 
 
     return {

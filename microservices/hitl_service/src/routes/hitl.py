@@ -48,6 +48,8 @@ PROCESS_NEXT_STAGE = {
 
 def get_doc_list_data(docs_list: list):
   for doc in docs_list:
+    print()
+    print(doc)
     name = "N/A"
     if doc["entities"]:
       for entity in doc["entities"]:
@@ -156,12 +158,17 @@ async def report_data():
   docs_list = []
   try:
     #Fetching only active documents
+
     docs_list = list(
         map(lambda x: x.to_dict(),
             Document.collection.filter(active="active").fetch()))
     docs_list = sorted(
         docs_list, key=lambda i: i["upload_timestamp"], reverse=True)
+    Logger.info(f"Fetched Active Data len={ len(docs_list)}")
     docs_list = get_doc_list_data(docs_list)
+    Logger.info(f"report_data docs_list len={ len(docs_list)}")
+    for doc in docs_list:
+      Logger.info(f"{doc}")
     response = {"status": STATUS_SUCCESS}
     response["len"] = len(docs_list)
     response["data"] = docs_list
@@ -239,6 +246,8 @@ async def get_queue(hitl_status: str):
     result_queue = filter(filter_status, result_queue)
     result_queue = sorted(
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
+    Logger.info(f"get_queue result_queue={result_queue}")
+
     response = {"status": STATUS_SUCCESS}
     response["len"] = len(result_queue)
     response["data"] = result_queue
@@ -420,6 +429,7 @@ async def get_unclassified():
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
     response["len"] = len(result_queue)
     response["data"] = result_queue
+    Logger.info(f"get_unclassified result_queue={result_queue}")
     return response
   except Exception as e:
     print(e)
