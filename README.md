@@ -79,10 +79,44 @@ Run init step (will prepare for terraform execution and do terraform apply with 
 ./init.sh
 ```
 
-When not using custom DNS name (if you left `mydomain.com` above as API_DOMAIN, switch to using Ingress IP (shall be skipped when using custom domain name):
-```shell
-source ./init_domain_with_ip.sh
+Get the API endpoint IP address, this will be used in Firebase Auth later.
 ```
+kubectl describe ingress default-ingress | grep Address
+
+```
+- This will print the Ingress IP like below:
+  ```
+  Address: 123.123.123.123
+  ```
+
+**NOTE**: If you don’t have a custom domain ( (if you left `mydomain.com` above as API_DOMAIN), and want to use the Ingress IP address as the API endpoint:
+- Change the API_DOMAIN to the Ingress endpoint, and re-deploy CloudRun.
+  ```
+  export API_DOMAIN=$(kubectl describe ingress default-ingress | grep Address | awk '{print $2}')
+  source ./init_domain_with_ip.sh
+  ```
+
+#### Enable Firebase Auth
+- Before enabling firebase, make sure [Firebase Management API](https://console.cloud.google.com/apis/api/firebase.googleapis.com/metrics) should be disabled in GCP API & Services.
+- Go to [Firebase Console UI](https://firebase.corp.google.com/project/_/notification) to add your existing project. Select “Pay as you go” and Confirm plan.
+- On the left panel of Firebase Console UI, go to Build > Authentication, and click Get Started.
+- Select Google in the Additional providers
+- Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.
+- Go to Settings > Authorized domain, add the following to the Authorized domains:
+  - Web App Domain (e.g. adp-dev.cloudpssolutions.com) - or empry, if you do not have a custom domain. 
+  - API endpoint IP address (from kubectl describe ingress | grep Address)
+  - localhost
+- Go to Project Overview > Project settings, you will use this info in the next step.
+- In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. VSCode), and change the following values accordingly.
+  - REACT_APP_BASE_URL
+    - The custom Web App Domain that you added in the previous step.
+    - Alternatively, you can use the API Domain IP Address (Ingress), e.g. http://123.123.123.123
+  - REACT_APP_API_KEY - Web API Key
+  - REACT_APP_FIREBASE_AUTH_DOMAIN - $PROJECT_ID.firebaseapp.com
+  - REACT_APP_STORAGE_BUCKET - $PROJECT_ID.appspot.com
+  - REACT_APP_MESSAGING_SENDER_ID
+    - You can find this ID in the Project settings > Cloud Messaging
+  - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
 
 #### Deploy microservices
 ```shell
@@ -114,8 +148,8 @@ touch START_PIPELINE
 gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<mydir>
 ```
 
-This should take around two minutes for operation to complete. 
-When processed, documents are moved to `gs://${PROJECT_ID}-pa-forms/processed` directory and also copied to gs://${PROJECT_ID}-document-upload with unique identifiers. 
+This should take around few minutes for operation to complete. 
+When processed, documents are copied to `gs://${PROJECT_ID}-document-upload` with unique identifiers. 
 
 
 To verify the Pipeline worked, go to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
@@ -155,51 +189,9 @@ The Custom Document Extractor has already been deployed, but not yet trained. Th
   - Using UI Manually Label and Train Custom Document Extractor to recognize selected type of the PriorAuth forms.
   - Set a default revision for the processor.
   - Test extraction by manually uploading document via the UI and check how entities are being extracted and assigned labels.
-  - For extracted data to be properly mapped to the created Labels, you need to customize schema inside (common/src/common/docai_entity_mapping.json)[common/src/common/docai_entity_mapping.json] under prior_auth_form section. 
-    - This is ued to specify which entities will be extracted and name mappings.
-  - Following utility would be handy to list all the entities the Trained processor Could extract from the document:
-
-    ```shell
-    export RPOCESSOR_ID=<your_processor_id>
-    python utils/gen_config_processor.py -f sample_data/custom_forms/<my-sample-form>.pdf 
-    ```
-  - In the Python output, everything between START GENERATED CONFIGURATION and END GENERATED CONFIGURATION is to be placed inside `common/src/common/docai_entity_mapping.json` (under prior_auth_form section)  and copied to GS config directory. 
-
-  ```shell
-      "all": {
-          "prior_auth_form": {
-              "default_entities": {
-                 <--- COPY_HERE ---> 
-              }
-          }
-  ```
-  For example: 
-  ```shell
-      "all": {
-          "prior_auth_form": {
-              "default_entities": {
-                "issurerName": ["issurerName"],
-                "routineFax": ["routineFax"],
-                "modificationFax": ["modificationFax"],
-              }
-          }
-  ```
-
-Upload config document to GS bucket:  
-```shell
- gsutil cp ../../../common/src/common/docai_entity_mapping.json gs://$PROJECT_ID/config/docai_entity_mapping.json
-```
-
-When adding new type (for examples, you already customized prior_auth_form and want to create a second Customized Processor for another form type, then following step needs to be done:)
-  - Add new type of the `SUPPORTING_DOCS`  inside (common/src/common/config.py)[common/src/common/config.py]: 
-
-  For example: 
-```python
-SUPPORTING_DOCS = ["claims_form", "prior_auth_form", "my_new_form"]
-  ```
 
 ### Custom Document Classifier
-Classifier allows to map form to the processor required for data extraction. 
+Classifier allows to map form type to the processor required for data extraction. 
 
 >> If you have just one sample_form.pdf, and you want to use it for classifier, use following utility to copy same form into the gcs bucket, later to use for classification. At least 10 instances are needed (all for Training set).
 ```shell
@@ -212,59 +204,29 @@ Configure Custom Document Classifier (Currently feature is not available for GA 
   - Deploy the new trained version via the UI.
   - Set the new version as default and test it manually via the UI by uploading the test document. is it classified properly?
 
-### Custom Configuration
-  - Use Classifier ID to setup [common/src/common/parser_config.json](common/src/common/parser_config.json)
+Use Classifier ID for the pipeline config.
 
-  - Config is stored in the bucket: `gs://${PROJECT_ID}/config/parser_config.json`
-    - Download config locally or when using Cloud Shell, use cloud shell editor to do changes to `gs://${PROJECT_ID}/config/parser_config.json` file
+  - Config is stored in the bucket: `gs://${PROJECT_ID}-config/parser_config.json`
+    - Download config locally or when using Cloud Shell, use cloud shell editor to do changes to `gs://${PROJECT_ID}-config/parser_config.json` file
 
       ```shell
       gsutil cp "gs://${PROJECT_ID}/config/parser_config.json" common/src/common/parser_config.json 
       ```
 
-  - Add id of the classifier you have created (replace:
+  - Use id of the classifier you have created (replace <project_id> and <classifier-id> in the document accordingly):
   ```shell
-      "classifier": {
-          "labels": {
-              "goog-packaged-solution": "prior-authorization"
-          },
-          "location": "us",
-          "parser_type": "CUSTOM_CLASSIFICATION_PROCESSOR",
-          "processor_id": "projects/<project_id>/locations/us/processors/<classifier-id>"
-      }
+    "classifier": {
+        "location": "us",
+        "parser_name": "Classifier",
+        "parser_type": "CUSTOM_CLASSIFICATION_PROCESSOR",
+        "processor_id": "projects/<project_id>/locations/us/processors/<classifier-id>"
+    }      
   ```
 
-Upload config:
-```shell
-gsutil cp common/src/common/parser_config.json "gs://${PROJECT_ID}/config/parser_config.json"
-````
-
-### Rebuild / RE-deploy
-- Rebuild/re-dploy applications using skaffold
+  - Upload config:
   ```shell
-  source SET
-  gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
-  skaffold run  -p dev --default-repo=gcr.io/${PROJECT_ID}
-  ```
-### Trigger pipeline
-*NB: Currently only pdf documents are supported, so if you have a jpg or png, please first convert it to pdf.*
-- Upload test forms to the `gs://${PROJECT_ID}-pa-forms/<name-of-form_type>`
-
-For example:
-```shell
-gsutil -m cp -r sample_data/bsc_pa/* gs://${PROJECT_ID}-pa-forms/bsc_pa/
-```
-
-- Trigger processing of a folder the forms:
-  ```shell
-    ./start_pipeline.sh <name-of-form_type>
-  ```
-
-
-For example:
-```shell
- ./start_pipeline.sh bsc_pa
-```
+  gsutil cp common/src/common/parser_config.json "gs://${PROJECT_ID}/config/parser_config.json"
+  ````
 
 ## Cross-Project Setup
 It is possible for the pipeline to work, accessing a separate project (within same org) with customized processor and Classifier. For that additional steps need to be done for cross project access:
@@ -272,7 +234,7 @@ It is possible for the pipeline to work, accessing a separate project (within sa
 - GCP Project to run the Claims Data Activator - Engine (**Project CDA**)
 - GCP Project to train and serve Document AI Processors and Classifier  (**Project DocAI**)
 
-1) Inside Project DocAI [impersonate](https://medium.com/@tanujbolisetty/gcp-impersonate-service-accounts-36eaa247f87c) following service account of the Project CDA `gke-sa@{PROJECT_CDA_ID}.iam.gserviceaccount.com` (used for GKE Nodes) and grant following  [roles](https://cloud.google.com/document-ai/docs/access-control/iam-roles):
+1) Inside Project DocAI [add](https://medium.com/@tanujbolisetty/gcp-impersonate-service-accounts-36eaa247f87c) following service account of the Project CDA `gke-sa@{PROJECT_CDA_ID}.iam.gserviceaccount.com` (used for GKE Nodes) and grant following  [roles](https://cloud.google.com/document-ai/docs/access-control/iam-roles):
    - **Document AI Viewer** - To grant access to view all resources and process documents in Document AI
    Where `{PROJECT_CDA_ID}` - to be replaced with the ID of the Project CDA
 2) Inside Project CDA grant following permissions to the default Document AI service account of the Project DocAI: `service-{PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com`
@@ -280,7 +242,37 @@ It is possible for the pipeline to work, accessing a separate project (within sa
    - **Storage Object Admin**  - To allow DocAI processor to save extracted entities as json files inside `${PROJECT_CDA_ID}-output` bucket of the Project CDA  (This could be done on the `${PROJECT_CDA_ID}-output` bucket level).
    Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the Project DocAI
 
+## Rebuild / Re-deploy Microservices
+If you are not using domain, make sure API_DOMAIN is set to the Ingress:
+```shell
+export API_DOMAIN=$(kubectl describe ingress default-ingress | grep Address | awk '{print $2}')
+```
 
+Use skaffold to deploy microservices (this excludes updating CloudRun services):
+```shell
+source SET
+gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
+skaffold run  -p prod --default-repo=gcr.io/${PROJECT_ID}
+```
+
+## Testing Utilities
+- Following utility would be handy to list all the entities the Trained processor Could extract from the document:
+
+  ```shell
+  export RPOCESSOR_ID=<your_processor_id>
+  python utils/gen_config_processor.py -f sample_data/custom_forms/<my-sample-form>.pdf 
+  ```
+
+## Cleaning Data
+- Following script cleans all document related data:
+  - Firestore `document` collection
+  - BigQuery `validation` table
+  - `${PROJECT_ID}-pa-forms` bucket
+  - `${PROJECT_ID}-document-upload` bucket
+  
+  ```shell
+  utils/cleanup.sh
+  ```
 
 ## Deployment Troubleshoot
 
