@@ -252,7 +252,7 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
   processor_id = parser_details["processor_id"]
   opts = {"api_endpoint": f"{location}-documentai.googleapis.com"}
 
-  dai_client = documentai_v1beta3.DocumentProcessorServiceClient(client_options=opts)
+  dai_client = documentai.DocumentProcessorServiceClient(client_options=opts)
 
   gcs_documents = documentai.GcsDocuments(documents=[{
       "gcs_uri": gcs_doc_path,
@@ -467,6 +467,7 @@ def extract_entities(gcs_doc_path: str, doc_class: str, context: str):
     parser_name = parser_information["parser_name"]
     parser_type = parser_information["parser_type"]
 
+    print(f"parser_type={parser_type}, parser_name={parser_name}")
     # Todo Refactor, not use the type here. Makes no sense. Instead check the real processor type (not from config) and do entity extraction differently.
     # Todo: And send all document s to batch processing universally here.
     if parser_type == "FORM_PARSER_PROCESSOR":

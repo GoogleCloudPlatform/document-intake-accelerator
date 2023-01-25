@@ -1,32 +1,10 @@
-Preparations:
-```shell
-export PROJECT_ID = <put-id-here>
-export API_DOMAIN=mydomain.com
-```
+Setting up Cross Project Access:
 
-If you do not have domain, leave a dummy one and then on deploy step, after running terraform, set it to the external IP.
+Impersonate service account and grant following roles:
 
-For Argolis Environments: 
-```shell
-gcloud config set project $PROJECT_ID
-ORGANIZATION_ID=$(gcloud organizations list --format="value(name)")
-gcloud resource-manager org-policies disable-enforce constraints/compute.requireOsLogin --organization=$ORGANIZATION_ID
-gcloud resource-manager org-policies delete constraints/compute.vmExternalIpAccess --organization=$ORGANIZATION_ID
-```
+https://cloud.google.com/document-ai/docs/access-control/iam-roles
+https://medium.com/@tanujbolisetty/gcp-impersonate-service-accounts-36eaa247f87c
 
-Run terraform script and prompted to approve terraform changes, do so:
-```shell
-./init.sh
-```
+Storage access:
+https://cloud.google.com/document-ai/docs/cross-project-setup
 
-When not using DNS name, Update API_DOMAIN in SET accordingly:
-```shell
-./init_domian_with_ip.sh
-```
-
-
-
-After that deploy:
-```shell
-./deploy.sh
-```

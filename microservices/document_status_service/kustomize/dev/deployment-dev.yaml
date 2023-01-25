@@ -28,15 +28,15 @@ spec:
         - name: PROJECT_ID
           valueFrom:
             configMapKeyRef:
-              name: env-vars
+              name: document-status-env-vars
               key: PROJECT_ID
         - name: EXTERNAL_DATA_PROJECT_ID
           valueFrom:
             configMapKeyRef:
-              name: env-vars
+              name: document-status-env-vars
               key: EXTERNAL_DATA_PROJECT_ID
         - name: DATABASE_PREFIX
           valueFrom:
             configMapKeyRef:
-              name: env-vars
+              name: document-status-env-vars
               key: DATABASE_PREFIX

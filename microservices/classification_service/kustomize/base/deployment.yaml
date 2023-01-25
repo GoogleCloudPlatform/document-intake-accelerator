@@ -62,10 +62,15 @@ spec:
         - name: PARSER_CONFIG_FILE
           valueFrom:
             configMapKeyRef:
-              name: env-vars
+              name: classification-env-vars
               key: PARSER_CONFIG_FILE
         - name: DOCAI_ENTITY_MAPPING_FILE
           valueFrom:
             configMapKeyRef:
-              name: env-vars
+              name: classification-env-vars
               key: DOCAI_ENTITY_MAPPING_FILE
+        - name: CLASSIFICATION_CONFIDENCE_THRESHOLD
+          valueFrom:
+            configMapKeyRef:
+              name: classification-env-vars
+              key: CLASSIFICATION_CONFIDENCE_THRESHOLD

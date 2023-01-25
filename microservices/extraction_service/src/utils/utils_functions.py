@@ -224,7 +224,7 @@ def entities_extraction(parser_data, required_entities, doc_type):
 
   # Read the entities from the processor
   parser_entities = parser_data["entities"]
-  # print(f"parser_entities = {parser_entities}")
+  print(f"parser_entities = {parser_entities}")
   default_entities = required_entities["default_entities"]
   print(f"default_entities={default_entities}")
   derived_entities = required_entities.get("derived_entities")

@@ -105,7 +105,7 @@ kubectl describe ingress default-ingress | grep Address
 ### Enable Firebase Auth
 
 - Before enabling firebase, make sure [Firebase Management API](https://console.cloud.google.com/apis/api/firebase.googleapis.com/metrics) should be disabled in GCP API & Services.
-- Go to Firebase Console UI to add your existing project. Select “Pay as you go” and Confirm plan.
+- Go to [Firebase Console UI](https://firebase.corp.google.com/?pli=1) to add your existing project. Select “Pay as you go” and Confirm plan.
 - On the left panel of Firebase Console UI, go to Build > Authentication, and click Get Started.
 - Select Google in the Additional providers
 - Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.

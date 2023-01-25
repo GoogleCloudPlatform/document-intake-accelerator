@@ -94,8 +94,8 @@ def compare_json(application_json_obj, supporting_json_obj, sd_doc_type,
     Logger.info(support_keys)
     Logger.info(support_keys)
     if support_doc_type not in MATCHING_USER_KEYS_SUPPORTING_DOC:
-      Logger.error('Unsupported supporting doc')
-      return None
+      Logger.warning('Unsupported supporting doc')
+      return []
 
     support_doc_dict = MATCHING_USER_KEYS_SUPPORTING_DOC[support_doc_type]
     matched = []

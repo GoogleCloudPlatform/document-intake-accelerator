@@ -62,10 +62,10 @@ spec:
         - name: PARSER_CONFIG_FILE
           valueFrom:
             configMapKeyRef:
-              name: env-vars
+              name: extraction-env-vars
               key: PARSER_CONFIG_FILE
         - name: DOCAI_ENTITY_MAPPING_FILE
           valueFrom:
             configMapKeyRef:
-              name: env-vars
+              name: extraction-env-vars
               key: DOCAI_ENTITY_MAPPING_FILE

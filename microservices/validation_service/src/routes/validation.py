@@ -46,9 +46,11 @@ async def validation(case_id: str, uid: str, doc_class: str,
     """
   validation_status = STATUS_ERROR
   try:
+    Logger.info(f"Validation called for case_id={case_id}, uid={uid}, "
+                f"doc_class={doc_class}, entities={entities}")
     validation_output = get_values(doc_class, case_id, uid, entities)
     #The output of get_values is a tuple if executed successfully
-    #so taking valdation score and validation entities from output
+    #so taking validation score and validation entities from output
     if validation_output is not None:
       validation_score = validation_output[0]
       validation_entities = validation_output[1]

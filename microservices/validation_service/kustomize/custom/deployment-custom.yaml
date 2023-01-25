@@ -27,10 +27,10 @@ spec:
         - name: PROJECT_ID
           valueFrom:
             configMapKeyRef:
-              name: env-vars
+              name: validation-env-vars
               key: PROJECT_ID
         - name: EXTERNAL_DATA_PROJECT_ID
           valueFrom:
             configMapKeyRef:
-              name: env-vars
+              name: validation-env-vars
               key: EXTERNAL_DATA_PROJECT_ID
