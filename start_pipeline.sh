@@ -1,40 +1,57 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+is_package='false'
 
-if [ "$#" -lt 1 ]; then
+
+# get parameters
+while getopts d:l:p flag
+do
+  case "${flag}" in
+    p) is_package='true';;
+    d) dir=${OPTARG};;
+    l) gs_dir=${OPTARG};;
+  esac
+done
+
+usage(){
     echo "Usage: "
-    echo "  start_pipeline.sh <dir> [<gs_dir>]"
-    echo "Copies files from <dir> to gs://${PROJECT_ID}/pa-forms/<gs_dir> and triggers START_PIPELINE"
-    echo "  dir       - directory name with pdf files inside  or a path to a single form"
-    echo "  gs_dir    - name of the directory inside  gs://${PROJECT_ID}/pa-forms/<gs_dir> (By default is copied as <dir>) "
+    echo "  start_pipeline.sh -d <source_dir_or_file> [-l label_name] [-p]"
+    echo "Copies files from <source_dir_or_file> to gs://${PROJECT_ID}/pa-forms/<gs_uri_dir> and triggers START_PIPELINE"
+    echo "  -p       - All files inside same directory go as single CaseId (will not work when multiple files of same type)"
     exit
-fi
-dir=$1
-gs_dir=$dir
+}
 
-if [ "$#" -gt 1 ]; then
-  gs_dir=$2
+
+if [ -z "$gs_dir" ]; then
+  gs_dir=$dir
 fi
 GS_URL="gs://$PROJECT_ID-pa-forms/$gs_dir/"
 INPUT=${DIR}/$dir
 i=0
-echo "------ $dir"
+
+echo ">>> Source=[$dir], Destination=[$GS_URL], packaged=$is_package"
+
 if [ -d "$dir"/ ]; then
-  cd $dir
   echo "Using all PDF files inside directory $dir"
-  for FILE in *.pdf; do
-    i=$((i+1))
-    URL="gs://$PROJECT_ID-pa-forms/${i}_$gs_dir/"
-    echo " $i --- Copying data from ${INPUT}/${FILE} to ${URL}"
-    gsutil cp "${INPUT}/${FILE}" "${URL}"
-    # application form
-#    gsutil cp "${DIR}/sample_data/bsc_demo/Package.pdf" "${URL}"
+
+  if [ "$is_package" = "false" ]; then
+    cd "$dir" || exit;
+    for FILE in *.pdf; do
+      i=$((i+1))
+      URL="gs://$PROJECT_ID-pa-forms/${gs_dir}_${i}/"
+      echo " $i --- Copying data from ${INPUT}/${FILE} to ${URL}"
+      gsutil cp "${INPUT}/${FILE}" "${URL}"
+      echo "Triggering pipeline for ${URL}"
+      gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${URL}"
+    done
+    cd ..
+  else
+    URL="gs://$PROJECT_ID-pa-forms/$gs_dir/"
+    echo "Copying data from ${INPUT} to ${URL}"
+    gsutil cp "${INPUT}/*" "${URL}/"
     echo "Triggering pipeline for ${URL}"
     gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${URL}"
-#    echo "Sleeping to avoid exceeding the limit of concurrent requests to processor (Limit = 5)"
-#    sleep 5
-  done
+  fi
 
-  cd ..
 #  gsutil -m cp "${INPUT}/*.pdf" "$GS_URL"
 elif [ -f "$dir" ]; then
   # create a new case for each file for the demo purposes
@@ -52,5 +69,5 @@ fi
 #./start_pipeline.sh sample_data/bsc_demo/ bsc
 
 # DEMO
-# ./start_pipeline.sh sample_data/pa-forms-10 pa001
-# ./start_pipeline.sh sample_data/bsc_forms-10  bsc001
+#./start_pipeline.sh -d sample_data/bsc_demo -l demo-package -p
+# ./start_pipeline.sh -d sample_data/forms-10  -l demo-batch
