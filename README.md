@@ -137,7 +137,7 @@ See which pdf forms files are in the demo folder:
 
 Following step will upload to GS bucket documents from the sample_data/demo directory and trigger the pipeline with `mybatch-demo` tag:
 ```shell
-./start_pipeline demo mybatch-demo
+./start_pipeline -d demo -l mybatch-demo
 ```
 
 Alternatively, you can manually upload *pdf* forms to the **gs://${PROJECT_ID}-pa-forms/<mydir>** bucket and drop empty START_PIPELINE file to trigger the pipeline execution.
