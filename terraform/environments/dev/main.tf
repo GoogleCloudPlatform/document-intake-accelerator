@@ -376,7 +376,7 @@ resource "null_resource" "sample-data" {
     google_storage_bucket.document-load
   ]
   provisioner "local-exec" {
-    command = "gsutil -m  cp -r sample_data gs://${google_storage_bucket.default.name}/"
+    command = "gsutil -m  cp -r ../../../sample_data gs://${google_storage_bucket.default.name}/"
   }
 }
 
