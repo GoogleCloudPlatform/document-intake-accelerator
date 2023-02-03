@@ -79,7 +79,7 @@ def check_duplicate_keys(dictme,without_noise):
 
 
 
-def default_entities_extraction(parser_entities, default_entities, doc_type):
+def default_entities_extraction(parser_data, default_entities, doc_type):
   """
    This function extracted default entities
    Parameters
@@ -90,6 +90,13 @@ def default_entities_extraction(parser_entities, default_entities, doc_type):
    -------
   """
   parser_entities_dict = {}
+  parser_entities = parser_data["entities"]
+  pages_dimensions = []
+
+  # Todo add recognizing of the page number and taking proper dimensions. now assume one page only
+  for page in parser_data["pages"]:
+    dimension = page["dimension"]
+    pages_dimensions.append(dimension)
 
   # retrieve parser given entities
   for each_entity in parser_entities:
@@ -105,10 +112,22 @@ def default_entities_extraction(parser_entities, default_entities, doc_type):
                              prop.get("mentionText", ""), \
                              round(prop.get("confidence", 0), 2)
       val = strip_value(val)
-      parser_entities_dict[key] = [val, confidence]
+
+      pa = prop.get("pageAnchor")
+      if pa and len(pa.get("pageRefs", [])) > 0:
+        value_coordinates = []
+        value_coordinates_dic = pa.get("pageRefs")[0].get("boundingPoly").get("normalizedVertices")
+        for coordinate in value_coordinates_dic:
+          value_coordinates.append(float(coordinate["x"]))
+          value_coordinates.append(float(coordinate["y"]))
+      else:
+        value_coordinates = []
+
+      parser_entities_dict[key] = [val, confidence, value_coordinates]
 
 
   entity_dict = {}
+
 
   # create default entities
   for key in default_entities:
@@ -117,14 +136,29 @@ def default_entities_extraction(parser_entities, default_entities, doc_type):
           "entity": default_entities[key][0],
           "value": parser_entities_dict[key][0],
           "extraction_confidence": parser_entities_dict[key][1],
+          "value_coordinates": parser_entities_dict[key][2],
           "manual_extraction": False,
-          "corrected_value": None}
+          "key_coordinates": parser_entities_dict[key][2],
+          "corrected_value": None,
+          "page_no": 1,  # TODO
+          "page_width": int(pages_dimensions[0]["width"]),
+          "page_height": int(pages_dimensions[0]["height"])
+      }
     else:
       entity_dict[default_entities[key][0]] = {
           "entity": default_entities[key][0], "value": None,
           "extraction_confidence": None,
+          "value_coordinates": parser_entities_dict[key][2],
+          "key_coordinates": parser_entities_dict[key][2],
           "manual_extraction": False,
-          "corrected_value": None}
+          "corrected_value": None,
+          "page_no": 1,  # TODO
+          "page_width": int(pages_dimensions[0]["width"]),
+          "page_height": int(pages_dimensions[0]["height"])
+
+      }
+
+
   if doc_type == "utility_bill":
     if "supplier_address" in parser_entities_dict:
       if parser_entities_dict["supplier_address"][0] == "":
@@ -230,7 +264,7 @@ def entities_extraction(parser_data, required_entities, doc_type):
   derived_entities = required_entities.get("derived_entities")
   print(f"derived_entities={derived_entities}")
   # Extract default entities
-  entity_dict = default_entities_extraction(parser_entities,
+  entity_dict = default_entities_extraction(parser_data,
                                             default_entities, doc_type)
   Logger.info("Default entities created from Specialized parser response")
   # if any derived entities then extract them
@@ -365,23 +399,23 @@ def standard_entity_mapping(desired_entities_list, parser_name):
     .agg(pd.Series.mode).reset_index()
   df_corrected_value = df_json.groupby(["entity"])[group_by_columns[3]] \
     .mean().reset_index().round(2)
-  if parser_name == "FormParser":
-    df_page_no = df_json.groupby(["entity"])[group_by_columns[4]].mean() \
-      .reset_index().round(2)
-    df_page_width = df_json.groupby(["entity"])[group_by_columns[5]].mean() \
-      .reset_index().round(2)
-    df_page_height = df_json.groupby(["entity"])[group_by_columns[6]].mean() \
-      .reset_index().round(2)
-    # co-ordinate consolidation
-    df_key_coordinates = df_json.groupby("entity")[group_by_columns[7]].apply(
-        consolidate_coordinates).reset_index()
-    df_value_coordinates = df_json.groupby("entity")[group_by_columns[8]].apply(
-        consolidate_coordinates).reset_index()
-    dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value,
-           df_page_no, df_page_width, df_page_height,
-           df_key_coordinates, df_value_coordinates]
-  else:
-    dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value]
+  # if parser_name == "FormParser":
+  df_page_no = df_json.groupby(["entity"])[group_by_columns[4]].mean() \
+    .reset_index().round(2)
+  df_page_width = df_json.groupby(["entity"])[group_by_columns[5]].mean() \
+    .reset_index().round(2)
+  df_page_height = df_json.groupby(["entity"])[group_by_columns[6]].mean() \
+    .reset_index().round(2)
+  # co-ordinate consolidation
+  df_key_coordinates = df_json.groupby("entity")[group_by_columns[7]].apply(
+      consolidate_coordinates).reset_index()
+  df_value_coordinates = df_json.groupby("entity")[group_by_columns[8]].apply(
+      consolidate_coordinates).reset_index()
+  dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value,
+         df_page_no, df_page_width, df_page_height,
+         df_key_coordinates, df_value_coordinates]
+  # else:
+  #   dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value]
 
   df_final = reduce(lambda left, right: pd.merge(left, right, on="entity"), dfs)
   df_final = df_final.replace(r"^\s*$", np.nan, regex=True)
@@ -437,10 +471,8 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
                                             [idx_list[idx]]),
              "manual_extraction": False,
              "corrected_value": None,
-             "value_coordinates": [float(i) for i in df["value_coordinates"]
-             [idx_list[idx]]],
-             "key_coordinates": [float(i) for i in df["key_coordinates"]
-             [idx_list[idx]]],
+             "value_coordinates": [float(i) for i in df["value_coordinates"][idx_list[idx]]],
+             "key_coordinates": [float(i) for i in df["key_coordinates"][idx_list[idx]]],
              "page_no": int(df["page_no"][idx_list[idx]]),
              "page_width": int(df["page_width"][idx_list[idx]]),
              "page_height": int(df["page_height"][idx_list[idx]])

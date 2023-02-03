@@ -33,6 +33,9 @@ def format_data_for_bq(entity):
     for i in entity:
       entity_dict = {}
       entity_dict[i.get("entity")] = i.get("value")
+      entity_dict["extraction_confidence"] = i.get("extraction_confidence")
+      entity_dict["manual_extraction"] = i.get("manual_extraction")
+      entity_dict["corrected_value"] = i.get("corrected_value")
       new_list.append(entity_dict)
     res = dict(ChainMap(*new_list))
     new_json = json.dumps(res)

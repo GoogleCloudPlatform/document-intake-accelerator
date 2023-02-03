@@ -46,7 +46,7 @@ resource "google_bigquery_table" "table_id" {
   {
     "name": "uid",
     "type": "STRING",
-    "mode": "NULLABLE"
+    "mode": "REQUIRED"
   },
   {
     "name": "document_class",
@@ -60,13 +60,13 @@ resource "google_bigquery_table" "table_id" {
   },
   {
     "name": "entities",
-    "type": "STRING",
+    "type": "JSON",
     "mode": "NULLABLE"
   },
  {
     "name": "timestamp",
     "type": "TIMESTAMP",
-    "mode": "NULLABLE"
+    "mode": "REQUIRED"
  }
 
 

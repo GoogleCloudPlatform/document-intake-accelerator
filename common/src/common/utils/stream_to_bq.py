@@ -63,7 +63,7 @@ def stream_document_to_bigquery(client, case_id ,uid,
   """
     Function insert's data in Bigquery database
     Args :
-      entity : string format of enties and values
+      entity : string format of entries and values
       case_id : str
       uid : str
       document_class : str
