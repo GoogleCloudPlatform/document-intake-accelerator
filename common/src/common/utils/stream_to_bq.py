@@ -18,8 +18,9 @@ limitations under the License.
 import copy
 import json
 from .logging_handler import Logger
-from common.config import PROJECT_ID, DATABASE_PREFIX ,BIGQUERY_DB
+from common.config import PROJECT_ID, DATABASE_PREFIX, BIGQUERY_DB
 import datetime
+
 
 def stream_claim_to_bigquery(client, claim_dict, operation, timestamp):
   table_id = f"{PROJECT_ID}.{DATABASE_PREFIX}rules_engine.claims"
@@ -58,8 +59,9 @@ def delete_claim_in_bigquery(client, claim_id, timestamp):
     error = errors[0].get("errors")
     Logger.error(f"Encountered errors while inserting rows: {error}")
 
-def stream_document_to_bigquery(client, case_id ,uid,
-  document_class , document_type, entites):
+
+def stream_document_to_bigquery(client, case_id, uid,
+    document_class, document_type, entites, gcs_doc_path = None):
   """
     Function insert's data in Bigquery database
     Args :
@@ -75,16 +77,17 @@ def stream_document_to_bigquery(client, case_id ,uid,
   table_id = f"{PROJECT_ID}.{DATABASE_PREFIX}{BIGQUERY_DB}"
   Logger.info(f"stream_document_to_bigquery case_id={case_id} ,uid={uid}, "
               f"document_class={document_class}, document_type={document_type}"
-              f"table_id={table_id}")
+              f"table_id={table_id}, gcs_doc_path={gcs_doc_path}")
 
   now = datetime.datetime.now(datetime.timezone.utc)
-  rows_to_insert= [
-    {"case_id": case_id,
-    "uid": uid,
-    "document_class": document_class ,
-    "document_type": document_type,
-    "entities": entites,
-    "timestamp": now.strftime('%Y-%m-%d %H:%M:%S.%f')}
+  rows_to_insert = [
+      {"case_id": case_id,
+       "uid": uid,
+       "document_class": document_class,
+       "document_type": document_type,
+       "entities": entites,
+       "timestamp": now.strftime('%Y-%m-%d %H:%M:%S.%f'),
+       "gcs_doc_path": gcs_doc_path}
   ]
   errors = client.insert_rows_json(table_id, rows_to_insert)
   if errors == []:

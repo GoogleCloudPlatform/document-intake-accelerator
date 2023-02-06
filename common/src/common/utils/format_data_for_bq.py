@@ -20,25 +20,26 @@ Function to format data to be inserted in Bigqury
 
 import json
 from collections import ChainMap
-def format_data_for_bq(entity):
+
+
+def format_data_for_bq(entities):
   """
-    Taakes list of dictionaries as input and converts it
+    Takes list of dictionaries as input and converts it
     for BQ compatible format as string of dictionaries
     Args :
     entity : list of dictionaries
-    output : string format of enties and values
+    output : string format of entities and values
   """
-  if entity is not None:
+  if entities is not None:
     new_list = []
-    for i in entity:
+    for i in entities:
       entity_dict = {}
       entity_dict[i.get("entity")] = i.get("value")
       entity_dict["extraction_confidence"] = i.get("extraction_confidence")
-      entity_dict["manual_extraction"] = i.get("manual_extraction")
       entity_dict["corrected_value"] = i.get("corrected_value")
       new_list.append(entity_dict)
-    res = dict(ChainMap(*new_list))
-    new_json = json.dumps(res)
+    # res = dict(ChainMap(*new_list))
+    new_json = json.dumps(new_list)
     return new_json
   else:
     return None

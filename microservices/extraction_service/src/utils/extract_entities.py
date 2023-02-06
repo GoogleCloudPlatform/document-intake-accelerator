@@ -207,6 +207,7 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
 
   # extract dl entities
   extracted_entity_dict = entities_extraction(data, mapping_dict, doc_class)
+
   # Create a list of entities dicts
   specialized_parser_entity_list = [v for k, v in extracted_entity_dict.items()]
 

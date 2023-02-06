@@ -71,3 +71,4 @@ fi
 # DEMO
 #./start_pipeline.sh -d sample_data/bsc_demo -l demo-package -p
 # ./start_pipeline.sh -d sample_data/forms-10  -l demo-batch
+# ./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch

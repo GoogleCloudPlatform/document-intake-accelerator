@@ -72,8 +72,12 @@ async def extraction(case_id: str, uid: str, doc_class: str, document_type: str,
       #stream_document_to_bigquery updates data to bigquery
       bq_update_status = stream_document_to_bigquery(client, case_id, uid,
                                                      doc_class, document_type,
-                                                     entities_for_bq)
-      Logger.info(f"returned status {bq_update_status}")
+                                                     entities_for_bq, gcs_url)
+      if not bq_update_status:
+        Logger.info(f"returned status {bq_update_status}")
+      else:
+        Logger.error(f"Failed streaming to BQ,  returned status {bq_update_status}")
+
       #update_extraction_status updates data to document collection
       db_update_status = update_extraction_status(case_id, uid, STATUS_SUCCESS,
                                                   extraction_output[0],

@@ -27,6 +27,7 @@ from google.cloud import storage
 from .table_extractor import TableExtractor
 from common.utils.logging_handler import Logger
 
+
 def pattern_based_entities(parser_data, pattern):
   """
   Function return matched text as per pattern
@@ -48,35 +49,35 @@ def pattern_based_entities(parser_data, pattern):
     op = None
   return op
 
-def update_confidence(dupp,without_noise):
+
+def update_confidence(dupp, without_noise):
   for key in dupp.keys():
     for i in without_noise:
       if i["key"] == key:
-        i["value_confidence"] =0.0
+        i["value_confidence"] = 0.0
   return without_noise
 
-def check_duplicate_keys(dictme,without_noise):
-  #dictme is the mapping dictionary
-  #without_noise is the raw dictionary which comes from Form parser
-  dupp={}
-  for j,k in dictme.items():
+
+def check_duplicate_keys(dictme, without_noise):
+  # dictme is the mapping dictionary
+  # without_noise is the raw dictionary which comes from Form parser
+  dupp = {}
+  for j, k in dictme.items():
     # print(j,k)
     if len(k) > 1:
       dupp[j] = len(k)
-  for j,k in dupp.items():
-    count=0
+  for j, k in dupp.items():
+    count = 0
     for i in without_noise:
       if i["key"] == j:
         count = count + 1
-    #remove this later
-    count=0
-    if count!=k:
-      without_noise=update_confidence(dupp,without_noise)
+    # remove this later
+    count = 0
+    if count != k:
+      without_noise = update_confidence(dupp, without_noise)
       return False
 
-
   return True
-
 
 
 def default_entities_extraction(parser_data, default_entities, doc_type):
@@ -116,7 +117,8 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
       pa = prop.get("pageAnchor")
       if pa and len(pa.get("pageRefs", [])) > 0:
         value_coordinates = []
-        value_coordinates_dic = pa.get("pageRefs")[0].get("boundingPoly").get("normalizedVertices")
+        value_coordinates_dic = pa.get("pageRefs")[0].get("boundingPoly").get(
+            "normalizedVertices")
         for coordinate in value_coordinates_dic:
           value_coordinates.append(float(coordinate["x"]))
           value_coordinates.append(float(coordinate["y"]))
@@ -125,9 +127,7 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
 
       parser_entities_dict[key] = [val, confidence, value_coordinates]
 
-
   entity_dict = {}
-
 
   # create default entities
   for key in default_entities:
@@ -158,12 +158,11 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
 
       }
 
-
   if doc_type == "utility_bill":
     if "supplier_address" in parser_entities_dict:
       if parser_entities_dict["supplier_address"][0] == "":
         if "receiver_address" in parser_entities_dict \
-            and parser_entities_dict["receiver_address"][0]!="":
+            and parser_entities_dict["receiver_address"][0] != "":
           entity_dict["reciever address"]["value"] = \
             parser_entities_dict["receiver_address"][0]
         else:
@@ -310,7 +309,7 @@ def consolidate_coordinates(d):
   """
   entities_cooridnates = []
 
-  if len(d)>1:
+  if len(d) > 1:
     for i in d:
       if i:
         entities_cooridnates.append(i)
@@ -334,6 +333,7 @@ def consolidate_coordinates(d):
     else:
       return None
 
+
 def standard_entity_mapping(desired_entities_list, parser_name):
   """
     This function changes entity name to standard names and also
@@ -346,7 +346,8 @@ def standard_entity_mapping(desired_entities_list, parser_name):
     Returns: Standard entities list
     -------
   """
-  Logger.info(f"standard_entity_mapping called for desired_entities_list={desired_entities_list}")
+  Logger.info(
+      f"standard_entity_mapping called for desired_entities_list={desired_entities_list}")
   # Logger.info(f"desired_entities_list={desired_entities_list}")
   # convert extracted json to pandas dataframe
   df_json = pd.DataFrame.from_dict(desired_entities_list)
@@ -376,14 +377,14 @@ def standard_entity_mapping(desired_entities_list, parser_name):
     # print(f"item={item}")
     if item in dict_lookup:
       # print(f"index={index}, item={dict_lookup[item]}")
-      df_json["entity"][index]=dict_lookup[item]
+      df_json["entity"][index] = dict_lookup[item]
     # TODO no dropping, keys are not normalized yet
     # else:
     #   df_json = df_json.drop(index)
     #   df_json.reset_index(inplace=True, drop=True)
   # convert datatype from object to int for column "extraction_confidence"
   df_json["extraction_confidence"] = pd.to_numeric \
-    (df_json["extraction_confidence"],errors="coerce")
+    (df_json["extraction_confidence"], errors="coerce")
   group_by_columns = ["value", "extraction_confidence", "manual_extraction",
                       "corrected_value", "page_no",
                       "page_width", "page_height", "key_coordinates",
@@ -444,7 +445,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   default_entities = mapping_dict.get("default_entities")
   derived_entities = mapping_dict.get("derived_entities")
   table_entities = mapping_dict.get("table_entities")
-  flag = check_duplicate_keys(default_entities,form_parser_entity_list)
+  flag = check_duplicate_keys(default_entities, form_parser_entity_list)
 
   df = pd.DataFrame(form_parser_entity_list)
   print("....pandas.....")
@@ -457,7 +458,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
       # print(f'checking {df["key"]} == {each_ocr_key}')
       idx_list = df.index[df["key"] == each_ocr_key].tolist()
       # print(f"idx_list={idx_list}")
-    except: # pylint: disable=bare-except
+    except:  # pylint: disable=bare-except
       idx_list = []
       # print("idx_list is Empty")
     # loop for matched records of mapping dictionary
@@ -471,8 +472,10 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
                                             [idx_list[idx]]),
              "manual_extraction": False,
              "corrected_value": None,
-             "value_coordinates": [float(i) for i in df["value_coordinates"][idx_list[idx]]],
-             "key_coordinates": [float(i) for i in df["key_coordinates"][idx_list[idx]]],
+             "value_coordinates": [float(i) for i in
+                                   df["value_coordinates"][idx_list[idx]]],
+             "key_coordinates": [float(i) for i in
+                                 df["key_coordinates"][idx_list[idx]]],
              "page_no": int(df["page_no"][idx_list[idx]]),
              "page_width": int(df["page_width"][idx_list[idx]]),
              "page_height": int(df["page_height"][idx_list[idx]])
@@ -480,7 +483,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
 
           print(f" ==> entity: {each_val}, value: {df['value'][idx_list[idx]]}")
 
-        except: # pylint: disable=bare-except
+        except:  # pylint: disable=bare-except
           Logger.info("Key not found in parser output,"
                       " so filling null value")
 
@@ -591,13 +594,13 @@ def clean_form_parser_keys(text):
     if last_word in [")", "]"]:
       text += last_word
 
-  except: # pylint: disable=bare-except
+  except:  # pylint: disable=bare-except
     Logger.error("Exception occurred while cleaning keys")
 
   return text
 
-def del_gcs_folder(bucket, folder):
 
+def del_gcs_folder(bucket, folder):
   """
   This function is to delete folder from gcs bucket, this is used to
    delete temp folder from bucket
@@ -616,6 +619,7 @@ def del_gcs_folder(bucket, folder):
     blob.delete()
 
   # print("Delete successful")
+
 
 def strip_value(value):
   '''Function for default cleaning of values to remove space at end and begining
@@ -672,7 +676,7 @@ def extract_form_fields(doc_element: dict, document: dict):
   return response, confidence, list_of_coordidnates
 
 
-def extraction_accuracy_calc(total_entities_list,flag=True):
+def extraction_accuracy_calc(total_entities_list, flag=True):
   """
     This function is to calculate document extraction accuracy
     Parameters
@@ -682,18 +686,18 @@ def extraction_accuracy_calc(total_entities_list,flag=True):
     -------
   """
   # get fields extraction accuracy
-  extraction_status="single entities present"
+  extraction_status = "single entities present"
   if flag is False:
     extraction_accuracy = 0.0
-    extraction_status="duplicate entities present"
-    return extraction_accuracy,extraction_status
+    extraction_status = "duplicate entities present"
+    return extraction_accuracy, extraction_status
   entity_accuracy_list = [each_entity.get("extraction_confidence") if
                           each_entity.get("extraction_confidence") else 0
                           for each_entity in
                           total_entities_list if not each_entity.
-        get("manual_extraction")]
+                          get("manual_extraction")]
 
   extraction_accuracy = round(sum(entity_accuracy_list) /
                               len(entity_accuracy_list), 3)
 
-  return extraction_accuracy,extraction_status
+  return extraction_accuracy, extraction_status

@@ -118,6 +118,7 @@ kubectl describe ingress default-ingress | grep Address
     - You can find this ID in the Project settings > Cloud Messaging
   - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
 
+Optional: [register you domain](https://cloud.google.com/dns/docs/tutorials/create-domain-tutorial) 
 #### Deploy microservices
 ```shell
 
