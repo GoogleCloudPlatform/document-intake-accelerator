@@ -6,7 +6,7 @@ if [ -z "$TO_DELETE" ]; then
 fi
 
 echo "Cleaning pa-forms directory inside $TO_DELETE"
-read -p "Are you sure you want to delete all forms inside  $TO_DELETE? " -n 1 -r
+read -p "Are you sure you want to delete all forms inside  $TO_DELETE? Press y if yes:" -n 1 -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]
 then

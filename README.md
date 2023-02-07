@@ -244,18 +244,18 @@ It is possible for the pipeline to work, accessing a separate project (within sa
    Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the Project DocAI
 
 ## Rebuild / Re-deploy Microservices
-If you are not using domain, make sure API_DOMAIN is set to the Ingress:
+The following wrapper script will use skaffold to rebuild/redeploy microservices:
 ```shell
-export API_DOMAIN=$(kubectl describe ingress default-ingress | grep Address | awk '{print $2}')
+./deploy.sh
 ```
 
-Use skaffold to deploy microservices (this excludes updating CloudRun services):
-```shell
-source SET
-gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
-skaffold run  -p prod --default-repo=gcr.io/${PROJECT_ID}
-```
 
+# Utilities
+## Prerequisites
+Make sure to install all required libraries prior to using utilities listed below: 
+```shell
+pip3 install -r utils/requirements.tx
+```
 ## Testing Utilities
 - Following utility would be handy to list all the entities the Trained processor Could extract from the document:
 
@@ -265,7 +265,7 @@ skaffold run  -p prod --default-repo=gcr.io/${PROJECT_ID}
   ```
 
 ## Cleaning Data
-- Following script cleans all document related data:
+- Following script cleans all document related data (requires PROJECT_ID to be set upfront as an env variable):
   - Firestore `document` collection
   - BigQuery `validation` table
   - `${PROJECT_ID}-pa-forms` bucket
