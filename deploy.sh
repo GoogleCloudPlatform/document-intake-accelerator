@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -e # Exit if error is detected during pipeline execution
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${DIR}"/SET
 
@@ -14,7 +13,20 @@ if [[ -z "${PROJECT_ID}" ]]; then
   exit
 fi
 
-source "${DIR}"/microservices/adp_ui/.env  # to get settings into config map, to be able to retrieve them later on when re-deploying
+# Only first time copy to GCS .env, next when re-deploying, retrieve back those variables.
+ENV_CONFIG="gs://${TF_VAR_config_bucket}/adp_ui.env"
+gsutil -q stat "$ENV_CONFIG" 2> /dev/null
+RETURN=$?
+if [[ $RETURN -gt 0 ]]; then
+    echo "UI config does not exist in gs://${TF_VAR_config_bucket}/.env"
+    echo "Copying frontend settings to GCS as a safe backup storage..."
+    gsutil cp "${DIR}/microservices/adp_ui/.env" "$ENV_CONFIG"
+else
+  echo "Retrieving frontend config from GCS backup..."
+  gsutil cp "$ENV_CONFIG" "${DIR}/microservices/adp_ui/.env"
+fi
+
+
 gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
 skaffold run  -p prod --default-repo=gcr.io/${PROJECT_ID}
 
