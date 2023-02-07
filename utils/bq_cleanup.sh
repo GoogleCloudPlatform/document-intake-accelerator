@@ -6,8 +6,6 @@ source "$DIR/../SET"
 BIGQUERY_DATASET=validation
 BIGQUERY_TABLE=validation_table
 
-REGION=$(gcloud config get-value compute/region 2> /dev/null);
-PROJECT_ID=$(gcloud config get-value core/project 2> /dev/null);
 DELETE='DELETE FROM `'"${PROJECT_ID}"'`.'"${BIGQUERY_DATASET}."''"${BIGQUERY_TABLE}"' WHERE true; '
 
 do_query()
