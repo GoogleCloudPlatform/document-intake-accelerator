@@ -148,8 +148,8 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
       entity_dict[default_entities[key][0]] = {
           "entity": default_entities[key][0], "value": None,
           "extraction_confidence": None,
-          "value_coordinates": parser_entities_dict[key][2],
-          "key_coordinates": parser_entities_dict[key][2],
+          "value_coordinates": [],
+          "key_coordinates": [],
           "manual_extraction": False,
           "corrected_value": None,
           "page_no": 1,  # TODO
