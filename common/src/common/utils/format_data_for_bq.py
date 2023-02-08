@@ -36,7 +36,7 @@ def format_data_for_bq(entities):
       entity_dict = {}
       entity_dict["name"] = i.get("entity")
       entity_dict["value"] = i.get("value")
-      entity_dict["extraction_confidence"] = i.get("extraction_confidence")
+      entity_dict["confidence"] = i.get("extraction_confidence")
       entity_dict["corrected_value"] = i.get("corrected_value")
       new_list.append(entity_dict)
     # res = dict(ChainMap(*new_list))

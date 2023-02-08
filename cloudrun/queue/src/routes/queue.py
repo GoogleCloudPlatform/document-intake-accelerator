@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import time
 
 from fastapi import APIRouter, Request
 import base64
@@ -98,11 +99,15 @@ async def publish_msg(request: Request, response: Response):
     #     }
     #   ]
     # }
+
+    start_time = time.time()
     print(f"Sending data to {PROCESS_TASK_URL}:")
     print(request_body)
 
     process_task_response = requests.post(PROCESS_TASK_URL, json=request_body)
-    print(f"Response from {PROCESS_TASK_URL}")
+    process_time = time.time() - start_time
+    time_elapsed = round(process_time * 1000)
+    print(f"Response from {PROCESS_TASK_URL}, Time elapsed: {str(time_elapsed)} ms")
     print(process_task_response.json())
 
     response.status_code = process_task_response.status_code

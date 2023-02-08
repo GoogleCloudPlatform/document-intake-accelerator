@@ -16,7 +16,7 @@
  */
 //
 output "event-subscription" {
-  value = google_eventarc_trigger.startpipeline-topic-trigger.transport[0].pubsub[0].subscription
+  value = google_eventarc_trigger.pipeline-topic-trigger.transport[0].pubsub[0].subscription
 }
 
 //output "event-topic" {
