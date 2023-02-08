@@ -244,11 +244,24 @@ It is possible for the pipeline to work, accessing a separate project (within sa
    Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the Project DocAI
 
 ## Rebuild / Re-deploy Microservices
+
+Updated sources from the Git repo:
+```shell
+git pull
+```
 The following wrapper script will use skaffold to rebuild/redeploy microservices:
 ```shell
 ./deploy.sh
 ```
 
+You can additionally [clear all existing data (in GCS, Firestore and BigQuery)](#cleaning_data) 
+
+
+
+And a quick test to upload sample forms:
+```shell
+./start_pipeline.sh -d sample_data/forms-10  -l demo-batch
+```
 
 # Utilities
 ## Prerequisites
@@ -264,7 +277,13 @@ pip3 install -r utils/requirements.tx
   python utils/gen_config_processor.py -f sample_data/custom_forms/<my-sample-form>.pdf 
   ```
 
-## Cleaning Data
+## <a name="cleaning_data"></a>Cleaning Data
+
+Make sure to first install dependency libraries for utilities:
+```shell
+pip3 install -r utils/requirements.tx
+```
+
 - Following script cleans all document related data (requires PROJECT_ID to be set upfront as an env variable):
   - Firestore `document` collection
   - BigQuery `validation` table
@@ -274,6 +293,9 @@ pip3 install -r utils/requirements.tx
   ```shell
   utils/cleanup.sh
   ```
+  
+> Please, note, that due to active StreamingBuffer, BigQuery can only be cleaned after a table has received no inserts for an extended interval of time (~ 90 minutes). Then the buffer is detached and DELETE statement is allowed.
+> For more details see [here](https://cloud.google.com/blog/products/bigquery/life-of-a-bigquery-streaming-insert) 
 
 ## Deployment Troubleshoot
 
