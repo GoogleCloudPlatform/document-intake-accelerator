@@ -15,7 +15,7 @@
  *
  */
 
-#Creating a pubsub resource for queue
+#Creating a pubsub resource for start pipeline
 
 ##creating pubsub topic
 #resource "google_pubsub_topic" "queue" {

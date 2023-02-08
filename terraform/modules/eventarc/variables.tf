@@ -26,10 +26,10 @@ variable "gcs_bucket" {
   description = "bucket for PA forms for batch processing"
 }
 
-#variable "topic" {
-#  type        = string
-#  description = "topic"
-#}
+variable "topic" {
+  type        = string
+  description = "topic"
+}
 
 variable "cloudrun_name" {
   type        = string
