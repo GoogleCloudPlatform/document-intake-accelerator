@@ -258,10 +258,16 @@ You can additionally [clear all existing data (in GCS, Firestore and BigQuery)](
 
 
 
-And a quick test to upload sample forms:
+And a quick test to upload sample forms.
+-First command uploads 20 forms (two different CDE types) as standalone applications, 
+-Second command uploads three forms as signale application (2 CDE type and a Form type):
+
 ```shell
 ./start_pipeline.sh -d sample_data/forms-10  -l demo-batch
+./start_pipeline.sh -d sample_data/bsc_demo -l demo-package -p
 ```
+
+
 
 # Utilities
 ## Prerequisites
