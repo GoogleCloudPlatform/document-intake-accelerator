@@ -22,7 +22,7 @@ if [[ $RETURN -gt 0 ]]; then
     echo "Copying frontend settings to GCS as a safe backup storage..."
     gsutil cp "${DIR}/microservices/adp_ui/.env" "$ENV_CONFIG"
 else
-  echo "Retrieving frontend config from GCS backup..."
+  echo "Retrieving frontend config from GCS backup:"
   gsutil cp "$ENV_CONFIG" "${DIR}/microservices/adp_ui/.env"
 fi
 

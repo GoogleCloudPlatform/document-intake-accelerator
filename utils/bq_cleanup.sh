@@ -10,11 +10,11 @@ DELETE='DELETE FROM `'"${PROJECT_ID}"'`.'"${BIGQUERY_DATASET}."''"${BIGQUERY_TAB
 
 do_query()
 {
-  bq query --location=$REGION --nouse_legacy_sql \
+  bq query  --nouse_legacy_sql \
   $DELETE
 }
 
-read -p "Are you sure you want to delete all BigQuery entries inside $PROJECT_ID.$BIGQUERY_DATASET.$BIGQUERY_TABLE? " -n 1 -r
+read -p "Are you sure you want to delete all BigQuery entries inside $PROJECT_ID.$BIGQUERY_DATASET.$BIGQUERY_TABLE? Press [y] if yes: " -n 1 -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
