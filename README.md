@@ -154,19 +154,7 @@ When processed, documents are copied to `gs://${PROJECT_ID}-document-upload` wit
 
 
 To verify the Pipeline worked, go to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
-Or run the following Query:
-```shell
-./utils/run_query.sh
-```
-
-Sample output:
-```shell
-+----------------------------------------------+----------------------+----------------+----------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+
-|                   case_id                         |         uid          | document_class |    document_type     |                                                                                                                                                                                                                entities                                                                                                                                                                                                                |      timestamp      |
-+----------------------------------------------+----------------------+----------------+----------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+
-| mybatch-demo_63a8295e-90a6-11ed-83f9-fd3ef939e375 | VTnRhdt4oMH6UbeMyaQb | claims_form    | supporting_documents | {"zip": "07082", "state": "NJ", "referred_by": "None", "occupation": "Software Engineer", "name": "SALLY WALKER", "medications": null, "medical_condition": null, "marital_status": "Single", "gender": "F", "emergency_contact_phone": "(906) 334-8976", "emergency_contact": "Eva Walker", "email": "Sally, waller@cmail.com", "dob": "09/04/1986", "date": "9/14/19", "city": "Towaco", "address": "24 barney lane", "PHONE": null} | 2023-01-10 05:20:49 |
-+----------------------------------------------+----------------------+----------------+----------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+
-```
+Sample queries are located in [sql-scripts/](sql-scripts)
 
 ## Next Steps
 In the next steps you will set up specialized Processor and Classifier to handle custom Prior-Auth form. Previously only Form parser available out-of-the-box was used.
@@ -256,8 +244,6 @@ The following wrapper script will use skaffold to rebuild/redeploy microservices
 
 You can additionally [clear all existing data (in GCS, Firestore and BigQuery)](#cleaning_data) 
 
-
-
 And a quick test to upload sample forms.
 -First command uploads 20 forms (two different CDE types) as standalone applications, 
 -Second command uploads three forms as signale application (2 CDE type and a Form type):
@@ -266,7 +252,6 @@ And a quick test to upload sample forms.
 ./start_pipeline.sh -d sample_data/forms-10  -l demo-batch
 ./start_pipeline.sh -d sample_data/bsc_demo -l demo-package -p
 ```
-
 
 
 # Utilities
@@ -301,7 +286,7 @@ pip3 install -r utils/requirements.tx
   ```
   
 > Please, note, that due to active StreamingBuffer, BigQuery can only be cleaned after a table has received no inserts for an extended interval of time (~ 90 minutes). Then the buffer is detached and DELETE statement is allowed.
-> For more details see [here](https://cloud.google.com/blog/products/bigquery/life-of-a-bigquery-streaming-insert) 
+> For more details see [here](https://cloud.google.com/blog/products/bigquery/life-of-a-bigquery-streaming-insert) .
 
 ## Deployment Troubleshoot
 
