@@ -14,15 +14,11 @@
  * limitations under the License.
  *
  */
-
-output "parser_config" {
-  value = module.docai.parser_config
+//
+output "event-subscription" {
+  value = google_eventarc_trigger.pipeline-topic-trigger.transport[0].pubsub[0].subscription
 }
 
-output "eventarc_subscription" {
-  value = module.cloudrun-startspipeline-eventarc.event-subscription
-}
-
-//output "vertex_ai" {
-//  value = module.vertex_ai.output
+//output "event-topic" {
+//  value = google_eventarc_trigger.startpipeline-topic-trigger.transport[0].pubsub[0].topic
 //}

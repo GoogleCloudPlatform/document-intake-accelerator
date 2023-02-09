@@ -38,36 +38,48 @@ resource "google_bigquery_table" "table_id" {
 
   schema = <<EOF
 [
-  {
-    "name": "case_id",
-    "type": "STRING",
-    "mode": "NULLABLE"
-  },
-  {
-    "name": "uid",
-    "type": "STRING",
-    "mode": "NULLABLE"
-  },
-  {
-    "name": "document_class",
-    "type": "STRING",
-    "mode": "NULLABLE"
-  },
-  {
-    "name": "document_type",
-    "type": "STRING",
-    "mode": "NULLABLE"
-  },
-  {
-    "name": "entities",
-    "type": "STRING",
-    "mode": "NULLABLE"
-  },
- {
-    "name": "timestamp",
-    "type": "TIMESTAMP",
-    "mode": "NULLABLE"
- }
+    {
+        "name": "uid",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": "Unique key"
+    },
+    {
+        "name": "case_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "CASE id of the application"
+    },
+    {
+        "name": "document_class",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": "Indicates document_class and processor used for extracting the form."
+    },
+    {
+        "name": "document_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Document type if known"
+    },
+    {
+        "name": "entities",
+        "type": "JSON",
+        "mode": "NULLABLE",
+        "description": "Raw entities extracted from the document."
+    },
+    {
+        "name": "timestamp",
+        "type": "DATETIME",
+        "mode": "REQUIRED",
+        "description": "Timestamp when row was added"
+    },
+    {
+        "name": "gcs_doc_path",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "GCS path to the document"
+    }
 
 
 ]

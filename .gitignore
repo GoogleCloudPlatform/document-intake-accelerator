@@ -29,3 +29,4 @@ ui-debug.log
 utils/fake_data_generation/examples/pa_form_generator/out
 utils/fake_data_generation/examples/pa_form_generator/out/*
 microservices/adp_ui/.env
+/sample_data/bsc_forms/

@@ -8,6 +8,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../common/src'))
 
 from utils import extract_entities
 from common.utils import helper
+from common.utils.stream_to_bq import stream_document_to_bigquery
+from common.utils.format_data_for_bq import format_data_for_bq
 
 # python utils/extract.py -f gs://
 # Make sure to SET GOOGLE_APPLICATION_CREDENTIALS
@@ -91,7 +93,14 @@ def process_file(file_uri, doc_class):
   else:
     context = "california"
     #extract_enitities.extract(file_uri, args.doc_class, context)
-    extract_entities.extract_entities(file_uri, doc_class, context)
+    extraction_output = extract_entities.extract_entities(file_uri, doc_class, context)
+    is_tuple = isinstance(extraction_output, tuple)
+
+    if is_tuple and isinstance(extraction_output[0], list):
+      #call the format_data_bq function to format data to be
+      # inserted in Bigquery
+      entities_for_bq = format_data_for_bq(extraction_output[0])
+
 
 
 if __name__ == "__main__":

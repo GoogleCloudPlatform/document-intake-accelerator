@@ -13,25 +13,31 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import json
 
 """ hitl endpoints """
 from fastapi import APIRouter, HTTPException, Response
 from typing import Optional
 from common.models import Document
 from common.utils.logging_handler import Logger
-from common.config import BUCKET_NAME,DB_KEYS,ENTITY_KEYS,\
-  APPLICATION_FORMS,SUPPORTING_DOCS
-from common.config import STATUS_APPROVED, STATUS_REVIEW, STATUS_REJECTED, STATUS_PENDING
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR, STATUS_TIMEOUT
+from common.config import BUCKET_NAME, DB_KEYS, ENTITY_KEYS, \
+  APPLICATION_FORMS, SUPPORTING_DOCS
+from common.config import STATUS_APPROVED, STATUS_REVIEW, STATUS_REJECTED, \
+  STATUS_PENDING
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR, \
+  STATUS_TIMEOUT
 from common.config import PROCESS_TIMEOUT_SECONDS
+from common.utils.stream_to_bq import stream_document_to_bigquery
 from google.cloud import storage
 import datetime
 import requests
 import fireo
 import traceback
 from models.search_payload import SearchPayload
+from common.db_client import bq_client
 # disabling for linting to pass
 # pylint: disable = broad-except
+from common.utils.format_data_for_bq import format_data_for_bq
 
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
@@ -44,6 +50,26 @@ PROCESS_NEXT_STAGE = {
     "validation": "matching",
     "matching": "Auto-approval checking",
 }
+
+
+def strean_data_to_bq(doc):
+  client = bq_client()
+  if doc["entities"]:
+    for entity in doc["entities"]:
+      print(f"entity={entity}")
+  new_json = json.dumps(doc["entities"])
+  print(new_json)
+
+  new_json = json.dumps(doc)
+  print(new_json)
+  # inserted in Bigquery
+  # entities_for_bq = format_data_for_bq(extraction_output[0])
+  # Logger.info(f"Streaming data to BigQuery for case_id={case_id} document_type={document_type} doc_class={doc_class}")
+  # #stream_document_to_bigquery updates data to bigquery
+  # bq_update_status = stream_document_to_bigquery(client, case_id, uid,
+  #                                                doc_class, document_type,
+  #                                                entities_for_bq)
+  # Logger.info(f"returned status {bq_update_status}")
 
 
 def get_doc_list_data(docs_list: list):
@@ -157,16 +183,16 @@ async def report_data():
     """
   docs_list = []
   try:
-    #Fetching only active documents
+    # Fetching only active documents
 
     docs_list = list(
         map(lambda x: x.to_dict(),
             Document.collection.filter(active="active").fetch()))
     docs_list = sorted(
         docs_list, key=lambda i: i["upload_timestamp"], reverse=True)
-    Logger.info(f"Fetched Active Data len={ len(docs_list)}")
+    Logger.info(f"Fetched Active Data len={len(docs_list)}")
     docs_list = get_doc_list_data(docs_list)
-    Logger.info(f"report_data docs_list len={ len(docs_list)}")
+    Logger.info(f"report_data docs_list len={len(docs_list)}")
     for doc in docs_list:
       Logger.info(f"{doc}")
     response = {"status": STATUS_SUCCESS}
@@ -223,7 +249,7 @@ async def get_queue(hitl_status: str):
     500 : If there is any error during fetching from firestore
   """
 
-  #Filter function to filter based on current document status
+  # Filter function to filter based on current document status
   def filter_status(item):
     return item["current_status"] == hitl_status
 
@@ -235,13 +261,13 @@ async def get_queue(hitl_status: str):
   ]:
     raise HTTPException(status_code=400, detail="Invalid Parameter")
   try:
-    #Fetching documents and converting to list of dictionaries
+    # Fetching documents and converting to list of dictionaries
     docs = list(
         map(lambda x: x.to_dict(),
             Document.collection.filter(active="active").fetch()))
 
-    #Adding keys like process_status, current_status filtering on current_status
-    #And sorting by upload_timestamp in descending order
+    # Adding keys like process_status, current_status filtering on current_status
+    # And sorting by upload_timestamp in descending order
     result_queue = get_doc_list_data(docs)
     result_queue = filter(filter_status, result_queue)
     result_queue = sorted(
@@ -268,17 +294,36 @@ async def update_entity(uid: str, updated_doc: dict):
     Updates the entity values
     Args : uid - unique id,
     updated_doc - document with updated values in entities field
-    Returns 200 : Updation was successful
+    Returns 200 : Update was successful
     Returns 500 : If something fails
   """
   try:
+    Logger.info(f"update_entity with uid={uid}, updated_doc={updated_doc}")
     doc = Document.find_by_uid(uid)
     if not doc or not doc.to_dict()["active"].lower() == "active":
-      response = {"status": STATUS_ERROR}
-      response["detail"] = "No Document found with the given uid"
+      response = {"status": STATUS_ERROR,
+                  "detail": "No Document found with the given uid"}
       return response
     doc.entities = updated_doc["entities"]
+    Logger.info(f"entities={updated_doc['entities']}")
     doc.update()
+    client = bq_client()
+
+    entities = format_data_for_bq(updated_doc["entities"])
+    bq_update_status = stream_document_to_bigquery(client,
+                                                   updated_doc["case_id"], uid,
+                                                   updated_doc[
+                                                     "document_class"],
+                                                   updated_doc["document_type"],
+                                                   entities,
+                                                   updated_doc["url"])
+    if not bq_update_status:
+      Logger.info(f"returned status {bq_update_status}")
+    else:
+      Logger.error(
+        f"Failed streaming to BQ,  returned status {bq_update_status}")
+      return {"status": FAILED_RESPONSE}
+
     return {"status": STATUS_SUCCESS}
 
   except Exception as e:
@@ -292,14 +337,14 @@ async def update_entity(uid: str, updated_doc: dict):
 
 @router.post("/update_hitl_status")
 async def update_hitl_status(uid: str,
-                             status: str,
-                             user: str,
-                             comment: Optional[str] = ""):
+    status: str,
+    user: str,
+    comment: Optional[str] = ""):
   """
     Updates the HITL status
     Args : uid - unique id,status - hitl status,
     user-username, comment - notes or comments by user
-    Returns 200 : Updation was successful
+    Returns 200 : Update was successful
     Returns 500 : If something fails
   """
   if status.lower() not in [
@@ -341,27 +386,27 @@ async def update_hitl_status(uid: str,
 
 
 def get_file_from_bucket(case_id: str,
-                         uid: str,
-                         download: Optional[bool] = False):
+    uid: str,
+    download: Optional[bool] = False):
   storage_client = storage.Client()
-  #listing out all blobs with case_id and uid
+  # listing out all blobs with case_id and uid
   blobs = storage_client.list_blobs(
       BUCKET_NAME, prefix=case_id + "/" + uid + "/", delimiter="/")
 
   target_blob = None
-  #Selecting the last blob which would be the pdf file
+  # Selecting the last blob which would be the pdf file
   for blob in blobs:
     target_blob = blob
 
-  #If file is not found raise 404
+  # If file is not found raise 404
   if target_blob is None:
     return None, None
 
   filename = target_blob.name.split("/")[-1]
-  #Downloading the pdf file into a byte string
+  # Downloading the pdf file into a byte string
   return_data = target_blob.download_as_bytes()
 
-  #Checking for download flag and setting headers
+  # Checking for download flag and setting headers
   headers = None
   if download:
     headers = {"Content-Disposition": "attachment;filename=" + filename}
@@ -442,10 +487,10 @@ async def get_unclassified():
 
 
 def update_classification_status(case_id: str,
-                                 uid: str,
-                                 status: str,
-                                 document_class: Optional[str] = None,
-                                 document_type: Optional[str] = None):
+    uid: str,
+    status: str,
+    document_class: Optional[str] = None,
+    document_type: Optional[str] = None):
   """ Call status update api to update the classification output
     Args:
     case_id (str): Case id of the file ,
@@ -454,24 +499,24 @@ def update_classification_status(case_id: str,
 
     """
   base_url = "http://document-status-service/document_status_service" \
-  "/v1/update_classification_status"
+             "/v1/update_classification_status"
 
   if status == STATUS_SUCCESS:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
-    f"&status={status}&is_hitl={True}&document_class={document_class}"\
-      f"&document_type={document_type}"
+              f"&status={status}&is_hitl={True}&document_class={document_class}" \
+              f"&document_type={document_type}"
     response = requests.post(req_url)
     return response
 
   else:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
-    f"&status={status}"
+              f"&status={status}"
     response = requests.post(req_url)
     return response
 
 
 def call_process_task(case_id: str, uid: str, document_class: str,
-                      document_type: str, gcs_uri: str, context: str):
+    document_type: str, gcs_uri: str, context: str):
   """
     Starts the process task API after hitl classification
   """
@@ -485,8 +530,8 @@ def call_process_task(case_id: str, uid: str, document_class: str,
       "context": context
   }
   payload = {"configs": [data]}
-  base_url = f"http://upload-service/upload_service/v1/process_task"\
-    f"?is_hitl={True}"
+  base_url = f"http://upload-service/upload_service/v1/process_task" \
+             f"?is_hitl={True}"
   print("params for process task", base_url, payload)
   Logger.info(f"Params for process task {payload}")
   response = requests.post(base_url, json=payload)
@@ -495,7 +540,7 @@ def call_process_task(case_id: str, uid: str, document_class: str,
 
 @router.post("/update_hitl_classification")
 async def update_hitl_classification(case_id: str, uid: str,
-                                     document_class: str):
+    document_class: str):
   """
   Updates the hitl classification status flag and doc type and doc class in DB
   and starts the process task
@@ -514,13 +559,13 @@ async def update_hitl_classification(case_id: str, uid: str,
       raise HTTPException(status_code=404, detail="Document not found")
 
     if document_class not in APPLICATION_FORMS and \
-      document_class not in SUPPORTING_DOCS:
+        document_class not in SUPPORTING_DOCS:
       Logger.error("Invalid parameter document_class")
       raise HTTPException(
           status_code=400, detail="Invalid Parameter. Document class")
 
-    Logger.info(f"Starting manual classification for case_id"\
-        f" {case_id} and uid {uid}")
+    Logger.info(f"Starting manual classification for case_id" \
+                f" {case_id} and uid {uid}")
     document_type = None
     if document_class.lower() in APPLICATION_FORMS:
       document_type = "application_form"
@@ -532,9 +577,9 @@ async def update_hitl_classification(case_id: str, uid: str,
       raise HTTPException(
           status_code=422, detail="Unidentified document class found")
 
-    #Update DSM
-    Logger.info("Updating Doc status from Hitl classification for case_id"\
-      f"{case_id} and uid {uid}")
+    # Update DSM
+    Logger.info("Updating Doc status from Hitl classification for case_id" \
+                f"{case_id} and uid {uid}")
     response = update_classification_status(
         case_id,
         uid,
@@ -547,7 +592,7 @@ async def update_hitl_classification(case_id: str, uid: str,
       raise HTTPException(
           status_code=500, detail="Document status updation failed")
 
-    #Call Process task
+    # Call Process task
     Logger.info("Starting Process task from hitl classification")
     res = call_process_task(case_id, uid, document_class, document_type,
                             doc.url, doc.context)

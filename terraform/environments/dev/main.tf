@@ -164,7 +164,7 @@ data "google_cloud_run_service" "startpipeline-run" {
   location = var.region
 }
 
-module "pubsub" {
+module "cloudrun-queue-pubsub" {
   depends_on = [
     time_sleep.wait_for_project_services,
     module.service_accounts,
@@ -214,7 +214,7 @@ resource "time_sleep" "wait_for_eventarc_service_agent_permissions" {
   create_duration = "120s"
 }
 
-module "eventarc" {
+module "cloudrun-startspipeline-eventarc" {
   depends_on = [
     time_sleep.wait_for_project_services,
     module.service_accounts,
@@ -223,6 +223,7 @@ module "eventarc" {
     time_sleep.wait_for_eventarc_service_agent_permissions
   ]
   source                = "../../modules/eventarc"
+  topic                 = "startpipeline-topic"
   project_id            = var.project_id
   region                = var.region
   cloudrun_name         = module.cloudrun-start-pipeline.name
@@ -232,6 +233,20 @@ module "eventarc" {
   gcs_bucket            = local.forms_gcs_path
 
 }
+
+
+
+# Need to update subscription created by eventarc and set acknoledgmenet deadline
+//resource "google_pubsub_subscription" "startpipeline-eventarc-subscription" {
+//  depends_on = [module.startpipeline-eventarc]
+//  topic       = module.startpipeline-eventarc.event-topic
+//  name = module.startpipeline-eventarc.event-subscription
+//  ack_deadline_seconds = 60
+//  labels = {
+//    goog-packaged-solution = "prior-authorization"
+//  }
+//
+//}
 
 module "validation_bigquery" {
   depends_on = [
@@ -266,6 +281,7 @@ resource "google_storage_bucket" "default" {
   location                    = local.multiregion
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
+  force_destroy = true
   labels = {
     goog-packaged-solution = "prior-authorization"
   }
@@ -276,6 +292,7 @@ resource "google_storage_bucket" "document-upload" {
   location                    = local.multiregion
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
+  force_destroy = true
   labels = {
     goog-packaged-solution = "prior-authorization"
   }
@@ -288,6 +305,7 @@ resource "google_storage_bucket" "document-load" {
   location                    = local.multiregion
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
+  force_destroy = true
   labels = {
     goog-packaged-solution = "prior-authorization"
   }
@@ -299,6 +317,7 @@ resource "google_storage_bucket" "pa-config" {
   location                    = local.multiregion
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
+  force_destroy = true
   versioning {
     enabled = true
   }
@@ -313,20 +332,12 @@ resource "google_storage_bucket" "docai-output" {
   location                    = local.multiregion
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
+  force_destroy = true
   labels = {
     goog-packaged-solution = "prior-authorization"
   }
 }
 
-resource "google_storage_bucket" "assets" {
-  name                        = "${local.project_id}-assets"
-  location                    = local.multiregion
-  storage_class               = "STANDARD"
-  uniform_bucket_level_access = true
-  labels = {
-    goog-packaged-solution = "prior-authorization"
-  }
-}
 
 # ================= Validation Rules ====================
 
@@ -376,7 +387,7 @@ resource "null_resource" "sample-data" {
     google_storage_bucket.document-load
   ]
   provisioner "local-exec" {
-    command = "gsutil -m  cp -r sample_data gs://${google_storage_bucket.default.name}/"
+    command = "gsutil -m  cp -r ../../../sample_data gs://${google_storage_bucket.default.name}/"
   }
 }
 

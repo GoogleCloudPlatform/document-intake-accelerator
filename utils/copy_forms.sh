@@ -1,4 +1,4 @@
-
+#!/usr/bin/env bash
 count=10
 dest="gs://${PROJECT_ID}-pa-forms/demo"
 while getopts f:c:d: flag

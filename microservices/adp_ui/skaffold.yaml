@@ -17,11 +17,17 @@ kind: Config
 metadata:
   name: adp-ui
 build:
-  googleCloudBuild: {}
+  tagPolicy:
+    gitCommit: {}
+  local:
+    concurrency: 0
   artifacts:
   - image: adp-ui
-    docker:
-      dockerfile: Dockerfile
+    sync:
+      infer:
+      - '**/*.js'
+      - '**/*.json'
+      - '**/*.css'
 deploy:
   kubectl: { }
 manifests:
@@ -40,6 +46,11 @@ profiles:
     googleCloudBuild: {}
     artifacts:
     - image: adp-ui
+      docker:
+        cacheFrom:
+        - adp-ui
+        - adp-ui:latest
+        dockerfile: Dockerfile
 - name: dev
   build:
     googleCloudBuild: {}
@@ -51,6 +62,9 @@ profiles:
           - '**/*.json'
           - '**/*.css'
       docker:
+        cacheFrom:
+        - adp-ui
+        - adp-ui:latest
         dockerfile: Dockerfile
   deploy:
     kubectl: { }

@@ -118,6 +118,7 @@ kubectl describe ingress default-ingress | grep Address
     - You can find this ID in the Project settings > Cloud Messaging
   - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
 
+Optional: [register you domain](https://cloud.google.com/dns/docs/tutorials/create-domain-tutorial) 
 #### Deploy microservices
 ```shell
 
@@ -243,18 +244,37 @@ It is possible for the pipeline to work, accessing a separate project (within sa
    Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the Project DocAI
 
 ## Rebuild / Re-deploy Microservices
-If you are not using domain, make sure API_DOMAIN is set to the Ingress:
+
+Updated sources from the Git repo:
 ```shell
-export API_DOMAIN=$(kubectl describe ingress default-ingress | grep Address | awk '{print $2}')
+git pull
+```
+The following wrapper script will use skaffold to rebuild/redeploy microservices:
+```shell
+./deploy.sh
 ```
 
-Use skaffold to deploy microservices (this excludes updating CloudRun services):
+You can additionally [clear all existing data (in GCS, Firestore and BigQuery)](#cleaning_data) 
+
+
+
+And a quick test to upload sample forms.
+-First command uploads 20 forms (two different CDE types) as standalone applications, 
+-Second command uploads three forms as signale application (2 CDE type and a Form type):
+
 ```shell
-source SET
-gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
-skaffold run  -p prod --default-repo=gcr.io/${PROJECT_ID}
+./start_pipeline.sh -d sample_data/forms-10  -l demo-batch
+./start_pipeline.sh -d sample_data/bsc_demo -l demo-package -p
 ```
 
+
+
+# Utilities
+## Prerequisites
+Make sure to install all required libraries prior to using utilities listed below: 
+```shell
+pip3 install -r utils/requirements.tx
+```
 ## Testing Utilities
 - Following utility would be handy to list all the entities the Trained processor Could extract from the document:
 
@@ -263,8 +283,14 @@ skaffold run  -p prod --default-repo=gcr.io/${PROJECT_ID}
   python utils/gen_config_processor.py -f sample_data/custom_forms/<my-sample-form>.pdf 
   ```
 
-## Cleaning Data
-- Following script cleans all document related data:
+## <a name="cleaning_data"></a>Cleaning Data
+
+Make sure to first install dependency libraries for utilities:
+```shell
+pip3 install -r utils/requirements.tx
+```
+
+- Following script cleans all document related data (requires PROJECT_ID to be set upfront as an env variable):
   - Firestore `document` collection
   - BigQuery `validation` table
   - `${PROJECT_ID}-pa-forms` bucket
@@ -273,6 +299,9 @@ skaffold run  -p prod --default-repo=gcr.io/${PROJECT_ID}
   ```shell
   utils/cleanup.sh
   ```
+  
+> Please, note, that due to active StreamingBuffer, BigQuery can only be cleaned after a table has received no inserts for an extended interval of time (~ 90 minutes). Then the buffer is detached and DELETE statement is allowed.
+> For more details see [here](https://cloud.google.com/blog/products/bigquery/life-of-a-bigquery-streaming-insert) 
 
 ## Deployment Troubleshoot
 

@@ -75,13 +75,14 @@ def get_key_values_dic(entity: documentai.Document.Entity,
     new_entity_value = (
         entity_key,
         normalized_value.text if normalized_value else entity.mention_text,
-        confidence
+        confidence,
+
     )
   else:
     key = entity_key
     new_entity_value = (
         normalized_value.text if normalized_value else entity.mention_text,
-        confidence
+        confidence,
     )
 
   existing_entity = document_entities.get(key)
@@ -148,8 +149,9 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
   parser_doc_data = result.document
   # convert to json
   json_string = proto.Message.to_json(parser_doc_data)
-  # print("Extracted data:")
-  # print(json.dumps(json_string))
+  # print("*********** Extracted data:")
+  # print(json.dumps(parser_doc_data.entities, indent=4))
+  # print("***********")
   data = json.loads(json_string)
   # remove unnecessary entities from parser
   for each_attr in DOCAI_ATTRIBUTES_TO_IGNORE:
@@ -205,6 +207,7 @@ def specialized_parser_extraction(parser_details: dict, gcs_doc_path: str,
 
   # extract dl entities
   extracted_entity_dict = entities_extraction(data, mapping_dict, doc_class)
+
   # Create a list of entities dicts
   specialized_parser_entity_list = [v for k, v in extracted_entity_dict.items()]
 
@@ -304,8 +307,8 @@ def form_parser_extraction(parser_details: dict, gcs_doc_path: str,
     operation.result(timeout=timeout)
   # Catch exception when operation doesn't finish before timeout
   except (RetryError, InternalServerError) as e:
-    Logger.info(e.message)
-    Logger.info("Failed to process documents")
+    Logger.error(e.message)
+    Logger.error("Failed to process documents")
     return [], False
 
   elapsed ="{:.0f}".format(time.time() - start)
