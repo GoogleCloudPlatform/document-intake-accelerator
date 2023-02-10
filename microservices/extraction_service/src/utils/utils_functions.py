@@ -93,6 +93,7 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
   parser_entities_dict = {}
   parser_entities = parser_data["entities"]
   pages_dimensions = []
+  page_no = 0
 
   # Todo add recognizing of the page number and taking proper dimensions. now assume one page only
   for page in parser_data["pages"]:
@@ -116,6 +117,7 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
 
       pa = prop.get("pageAnchor")
       if pa and len(pa.get("pageRefs", [])) > 0:
+        page_no = int(pa.get("pageRefs")[0].get("page"))
         value_coordinates = []
         value_coordinates_dic = pa.get("pageRefs")[0].get("boundingPoly").get(
             "normalizedVertices")
@@ -140,11 +142,12 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
           "manual_extraction": False,
           "key_coordinates": parser_entities_dict[key][2],
           "corrected_value": None,
-          "page_no": 1,  # TODO
-          "page_width": int(pages_dimensions[0]["width"]),
-          "page_height": int(pages_dimensions[0]["height"])
+          "page_no": page_no + 1,
+          "page_width": int(pages_dimensions[page_no]["width"]),
+          "page_height": int(pages_dimensions[page_no]["height"])
       }
     else:
+      # Entity not present
       entity_dict[default_entities[key][0]] = {
           "entity": default_entities[key][0], "value": None,
           "extraction_confidence": None,
@@ -152,9 +155,9 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
           "key_coordinates": [],
           "manual_extraction": False,
           "corrected_value": None,
-          "page_no": 1,  # TODO
-          "page_width": int(pages_dimensions[0]["width"]),
-          "page_height": int(pages_dimensions[0]["height"])
+          "page_no": None,
+          "page_width": None,
+          "page_height": None
 
       }
 
