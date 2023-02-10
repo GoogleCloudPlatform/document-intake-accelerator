@@ -17,35 +17,45 @@
 
 const docclasstype=[
 
+// {
+//     'value':'utility_bill',
+//     'doc_type':'Supporting Documents',
+//     'doc_class': 'Utility Bill'
+// },
+// {
+//     'value':'unemployment_form',
+//     'doc_type':'Application Form',
+//     'doc_class': 'Unemployment Form'
+// },
+// {
+//     'value':'claims_form',
+//     'doc_type':'Supporting Documents',
+//     'doc_class': 'Claims Form'
+// },
 {
-    'value':'utility_bill',
+    'value':'bsc_pa_form',
     'doc_type':'Supporting Documents',
-    'doc_class': 'Utility Bill'
+    'doc_class': 'BSC Prior-Auth Form'
 },
 {
-    'value':'unemployment_form',
-    'doc_type':'Application Form',
-    'doc_class': 'Unemployment Form'
-},
-{
-    'value':'claims_form',
+    'value':'generic_form',
     'doc_type':'Supporting Documents',
-    'doc_class': 'Claims Form'
+    'doc_class': 'Generic Form Parser'
 },
-{
-    'value':'pay_stub',
-    'doc_type':'Supporting Documents',
-    'doc_class': 'Pay Stub'
-},
-{
-    'value':'driver_license',
-    'doc_type':'Supporting Documents',
-    'doc_class': 'Driver License'
-},
+// {
+//     'value':'pay_stub',
+//     'doc_type':'Supporting Documents',
+//     'doc_class': 'Pay Stub'
+// },
+// {
+//     'value':'driver_license',
+//     'doc_type':'Supporting Documents',
+//     'doc_class': 'Driver License'
+// },
 {
     'value':'prior_auth_form',
     'doc_type':'Supporting Documents',
-    'doc_class': 'Prior-authorization Form'
+    'doc_class': 'Prior-Authorization Texas Form'
 },
 ]
 

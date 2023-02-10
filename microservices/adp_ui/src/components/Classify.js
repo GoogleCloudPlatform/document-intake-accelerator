@@ -110,7 +110,7 @@ function Classified() {
       };
       var renderTask = page.render(renderContext);
       renderTask.promise.then(function () {
-        console.log("Pahge rendered")
+        console.log("Page rendered")
       });
 
       currPage++;
