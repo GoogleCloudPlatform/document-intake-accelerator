@@ -1,4 +1,4 @@
-# Document Intake Accelerator
+# Claims Data Activator
 
 > A pre-packaged and customizable solution to accelerate the development of end-to-end document processing workflow incorporating Document AI parsers and other GCP products (Firestore, BigQuery, GKE, etc). The goal is to accelerate the development efforts in document workflow with many ready-to-use components.
 
