@@ -1,0 +1,14 @@
+{
+  "generic_form": {
+    "doc_type":"supporting_documents",
+    "display_name": "Supporting Documents > Generic Form",
+    "parser": "claims_form_parser",
+    "classifier_label": "Generic"
+  },
+  "prior_auth_form": {
+    "doc_type": "supporting_documents",
+    "display_name": "Supporting Documents > Prior-Authorization Form",
+    "classifier_label": "Prior_Auth",
+    "parser": "prior_auth_form_parser"
+  }
+}

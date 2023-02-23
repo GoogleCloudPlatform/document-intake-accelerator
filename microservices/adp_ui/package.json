@@ -21,6 +21,7 @@
     "firebase": "^9.6.8",
     "moment": "^2.29.3",
     "pdfjs": "^2.4.7",
+    "isomorphic-fetch": "^2.2.1",
     "pdfjs-dist": "^2.13.216",
     "primeflex": "^3.1.0",
     "primeicons": "^5.0.0",

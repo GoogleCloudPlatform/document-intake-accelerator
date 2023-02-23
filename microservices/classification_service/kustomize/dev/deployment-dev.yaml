@@ -24,19 +24,6 @@ spec:
       - name: classification-service
         image: classification-service
         imagePullPolicy: Always
-        env:
-        - name: PROJECT_ID
-          valueFrom:
-            configMapKeyRef:
-              name: classification-env-vars
-              key: PROJECT_ID
-        - name: EXTERNAL_DATA_PROJECT_ID
-          valueFrom:
-            configMapKeyRef:
-              name: classification-env-vars
-              key: EXTERNAL_DATA_PROJECT_ID
-        - name: DATABASE_PREFIX
-          valueFrom:
-            configMapKeyRef:
-              name: classification-env-vars
-              key: DATABASE_PREFIX
+        envFrom:
+        - configMapRef:
+            name: classification-env-vars

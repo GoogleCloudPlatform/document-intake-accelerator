@@ -58,9 +58,6 @@ spec:
           periodSeconds: 30
           successThreshold: 1
           timeoutSeconds: 10
-        env:
-        - name: EXTRACTION_CONFIDENCE_THRESHOLD
-          valueFrom:
-            configMapKeyRef:
-              name: upload-env-vars
-              key: EXTRACTION_CONFIDENCE_THRESHOLD
+        envFrom:
+        - configMapRef:
+            name: upload-env-vars

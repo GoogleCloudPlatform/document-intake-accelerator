@@ -58,14 +58,6 @@ spec:
           periodSeconds: 30
           successThreshold: 1
           timeoutSeconds: 10
-        env:
-        - name: PARSER_CONFIG_FILE
-          valueFrom:
-            configMapKeyRef:
-              name: extraction-env-vars
-              key: PARSER_CONFIG_FILE
-        - name: DOCAI_ENTITY_MAPPING_FILE
-          valueFrom:
-            configMapKeyRef:
-              name: extraction-env-vars
-              key: DOCAI_ENTITY_MAPPING_FILE
+        envFrom:
+        - configMapRef:
+            name: extraction-env-vars

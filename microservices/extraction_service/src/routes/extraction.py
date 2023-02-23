@@ -90,6 +90,7 @@ async def extraction(case_id: str, uid: str, doc_class: str, document_type: str,
             "entities": extraction_output[0],
             "score": extraction_output[1],
             "extraction_status": extraction_output[2],
+            "extraction_field_min_score": extraction_output[3],
             "message": f"document with case_id {case_id} ,uid_id {uid} "
                        f"successfully extracted"
         }
@@ -102,7 +103,7 @@ async def extraction(case_id: str, uid: str, doc_class: str, document_type: str,
     #check if  extract_entities returned None when parser not available
     elif extraction_output is None:
       update_extraction_status(case_id, uid, STATUS_ERROR, None, None, None)
-      Logger.error(f"Parser not available for case_id {case_id} "
+      Logger.error(f"Parser not available for case_id {case_id} " 
                    f",uid {uid}, doc_class {doc_class}")
       response.status_code = status.HTTP_404_NOT_FOUND
       response.body = f"Parser not available for case_id {case_id}" \

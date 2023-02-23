@@ -19,16 +19,17 @@ import requests
 import traceback
 from fastapi import HTTPException
 from common.utils.logging_handler import Logger
+
 from utils.autoapproval import get_autoapproval_status
 from typing import List, Dict
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR, CLASSIFICATION_UNDETECTABLE
 
 
 def run_pipeline(payload: List[Dict], is_hitl: bool, is_reassign: bool):
   """Runs the entire pipeline
     Args:
     payload (ProcessTask): Consist of configs required to run the pipeline
-    is_hitl : It is used to run the pipeline for unclassifed documents
+    is_hitl : It is used to run the pipeline for unclassified documents
     is_reassign : It is used to run the pipeline for reassigned document
   """
   Logger.info(f"Processing the documents: {payload}")
@@ -74,17 +75,19 @@ def run_pipeline(payload: List[Dict], is_hitl: bool, is_reassign: bool):
             extraction_output = extract_documents(
                 doc, document_type="supporting_documents")
             extraction_score = extraction_output[0]
-            extraction_entities = extraction_output[1]
+            extraction_field_min_score = extraction_output[1]
+            extraction_entities = extraction_output[2]
             Logger.info(f" Executing pipeline for normal scenario {doc}")
             if extraction_score is not None and extraction_entities:
               Logger.info(f"extraction score is {extraction_score},{doc}")
-              validate_match_approve(doc, extraction_score, extraction_entities)
+              validate_match_approve(doc, extraction_score, extraction_field_min_score, extraction_entities)
           else:
             Logger.info(f" Executing pipeline for reassign scenario "
                         f"{doc}")
             extraction_score = doc["extraction_score"]
             extraction_entities = doc["extraction_entities"]
-            validate_match_approve(doc, extraction_score, extraction_entities)
+            extraction_field_min_score = None # Todo calculate the field value
+            validate_match_approve(doc, extraction_score, extraction_field_min_score, extraction_entities)
         except Exception as e:
           Logger.error(e)
           err = traceback.format_exc().replace("\n", " ")
@@ -164,9 +167,14 @@ def filter_documents(configs: List[Dict]):
     if cl_result.status_code == 200:
       document_type = cl_result.json().get("doc_type")
       document_class = cl_result.json().get("doc_class")
+
       Logger.info(
-          f"Classification successful for {uid}:document_type:{document_type},\
+          f"Classification for {uid}:document_type:{document_type},\
       document_class:{document_class}.")
+
+      if document_class == CLASSIFICATION_UNDETECTABLE:
+        Logger.warning(f"Skipping extraction for unclassified document  {uid} ")
+        continue
 
       if document_type == "application_form":
         config["document_class"] = document_class
@@ -189,14 +197,15 @@ def extract_documents(doc: Dict, document_type):
   """Perform extraction for application or supporting documents"""
   extraction_score = None
   extraction_entities = None
+  extraction_field_min_score = None
   case_id = doc.get("case_id")
   uid = doc.get("uid")
   document_class = doc.get("document_class")
   context = doc.get("context")
   gcs_url = doc.get("gcs_url")
   Logger.info(f"extract_documents with case_id={case_id}, uid={uid}, "
-              f"document_class={document_class}, document_type={document_type},"
-              f" context={context}, gcs_url={gcs_url}")
+              f"document_class={document_class}, document_type={document_type}, "
+              f"context={context}, gcs_url={gcs_url}")
   extract_res = get_extraction_score(case_id, uid, document_class,
                                      document_type, context, gcs_url)
 
@@ -204,10 +213,13 @@ def extract_documents(doc: Dict, document_type):
     Logger.info(f"Extraction successful for {document_type}\
        case_id: {case_id} uid:{uid}")
     extraction_score = extract_res.json().get("score")
+    extraction_field_min_score = extract_res.json().get("extraction_field_min_score")
     extraction_entities = extract_res.json().get("entities")
+
     # if document is application form then update autoapproval status
     if document_type == "application_form":
       autoapproval_status = get_autoapproval_status(None, extraction_score,
+                                                    extraction_field_min_score,
                                                     None, document_class,
                                                     document_type)
       Logger.info(f"autoapproval_status for application:{autoapproval_status}")
@@ -217,10 +229,10 @@ def extract_documents(doc: Dict, document_type):
   else:
     Logger.error(f"extraction failed for {document_type} {document_class} case_id={case_id} uid={uid}")
   # extraction_score = None
-  return extraction_score, extraction_entities
+  return extraction_score, extraction_field_min_score, extraction_entities
 
 
-def validate_match_approve(sup_doc: Dict, extraction_score,
+def validate_match_approve(sup_doc: Dict, extraction_score, min_extraction_score_per_field,
                            extraction_entities):
   """Perform validation, matching and autoapproval for supporting documents"""
   validation_score = None
@@ -241,7 +253,7 @@ def validate_match_approve(sup_doc: Dict, extraction_score,
       Logger.info(f"Matching successful for case_id: {case_id} uid:{uid}.")
       matching_score = matching_res.json().get("score")
       update_autoapproval(document_class, document_type, case_id, uid,
-                          validation_score, extraction_score, matching_score)
+                          validation_score, extraction_score, min_extraction_score_per_field, matching_score)
     else:
       Logger.error(f"Matching FAILED for case_id: {case_id} uid:{uid}")
   else:
@@ -255,10 +267,12 @@ def update_autoapproval(document_class,
                         uid,
                         validation_score=None,
                         extraction_score=None,
+                        min_extraction_score_per_field=None,
                         matching_score=None):
   """Get the autoapproval status and update."""
   autoapproval_status = get_autoapproval_status(validation_score,
                                                 extraction_score,
+                                                min_extraction_score_per_field,
                                                 matching_score, document_class,
                                                 document_type)
   Logger.info(f"autoapproval_status for application:{autoapproval_status}\

@@ -24,14 +24,6 @@ spec:
       - name: validation-service
         image: validation-service
         imagePullPolicy: Always
-        env:
-        - name: PROJECT_ID
-          valueFrom:
-            configMapKeyRef:
-              name: validation-env-vars
-              key: PROJECT_ID
-        - name: EXTERNAL_DATA_PROJECT_ID
-          valueFrom:
-            configMapKeyRef:
-              name: validation-env-vars
-              key: EXTERNAL_DATA_PROJECT_ID
+        envFrom:
+        - configMapRef:
+            name: validation-env-vars

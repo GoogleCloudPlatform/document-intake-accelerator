@@ -32,19 +32,28 @@ source ~/venv/pa/bin/activate
 ```
 
 ### Prerequisites
+To access Custom Document Classifier and Splitter, you need to request early access by filling in this form: 
+This needs to be done before running the deployment.
+
+[//]: # ()
+[//]: # (It is recommended to deploy two projects: one for the Pipeline Engine, and another for the Document AI processors. Both projects need to belong in the same Org. )
+
+[//]: # (When following this  practice, first create project used to host Document AI. Then create second project for deployment. Otherwise, when both DocAI and Pipeline deployed into the same project, use same PROJECT_ID in the commands below.)
+
 *Important*: User needs to have Project **owner** role in order to deploy  terraform setup.
 ```
-export PROJECT_ID=<GCP Project ID>
+export PROJECT_ID=<GCP Project ID to host Data ingestion microservices>
 export API_DOMAIN=mydomain.com
 ```
 Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (needs to be set to a legal name as a placeholder) and then later run an optional step below to configure using Ingress IP address instead.
 
 
+Activate Project for the pipeline deployment:
 ```shell
 gcloud config set project $PROJECT_ID
 ```
 
-Run following commands locally (not required for Cloud Shell):
+Run following commands when deploying from developer machine  (not required for Cloud Shell):
 ```shell
 gcloud auth login
 gcloud auth application-default login
@@ -98,7 +107,7 @@ kubectl describe ingress default-ingress | grep Address
 
 #### Enable Firebase Auth
 - Before enabling firebase, make sure [Firebase Management API](https://console.cloud.google.com/apis/api/firebase.googleapis.com/metrics) should be disabled in GCP API & Services.
-- Go to [Firebase Console UI](https://firebase.corp.google.com/project/_/notification) to add your existing project. Select “Pay as you go” and Confirm plan.
+- Go to [Firebase Console UI](https://console.firebase.google.com/) to add your existing project. Select “Pay as you go” and Confirm plan.
 - On the left panel of Firebase Console UI, go to Build > Authentication, and click Get Started.
 - Select Google in the Additional providers
 - Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.
@@ -121,50 +130,69 @@ kubectl describe ingress default-ingress | grep Address
 Optional: [register you domain](https://cloud.google.com/dns/docs/tutorials/create-domain-tutorial) 
 #### Deploy microservices
 ```shell
-
 ./deploy.sh
 ```
 
-#### Trigger the pipeline
+### Out of the box Demo Flow
+
+#### Working from the UI
+In order to access the Application UI, Navigate to the API Domain IP Address or Domain Name (depending on the setup) in the browser and login with your Google credentials.
+Try Uploading the Document, using *Upload a Document* button.  From *Choose Program* drop-down, select a state ( pick any ).
+Right now, the Form Processor is set up as a default processor (since no classifier is deployed or trained), so each document will be processed with the Form Parser and extracted data will be streamed to the BigQuery.
+
+> The setting for the default processor is done through the following configuration setting  "settings_config" -> "classification_default_label".  Explained in details in the [Configuring the System](#system_config).
+
+As you click Refresh Icon on the top right, you will see different Status the Pipeline goes through: *Classifying -> Extracting -> Approved* or *Needs Review*. 
+
+If you select *View* action, you will see the key/value pairs extracted from the Document. 
+
+Navigate to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
+
+You could also run sample query from the Cloud Shell:
+```shell
+./sql-scripts/run_query.sh
+```
+
+#### Triggering pipeline in a batch mode
 *NB: Currently only pdf documents are supported, so if you have a jpg or png, please first convert it to pdf.*
 
-To trigger document processing and extraction of the data to further ingest in BigQuery,
- you must upload an empty file named START_PIPELINE into a batch data folder inside ${PROJECT_ID}-pa-forms GCS bucket.
+The Pipeline is triggered when an empty file named START_PIPELINE is uploaded to the `${PROJECT_ID}-pa-forms` GCS bucket. When the START_PIPELINE document is uploaded, all `*.pdf` files containing in that folder are sent to the processing queue.  
+All documents within the same gsc folder are treated as related documents, that belong to the same application (patient).
+When processed, documents are copied to `gs://${PROJECT_ID}-document-upload` with unique identifiers.
 
-See which pdf forms files are in the demo folder:
+Wrapper script to upload each document as a standalone application inside `${PROJECT_ID}-pa-forms`:
 ```shell
-  ls sample_data/demo/*.pdf
+./start_pipeline.sh -d <local-dir-with-forms>  -l <batch-name>
 ```
 
-Following step will upload to GS bucket documents from the sample_data/demo directory and trigger the pipeline with `mybatch-demo` tag:
+Or send all documents within the directory as single Application with same Case ID:
 ```shell
-./start_pipeline -d demo -l mybatch-demo
+./start_pipeline.sh -d <local-dir-with-forms> -l <batch-name> -p
 ```
 
-Alternatively, you can manually upload *pdf* forms to the **gs://${PROJECT_ID}-pa-forms/<mydir>** bucket and drop empty START_PIPELINE file to trigger the pipeline execution.
-After putting START_PIPELINE, the pipeline is automatically triggered  to process  all PDF documents inside the gs://${PROJECT_ID}-pa-forms/<mydir> folder.
+Or send a pdf document by name:
+```shell
+ ./start_pipeline.sh -d <local-dir-with-forms>/<my_doc>.pdf  -l <batch-name>
+```
+
+Alternatively, send a single document to processing:
+- Upload *pdf* form to the gs://<PROJECT_ID>-pa-forms/my_dir and 
+- Drop empty START_PIPELINE file to trigger the pipeline execution.
+> After putting START_PIPELINE, the pipeline is automatically triggered  to process  all PDF documents inside the gs://${PROJECT_ID}-pa-forms/<mydir> folder.
 
 ```shell
+gsutil cp  <my-local-dir>/<my_document>.pdf
+gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<my-dir>/
 touch START_PIPELINE
-gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<mydir>
+gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<my-dir>/
 ```
 
-This should take around few minutes for operation to complete. 
-When processed, documents are copied to `gs://${PROJECT_ID}-document-upload` with unique identifiers. 
+## Setting up CDE and CDS 
 
+**Pre-requisites** 
+- There should be at least 20 (recommended 50) customer  forms with filled data (of the same type), which could be used for training the processor for extraction and classification.
+- All forms need to be in pdf format
 
-To verify the Pipeline worked, go to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
-Sample queries are located in [sql-scripts/](sql-scripts)
-
-## Next Steps
-In the next steps you will set up specialized Processor and Classifier to handle custom Prior-Auth form. Previously only Form parser available out-of-the-box was used.
-
-**Pre-requisite** 
-There should be at least 20 (recommended 50) customer  forms with filled data (of the same type), which could be used for training the processor for extraction and classification.
-
-### Preparations
-* Create new `sample_data/custom_forms` directory
-* Convert existing forms to pdf (if not in pdf format) and add them to the new `sample_data/custom_forms` directory.
 
 If you have png files, following script can convert them to pdf:
 ```shell
@@ -179,47 +207,106 @@ The Custom Document Extractor has already been deployed, but not yet trained. Th
   - Set a default revision for the processor.
   - Test extraction by manually uploading document via the UI and check how entities are being extracted and assigned labels.
 
-### Custom Document Classifier
-Classifier allows to map form type to the processor required for data extraction. 
+You can deploy and train additional Custom Document Extractor if you navigate to **Document AI -> Workbench** and select **Custom Document Extractor** -> CREATE PROCESSOR
 
->> If you have just one sample_form.pdf, and you want to use it for classifier, use following utility to copy same form into the gcs bucket, later to use for classification. At least 10 instances are needed (all for Training set).
+### Custom Document Classifier
+Classifier allows mapping the document class to the processor required for data extraction. 
+
+Configure Custom Document Classifier (Currently feature is not available for GA and needs to be requested via the [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform))
+  - After Project has been whitelisted for using Classifier, navigate to **Document AI -> Workbench**  and select **Custom Document Classifier** -> CREATE PROCESSOR.
+  - Create New Labels for each document type you plan to use.  
+  - Train Classifier using sample forms to classify the labels.
+  - Deploy the new trained version via the UI.
+  - Set the new version as default and test it manually via the UI by uploading the test document. is it classified properly?
+
+> If you have just one sample_form.pdf, and you want to use it for classifier, use following utility to copy same form into the gcs bucket, later to use for classification. At least 10 instances are needed (all for Training set).
 ```shell
 utils/copy_forms.sh -f sample_data/<path_to_form>.pdf -d gs://<path_to_gs_uri> -c 10
 ```
 
-Configure Custom Document Classifier (Currently feature is not available for GA and needs to be requested via the [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform))
-  - Create New Labels for all currently active form types: `prior_auth_form` and`claims_form`.
-  - Train Classifier to using sample forms to classify the labels.
-  - Deploy the new trained version via the UI.
-  - Set the new version as default and test it manually via the UI by uploading the test document. is it classified properly?
+## <a name="system_config"></a>Configuring the System
+- Config file is stored in the GCS bucket and dynamically used by the pipeline: `gs://${PROJECT_ID}-config/config.json`
 
-Use Classifier ID for the pipeline config.
 
-  - Config is stored in the bucket: `gs://${PROJECT_ID}-config/parser_config.json`
-    - Download config locally or when using Cloud Shell, use cloud shell editor to do changes to `gs://${PROJECT_ID}-config/parser_config.json` file
+  - For the config changes, download, edit, and upload the  `gs://${PROJECT_ID}-config/config.json` file:
 
-      ```shell
-      gsutil cp "gs://${PROJECT_ID}/config/parser_config.json" common/src/common/parser_config.json 
-      ```
+    ```shell
+    gsutil cp "gs://${PROJECT_ID}-config/config.json" common/src/common/configs/config.json 
+    ```
 
-  - Use id of the classifier you have created (replace <project_id> and <classifier-id> in the document accordingly):
-  ```shell
-    "classifier": {
-        "location": "us",
-        "parser_name": "Classifier",
-        "parser_type": "CUSTOM_CLASSIFICATION_PROCESSOR",
-        "processor_id": "projects/<project_id>/locations/us/processors/<classifier-id>"
-    }      
-  ```
+  - Apply required changes as discussed later in this section. 
 
   - Upload config:
-  ```shell
-  gsutil cp common/src/common/parser_config.json "gs://${PROJECT_ID}/config/parser_config.json"
-  ````
+    ```shell
+    gsutil cp common/src/common/configs/config.json "gs://${PROJECT_ID}-config/config.json"
+
+### Adding Classifier 
+Since currently Classifier is not in GA and has to be manually created, following section needs to be added inside  `parser_config` to activate Classification step (replace  <PROJECT_ID> and <PROCESSOR_ID> accordingly):
+
+```shell
+"parser_config": {
+    # ... parsers here ...
+    
+    "classifier": {
+      "location": "us",
+      "parser_type": "CUSTOM_CLASSIFICATION_PROCESSOR",
+      "processor_id": "projects/<PROJECT_ID>/locations/us/processors/<PROCESSOR_ID>"
+    }
+  }
+```
+
+
+### Adding Support for Additional Type of Forms
+
+1. Deploy and train the DocAI  processor.
+
+
+2. After processor is created and deployed, add following entry (replace <parser_name> with the name which best describes the processor purpose)  inside `parser_config`:
+```shell
+"parser_config": {
+    # ... parsers here ...
+      
+    "<parser_name>": {
+      "processor_id": "projects/<PROJECT_ID>/locations/us/processors/<PROCESSOR_ID>"
+    }
+}
+```
+
+3. Add configuration for the document type entry inside `document_types_config`:
+
+```shell
+"document_types_config": {
+     # ... document configurations here ... 
+     
+    "<document_type_name>": {
+        "doc_type": "supporting_documents",
+        "display_name": "<Name of the Form>",
+        "classifier_label": "<Label-as-trained>",
+        "parser": "<parser_name>"
+    }  
+}
+
+```
+Where:
+- **doc_type** - Can be of "application_form" or "supporting_documents".
+- **display_name** - Text to be displayed in the UI for the 'Choose Document Type/Class' drop-down when manually Re-Classifying.
+- **classifier_label** - As defined in the Classifier when training on the documents.
+- **parser** - Parser name as defined in the `parser_config` section.
+
+### General Settings
+`settings_config` section currently supports the following parameters:
+
+- `extraction_confidence_threshold` - threshold to mark documents for HITL as *Needs Review*. Compared with the *calculated average* confidence score across all document  labels. 
+- `field_extraction_confidence_threshold` - threshold to mark documents for HITL as *Needs Review*. Compared with the *minimum* confidence score across all document labels.
+- `classification_confidence_threshold` - threshold to pass Classification step. When the confidence score as returned by the Classifier is less, the default behavior is determined by the `classification_default_class` setting. If the settings is "None" or non-existing document type, document remain *Unclassified*. 
+- `classification_default_class` - the default behavior for the unclassified forms (or when classifier is not configured). Needs to be a valid  name of the document type, as configured in the `document_types_config`.
+
 
 ## Cross-Project Setup
-It is possible for the pipeline to work, accessing a separate project (within same org) with customized processor and Classifier. For that additional steps need to be done for cross project access:
+If you want to enable cross project access, following steps need to be done manually.
 
+Limitations: Two projects need to be within the same ORG. 
+For further reference, lets define the two projects:
 - GCP Project to run the Claims Data Activator - Engine (**Project CDA**)
 - GCP Project to train and serve Document AI Processors and Classifier  (**Project DocAI**)
 
@@ -244,15 +331,6 @@ The following wrapper script will use skaffold to rebuild/redeploy microservices
 
 You can additionally [clear all existing data (in GCS, Firestore and BigQuery)](#cleaning_data) 
 
-And a quick test to upload sample forms.
--First command uploads 20 forms (two different CDE types) as standalone applications, 
--Second command uploads three forms as signale application (2 CDE type and a Form type):
-
-```shell
-./start_pipeline.sh -d sample_data/forms-10  -l demo-batch
-./start_pipeline.sh -d sample_data/bsc_demo -l demo-package -p
-```
-
 
 # Utilities
 ## Prerequisites
@@ -265,7 +343,7 @@ pip3 install -r utils/requirements.tx
 
   ```shell
   export RPOCESSOR_ID=<your_processor_id>
-  python utils/gen_config_processor.py -f sample_data/custom_forms/<my-sample-form>.pdf 
+  python utils/gen_config_processor.py -f <my-local-dir>/<my-sample-form>.pdf 
   ```
 
 ## <a name="cleaning_data"></a>Cleaning Data
@@ -287,6 +365,11 @@ pip3 install -r utils/requirements.tx
   
 > Please, note, that due to active StreamingBuffer, BigQuery can only be cleaned after a table has received no inserts for an extended interval of time (~ 90 minutes). Then the buffer is detached and DELETE statement is allowed.
 > For more details see [here](https://cloud.google.com/blog/products/bigquery/life-of-a-bigquery-streaming-insert) .
+
+# Configuration Service
+Config Service (used by adp ui):
+- http://$API_DOMAIN/config_service/v1/get_config?name=document_types_config
+- http://$API_DOMAIN/config_service/v1/get_config
 
 ## Deployment Troubleshoot
 
@@ -322,9 +405,6 @@ Your connection is not private
 
 - Open the chrome://net-internals/#hsts in URL, and delete the domain HSTS.
 - (Optional) Click the “Not Secure” icon on the top, and select the “Certificate is not valid” option, and select “Always Trust”.
-
-### Eventarc error on init
-- Is due to timing and re-running `terraform apply -target=module.eventarc`  fixes the issue.
 
 
 # Development

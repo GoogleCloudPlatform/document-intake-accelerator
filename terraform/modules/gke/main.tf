@@ -17,6 +17,7 @@
 
 locals {
   project = var.project_id
+  service_account = "${var.service_account_name}@${var.project_id}.iam.gserviceaccount.com"
 }
 
 module "gke_cluster" {
@@ -56,7 +57,7 @@ module "gke_cluster" {
       node_locations     = var.node_locations
 
       # hard coding until resolved: https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/issues/991
-      service_account = "${var.service_account_name}@${var.project_id}.iam.gserviceaccount.com"
+      service_account = local.service_account
     },
   ]
   node_pools_oauth_scopes = {

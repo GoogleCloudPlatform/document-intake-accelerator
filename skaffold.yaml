@@ -52,6 +52,10 @@ requires:
   configs: [hitl-service]
   activeProfiles:  *all_profiles
 
+- path: ./microservices/config_service
+  configs: [config-service]
+  activeProfiles:  *all_profiles
+
 - path: ./microservices/document_status_service
   configs: [document-status-service]
   activeProfiles:  *all_profiles

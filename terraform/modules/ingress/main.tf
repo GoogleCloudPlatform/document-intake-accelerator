@@ -203,6 +203,20 @@ resource "kubernetes_ingress_v1" "default_ingress" {
           path_type = "Prefix"
           path      = "/sample_service"
         }
+
+        # Config Service
+        path {
+          backend {
+            service {
+              name = "config-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/config_service"
+        }
       }
     }
 

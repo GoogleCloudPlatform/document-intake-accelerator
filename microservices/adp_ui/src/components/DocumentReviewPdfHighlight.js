@@ -415,11 +415,6 @@ function DocumentReview() {
 
         {/** TO display the PDF and the extracted values of the PDF*/}
         <Row>
-          {inputData.document_type === 'supporting_documents' && inputData.document_class !== "claims_form" ?
-            <label className="labelNote"><span style={{ marginLeft: '30px' }}>Field highlights are not available for supporting documents</span></label>
-            : (inputData.document_type === null ? '' : <label className="labelNote"> <span style={{ marginLeft: '30px' }}>Cannot extract Matching and Validation scores for Application forms</span></label>)}
-        </Row>
-        <Row>
 
           <Col className="col-7" style={{ overflow: 'scroll', height: 'calc(100vh - 220px)', paddingTop: '0px' }}>
             <div ref={myRef} id='pdf-viewer' style={{ width: '100%', minWidth: '800px', maxWidth: '1200px', backgroundColor: '#ccc', paddingTop: '0px' }}></div>

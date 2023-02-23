@@ -74,36 +74,6 @@ AUTO_APPROVAL_MAPPING = {
             "Extraction_Score": 0.5
         }
     },
-    "bsc_pa_form": {
-        "Accept1": {
-            "Validation_Score": 0,
-            "Matching_Score": 0,
-            "Extraction_Score": 0.8
-        },
-        "Reject": {
-            "Extraction_Score": 0.5
-        }
-    },
-    "bsc_package_form": {
-        "Accept1": {
-            "Validation_Score": 0,
-            "Matching_Score": 0,
-            "Extraction_Score": 0.8
-        },
-        "Reject": {
-            "Extraction_Score": 0.5
-        }
-    },
-    "prior_auth_form": {
-        "Accept1": {
-            "Validation_Score": 0,
-            "Matching_Score": 0,
-            "Extraction_Score": 0.8
-        },
-        "Reject": {
-            "Extraction_Score": 0.5
-        }
-    },
     "claims_form": {
         "Accept1": {
             "Validation_Score": 0.4,

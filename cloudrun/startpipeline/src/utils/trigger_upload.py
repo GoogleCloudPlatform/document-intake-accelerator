@@ -5,7 +5,6 @@ import string
 import requests
 from config import UPLOAD_URL
 from fastapi import APIRouter
-from fastapi import FastAPI, File, UploadFile
 from common.utils.helper import split_uri_2_path_filename
 from common.utils.logging_handler import Logger
 

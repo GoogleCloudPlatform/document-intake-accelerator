@@ -15,17 +15,15 @@
 ###################################################################################*/
 
 /*
-
-
-Use Cases:
-    - Display All extracted entities (if there are multiple entries for the same uid, shows the latest entry)
+ * Use Cases:
+ *   - Display All extracted entities (if there are multiple entries for the same uid, shows the latest entry)
  */
 
 
 WITH latest AS (
     SELECT *
-    FROM `${project_id}.validation.validation_table` t
-    WHERE timestamp = (SELECT MAX(timestamp) FROM `ek-cda-engine.validation.validation_table` WHERE uid = t.uid )
+    FROM `validation_table` t
+    WHERE timestamp = (SELECT MAX(timestamp) FROM `validation_table` WHERE uid = t.uid )
     ),
     flattened_1 AS (
 SELECT *,

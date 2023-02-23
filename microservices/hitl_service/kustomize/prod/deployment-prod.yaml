@@ -24,14 +24,6 @@ spec:
       - name: hitl-service
         image: hitl-service
         imagePullPolicy: Always
-        env:
-        - name: PROJECT_ID
-          valueFrom:
-            configMapKeyRef:
-              name: hitl-env-vars
-              key: PROJECT_ID
-        - name: EXTERNAL_DATA_PROJECT_ID
-          valueFrom:
-            configMapKeyRef:
-              name: hitl-env-vars
-              key: EXTERNAL_DATA_PROJECT_ID
+        envFrom:
+        - configMapRef:
+            name: hitl-env-vars

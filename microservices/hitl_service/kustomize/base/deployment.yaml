@@ -58,3 +58,6 @@ spec:
           periodSeconds: 30
           successThreshold: 1
           timeoutSeconds: 10
+        envFrom:
+        - configMapRef:
+            name: hitl-env-vars

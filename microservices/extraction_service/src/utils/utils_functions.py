@@ -337,14 +337,13 @@ def consolidate_coordinates(d):
       return None
 
 
-def standard_entity_mapping(desired_entities_list, parser_name):
+def standard_entity_mapping(desired_entities_list):
   """
     This function changes entity name to standard names and also
                 create consolidated entities like name and date
     Parameters
     ----------
     desired_entities_list: List of default and derived entities
-    parser_name: name of the parser
 
     Returns: Standard entities list
     -------
@@ -692,15 +691,17 @@ def extraction_accuracy_calc(total_entities_list, flag=True):
   extraction_status = "single entities present"
   if flag is False:
     extraction_accuracy = 0.0
+    extraction_field_min_score = 0
     extraction_status = "duplicate entities present"
-    return extraction_accuracy, extraction_status
+    return extraction_accuracy, extraction_status, extraction_field_min_score
   entity_accuracy_list = [each_entity.get("extraction_confidence") if
                           each_entity.get("extraction_confidence") else 0
                           for each_entity in
                           total_entities_list if not each_entity.
                           get("manual_extraction")]
 
+  extraction_field_min_score = min(entity_accuracy_list)
   extraction_accuracy = round(sum(entity_accuracy_list) /
                               len(entity_accuracy_list), 3)
 
-  return extraction_accuracy, extraction_status
+  return extraction_accuracy, extraction_status, extraction_field_min_score

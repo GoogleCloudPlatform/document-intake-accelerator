@@ -23,14 +23,6 @@ spec:
       - name: matching-service
         image: matching-service
         imagePullPolicy: Always
-        env:
-        - name: PROJECT_ID
-          valueFrom:
-            configMapKeyRef:
-              name: matching-env-vars
-              key: PROJECT_ID
-        - name: EXTERNAL_DATA_PROJECT_ID
-          valueFrom:
-            configMapKeyRef:
-              name: matching-env-vars
-              key: EXTERNAL_DATA_PROJECT_ID
+        envFrom:
+        - configMapRef:
+            name: matching-env-vars

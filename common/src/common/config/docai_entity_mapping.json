@@ -37,27 +37,6 @@
                 "issuerFax": ["issuerFax"],
                 "issuerDate": ["issuerDate"]
             }
-        },
-        "claims_form": {
-            "default_entities": {
-                "Date": ["date"],
-                "Name": ["name"],
-                "Occupation": ["occupation"],
-                "Emergency Contact": ["emergency_contact"],
-                "Referred By": ["referred_by"],
-                "Gender": ["gender"],
-                "DOB": ["dob"],
-                "Email": ["email"],
-                "City": ["city"],
-                "State": ["state"],
-                "Address": ["address"],
-                "Zip": ["zip"],
-                "Emergency Contact Phone": ["emergency_contact_phone"],
-                "Marital Status": ["marital_status"],
-                "Are you currently taking any medication? (If y...": ["medications"],
-                "_Phone": ["PHONE"],
-                "Describe your medical concerns (symptoms, diag...": ["medical_condition"]
-            }
         }
     }
 }

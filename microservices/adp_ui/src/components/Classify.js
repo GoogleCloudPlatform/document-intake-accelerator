@@ -41,11 +41,13 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.w
 
 let inputData = [];
 let viewer = '';
+let dropDown = '';
 var context = '';
 let canvas = '';
 var thePdf = null;
+let optionsSorted = [];
 
-function Classified() {
+function  Classified() {
   const { uid, caseid } = useParams();
   const [notes, setNotes] = useState('');
   const [docType, setDocType] = useState('');
@@ -54,6 +56,16 @@ function Classified() {
   useEffect(() => {
     // based on the uid, get the document for the page
     let url = `${baseURL}/hitl_service/v1/fetch_file?case_id=${caseid}&uid=${uid}`
+    optionsSorted = options.then((res) => {
+      optionsSorted=res;
+      dropDown = document.getElementById('dropdown-basic-button');
+      res.forEach(item => {
+          dropDown.appendChild(new Option(item["display_name"] , item["value"]));
+          console.log("drop-down:", item["display_name"], item["value"])
+      })
+      console.log("optionsSorted", optionsSorted)
+    });
+
 
     axios.post(`${baseURL}/hitl_service/v1/get_document?uid=${uid}`, {
     }).then(res => {
@@ -83,9 +95,9 @@ function Classified() {
   }, []);
 
   let currPage = 1;
+
   // Based on the pagenumbers the PDF can be rendered
   function renderPage() {
-
     //pageNumber = 1;
     thePdf.getPage(currPage).then(function (page) {
       console.log('Page loaded');
@@ -164,7 +176,7 @@ function Classified() {
                   <label className="labelBold"> Choose Document Type/Class</label>
                   <select id="dropdown-basic-button" title="Choose Document Class" onChange={(e) => docTypeChange(e)} style={{ width: '100%', borderRadius: '16px' }}>
                     <option></option>
-                    {options.map(({ value, doc_type, doc_class }, index) => <option key={value} value={value} >{doc_type} {'>'} {doc_class}</option>)}
+                    {/*{optionsSorted.map(({ value, doc_type, doc_class }, index) => <option key={value} value={value} >{doc_type} {'>'} {doc_class}</option>)}*/}
 
                   </select>
                   <br /> <br />

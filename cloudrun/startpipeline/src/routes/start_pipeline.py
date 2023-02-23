@@ -1,15 +1,11 @@
-import random
-import re
-import string
 
 from google.cloud import storage
 from fastapi import Request, status, Response
 import json
 from fastapi import APIRouter
-import os
 from fastapi.concurrency import run_in_threadpool
 from config import DOCUMENT_STATUS_URL, UPLOAD_URL
-from common.utils.copy_gcs_documents import copy_blob, move_blob
+from common.utils.copy_gcs_documents import copy_blob
 from common.utils.helper import split_uri_2_path_filename
 import uuid
 import requests
@@ -22,7 +18,6 @@ from common.utils.publisher import publish_document
 from common.config import BUCKET_NAME
 from common.config import STATUS_SUCCESS, STATUS_ERROR
 import os
-import time
 
 # API clients
 gcs = None

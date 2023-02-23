@@ -26,3 +26,7 @@ output "endpoint" {
 output "ca_certificate" {
   value = try(module.gke_cluster.ca_certificate, null)
 }
+
+output "service_account_email" {
+ value = try(module.gke_cluster.service_account, null)
+}

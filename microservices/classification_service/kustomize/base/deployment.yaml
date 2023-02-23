@@ -58,19 +58,6 @@ spec:
           periodSeconds: 30
           successThreshold: 1
           timeoutSeconds: 10
-        env:
-        - name: PARSER_CONFIG_FILE
-          valueFrom:
-            configMapKeyRef:
-              name: classification-env-vars
-              key: PARSER_CONFIG_FILE
-        - name: DOCAI_ENTITY_MAPPING_FILE
-          valueFrom:
-            configMapKeyRef:
-              name: classification-env-vars
-              key: DOCAI_ENTITY_MAPPING_FILE
-        - name: CLASSIFICATION_CONFIDENCE_THRESHOLD
-          valueFrom:
-            configMapKeyRef:
-              name: classification-env-vars
-              key: CLASSIFICATION_CONFIDENCE_THRESHOLD
+        envFrom:
+        - configMapRef:
+            name: classification-env-vars

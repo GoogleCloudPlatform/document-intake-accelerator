@@ -33,15 +33,11 @@ bash "${DIR}"/setup/setup_terraform.sh
 
 cd "${DIR}/terraform/environments/dev" || exit
 terraform init -backend-config=bucket=$TF_BUCKET_NAME
-
 terraform apply -target=module.project_services -target=module.service_accounts -auto-approve
-
 terraform apply -auto-approve
 
-# eventarc and ksa are always failing when running first time. Re-running apply command is an overcall (due re-building Cloud Run), but works
-# terraform apply -target=module.gke -target=module.eventarc -auto-approve
-#terraform apply -target=module.eventarc -auto-approve
 
+# Constructing the Global Config File
 bash ../../../setup/update_config.sh
 
 # Modify ACK deadline for the eventarc subscription (this could not be done via terraform API)
@@ -49,10 +45,9 @@ subscription=$(terraform output -json eventarc_subscription)
 subscription_name=$(echo "$subscription" | tr -d '"' | sed 's:.*/::')
 gcloud alpha pubsub subscriptions update "$subscription_name" --ack-deadline=120 --project $PROJECT_ID
 
-gsutil cp "${DIR}/common/src/common/parser_config.json" "gs://${TF_VAR_config_bucket}/parser_config.json"
+
 
 # TODO Add instructions on Cloud DNS Setup for API_DOMAIN
-
 # Cloud DNS
 # Enable Cloud DNS API
 # https://docs.google.com/document/d/1oHpOwUfeIMKfe7b1UN7Vd1OoZzn9Gndxvmi-ANcxB_Q/preview?resourcekey=0-pAmIVo-ap-zCzd_HD-W5IQ

@@ -18,12 +18,10 @@ limitations under the License.
   Sample Service Microservice
 """
 import uvicorn
-import asyncio
-import time
+from fastapi import FastAPI
+from fastapi import status
+
 import config
-from common.utils.logging_handler import Logger
-from concurrent.futures import ThreadPoolExecutor
-from fastapi import FastAPI, Request, status
 from routes import queue
 
 # app = FastAPI(docs_url="/docs", redoc_url="/redoc", openapi_url="/openapi.json")

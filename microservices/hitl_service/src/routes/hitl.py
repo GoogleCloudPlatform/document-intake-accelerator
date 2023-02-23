@@ -20,13 +20,13 @@ from fastapi import APIRouter, HTTPException, Response
 from typing import Optional
 from common.models import Document
 from common.utils.logging_handler import Logger
-from common.config import BUCKET_NAME, DB_KEYS, ENTITY_KEYS, \
-  APPLICATION_FORMS, SUPPORTING_DOCS
+from common.config import BUCKET_NAME, DB_KEYS, ENTITY_KEYS
 from common.config import STATUS_APPROVED, STATUS_REVIEW, STATUS_REJECTED, \
   STATUS_PENDING
 from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR, \
   STATUS_TIMEOUT
 from common.config import PROCESS_TIMEOUT_SECONDS
+from common.config import get_document_types_config
 from common.utils.stream_to_bq import stream_document_to_bigquery
 from google.cloud import storage
 import datetime
@@ -551,28 +551,24 @@ async def update_hitl_classification(case_id: str, uid: str,
   Returns 500: If something fails
   """
   try:
-
+    Logger.info(f"update_hitl_classification with case_id={case_id}, uid={uid}, document_class={document_class}")
     doc = Document.find_by_uid(uid)
     print(doc.to_dict()["active"].lower())
     if not doc or not doc.to_dict()["active"].lower() == "active":
       Logger.error("Document for hitl classification not found")
       raise HTTPException(status_code=404, detail="Document not found")
 
-    if document_class not in APPLICATION_FORMS and \
-        document_class not in SUPPORTING_DOCS:
-      Logger.error("Invalid parameter document_class")
+    document_types_config = get_document_types_config()
+    if document_class not in document_types_config.keys():
+      Logger.error(f"Invalid parameter document_class {document_class}")
       raise HTTPException(
           status_code=400, detail="Invalid Parameter. Document class")
 
     Logger.info(f"Starting manual classification for case_id" \
                 f" {case_id} and uid {uid}")
-    document_type = None
-    if document_class.lower() in APPLICATION_FORMS:
-      document_type = "application_form"
-    elif document_class.lower() in SUPPORTING_DOCS:
-      document_type = "supporting_documents"
-    else:
-      Logger.error(f"Doc class {document_class} is not a valid doc class")
+    document_type = document_types_config[document_class].get("doc_type")
+    if not document_type:
+      Logger.error(f"Doc class {document_class} is not a valid doc class, because missing doc_type property")
       update_classification_status(case_id, uid, STATUS_ERROR)
       raise HTTPException(
           status_code=422, detail="Unidentified document class found")

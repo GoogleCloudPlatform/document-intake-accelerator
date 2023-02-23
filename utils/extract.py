@@ -37,11 +37,9 @@ from common.utils.format_data_for_bq import format_data_for_bq
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
 print(f"PROJECT_ID={PROJECT_ID}")
 print( os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", ""))
-os.environ["PARSER_CONFIG_FILE"] = f"gs://{PROJECT_ID}/config/parser_config_demo.json"
-#os.environ["PARSER_CONFIG_FILE"] = os.path.join(os.path.dirname(__file__), '../common/src/common/parser_config_demo.json')
-os.environ["DOCAI_ENTITY_MAPPING_FILE"] = f"gs://{PROJECT_ID}/config/docai_entity_mapping.json"
-#os.environ["DOCAI_ENTITY_MAPPING_FILE"] = os.path.join(os.path.dirname(__file__), '../common/src/common/docai_entity_mapping.json')
+os.environ["CONFIG_FILE"] = f"gs://{PROJECT_ID}-config/config.json"
 os.environ["DEBUG"] = 'True'
+
 
 def get_parser():
   # Read command line arguments
