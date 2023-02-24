@@ -75,13 +75,14 @@ variable "cluster_name" {
 
 variable "network" {
   type    = string
-  default = "adp-vpc"
+  default = "default-vpc"
 }
 
 variable "subnetwork" {
   type    = string
   default = "adp-subnetwork"
 }
+
 
 #adding new variables for the updated scripts
 

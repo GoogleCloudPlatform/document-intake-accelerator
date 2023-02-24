@@ -46,6 +46,14 @@ locals {
     "secretmanager.googleapis.com",        # Secret Manager
     "storage.googleapis.com",              # Cloud Storage
   ]
+
+  services_docai = [
+    "documentai.googleapis.com",           # Document AI
+    "iam.googleapis.com",                  # Cloud IAM
+    "logging.googleapis.com",              # Cloud Logging
+    "monitoring.googleapis.com",           # Cloud Operations Suite
+    "storage.googleapis.com",              # Cloud Storage
+  ]
 }
 
 data "google_project" "project" {}
@@ -55,6 +63,14 @@ module "project_services" {
   project_id = var.project_id
   services   = local.services
 }
+
+module "project_services_docai" {
+  count   = var.docai_project_id !=  var.project_id ? 1 : 0
+  source     = "../../modules/project_services"
+  project_id = var.docai_project_id
+  services   = local.services_docai
+}
+
 
 module "service_accounts" {
   depends_on = [module.project_services]
@@ -71,17 +87,17 @@ resource "time_sleep" "wait_for_project_services" {
   create_duration = "60s"
 }
 
-module "firebase" {
-  depends_on       = [time_sleep.wait_for_project_services]
-  source           = "../../modules/firebase"
-  project_id       = var.project_id
-  firestore_region = var.firestore_region
-}
+//module "firebase" {
+//  depends_on       = [time_sleep.wait_for_project_services]
+//  source           = "../../modules/firebase"
+//  project_id       = var.project_id
+//  firestore_region = var.firestore_region
+//}
 
 module "vpc_network" {
   source      = "../../modules/vpc_network"
   project_id  = var.project_id
-  vpc_network = "default-vpc"
+  vpc_network = var.network
   region      = var.region
 }
 
@@ -92,7 +108,7 @@ module "gke" {
   project_id     = var.project_id
   cluster_name   = var.cluster_name
   namespace      = "default"
-  vpc_network    = "default-vpc"
+  vpc_network    = var.network
   region         = var.region
   min_node_count = 1
   max_node_count = 10
