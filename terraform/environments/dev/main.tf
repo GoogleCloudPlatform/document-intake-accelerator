@@ -308,7 +308,6 @@ output "project_docai_number" {
 }
 
 # give backup SA rights on bucket
-# TODO gives error that
 resource "google_storage_bucket_iam_binding" "cda-docai_sa_storage_load_binding" {
   count   = var.docai_project_id !=  var.project_id ? 1 : 0
   bucket = google_storage_bucket.document-load.name
