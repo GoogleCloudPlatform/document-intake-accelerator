@@ -35,17 +35,24 @@ source ~/venv/pa/bin/activate
 To access Custom Document Classifier and Splitter, you need to request early access by filling in this form: 
 This needs to be done before running the deployment.
 
-[//]: # ()
-[//]: # (It is recommended to deploy two projects: one for the Pipeline Engine, and another for the Document AI processors. Both projects need to belong in the same Org. )
 
-[//]: # (When following this  practice, first create project used to host Document AI. Then create second project for deployment. Otherwise, when both DocAI and Pipeline deployed into the same project, use same PROJECT_ID in the commands below.)
+It is recommended to deploy into two projects: one for the Pipeline Engine (PROJECT_ID), and another for the Document AI processors (DOCAI_PROJECT_ID). Both projects need to belong to the same Org. 
+When following this  practice, before deployment create two projects. Otherwise,  use same Project Id both 
 
 *Important*: User needs to have Project **owner** role in order to deploy  terraform setup.
+
 ```
 export PROJECT_ID=<GCP Project ID to host Data ingestion microservices>
+export DOCAI_PROJECT_ID = <GCP Project ID to host Document AI>
 export API_DOMAIN=mydomain.com
 ```
 Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (needs to be set to a legal name as a placeholder) and then later run an optional step below to configure using Ingress IP address instead.
+
+Classifier is currently in Preview. Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform), so that Project is whitelisted. If you have your DocAI project whitelisted, set optional parameter to deploy classifier as well into the DocAI project.
+Otherwise, this could be done and configured later. 
+```shell
+export CLASSIFIER=true
+```
 
 
 Activate Project for the pipeline deployment:

@@ -33,7 +33,7 @@ bash "${DIR}"/setup/setup_terraform.sh
 
 cd "${DIR}/terraform/environments/dev" || exit
 terraform init -backend-config=bucket=$TF_BUCKET_NAME
-terraform apply -target=module.project_services -target=module.service_accounts -auto-approve
+terraform apply -target=module.project_services -target=module.service_accounts -target=module.project_services_docai -auto-approve
 terraform apply -auto-approve
 
 
@@ -45,8 +45,16 @@ subscription=$(terraform output -json eventarc_subscription)
 subscription_name=$(echo "$subscription" | tr -d '"' | sed 's:.*/::')
 gcloud alpha pubsub subscriptions update "$subscription_name" --ack-deadline=120 --project $PROJECT_ID
 
+#TODO fix in TF to perform this step
+if [ -z "$DOCAI_PROJECT_ID"  ] && [ "$DOCAI_PROJECT_ID" != "$PROJECT_ID" ]; then
+  gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"     --role="roles/documentai.viewer"
+  PROJECT_DOCAI_NUMBER=$(gcloud projects describe "$DOCAI_PROJECT_ID" --format='get(projectNumber)')
+  gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-pa-forms --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"
+  gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-output --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.admin"
+fi
 
 
+  gcloud projects add-iam-policy-binding $PROJECT_ID --member="service-749747741063@gcp-sa-prod-dai-core.iam.gserviceaccount.com"     --role="roles/documentai.viewer"
 # TODO Add instructions on Cloud DNS Setup for API_DOMAIN
 # Cloud DNS
 # Enable Cloud DNS API

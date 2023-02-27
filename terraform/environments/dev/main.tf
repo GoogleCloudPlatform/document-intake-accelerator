@@ -303,6 +303,18 @@ module "docai" {
   }
 }
 
+module "classifier" {
+  count   = var.classifier ? 1 : 0
+  depends_on = [
+    time_sleep.wait_for_project_services
+  ]
+  source     = "../../modules/docai"
+  project_id = var.docai_project_id
+
+  processors = {
+    classifier      = "CUSTOM_CLASSIFICATION_PROCESSOR" # Need to become GA
+  }
+}
 
 # ================= Setup Cross Project Access ====================
 resource "google_project_iam_member" "project-gke-docai-access" {
@@ -327,7 +339,7 @@ output "project_docai_number" {
 resource "google_storage_bucket_iam_binding" "cda-docai_sa_storage_load_binding" {
   count   = var.docai_project_id !=  var.project_id ? 1 : 0
   bucket = google_storage_bucket.document-load.name
-  role   = "roles/storage.admin"
+  role   = "roles/storage.objectViewer"
   members = [
     "serviceAccount:service-${data.google_project.docai_project.number}@gcp-sa-prod-dai-core.iam.gserviceaccount.com",
   ]

@@ -68,6 +68,13 @@ variable "env" {
   default = "dev"
 }
 
+#if classifier was whitelisted
+variable "classifier" {
+  description = "If set to true, it will create classifier, which is currently preview and require to be whitelisted"
+  type        = bool
+  default     = false
+}
+
 variable "cluster_name" {
   type    = string
   default = "main-cluster"

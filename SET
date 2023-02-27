@@ -8,16 +8,18 @@ export TF_VAR_api_domain=$API_DOMAIN
 
 export TF_VAR_project_id=$PROJECT_ID
 export TF_VAR_docai_project_id=${DOCAI_PROJECT_ID:-$PROJECT_ID}
+export TF_VAR_classifier=${CLASSIFIER:-"false"}
 
 export TF_BUCKET_NAME="${PROJECT_ID}-tfstate"
 export TF_BUCKET_LOCATION="us"
+
 export TF_VAR_config_bucket="${PROJECT_ID}-config"
 
 export CONFIG_BUCKET=${TF_VAR_config_bucket}
 
 export DEBUG=True
 
-echo "Using PROJECT_ID=$TF_VAR_project_id and API_DOMAIN=$TF_VAR_api_domain DOCAI_PROJECT_ID=$TF_VAR_docai_project_id"
+echo "Using PROJECT_ID=$TF_VAR_project_id and API_DOMAIN=$TF_VAR_api_domain DOCAI_PROJECT_ID=$TF_VAR_docai_project_id CLASSIFIER=$TF_VAR_classifier"
 # Fix Workload Identity Name
 # kubectl get serviceaccount ksa -o json | jq '.metadata.name = "gke-sa"' | kubectl apply -f -
 
