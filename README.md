@@ -36,8 +36,8 @@ To access Custom Document Classifier and Splitter, you need to request early acc
 This needs to be done before running the deployment.
 
 
-It is recommended to deploy into two projects: one for the Pipeline Engine (PROJECT_ID), and another for the Document AI processors (DOCAI_PROJECT_ID). Both projects need to belong to the same Org. 
-When following this  practice, before deployment create two projects. Otherwise,  use same Project Id both 
+It is recommended to deploy into two projects: one for the Pipeline Engine (`PROJECT_ID`), and another for the Document AI processors (`DOCAI_PROJECT_ID`). Both projects need to belong to the same Org. 
+When following this  practice, before deployment create two projects. Otherwise, do not set `DOCAI_PROJECT_ID` variable, or use same Project ID for both settings.
 
 *Important*: User needs to have Project **owner** role in order to deploy  terraform setup.
 
