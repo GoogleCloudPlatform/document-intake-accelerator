@@ -18,7 +18,7 @@ export CONFIG_BUCKET=${TF_VAR_config_bucket}
 
 export DEBUG=True
 
-echo "Using PROJECT_ID=$TF_VAR_project_id and API_DOMAIN=$TF_VAR_api_domain DOCAI_PROJECT_ID=$TF_VAR_docai_project_id
+echo "Using PROJECT_ID=$TF_VAR_project_id and API_DOMAIN=$TF_VAR_api_domain DOCAI_PROJECT_ID=$TF_VAR_docai_project_id"
 # Fix Workload Identity Name
 # kubectl get serviceaccount ksa -o json | jq '.metadata.name = "gke-sa"' | kubectl apply -f -
 
