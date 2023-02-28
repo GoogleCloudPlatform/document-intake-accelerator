@@ -87,12 +87,12 @@ resource "time_sleep" "wait_for_project_services" {
   create_duration = "60s"
 }
 
-//module "firebase" {
-//  depends_on       = [time_sleep.wait_for_project_services]
-//  source           = "../../modules/firebase"
-//  project_id       = var.project_id
-//  firestore_region = var.firestore_region
-//}
+module "firebase" {
+  depends_on       = [time_sleep.wait_for_project_services]
+  source           = "../../modules/firebase"
+  project_id       = var.project_id
+  firestore_region = var.firestore_region
+}
 
 module "vpc_network" {
   source      = "../../modules/vpc_network"
@@ -299,20 +299,7 @@ module "docai" {
   processors = {
     claims_form_parser     = "FORM_PARSER_PROCESSOR"
     prior_auth_form_parser = "CUSTOM_EXTRACTION_PROCESSOR"
-//    classifier      = "CUSTOM_CLASSIFICATION_PROCESSOR" # Need to become GA
-  }
-}
-
-module "classifier" {
-  count   = var.classifier ? 1 : 0
-  depends_on = [
-    time_sleep.wait_for_project_services
-  ]
-  source     = "../../modules/docai"
-  project_id = var.docai_project_id
-
-  processors = {
-    classifier      = "CUSTOM_CLASSIFICATION_PROCESSOR" # Need to become GA
+//    classifier      = "CUSTOM_CLASSIFICATION_PROCESSOR" # Needs to become GA
   }
 }
 

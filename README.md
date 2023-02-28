@@ -48,11 +48,7 @@ export API_DOMAIN=mydomain.com
 ```
 Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (needs to be set to a legal name as a placeholder) and then later run an optional step below to configure using Ingress IP address instead.
 
-Classifier is currently in Preview. Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform), so that Project is whitelisted. If you have your DocAI project whitelisted, set optional parameter to deploy classifier as well into the DocAI project.
-Otherwise, this could be done and configured later. 
-```shell
-export CLASSIFIER=true
-```
+Classifier is currently in Preview. Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform), so that Project is whitelisted. 
 
 
 Activate Project for the pipeline deployment:
@@ -74,7 +70,6 @@ Run the following commands to update Organization policies (Required for managed
 ORGANIZATION_ID=$(gcloud organizations list --format="value(name)")
 gcloud resource-manager org-policies disable-enforce constraints/compute.requireOsLogin --organization=$ORGANIZATION_ID
 gcloud resource-manager org-policies delete constraints/compute.vmExternalIpAccess --organization=$ORGANIZATION_ID
-gcloud resource-manager org-policies delete constraints/compute.requireShieldedVm --organization=$ORGANIZATION_ID
 ```
 
 If you have multiple Organizations, set the ORGANIZATION_ID manually to the Organization ID

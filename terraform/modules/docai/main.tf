@@ -31,9 +31,6 @@ output "parser_config" {
       parser_name  = processor.display_name
       parser_type  = processor.type
       processor_id = processor.id
-      labels = {
-        goog-packaged-solution = "prior-authorization"
-      }
     }
   }
 }
