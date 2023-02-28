@@ -43,7 +43,7 @@ When following this  practice, before deployment create two projects. Otherwise,
 
 ```
 export PROJECT_ID=<GCP Project ID to host Data ingestion microservices>
-export DOCAI_PROJECT_ID = <GCP Project ID to host Document AI>
+export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI>
 export API_DOMAIN=mydomain.com
 ```
 Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (needs to be set to a legal name as a placeholder) and then later run an optional step below to configure using Ingress IP address instead.
@@ -77,7 +77,6 @@ If you have multiple Organizations, set the ORGANIZATION_ID manually to the Orga
 Or, change the following Organization policy constraints in [GCP Console](https://console.cloud.google.com/iam-admin/orgpolicies)
 - constraints/compute.requireOsLogin - Enforced Off
 - constraints/compute.vmExternalIpAccess - Allow All
-- constraints/compute.requireShieldedVm - Enforced Off
 
 ### Setup and Run Demo
 

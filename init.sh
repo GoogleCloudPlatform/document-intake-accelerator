@@ -32,6 +32,8 @@ export TF_VAR_admin_email=${ADMIN_EMAIL}
 bash "${DIR}"/setup/setup_terraform.sh
 
 cd "${DIR}/terraform/environments/dev" || exit
+
+# TODO skip if bucket already exists
 terraform init -backend-config=bucket=$TF_BUCKET_NAME
 terraform apply -target=module.project_services -target=module.service_accounts -target=module.project_services_docai -auto-approve
 terraform apply -auto-approve
@@ -50,7 +52,7 @@ if [ -n "$DOCAI_PROJECT_ID"  ] && [ "$DOCAI_PROJECT_ID" != "$PROJECT_ID" ]; then
   gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"  --role="roles/documentai.viewer"
   PROJECT_DOCAI_NUMBER=$(gcloud projects describe "$DOCAI_PROJECT_ID" --format='get(projectNumber)')
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-pa-forms --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"
-  gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-output --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.admin"
+  gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-docai-output --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.admin"
 fi
 
 # TODO Add instructions on Cloud DNS Setup for API_DOMAIN

@@ -33,7 +33,6 @@ def run_pipeline(payload: List[Dict], is_hitl: bool, is_reassign: bool):
     is_reassign : It is used to run the pipeline for reassigned document
   """
   Logger.info(f"Processing the documents: {payload}")
-  print(f"Processing the documents: {payload}")
 
   extraction_score = None
   applications = []
