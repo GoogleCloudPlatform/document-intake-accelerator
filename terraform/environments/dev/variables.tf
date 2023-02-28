@@ -68,6 +68,7 @@ variable "env" {
   default = "dev"
 }
 
+
 variable "cluster_name" {
   type    = string
   default = "main-cluster"
@@ -75,13 +76,14 @@ variable "cluster_name" {
 
 variable "network" {
   type    = string
-  default = "adp-vpc"
+  default = "default-vpc"
 }
 
 variable "subnetwork" {
   type    = string
   default = "adp-subnetwork"
 }
+
 
 #adding new variables for the updated scripts
 

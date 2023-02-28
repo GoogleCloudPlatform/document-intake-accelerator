@@ -11,6 +11,6 @@ export TF_VAR_api_domain=$API_DOMAIN
 
 echo "Using IP address = $TF_VAR_api_domain"
 cd terraform/environments/dev || exit
-terraform apply -target=module.cloudrun-queue -target=module.cloudrun-start-pipeline -auto-approve
+terraform apply -target=module.ingress -target=module.cloudrun-queue -target=module.cloudrun-start-pipeline -auto-approve
 cd ../../../
 

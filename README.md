@@ -35,17 +35,20 @@ source ~/venv/pa/bin/activate
 To access Custom Document Classifier and Splitter, you need to request early access by filling in this form: 
 This needs to be done before running the deployment.
 
-[//]: # ()
-[//]: # (It is recommended to deploy two projects: one for the Pipeline Engine, and another for the Document AI processors. Both projects need to belong in the same Org. )
 
-[//]: # (When following this  practice, first create project used to host Document AI. Then create second project for deployment. Otherwise, when both DocAI and Pipeline deployed into the same project, use same PROJECT_ID in the commands below.)
+It is recommended to deploy into two projects: one for the Pipeline Engine (PROJECT_ID), and another for the Document AI processors (DOCAI_PROJECT_ID). Both projects need to belong to the same Org. 
+When following this  practice, before deployment create two projects. Otherwise,  use same Project Id both 
 
 *Important*: User needs to have Project **owner** role in order to deploy  terraform setup.
+
 ```
 export PROJECT_ID=<GCP Project ID to host Data ingestion microservices>
+export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI>
 export API_DOMAIN=mydomain.com
 ```
 Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (needs to be set to a legal name as a placeholder) and then later run an optional step below to configure using Ingress IP address instead.
+
+Classifier is currently in Preview. Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform), so that Project is whitelisted. 
 
 
 Activate Project for the pipeline deployment:
@@ -67,7 +70,6 @@ Run the following commands to update Organization policies (Required for managed
 ORGANIZATION_ID=$(gcloud organizations list --format="value(name)")
 gcloud resource-manager org-policies disable-enforce constraints/compute.requireOsLogin --organization=$ORGANIZATION_ID
 gcloud resource-manager org-policies delete constraints/compute.vmExternalIpAccess --organization=$ORGANIZATION_ID
-gcloud resource-manager org-policies delete constraints/compute.requireShieldedVm --organization=$ORGANIZATION_ID
 ```
 
 If you have multiple Organizations, set the ORGANIZATION_ID manually to the Organization ID
@@ -75,7 +77,6 @@ If you have multiple Organizations, set the ORGANIZATION_ID manually to the Orga
 Or, change the following Organization policy constraints in [GCP Console](https://console.cloud.google.com/iam-admin/orgpolicies)
 - constraints/compute.requireOsLogin - Enforced Off
 - constraints/compute.vmExternalIpAccess - Allow All
-- constraints/compute.requireShieldedVm - Enforced Off
 
 ### Setup and Run Demo
 
@@ -314,10 +315,16 @@ For further reference, lets define the two projects:
    - **Document AI Viewer** - To grant access to view all resources and process documents in Document AI
    Where `{PROJECT_CDA_ID}` - to be replaced with the ID of the Project CDA
 2) Inside Project CDA grant following permissions to the default Document AI service account of the Project DocAI: `service-{PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com`
-   - **Storage Object Viewer** - [To make files in Project CDA accessible to Project DocAI](https://cloud.google.com/document-ai/docs/cross-project-setup) (This could be done on the `${PROJECT_CDA_ID}-pa-forms` bucket level with the forms to handle).
+   - **Storage Object Viewer** - [To make files in Project CDA accessible to Project DocAI](https://cloud.google.com/document-ai/docs/cross-project-setup) (This could be done on the `${PROJECT_CDA_ID}-document-upload` and `${PROJECT_CDA_ID}-docai-output` bucket level with the forms to handle).
    - **Storage Object Admin**  - To allow DocAI processor to save extracted entities as json files inside `${PROJECT_CDA_ID}-output` bucket of the Project CDA  (This could be done on the `${PROJECT_CDA_ID}-output` bucket level).
    Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the Project DocAI
 
+```shell
+  gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"  --role="roles/documentai.viewer"
+  PROJECT_DOCAI_NUMBER=$(gcloud projects describe "$DOCAI_PROJECT_ID" --format='get(projectNumber)')
+  gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-docai-output --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.admin"
+  gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-document-upload --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"
+```
 ## Rebuild / Re-deploy Microservices
 
 Updated sources from the Git repo:

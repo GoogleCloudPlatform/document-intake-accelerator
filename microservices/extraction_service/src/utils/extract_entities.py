@@ -272,7 +272,7 @@ def form_parser_extraction(processor, dai_client, gcs_doc_path: str,
 
   # request for Doc AI
   request = documentai.types.document_processor_service.BatchProcessRequest(
-      name="projects/prior-auth-poc/locations/us/processors/79b2c1fa8b5b2e8a",
+      name=processor.name,
       input_documents=input_config,
       document_output_config=output_config,
   )

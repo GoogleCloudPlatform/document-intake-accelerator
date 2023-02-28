@@ -46,6 +46,14 @@ locals {
     "secretmanager.googleapis.com",        # Secret Manager
     "storage.googleapis.com",              # Cloud Storage
   ]
+
+  services_docai = [
+    "documentai.googleapis.com",           # Document AI
+    "iam.googleapis.com",                  # Cloud IAM
+    "logging.googleapis.com",              # Cloud Logging
+    "monitoring.googleapis.com",           # Cloud Operations Suite
+    "storage.googleapis.com",              # Cloud Storage
+  ]
 }
 
 data "google_project" "project" {}
@@ -55,6 +63,14 @@ module "project_services" {
   project_id = var.project_id
   services   = local.services
 }
+
+module "project_services_docai" {
+  count   = var.docai_project_id !=  var.project_id ? 1 : 0
+  source     = "../../modules/project_services"
+  project_id = var.docai_project_id
+  services   = local.services_docai
+}
+
 
 module "service_accounts" {
   depends_on = [module.project_services]
@@ -81,7 +97,7 @@ module "firebase" {
 module "vpc_network" {
   source      = "../../modules/vpc_network"
   project_id  = var.project_id
-  vpc_network = "default-vpc"
+  vpc_network = var.network
   region      = var.region
 }
 
@@ -92,7 +108,7 @@ module "gke" {
   project_id     = var.project_id
   cluster_name   = var.cluster_name
   namespace      = "default"
-  vpc_network    = "default-vpc"
+  vpc_network    = var.network
   region         = var.region
   min_node_count = 1
   max_node_count = 10
@@ -283,10 +299,9 @@ module "docai" {
   processors = {
     claims_form_parser     = "FORM_PARSER_PROCESSOR"
     prior_auth_form_parser = "CUSTOM_EXTRACTION_PROCESSOR"
-//    classifier      = "CUSTOM_CLASSIFICATION_PROCESSOR" # Need to become GA
+//    classifier      = "CUSTOM_CLASSIFICATION_PROCESSOR" # Needs to become GA
   }
 }
-
 
 # ================= Setup Cross Project Access ====================
 resource "google_project_iam_member" "project-gke-docai-access" {
@@ -308,11 +323,10 @@ output "project_docai_number" {
 }
 
 # give backup SA rights on bucket
-# TODO gives error that
 resource "google_storage_bucket_iam_binding" "cda-docai_sa_storage_load_binding" {
   count   = var.docai_project_id !=  var.project_id ? 1 : 0
   bucket = google_storage_bucket.document-load.name
-  role   = "roles/storage.admin"
+  role   = "roles/storage.objectViewer"
   members = [
     "serviceAccount:service-${data.google_project.docai_project.number}@gcp-sa-prod-dai-core.iam.gserviceaccount.com",
   ]
