@@ -35,7 +35,7 @@ module "vpc" {
   ]
 
   secondary_ranges = {
-    vpc-01-subnet-01 = [
+    (var.subnetwork) = [
       {
         range_name    = "secondary-pod-range-01"
         ip_cidr_range = "10.1.0.0/16"

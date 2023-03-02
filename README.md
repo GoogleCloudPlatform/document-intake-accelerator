@@ -78,6 +78,37 @@ Or, change the following Organization policy constraints in [GCP Console](https:
 - constraints/compute.requireOsLogin - Enforced Off
 - constraints/compute.vmExternalIpAccess - Allow All
 
+### Virtual Private Cloud (VPC) design
+
+As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) via the `network_config` variable. Make sure that the GKE API (`container.googleapis.com`) is enabled in the VPC host project.
+
+If the `network_config` variable is not provided, one VPC will be created in the project.
+
+To deploy the solution on a Shared VPC, you have to configure the `network_config` variable (inside `terraform/environments/dev/terraform.tfvars`):
+
+```
+network_config = {
+  host_project      = "PROJECT_ID"
+  network_self_link = "https://www.googleapis.com/compute/v1/projects/PROJECT_ID/global/networks/VPC_NAME"
+  subnet_self_link  = "https://www.googleapis.com/compute/v1/projects/PROJECT_ID/regions/$REGION/subnetworks/SUBNET_NAME"
+  gke_secondary_ranges = {
+    pods     = "SECONDARY_SUBNET_NAME_1"
+    services = "SECONDARY_SUBNET_NAME_2"
+  }
+  static_ip_address = "EXTERNAL IP address reserved"
+}
+```
+
+To run this example, the Shared VPC project needs to have:
+
+- A Private Service Connect with a range of `/24` (example: `10.60.0.0/24`).
+- Internet access configured (for example Cloud NAT).
+
+In order to run the example and deploy on a shared VPC the identity running Terraform must have the following IAM role on the Shared VPC Host project.
+- Compute Network Admin (roles/compute.networkAdmin)
+- Compute Shared VPC Admin (roles/compute.xpnAdmin)
+
+
 ### Setup and Run Demo
 
 Simplified steps below makes installation faster by encapsulating details in the wrapper scripts.
