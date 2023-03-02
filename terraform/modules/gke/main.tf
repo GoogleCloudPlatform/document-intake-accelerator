@@ -29,9 +29,9 @@ module "gke_cluster" {
   region                     = var.region
   regional                   = true
   network                    = var.vpc_network
-  subnetwork                 = "vpc-01-subnet-01"
-  ip_range_pods              = "secondary-pod-range-01"
-  ip_range_services          = "secondary-service-range-01"
+  subnetwork                 = var.vpc_subnetwork
+  ip_range_pods              = var.secondary_ranges_pods
+  ip_range_services          = var.secondary_ranges_services
   http_load_balancing        = true
   identity_namespace         = "enabled"
   horizontal_pod_autoscaling = true

@@ -30,6 +30,21 @@ variable "vpc_network" {
   description = "specify the vpc name"
 }
 
+variable "vpc_subnetwork" {
+  type        = string
+  description = "subnetwork"
+}
+
+variable "secondary_ranges_pods" {
+  type        = string
+  description = "gke IP ranges for pods"
+}
+
+variable "secondary_ranges_services" {
+  type        = string
+  description = "gke IP ranges for svc"
+}
+
 variable "region" {
   type        = string
   description = "cluster region"

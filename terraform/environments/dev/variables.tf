@@ -74,6 +74,21 @@ variable "cluster_name" {
   default = "main-cluster"
 }
 
+variable "network_config" {
+  description = "Shared VPC network configurations to use. If null networks will be created in projects with preconfigured values."
+  type = object({
+    host_project      = string
+    network_self_link = string
+    subnet_self_link  = string
+    static_ip_address = string
+    gke_secondary_ranges = object({
+      pods     = string
+      services = string
+    })
+  })
+  default = null
+}
+
 variable "network" {
   type    = string
   default = "default-vpc"
@@ -81,7 +96,7 @@ variable "network" {
 
 variable "subnetwork" {
   type    = string
-  default = "adp-subnetwork"
+  default = "cde-subnetwork-01"
 }
 
 

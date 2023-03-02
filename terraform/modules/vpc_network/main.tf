@@ -24,7 +24,7 @@ module "vpc" {
 
   subnets = [
     {
-      subnet_name               = "vpc-01-subnet-01"
+      subnet_name               = var.subnetwork
       subnet_ip                 = "10.0.0.0/16"
       subnet_region             = "us-central1"
       subnet_flow_logs          = "true"
