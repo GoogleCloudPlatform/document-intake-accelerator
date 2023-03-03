@@ -78,8 +78,9 @@ variable "network_config" {
   description = "Shared VPC network configurations to use. If null networks will be created in projects with preconfigured values."
   type = object({
     host_project      = string
-    network_self_link = string
-    subnet_self_link  = string
+    network           = string
+    subnet            = string
+    region            = string
     static_ip_address = string
     gke_secondary_ranges = object({
       pods     = string
@@ -87,6 +88,12 @@ variable "network_config" {
     })
   })
   default = null
+}
+
+variable "cda_external_ip" {
+  type        = string
+  description = "External Reserved IP address for the UI"
+  default     = null
 }
 
 variable "network" {

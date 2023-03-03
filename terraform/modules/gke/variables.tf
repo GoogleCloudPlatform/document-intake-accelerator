@@ -30,6 +30,11 @@ variable "vpc_network" {
   description = "specify the vpc name"
 }
 
+variable "network_project_id" {
+  type        = string
+  description = "The project ID of the shared VPC's host (for shared vpc support)"
+}
+
 variable "vpc_subnetwork" {
   type        = string
   description = "subnetwork"

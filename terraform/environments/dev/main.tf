@@ -19,7 +19,6 @@
 locals {
   env = var.env
 
-  region             = var.region
   firestore_region   = var.firestore_region
   multiregion        = var.multiregion
   project_id         = var.project_id
@@ -57,17 +56,21 @@ locals {
 
   shared_vpc_project = try(var.network_config.host_project, null)
   use_shared_vpc     = var.network_config != null
-
+  region = (
+    local.use_shared_vpc
+    ? var.network_config.region
+    : var.region
+  )
   #Todo use vpc module self_link
   vpc_subnet = (
     local.use_shared_vpc
-    ? var.network_config.subnet_self_link
+    ? var.network_config.subnet
     : var.subnetwork
   )
   #Todo use vpc module self_link
   vpc_network = (
     local.use_shared_vpc
-    ? var.network_config.network_self_link
+    ? var.network_config.network
     : var.network
   )
   gke_secondary_ranges_pods = (
@@ -79,6 +82,12 @@ locals {
     local.use_shared_vpc
     ? var.network_config.gke_secondary_ranges.services
     : "secondary-pod-range-01"
+  )
+  addresses = "http://localhost:4200,http://localhost:3000,http://${var.api_domain},https://${var.api_domain},http://34.120.222.231"
+  cors_origin = (
+    var.cda_external_ip == null
+    ? local.addresses
+    : "${local.addresses},http://${var.cda_external_ip},https://${var.cda_external_ip}"
   )
 
 }
@@ -139,9 +148,10 @@ module "gke" {
   namespace                 = "default"
   vpc_network               = local.vpc_network
   vpc_subnetwork            = local.vpc_subnet
+  network_project_id        = local.shared_vpc_project
   secondary_ranges_pods     = local.gke_secondary_ranges_pods
   secondary_ranges_services = local.gke_secondary_ranges_scv
-  region                    = var.region
+  region                    = local.region
   min_node_count            = 1
   max_node_count            = 10
   machine_type              = "n1-standard-8"
@@ -164,8 +174,9 @@ module "ingress" {
 
   # Domains for API endpoint, excluding protocols.
   domain            = var.api_domain
-  region            = var.region
-  cors_allow_origin = "http://localhost:4200,http://localhost:3000,http://${var.api_domain},https://${var.api_domain}"
+  region            = local.region
+  cors_allow_origin = local.addresses
+  external_address  = var.cda_external_ip
 }
 
 
@@ -177,7 +188,7 @@ module "cloudrun-queue" {
   source     = "../../modules/cloudrun"
   project_id = var.project_id
   name       = "queue"
-  region     = var.region
+  region     = local.region
   api_domain = var.api_domain
 }
 
@@ -189,7 +200,7 @@ module "cloudrun-start-pipeline" {
   source     = "../../modules/cloudrun"
   project_id = var.project_id
   name       = "startpipeline"
-  region     = var.region
+  region     = local.region
   api_domain = var.api_domain
 }
 
@@ -201,7 +212,7 @@ data "google_cloud_run_service" "queue-run" {
     module.vpc_network
   ]
   name     = "queue-cloudrun"
-  location = var.region
+  location = local.region
 }
 
 data "google_cloud_run_service" "startpipeline-run" {
@@ -210,7 +221,7 @@ data "google_cloud_run_service" "startpipeline-run" {
     module.vpc_network
   ]
   name     = "startpipeline-cloudrun"
-  location = var.region
+  location = local.region
 }
 
 module "cloudrun-queue-pubsub" {
@@ -223,7 +234,7 @@ module "cloudrun-queue-pubsub" {
   source                = "../../modules/pubsub"
   topic                 = "queue-topic"
   project_id            = var.project_id
-  region                = var.region
+  region                = local.region
   cloudrun_name         = module.cloudrun-queue.name
   cloudrun_location     = module.cloudrun-queue.location
   cloudrun_endpoint     = module.cloudrun-queue.endpoint
@@ -287,7 +298,7 @@ module "cloudrun-startspipeline-eventarc" {
   source                = "../../modules/eventarc"
   topic                 = "startpipeline-topic"
   project_id            = var.project_id
-  region                = var.region
+  region                = local.region
   cloudrun_name         = module.cloudrun-start-pipeline.name
   cloudrun_location     = module.cloudrun-start-pipeline.location
   cloudrun_endpoint     = module.cloudrun-start-pipeline.endpoint
