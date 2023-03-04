@@ -148,7 +148,7 @@ module "gke" {
   namespace                 = "default"
   vpc_network               = local.vpc_network
   vpc_subnetwork            = local.vpc_subnet
-  network_project_id        = local.shared_vpc_project
+  network_project_id        = local.use_shared_vpc ? local.shared_vpc_project : var.project_id
   secondary_ranges_pods     = local.gke_secondary_ranges_pods
   secondary_ranges_services = local.gke_secondary_ranges_scv
   region                    = local.region
