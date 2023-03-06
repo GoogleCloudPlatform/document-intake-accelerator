@@ -260,6 +260,11 @@ Wrapper script to upload each document as a standalone application inside `${PRO
 ./start_pipeline.sh -d <local-dir-with-forms>  -l <batch-name>
 ```
 
+For example, to parse the sample form:
+```shell
+./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
+```
+
 Or send all documents within the directory as single Application with same Case ID:
 ```shell
 ./start_pipeline.sh -d <local-dir-with-forms> -l <batch-name> -p
