@@ -16,23 +16,25 @@
  */
 
 locals {
-  project = var.project_id
+  project         = var.project_id
   service_account = "${var.service_account_name}@${var.project_id}.iam.gserviceaccount.com"
 }
 
+
 module "gke_cluster" {
-  source                     = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
-  version                    = "v22.1.0"
+  source                     = "terraform-google-modules/kubernetes-engine/google//modules/beta-private-cluster"
+  version                    = "23.1.0"
   project_id                 = var.project_id
   name                       = var.cluster_name
   kubernetes_version         = var.kubernetes_version
   region                     = var.region
   regional                   = true
   network                    = var.vpc_network
-  subnetwork                 = "vpc-01-subnet-01"
-  ip_range_pods              = "secondary-pod-range-01"
-  ip_range_services          = "secondary-service-range-01"
+  subnetwork                 = var.vpc_subnetwork
+  ip_range_pods              = var.secondary_ranges_pods
+  ip_range_services          = var.secondary_ranges_services
   http_load_balancing        = true
+  network_project_id         = var.network_project_id
   identity_namespace         = "enabled"
   horizontal_pod_autoscaling = true
   remove_default_node_pool   = true
@@ -69,7 +71,7 @@ module "gke_cluster" {
   node_pools_metadata = {
     node-pool-01 = {
       disable-legacy-endpoints = "true"
-      goog-packaged-solution = "prior-authorization"
+      goog-packaged-solution   = "prior-authorization"
     }
   }
 
@@ -79,7 +81,7 @@ module "gke_cluster" {
     }
 
     default-node-pool = {
-      default-node-pool = true
+      default-node-pool      = true
       goog-packaged-solution = "prior-authorization"
     }
   }

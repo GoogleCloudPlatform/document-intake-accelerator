@@ -18,8 +18,7 @@
 # project-specific locals
 locals {
   env = var.env
-  #TODO: change
-  region             = var.region
+
   firestore_region   = var.firestore_region
   multiregion        = var.multiregion
   project_id         = var.project_id
@@ -48,12 +47,49 @@ locals {
   ]
 
   services_docai = [
-    "documentai.googleapis.com",           # Document AI
-    "iam.googleapis.com",                  # Cloud IAM
-    "logging.googleapis.com",              # Cloud Logging
-    "monitoring.googleapis.com",           # Cloud Operations Suite
-    "storage.googleapis.com",              # Cloud Storage
+    "documentai.googleapis.com", # Document AI
+    "iam.googleapis.com",        # Cloud IAM
+    "logging.googleapis.com",    # Cloud Logging
+    "monitoring.googleapis.com", # Cloud Operations Suite
+    "storage.googleapis.com",    # Cloud Storage
   ]
+
+  shared_vpc_project = try(var.network_config.host_project, null)
+  use_shared_vpc     = var.network_config != null
+  region = (
+    local.use_shared_vpc
+    ? var.network_config.region
+    : var.region
+  )
+  #Todo use vpc module self_link
+  vpc_subnet = (
+    local.use_shared_vpc
+    ? var.network_config.subnet
+    : var.subnetwork
+  )
+  #Todo use vpc module self_link
+  vpc_network = (
+    local.use_shared_vpc
+    ? var.network_config.network
+    : var.network
+  )
+  gke_secondary_ranges_pods = (
+    local.use_shared_vpc
+    ? var.network_config.gke_secondary_ranges.pods
+    : "secondary-service-range-01"
+  )
+  gke_secondary_ranges_scv = (
+    local.use_shared_vpc
+    ? var.network_config.gke_secondary_ranges.services
+    : "secondary-pod-range-01"
+  )
+  addresses = "http://localhost:4200,http://localhost:3000,http://${var.api_domain},https://${var.api_domain},http://34.120.222.231"
+  cors_origin = (
+    var.cda_external_ip == null
+    ? local.addresses
+    : "${local.addresses},http://${var.cda_external_ip},https://${var.cda_external_ip}"
+  )
+
 }
 
 data "google_project" "project" {}
@@ -65,7 +101,7 @@ module "project_services" {
 }
 
 module "project_services_docai" {
-  count   = var.docai_project_id !=  var.project_id ? 1 : 0
+  count      = var.docai_project_id != var.project_id ? 1 : 0
   source     = "../../modules/project_services"
   project_id = var.docai_project_id
   services   = local.services_docai
@@ -95,24 +131,30 @@ module "firebase" {
 }
 
 module "vpc_network" {
+  count       = var.network_config == null ? 1 : 0
   source      = "../../modules/vpc_network"
   project_id  = var.project_id
   vpc_network = var.network
   region      = var.region
+  subnetwork  = var.subnetwork
 }
 
 module "gke" {
   depends_on = [module.project_services, module.vpc_network]
 
-  source         = "../../modules/gke"
-  project_id     = var.project_id
-  cluster_name   = var.cluster_name
-  namespace      = "default"
-  vpc_network    = var.network
-  region         = var.region
-  min_node_count = 1
-  max_node_count = 10
-  machine_type   = "n1-standard-8"
+  source                    = "../../modules/gke"
+  project_id                = var.project_id
+  cluster_name              = var.cluster_name
+  namespace                 = "default"
+  vpc_network               = local.vpc_network
+  vpc_subnetwork            = local.vpc_subnet
+  network_project_id        = local.use_shared_vpc ? local.shared_vpc_project : var.project_id
+  secondary_ranges_pods     = local.gke_secondary_ranges_pods
+  secondary_ranges_services = local.gke_secondary_ranges_scv
+  region                    = local.region
+  min_node_count            = 1
+  max_node_count            = 10
+  machine_type              = "n1-standard-8"
 
   # This service account will be created in both GCP and GKE, and will be
   # used for workload federation in all microservices.
@@ -121,6 +163,7 @@ module "gke" {
 
   # See latest stable version at https://cloud.google.com/kubernetes-engine/docs/release-notes-stable
   kubernetes_version = "1.23.13-gke.900"
+
 }
 
 module "ingress" {
@@ -131,8 +174,9 @@ module "ingress" {
 
   # Domains for API endpoint, excluding protocols.
   domain            = var.api_domain
-  region            = var.region
-  cors_allow_origin = "http://localhost:4200,http://localhost:3000,http://${var.api_domain},https://${var.api_domain}"
+  region            = local.region
+  cors_allow_origin = local.addresses
+  external_address  = var.cda_external_ip
 }
 
 
@@ -144,7 +188,7 @@ module "cloudrun-queue" {
   source     = "../../modules/cloudrun"
   project_id = var.project_id
   name       = "queue"
-  region     = var.region
+  region     = local.region
   api_domain = var.api_domain
 }
 
@@ -156,7 +200,7 @@ module "cloudrun-start-pipeline" {
   source     = "../../modules/cloudrun"
   project_id = var.project_id
   name       = "startpipeline"
-  region     = var.region
+  region     = local.region
   api_domain = var.api_domain
 }
 
@@ -168,7 +212,7 @@ data "google_cloud_run_service" "queue-run" {
     module.vpc_network
   ]
   name     = "queue-cloudrun"
-  location = var.region
+  location = local.region
 }
 
 data "google_cloud_run_service" "startpipeline-run" {
@@ -177,7 +221,7 @@ data "google_cloud_run_service" "startpipeline-run" {
     module.vpc_network
   ]
   name     = "startpipeline-cloudrun"
-  location = var.region
+  location = local.region
 }
 
 module "cloudrun-queue-pubsub" {
@@ -190,7 +234,7 @@ module "cloudrun-queue-pubsub" {
   source                = "../../modules/pubsub"
   topic                 = "queue-topic"
   project_id            = var.project_id
-  region                = var.region
+  region                = local.region
   cloudrun_name         = module.cloudrun-queue.name
   cloudrun_location     = module.cloudrun-queue.location
   cloudrun_endpoint     = module.cloudrun-queue.endpoint
@@ -254,7 +298,7 @@ module "cloudrun-startspipeline-eventarc" {
   source                = "../../modules/eventarc"
   topic                 = "startpipeline-topic"
   project_id            = var.project_id
-  region                = var.region
+  region                = local.region
   cloudrun_name         = module.cloudrun-start-pipeline.name
   cloudrun_location     = module.cloudrun-start-pipeline.location
   cloudrun_endpoint     = module.cloudrun-start-pipeline.endpoint
@@ -299,13 +343,13 @@ module "docai" {
   processors = {
     claims_form_parser     = "FORM_PARSER_PROCESSOR"
     prior_auth_form_parser = "CUSTOM_EXTRACTION_PROCESSOR"
-//    classifier      = "CUSTOM_CLASSIFICATION_PROCESSOR" # Needs to become GA
+    //    classifier      = "CUSTOM_CLASSIFICATION_PROCESSOR" # Needs to become GA
   }
 }
 
 # ================= Setup Cross Project Access ====================
 resource "google_project_iam_member" "project-gke-docai-access" {
-  count   = var.docai_project_id !=  var.project_id ? 1 : 0
+  count   = var.docai_project_id != var.project_id ? 1 : 0
   project = var.docai_project_id
   member  = "serviceAccount:${module.gke.service_account_email}"
   role    = "roles/documentai.viewer"
@@ -324,7 +368,7 @@ output "project_docai_number" {
 
 # give backup SA rights on bucket
 resource "google_storage_bucket_iam_binding" "cda-docai_sa_storage_load_binding" {
-  count   = var.docai_project_id !=  var.project_id ? 1 : 0
+  count  = var.docai_project_id != var.project_id ? 1 : 0
   bucket = google_storage_bucket.document-load.name
   role   = "roles/storage.objectViewer"
   members = [
@@ -338,7 +382,7 @@ resource "google_storage_bucket_iam_binding" "cda-docai_sa_storage_load_binding"
 
 # TODO Use gke module to access sa
 resource "google_storage_bucket_iam_binding" "cda-docai_sa_storage_output_binding" {
-  count   = var.docai_project_id !=  var.project_id ? 1 : 0
+  count  = var.docai_project_id != var.project_id ? 1 : 0
   bucket = google_storage_bucket.docai-output.name
   role   = "roles/storage.admin"
   members = [
@@ -422,7 +466,7 @@ resource "null_resource" "sample-data" {
     google_storage_bucket.document-load
   ]
   provisioner "local-exec" {
-    command = "gsutil -m  cp -r ../../../sample_data gs://${google_storage_bucket.document-load.name}/"
+    command = "gsutil -m  cp -r ../../../sample_data/bsc_demo gs://${google_storage_bucket.document-load.name}/bsc_demo"
   }
 }
 

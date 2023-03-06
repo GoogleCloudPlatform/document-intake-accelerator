@@ -74,6 +74,28 @@ variable "cluster_name" {
   default = "main-cluster"
 }
 
+variable "network_config" {
+  description = "Shared VPC network configurations to use. If null networks will be created in projects with preconfigured values."
+  type = object({
+    host_project      = string
+    network           = string
+    subnet            = string
+    region            = string
+    static_ip_address = string
+    gke_secondary_ranges = object({
+      pods     = string
+      services = string
+    })
+  })
+  default = null
+}
+
+variable "cda_external_ip" {
+  type        = string
+  description = "External Reserved IP address for the UI"
+  default     = null
+}
+
 variable "network" {
   type    = string
   default = "default-vpc"
@@ -81,7 +103,7 @@ variable "network" {
 
 variable "subnetwork" {
   type    = string
-  default = "adp-subnetwork"
+  default = "cde-subnetwork-01"
 }
 
 

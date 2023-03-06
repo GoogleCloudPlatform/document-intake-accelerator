@@ -78,6 +78,100 @@ Or, change the following Organization policy constraints in [GCP Console](https:
 - constraints/compute.requireOsLogin - Enforced Off
 - constraints/compute.vmExternalIpAccess - Allow All
 
+
+### Using Shared Virtual Private Cloud (VPC) for the deployment
+
+As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.tfvars).
+When enabling host project, and attaching service projects, Under Kubernetes Engine access, make sure to check Enabled checkbox. 
+Refer to this [guide](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-shared-vpc) for additional background information on setting up shared VPC. 
+
+If the `network_config` variable is not provided, one VPC will be created in the project.
+
+**Enable APIs**
+
+Make sure that the GKE API (`container.googleapis.com`) is enabled in the VPC host project.
+```shell
+gcloud services enable container.googleapis.com --project $HOST_PROJECT_ID     
+gcloud services enable container.googleapis.com --project $PROJECT_ID     
+```
+```shell
+export HOST_PROJECT_ID=<Your Host Project ID here>
+export SERVICE_PROJECT_NUM=$(gcloud projects describe "$PROJECT_ID" --format='get(projectNumber)')
+```
+
+**Grant Required Roles**
+```shell
+gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
+    --member serviceAccount:service-$SERVICE_PROJECT_NUM@container-engine-robot.iam.gserviceaccount.com \
+    --role=roles/container.hostServiceAgentUser
+gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
+    --member=serviceAccount:service-$SERVICE_PROJECT_NUM@container-engine-robot.iam.gserviceaccount.com \
+    --role=roles/compute.securityAdmin
+gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
+    --member=serviceAccount:service-$SERVICE_PROJECT_NUM@container-engine-robot.iam.gserviceaccount.com \
+    --role=roles/compute.networkUser  
+gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
+    --member=serviceAccount:$SERVICE_PROJECT_NUM@cloudservices.gserviceaccount.com \
+    --role=roles/compute.networkUser
+       
+```
+
+**Network and Subnetwork Requirements for GKE**
+- Pods secondary range for pods and services is required to be of size  /24 for the max_pods_per_node.
+- For the general requirements of the IP address ranges for nodes, Pods and Services, please refer [here](https://cloud.google.com/kubernetes-engine/docs/concepts/alias-ips)  
+
+Here is a [working example](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-shared-vpc#console) of a subnetwork inside shared VPC network for GKE:
+- Create subnet `SUBNET_NAME`: For IPv4 range of the subnet, enter 10.0.4.0/22.
+- Create two secondary subnets for gke pods and services Ip ranges:
+  - `SECONDARY_SUBNET_SERVICES`: For Secondary IPv4 range, enter 10.0.32.0/20.
+  - `SECONDARY_SUBNET_PODS`: For Secondary IPv4 range, enter 10.4.0.0/14.
+
+**Enable Config**
+
+Copy `terraform/environments/dev/terraform.sample.tfvars` as `terraform/environments/dev/terraform.tfvars` file:
+
+```shell
+cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
+```
+
+Edit `terraform.tfvars` in the editor,  uncomment `network_config` and fill in required parameters inside `network_config`:
+
+```
+network_config = {
+  host_project      = "HOST_PROJECT_ID"
+  network = "VPC_NAME"
+  subnet  = "SUBNET_NAME"
+  gke_secondary_ranges = {
+    pods     = "SECONDARY_SUBNET_PODS"
+    services = "SECONDARY_SUBNET_SERVICES"
+  }
+}
+```
+
+[//]: # ()
+[//]: # (In order to run the example and deploy on a shared VPC the identity running Terraform must have the following IAM role on the Shared VPC Host project.)
+
+[//]: # (- Compute Network Admin &#40;roles/compute.networkAdmin&#41;)
+
+[//]: # (- Compute Shared VPC Admin &#40;roles/compute.xpnAdmin&#41;)
+
+### Using External Static IP for the front end UI
+
+Static IP address could be assigned to GKE ingress during deployment via the `cda_external_ip` parameter.
+You could provide it using `terraform/environments/dev/terraform.tfvars' file:
+
+Copy `terraform/environments/dev/terraform.sample.tfvars` as `terraform/environments/dev/terraform.tfvars` file:
+
+```shell
+cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
+```
+
+Edit `terraform.tfvars` in the editor,  uncomment `cda_external_ip` and fill in the value of the reserved IP address (without http(s) prefix):
+
+```
+cda_external_ip = "IP.ADDRESS.HERE"
+```
+
 ### Setup and Run Demo
 
 Simplified steps below makes installation faster by encapsulating details in the wrapper scripts.
