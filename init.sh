@@ -34,7 +34,7 @@ bash "${DIR}"/setup/setup_terraform.sh
 cd "${DIR}/terraform/environments/dev" || exit
 
 # TODO skip if bucket already exists
-terraform init -backend-config=bucket=$TF_BUCKET_NAME
+terraform init -backend-config=bucket=$TF_BUCKET_NAME -upgrade
 terraform apply -target=module.project_services -target=module.service_accounts -target=module.project_services_docai -auto-approve
 terraform apply -auto-approve
 

@@ -24,6 +24,10 @@ variable "region" {
   type        = string
   description = "GCP region"
 }
+variable "external_address" {
+  type    = string
+  default = null
+}
 
 variable "cert_issuer_email" {
   type        = string

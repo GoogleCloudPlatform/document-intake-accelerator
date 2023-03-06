@@ -23,6 +23,10 @@ output "eventarc_subscription" {
   value = module.cloudrun-startspipeline-eventarc.event-subscription
 }
 
+output "ingress-ip" {
+  value = module.ingress.ingress_ip_address
+}
+
 //output "vertex_ai" {
 //  value = module.vertex_ai.output
 //}

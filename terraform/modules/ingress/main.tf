@@ -30,6 +30,13 @@ terraform {
   }
 }
 
+locals {
+  address = (
+      var.external_address != null
+      ? var.external_address
+      : google_compute_address.ingress_ip_address[0].address
+    )
+  }
 module "cert_manager" {
   source = "terraform-iaac/cert-manager/kubernetes"
 
@@ -45,20 +52,22 @@ resource "kubernetes_namespace" "ingress_nginx" {
 }
 
 resource "google_compute_address" "ingress_ip_address" {
+  count = var.external_address == null ? 1: 0
   name   = "nginx-controller"
   region = var.region
 }
+
 
 module "nginx-controller" {
   source    = "terraform-iaac/nginx-controller/helm"
   version   = "2.0.2"
   namespace = "ingress-nginx"
 
-  ip_address = google_compute_address.ingress_ip_address.address
+  ip_address = var.external_address != null ? var.external_address: google_compute_address.ingress_ip_address[0].address
 
   # TODO: does this require cert_manager up and running or can they be completed in parallel
   depends_on = [
-    module.cert_manager, resource.kubernetes_namespace.ingress_nginx
+    module.cert_manager, resource.kubernetes_namespace.ingress_nginx, resource.google_compute_address.ingress_ip_address
   ]
 }
 
