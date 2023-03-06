@@ -61,29 +61,19 @@ locals {
     ? var.network_config.region
     : var.region
   )
-  #Todo use vpc module self_link
-  vpc_subnet = (
-    local.use_shared_vpc
-    ? var.network_config.subnet
-    : var.subnetwork
-  )
-  #Todo use vpc module self_link
-  vpc_network = (
-    local.use_shared_vpc
-    ? var.network_config.network
-    : var.network
-  )
-  gke_secondary_ranges_pods = (
-    local.use_shared_vpc
-    ? var.network_config.gke_secondary_ranges.pods
-    : "secondary-service-range-01"
-  )
-  gke_secondary_ranges_scv = (
-    local.use_shared_vpc
-    ? var.network_config.gke_secondary_ranges.services
-    : "secondary-pod-range-01"
-  )
-  addresses = "http://localhost:4200,http://localhost:3000,http://${var.api_domain},https://${var.api_domain},http://34.120.222.231"
+
+  network_config = {
+    host_project = (local.use_shared_vpc ? var.network_config.host_project : var.project_id)
+    network      = (local.use_shared_vpc ? var.network_config.network : var.network)
+    subnet       = (local.use_shared_vpc ? var.network_config.subnet : var.subnetwork)
+    gke_secondary_ranges = {
+      pods     = (local.use_shared_vpc ? var.network_config.gke_secondary_ranges.pods : var.secondary_ranges_pods.range_name)
+      services = (local.use_shared_vpc ? var.network_config.gke_secondary_ranges.services : var.secondary_ranges_services.range_name)
+    }
+    region = (local.use_shared_vpc ? var.network_config.region : var.region)
+  }
+
+  addresses = "http://localhost:4200,http://localhost:3000,http://${var.api_domain},https://${var.api_domain}"
   cors_origin = (
     var.cda_external_ip == null
     ? local.addresses
@@ -131,12 +121,14 @@ module "firebase" {
 }
 
 module "vpc_network" {
-  count       = var.network_config == null ? 1 : 0
-  source      = "../../modules/vpc_network"
-  project_id  = var.project_id
-  vpc_network = var.network
-  region      = var.region
-  subnetwork  = var.subnetwork
+  count                     = local.use_shared_vpc ? 0 : 1
+  source                    = "../../modules/vpc_network"
+  project_id                = var.project_id
+  vpc_network               = var.network
+  region                    = var.region
+  subnetwork                = var.subnetwork
+  secondary_ranges_pods     = var.secondary_ranges_pods
+  secondary_ranges_services = var.secondary_ranges_services
 }
 
 module "gke" {
@@ -146,12 +138,12 @@ module "gke" {
   project_id                = var.project_id
   cluster_name              = var.cluster_name
   namespace                 = "default"
-  vpc_network               = local.vpc_network
-  vpc_subnetwork            = local.vpc_subnet
-  network_project_id        = local.use_shared_vpc ? local.shared_vpc_project : var.project_id
-  secondary_ranges_pods     = local.gke_secondary_ranges_pods
-  secondary_ranges_services = local.gke_secondary_ranges_scv
-  region                    = local.region
+  vpc_network               = local.network_config.network
+  vpc_subnetwork            = local.network_config.subnet
+  network_project_id        = local.network_config.host_project
+  secondary_ranges_pods     = local.network_config.gke_secondary_ranges.pods
+  secondary_ranges_services = local.network_config.gke_secondary_ranges.services
+  region                    = var.region
   min_node_count            = 1
   max_node_count            = 10
   machine_type              = "n1-standard-8"

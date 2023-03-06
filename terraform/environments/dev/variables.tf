@@ -77,11 +77,10 @@ variable "cluster_name" {
 variable "network_config" {
   description = "Shared VPC network configurations to use. If null networks will be created in projects with preconfigured values."
   type = object({
-    host_project      = string
-    network           = string
-    subnet            = string
-    region            = string
-    static_ip_address = string
+    host_project = string
+    network      = string
+    subnet       = string
+    region       = string
     gke_secondary_ranges = object({
       pods     = string
       services = string
@@ -99,6 +98,29 @@ variable "cda_external_ip" {
 variable "network" {
   type    = string
   default = "default-vpc"
+}
+
+variable "secondary_ranges_pods" {
+  type = object({
+    range_name    = string
+    ip_cidr_range = string
+  })
+
+  default = {
+    range_name    = "secondary-pod-range-01"
+    ip_cidr_range = "10.1.0.0/16"
+  }
+}
+
+variable "secondary_ranges_services" {
+  type = object({
+    range_name    = string
+    ip_cidr_range = string
+  })
+  default = {
+    range_name    = "secondary-service-range-01"
+    ip_cidr_range = "10.2.0.0/16"
+  }
 }
 
 variable "subnetwork" {

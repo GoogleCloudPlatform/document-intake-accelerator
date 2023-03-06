@@ -142,8 +142,8 @@ network_config = {
   network = "VPC_NAME"
   subnet  = "SUBNET_NAME"
   gke_secondary_ranges = {
-    pods     = "SECONDARY_SUBNET_PODS"
-    services = "SECONDARY_SUBNET_SERVICES"
+    pods     = "SECONDARY_SUBNET_PODS_RANGE_NAME"
+    services = "SECONDARY_SUBNET_SERVICES_RANGE_NAME"
   }
 }
 ```

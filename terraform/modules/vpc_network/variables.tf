@@ -26,10 +26,24 @@ variable "vpc_network" {
 }
 
 variable "subnetwork" {
-  type    = string
+  type = string
 }
 
 variable "region" {
   type        = string
   description = "GCP region"
+}
+
+variable "secondary_ranges_pods" {
+  type = object({
+    range_name    = string
+    ip_cidr_range = string
+  })
+}
+
+variable "secondary_ranges_services" {
+  type = object({
+    range_name    = string
+    ip_cidr_range = string
+  })
 }
