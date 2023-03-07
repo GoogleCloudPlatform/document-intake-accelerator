@@ -187,7 +187,7 @@ cda_external_ip = "IP.ADDRESS.HERE"
 ```
 
 ```shell
-export API_DOMAIN="IP.ADDRESS.HERE"
+export API_DOMAIN=IP.ADDRESS.HERE
 ```
 
 ### Setup and Run Demo
