@@ -83,8 +83,20 @@ Or, change the following Organization policy constraints in [GCP Console](https:
 
 As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.tfvars).
 When enabling host project, and attaching service projects, Under Kubernetes Engine access, make sure to check Enabled checkbox. 
-Refer to this [guide](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-shared-vpc) for additional background information on setting up shared VPC. 
+Refer to this [guide](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-shared-vpc) for in-detail  information on setting up shared VPC. 
 
+Make sure to add service project as attached to the VPC Hosted Project.
+The command that you use depends on the [required administrative role](https://cloud.google.com/vpc/docs/shared-vpc#iam_roles_required_for_shared_vpc) that you have.
+If you have Shared VPC Admin role at the organizational level:
+```shell
+gcloud compute shared-vpc associated-projects add $PROJECT_ID \
+    --host-project $HOST_PROJECT_ID
+```
+If you have Shared VPC Admin role at the folder level:
+```shell
+gcloud beta compute shared-vpc associated-projects add $PROJECT_ID \
+    --host-project $HOST_PROJECT_ID
+```
 If the `network_config` variable is not provided, one VPC will be created in the project.
 
 **Enable APIs**
@@ -158,7 +170,9 @@ network_config = {
 ### Using External Static IP for the front end UI
 
 Static IP address could be assigned to GKE ingress during deployment via the `cda_external_ip` parameter.
-You could provide it using `terraform/environments/dev/terraform.tfvars' file:
+> Right now, it has to be a *regional* Static IP address, corresponding to the VPC region.
+
+You could provide it using `terraform/environments/dev/terraform.tfvars` file:
 
 Copy `terraform/environments/dev/terraform.sample.tfvars` as `terraform/environments/dev/terraform.tfvars` file:
 
@@ -170,6 +184,10 @@ Edit `terraform.tfvars` in the editor,  uncomment `cda_external_ip` and fill in 
 
 ```
 cda_external_ip = "IP.ADDRESS.HERE"
+```
+
+```shell
+export API_DOMAIN="IP.ADDRESS.HERE"
 ```
 
 ### Setup and Run Demo
