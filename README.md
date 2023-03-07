@@ -139,7 +139,7 @@ Edit `terraform.tfvars` in the editor,  uncomment `network_config` and fill in r
 ```
 network_config = {
   host_project      = "HOST_PROJECT_ID"
-  network = "VPC_NAME"
+  network = "SHARED_VPC_NETWORK_NAME"
   subnet  = "SUBNET_NAME"
   gke_secondary_ranges = {
     pods     = "SECONDARY_SUBNET_PODS_RANGE_NAME"
@@ -180,8 +180,11 @@ For the detailed original flow see [Detailed Steps](#steps_original.md).
 #### Terraform 
 Run init step (will prepare for terraform execution and do terraform apply with auto-approve):
 ```shell
-./init.sh
+nohup bash -c "time ./init.sh" &
+tail -f nohup.out
 ```
+
+> We are using `nohup` command to make sure a command does not exit when Cloud Shell times out.
 
 Get the API endpoint IP address, this will be used in Firebase Auth later.
 ```

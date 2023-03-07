@@ -18,7 +18,7 @@ if [[ -z "${PROJECT_ID}" ]]; then
   exit
 fi
 
-source "${DIR}"/SET 2>&1 | tee -a "$LOG"
+source "${DIR}"/SET
 gcloud config set project $PROJECT_ID
 
 # Run following commands when executing from the local development machine (and not from Cloud Shell)
@@ -40,7 +40,7 @@ bash "${DIR}"/setup/setup_terraform.sh  2>&1 | tee -a "$LOG"
 cd "${DIR}/terraform/environments/dev" || exit
 
 # TODO skip if bucket already exists
-terraform init -backend-config=bucket=$TF_BUCKET_NAME -upgrade  2>&1 | tee -a "$LOG"
+terraform init -backend-config=bucket="$TF_BUCKET_NAME" -upgrade  2>&1 | tee -a "$LOG"
 terraform apply -target=module.project_services -target=module.service_accounts -target=module.project_services_docai -auto-approve  2>&1 | tee -a "$LOG"
 terraform apply -auto-approve  2>&1 | tee -a "$LOG"
 

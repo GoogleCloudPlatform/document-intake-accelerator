@@ -12,6 +12,7 @@ export TF_VAR_docai_project_id=${DOCAI_PROJECT_ID:-$PROJECT_ID}
 export TF_BUCKET_NAME="${PROJECT_ID}-tfstate"
 export TF_BUCKET_LOCATION="us"
 
+echo TF_BUCKET_NAME="$TF_BUCKET_NAME"
 export TF_VAR_config_bucket="${PROJECT_ID}-config"
 
 export CONFIG_BUCKET=${TF_VAR_config_bucket}
