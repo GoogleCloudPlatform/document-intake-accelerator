@@ -347,6 +347,7 @@ resource "google_project_iam_member" "project-gke-docai-access" {
   role    = "roles/documentai.viewer"
   depends_on = [
     module.gke,
+    module.docai
   ]
 }
 
@@ -358,11 +359,7 @@ output "project_docai_number" {
   value = data.google_project.project.number
 }
 
-//gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"  --role="roles/documentai.viewer"  2>&1 | tee -a "$LOG"
-//PROJECT_DOCAI_NUMBER=$(gcloud projects describe "$DOCAI_PROJECT_ID" --format='get(projectNumber)')
-//gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-docai-output --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.admin"  2>&1 | tee -a "$LOG"
-//gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-document-upload --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"  2>&1 | tee -a "$LOG"
-//
+
 # give backup SA rights on bucket
 resource "google_storage_bucket_iam_binding" "cda-docai_sa_storage_load_binding" {
   count  = var.docai_project_id != var.project_id ? 1 : 0
@@ -387,7 +384,8 @@ resource "google_storage_bucket_iam_binding" "cda-docai_sa_storage_output_bindin
   ]
   depends_on = [
     google_storage_bucket.docai-output,
-    module.gke
+    module.gke,
+    module.docai
   ]
 }
 
