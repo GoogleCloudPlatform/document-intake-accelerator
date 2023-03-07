@@ -4,7 +4,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOG="$DIR/deploy.log"
 filename=$(basename $0)
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
-echo " $timestamp - Running $filename ... " | tee "$LOG"
+echo "$timestamp - Running $filename ... " | tee "$LOG"
 
 source "${DIR}"/SET | tee -a "$LOG"
 
