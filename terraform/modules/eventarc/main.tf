@@ -80,7 +80,7 @@ resource "google_eventarc_trigger" "pipeline-topic-trigger" {
   provider        = google-beta
   name            = "startpipeline-topic-trigger"
   project         = var.project_id
-  location        = "us"
+  location        = var.region
   service_account = var.service_account_email
   labels = {
     goog-packaged-solution = "prior-authorization"

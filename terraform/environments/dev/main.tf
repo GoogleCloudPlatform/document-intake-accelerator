@@ -290,7 +290,7 @@ module "cloudrun-startspipeline-eventarc" {
   source                = "../../modules/eventarc"
   topic                 = "startpipeline-topic"
   project_id            = var.project_id
-  region                = local.region
+  region                = local.multiregion
   cloudrun_name         = module.cloudrun-start-pipeline.name
   cloudrun_location     = module.cloudrun-start-pipeline.location
   cloudrun_endpoint     = module.cloudrun-start-pipeline.endpoint

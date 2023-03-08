@@ -170,7 +170,7 @@ network_config = {
 ### Using External Static IP for the front end UI
 
 Static IP address could be assigned to GKE ingress during deployment via the `cda_external_ip` parameter.
-> Right now, it has to be a *regional* Static IP address, corresponding to the VPC region.
+Make sure to reserve a *regional* Static IP address, corresponding to the VPC region and create it in the Service project (PROJECT_ID).
 
 You could provide it using `terraform/environments/dev/terraform.tfvars` file:
 
@@ -198,12 +198,15 @@ For the detailed original flow see [Detailed Steps](#steps_original.md).
 #### Terraform 
 Run init step (will prepare for terraform execution and do terraform apply with auto-approve):
 ```shell
-nohup bash -c "time ./init.sh" &
-tail -f nohup.out
+./init.sh
 ```
 
-> We are using `nohup` command to make sure a command does not exit when Cloud Shell times out.
-
+> If Cloud shell times out during the operation, a workaround is to use `nohup` command to make sure a command does not exit when Cloud Shell times out.
+> 
+>  ```shell
+>  nohup bash -c "time ./init.sh" &
+>  tail -f nohup.out
+>  ```
 Get the API endpoint IP address, this will be used in Firebase Auth later.
 ```
 kubectl describe ingress default-ingress | grep Address
