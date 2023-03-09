@@ -1,5 +1,22 @@
-# Original Deployment Steps
+#  Deployment Steps
+When running locally, following tools need to be installed in advance:
+* skaffold (tested with v2.0.2)
+* gcloud
+* kubectl
+* terraform (tested with Terraform v1.3.5)
+* python
 
+Also make sure to update to the latest gcloud tool:
+```
+# Tested with gcloud v400.0.0
+gcloud components update
+```
+
+Before starting, activate Python virtual env in your terminal:
+```shell
+python3 -m venv ~/venv/pa
+source ~/venv/pa/bin/activate
+```
 ### Prerequisites
 *Important*: User needs to have Project **owner** role in order to deploy the terraform setup.
 ```

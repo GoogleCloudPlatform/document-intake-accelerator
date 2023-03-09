@@ -1,5 +1,6 @@
 # Claims Data Activator
 
+## Introduction
 > A pre-packaged and customizable solution to accelerate the development of end-to-end document processing workflow incorporating Document AI parsers and other GCP products (Firestore, BigQuery, GKE, etc). The goal is to accelerate the development efforts in document workflow with many ready-to-use components.
 
 ## Key features
@@ -8,60 +9,22 @@
 - Customizable components in microservice structure.
 - Solution architecture with best practices on Google Cloud Platform.
 
-## Getting Started to Deploy the DocAI Workflow
 
-Following steps could be run either from the CLoud Shell of the Project or locally,
+## How To Use This Repo
+This repo is intended to be used as a reference for your own implementation and
+as such we designed many elements to be as generic as possible. 
+You will almost certainly need to modify elements to fit your organization's specific requirements. 
+We strongly recommend you fork this repo, so you can have full control over your unique setup.
+While you will find end-to-end tools to help spin up a fully functional sandbox environment, most likely you will find yourself customizing solution further down the line.  
 
-When running locally, following tools need to be installed in advance:
-* skaffold (tested with v2.0.2)
-* gcloud
-* kubectl
-* terraform (tested with Terraform v1.3.5)
-* python
+## Prerequisites
 
-Also make sure to update to the latest gcloud tool:
-```
-# Tested with gcloud v400.0.0
-gcloud components update
-```
+### Project(s) Creation
+It is recommended to deploy into two projects: one for the Pipeline Engine (`PROJECT_ID`), and another for the Document AI processors (`DOCAI_PROJECT_ID`). Both projects need to belong to the same Org.
+When following this  practice, before deployment create two projects and note down.
 
-Before starting, activate Python virtual env in your terminal:
-```shell
-python3 -m venv ~/venv/pa
-source ~/venv/pa/bin/activate
-```
-
-### Prerequisites
-To access Custom Document Classifier and Splitter, you need to request early access by filling in this form: 
-This needs to be done before running the deployment.
-
-
-It is recommended to deploy into two projects: one for the Pipeline Engine (`PROJECT_ID`), and another for the Document AI processors (`DOCAI_PROJECT_ID`). Both projects need to belong to the same Org. 
-When following this  practice, before deployment create two projects. Otherwise, do not set `DOCAI_PROJECT_ID` variable, or use same Project ID for both settings.
-
-*Important*: User needs to have Project **owner** role in order to deploy  terraform setup.
-
-```
-export PROJECT_ID=<GCP Project ID to host Data ingestion microservices>
-export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI>
-export API_DOMAIN=mydomain.com
-```
-Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (needs to be set to a legal name as a placeholder) and then later run an optional step below to configure using Ingress IP address instead.
-
-Classifier is currently in Preview. Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform), so that Project is whitelisted. 
-
-
-Activate Project for the pipeline deployment:
-```shell
-gcloud config set project $PROJECT_ID
-```
-
-Run following commands when deploying from developer machine  (not required for Cloud Shell):
-```shell
-gcloud auth login
-gcloud auth application-default login
-gcloud auth application-default set-quota-project $PROJECT_ID
-```
+### Classifier Access
+Classifier is currently in Preview. Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform), so that Project is whitelisted.
 
 ### GCP Organization policy
 
@@ -78,12 +41,11 @@ Or, change the following Organization policy constraints in [GCP Console](https:
 - constraints/compute.requireOsLogin - Enforced Off
 - constraints/compute.vmExternalIpAccess - Allow All
 
-
 ### Using Shared Virtual Private Cloud (VPC) for the deployment
 
 As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.tfvars).
-When enabling host project, and attaching service projects, Under Kubernetes Engine access, make sure to check Enabled checkbox. 
-Refer to this [guide](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-shared-vpc) for in-detail  information on setting up shared VPC. 
+When enabling host project, and attaching service projects, Under Kubernetes Engine access, make sure to check Enabled checkbox.
+Refer to this [guide](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-shared-vpc) for in-detail  information on setting up shared VPC.
 
 Make sure to add service project as attached to the VPC Hosted Project.
 The command that you use depends on the [required administrative role](https://cloud.google.com/vpc/docs/shared-vpc#iam_roles_required_for_shared_vpc) that you have.
@@ -130,7 +92,7 @@ gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
 
 **Network and Subnetwork Requirements for GKE**
 - Pods secondary range for pods and services is required to be of size  /24 for the max_pods_per_node.
-- For the general requirements of the IP address ranges for nodes, Pods and Services, please refer [here](https://cloud.google.com/kubernetes-engine/docs/concepts/alias-ips)  
+- For the general requirements of the IP address ranges for nodes, Pods and Services, please refer [here](https://cloud.google.com/kubernetes-engine/docs/concepts/alias-ips)
 
 Here is a [working example](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-shared-vpc#console) of a subnetwork inside shared VPC network for GKE:
 - Create subnet `SUBNET_NAME`: For IPv4 range of the subnet, enter 10.0.4.0/22.
@@ -138,71 +100,62 @@ Here is a [working example](https://cloud.google.com/kubernetes-engine/docs/how-
   - `SECONDARY_SUBNET_SERVICES`: For Secondary IPv4 range, enter 10.0.32.0/20.
   - `SECONDARY_SUBNET_PODS`: For Secondary IPv4 range, enter 10.4.0.0/14.
 
-**Enable Config**
+## Getting Started to Deploy the DocAI Workflow
 
-Copy `terraform/environments/dev/terraform.sample.tfvars` as `terraform/environments/dev/terraform.tfvars` file:
+Following steps could be run either from the CLoud Shell of the Project or locally, below are both methods listed.
 
-```shell
-cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
-```
+## Installation Using Cloud Shell
 
-Edit `terraform.tfvars` in the editor,  uncomment `network_config` and fill in required parameters inside `network_config`:
-
-```
-network_config = {
-  host_project      = "HOST_PROJECT_ID"
-  network = "SHARED_VPC_NETWORK_NAME"
-  subnet  = "SUBNET_NAME"
-  gke_secondary_ranges = {
-    pods     = "SECONDARY_SUBNET_PODS_RANGE_NAME"
-    services = "SECONDARY_SUBNET_SERVICES_RANGE_NAME"
-  }
-}
-```
-
-[//]: # ()
-[//]: # (In order to run the example and deploy on a shared VPC the identity running Terraform must have the following IAM role on the Shared VPC Host project.)
-
-[//]: # (- Compute Network Admin &#40;roles/compute.networkAdmin&#41;)
-
-[//]: # (- Compute Shared VPC Admin &#40;roles/compute.xpnAdmin&#41;)
-
-### Using External Static IP for the front end UI
-
-Static IP address could be assigned to GKE ingress during deployment via the `cda_external_ip` parameter.
-Make sure to reserve a *regional* Static IP address, corresponding to the VPC region and create it in the Service project (PROJECT_ID).
-
-You could provide it using `terraform/environments/dev/terraform.tfvars` file:
-
-Copy `terraform/environments/dev/terraform.sample.tfvars` as `terraform/environments/dev/terraform.tfvars` file:
+*Important*: User needs to have Project **owner** role in order to deploy  terraform setup.
 
 ```shell
-cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
+export PROJECT_ID=<GCP Project ID to host CDA Pipeline Engine>
+export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors>
+export API_DOMAIN=mydomain.com
 ```
+Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (needs to be set to a legal name as a placeholder) and then later run an optional step below to configure using Ingress IP address instead.
+If you are using external static IP address without a domain, set it to the IP address:
 
-Edit `terraform.tfvars` in the editor,  uncomment `cda_external_ip` and fill in the value of the reserved IP address (without http(s) prefix):
 
-```
-cda_external_ip = "IP.ADDRESS.HERE"
-```
+> If, you wish to deploy using shared VPC or external static IP address: 
+> ```shell
+> cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
+>```
+> For **Shared VPC**:
+> - Edit `terraform.tfvars` in the editor,  uncomment `network_config` and fill in required parameters inside `network_config`:
+> ```
+> network_config = {
+>  host_project      = "HOST_PROJECT_ID"
+>  network = "SHARED_VPC_NETWORK_NAME"
+>  subnet  = "SUBNET_NAME"
+>  gke_secondary_ranges = {
+>    pods     = "SECONDARY_SUBNET_PODS_RANGE_NAME"
+>    services = "SECONDARY_SUBNET_SERVICES_RANGE_NAME"
+>  }
+>  region = "us-central1"
+> }
+>```
+>  
+> For the **Reserved External IP**:
+> - Edit `terraform.tfvars` in the editor,  uncomment `cda_external_ip` and fill in the value of the reserved IP address (without http(s) prefix):
+>
+> ```
+> cda_external_ip = "IP.ADDRESS.HERE"
+> ```
+> - Set API_DOMAIN to the External IP (when not using dedicated domain name): 
+> ```shell
+> export API_DOMAIN=IP.ADDRESS.HERE
+> ```
 
-```shell
-export API_DOMAIN=IP.ADDRESS.HERE
-```
 
-### Setup and Run Demo
-
-Simplified steps below makes installation faster by encapsulating details in the wrapper scripts.
-For the detailed original flow see [Detailed Steps](#steps_original.md).
-
-#### Terraform 
+#### Terraform
 Run init step (will prepare for terraform execution and do terraform apply with auto-approve):
 ```shell
 ./init.sh
 ```
 
 > If Cloud shell times out during the operation, a workaround is to use `nohup` command to make sure a command does not exit when Cloud Shell times out.
-> 
+>
 >  ```shell
 >  nohup bash -c "time ./init.sh" &
 >  tail -f nohup.out
@@ -210,16 +163,16 @@ Run init step (will prepare for terraform execution and do terraform apply with 
 Get the API endpoint IP address, this will be used in Firebase Auth later.
 ```
 kubectl describe ingress default-ingress | grep Address
-
 ```
 - This will print the Ingress IP like below:
   ```
   Address: 123.123.123.123
   ```
 
-**NOTE**: If you don’t have a custom domain ( (if you left `mydomain.com` above as API_DOMAIN), and want to use the Ingress IP address as the API endpoint:
+**NOTE**: If you don’t have a custom domain ( if you left `mydomain.com` above as API_DOMAIN and have **NOT** used Static external IP ), then you need  to use the Ingress IP address as the API endpoint.
+If you have already used external IP address, this step could be skipped.
 - Change the API_DOMAIN to the Ingress endpoint, and re-deploy CloudRun.
-  ```
+  ```shell
   export API_DOMAIN=$(kubectl describe ingress default-ingress | grep Address | awk '{print $2}')
   source ./init_domain_with_ip.sh
   ```
@@ -231,7 +184,7 @@ kubectl describe ingress default-ingress | grep Address
 - Select Google in the Additional providers
 - Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.
 - Go to Settings > Authorized domain, add the following to the Authorized domains:
-  - Web App Domain (e.g. adp-dev.cloudpssolutions.com) - or empry, if you do not have a custom domain. 
+  - Web App Domain (e.g. adp-dev.cloudpssolutions.com) - or empry, if you do not have a custom domain.
   - API endpoint IP address (from kubectl describe ingress | grep Address)
   - localhost
 - Go to Project Overview > Project settings, you will use this info in the next step.
@@ -246,13 +199,29 @@ kubectl describe ingress default-ingress | grep Address
     - You can find this ID in the Project settings > Cloud Messaging
   - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
 
-Optional: [register you domain](https://cloud.google.com/dns/docs/tutorials/create-domain-tutorial) 
+Optional: [register you domain](https://cloud.google.com/dns/docs/tutorials/create-domain-tutorial)
 #### Deploy microservices
+
+With kustomize 5.0 there are breaking changes on passing the environment variables.
+While we are making solution to account for those changes and work with kustomize 5.0, as a temporal workaround, please be sure to downgrade to 4.5.7 version when using Cloud Shell:
+```shell
+kustomize version
+sudo rm /usr/local/bin/kustomize
+curl -Lo install_kustomize "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" && chmod +x install_kustomize
+sudo ./install_kustomize 4.5.7 /usr/local/bin
+kustomize version
+```
+
 ```shell
 ./deploy.sh
 ```
 
 ### Out of the box Demo Flow
+
+Quick test to trigger pipeline to parse  the sample form:
+```shell
+./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
+```
 
 #### Working from the UI
 In order to access the Application UI, Navigate to the API Domain IP Address or Domain Name (depending on the setup) in the browser and login with your Google credentials.
@@ -261,9 +230,9 @@ Right now, the Form Processor is set up as a default processor (since no classif
 
 > The setting for the default processor is done through the following configuration setting  "settings_config" -> "classification_default_label".  Explained in details in the [Configuring the System](#system_config).
 
-As you click Refresh Icon on the top right, you will see different Status the Pipeline goes through: *Classifying -> Extracting -> Approved* or *Needs Review*. 
+As you click Refresh Icon on the top right, you will see different Status the Pipeline goes through: *Classifying -> Extracting -> Approved* or *Needs Review*.
 
-If you select *View* action, you will see the key/value pairs extracted from the Document. 
+If you select *View* action, you will see the key/value pairs extracted from the Document.
 
 Navigate to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
 
@@ -275,41 +244,53 @@ You could also run sample query from the Cloud Shell:
 #### Triggering pipeline in a batch mode
 *NB: Currently only pdf documents are supported, so if you have a jpg or png, please first convert it to pdf.*
 
-The Pipeline is triggered when an empty file named START_PIPELINE is uploaded to the `${PROJECT_ID}-pa-forms` GCS bucket. When the START_PIPELINE document is uploaded, all `*.pdf` files containing in that folder are sent to the processing queue.  
-All documents within the same gsc folder are treated as related documents, that belong to the same application (patient).
-When processed, documents are copied to `gs://${PROJECT_ID}-document-upload` with unique identifiers.
-
-Wrapper script to upload each document as a standalone application inside `${PROJECT_ID}-pa-forms`:
-```shell
-./start_pipeline.sh -d <local-dir-with-forms>  -l <batch-name>
-```
-
-For example, to parse the sample form:
+For example, to trigger pipeline to parse  the sample form:
 ```shell
 ./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
 ```
 
-Or send all documents within the directory as single Application with same Case ID:
-```shell
-./start_pipeline.sh -d <local-dir-with-forms> -l <batch-name> -p
-```
-
-Or send a pdf document by name:
-```shell
- ./start_pipeline.sh -d <local-dir-with-forms>/<my_doc>.pdf  -l <batch-name>
-```
-
-Alternatively, send a single document to processing:
-- Upload *pdf* form to the gs://<PROJECT_ID>-pa-forms/my_dir and 
-- Drop empty START_PIPELINE file to trigger the pipeline execution.
+> The Pipeline is triggered when an empty file named START_PIPELINE is uploaded to the `${PROJECT_ID}-pa-forms` GCS bucket. When the START_PIPELINE document is uploaded, all `*.pdf` files containing in that folder are sent to the processing queue.  
+> All documents within the same gsc folder are treated as related documents, that belong to the same application (patient).
+> When processed, documents are copied to `gs://${PROJECT_ID}-document-upload` with unique identifiers.
+>
+> Wrapper script to upload each document as a standalone application inside `${PROJECT_ID}-pa-forms`:
+> ```shell
+> ./start_pipeline.sh -d <local-dir-with-forms>  -l <batch-name>
+> ```
+>
+> Or send all documents within the directory as single Application with same Case ID:
+> ```shell
+> ./start_pipeline.sh -d <local-dir-with-forms> -l <batch-name> -p
+> ```
+>
+> Or send a pdf document by name:
+> ```shell
+> ./start_pipeline.sh -d <local-dir-with-forms>/<my_doc>.pdf  -l <batch-name>
+> ```
+>
+> Alternatively, send a single document to processing:
+> - Upload *pdf* form to the gs://<PROJECT_ID>-pa-forms/my_dir and
+> - Drop empty START_PIPELINE file to trigger the pipeline execution.
 > After putting START_PIPELINE, the pipeline is automatically triggered  to process  all PDF documents inside the gs://${PROJECT_ID}-pa-forms/<mydir> folder.
+>
+> ```shell
+> gsutil cp  <my-local-dir>/<my_document>.pdf
+> gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<my-dir>/
+> touch START_PIPELINE
+> gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<my-dir>/
+> ```
 
-```shell
-gsutil cp  <my-local-dir>/<my_document>.pdf
-gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<my-dir>/
-touch START_PIPELINE
-gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<my-dir>/
-```
+## Installation from the developer machine
+
+For the in-depth instructions please refer to this [page](#steps_original.md).
+
+[//]: # ()
+[//]: # (In order to run the example and deploy on a shared VPC the identity running Terraform must have the following IAM role on the Shared VPC Host project.)
+
+[//]: # (- Compute Network Admin &#40;roles/compute.networkAdmin&#41;)
+
+[//]: # (- Compute Shared VPC Admin &#40;roles/compute.xpnAdmin&#41;)
+
 
 ## Setting up CDE and CDS 
 

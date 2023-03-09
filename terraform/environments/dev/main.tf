@@ -167,7 +167,7 @@ module "ingress" {
   # Domains for API endpoint, excluding protocols.
   domain            = var.api_domain
   region            = local.region
-  cors_allow_origin = local.addresses
+  cors_allow_origin = local.cors_origin
   external_address  = var.cda_external_ip
 }
 

@@ -6,7 +6,7 @@ filename=$(basename $0)
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
 echo "$timestamp - Running $filename ... " | tee "$LOG"
 
-source "${DIR}"/SET | tee -a "$LOG"
+source "${DIR}"/SET
 
 if [[ -z "${API_DOMAIN}" ]]; then
   echo API_DOMAIN env variable is not set. Using External Ingress IP address... | tee -a "$LOG"
