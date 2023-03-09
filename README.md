@@ -1,4 +1,4 @@
-# Claims Data Activator
+# Claims Data Activator (CDA)
 
 ## Introduction
 > A pre-packaged and customizable solution to accelerate the development of end-to-end document processing workflow incorporating Document AI parsers and other GCP products (Firestore, BigQuery, GKE, etc). The goal is to accelerate the development efforts in document workflow with many ready-to-use components.
@@ -20,7 +20,7 @@ While you will find end-to-end tools to help spin up a fully functional sandbox 
 ## Prerequisites
 
 ### Project(s) Creation
-It is recommended to deploy into two projects: one for the Pipeline Engine (`PROJECT_ID`), and another for the Document AI processors (`DOCAI_PROJECT_ID`). Both projects need to belong to the same Org.
+It is recommended to deploy into two projects: one for the CDA Pipeline Engine (`PROJECT_ID`), and another for the Document AI processors (`DOCAI_PROJECT_ID`). Both projects need to belong to the same Org.
 When following this  practice, before deployment create two projects and note down.
 
 ### Classifier Access
@@ -62,7 +62,6 @@ export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors>
 export API_DOMAIN=mydomain.com
 ```
 Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (needs to be set to a legal name as a placeholder) and then later run an optional step below to configure using Ingress IP address instead.
-If you are using external static IP address without a domain, set it to the IP address:
 
 
 > If, you wish to deploy using shared VPC or external static IP address: 
