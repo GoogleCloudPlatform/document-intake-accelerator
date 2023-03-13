@@ -17,7 +17,6 @@
 
 # Terraform Block
 terraform {
-  required_version = ">= 0.13"
   required_providers {
     kubectl = {
       source  = "gavinbunney/kubectl"
@@ -25,7 +24,7 @@ terraform {
     }
     helm = {
       source  = "hashicorp/helm"
-      version = ">= 2.5.1"
+      version = ">= 2.7.0"
     }
   }
 }
@@ -37,6 +36,7 @@ locals {
       : google_compute_address.ingress_ip_address[0].address
     )
   }
+
 module "cert_manager" {
   source = "terraform-iaac/cert-manager/kubernetes"
 
@@ -60,14 +60,14 @@ resource "google_compute_address" "ingress_ip_address" {
 
 module "nginx-controller" {
   source    = "terraform-iaac/nginx-controller/helm"
-  version   = "2.0.2"
+  version   = "2.1.0"
   namespace = "ingress-nginx"
 
-  ip_address = var.external_address != null ? var.external_address: google_compute_address.ingress_ip_address[0].address
+  ip_address = local.address
 
   # TODO: does this require cert_manager up and running or can they be completed in parallel
   depends_on = [
-    module.cert_manager, resource.kubernetes_namespace.ingress_nginx, resource.google_compute_address.ingress_ip_address
+    module.cert_manager, kubernetes_namespace.ingress_nginx
   ]
 }
 
@@ -230,8 +230,11 @@ resource "kubernetes_ingress_v1" "default_ingress" {
     }
 
     tls {
-      hosts       = ["${var.domain}"]
-      secret_name = "tls-secret"
+      hosts = [
+        var.domain,
+        local.address,
+      ]
+      secret_name = "cert-manager-private-key"
     }
   }
 }
