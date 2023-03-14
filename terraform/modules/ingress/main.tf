@@ -101,6 +101,7 @@ resource "kubernetes_ingress_v1" "default_ingress" {
     }
 
     rule {
+      host = var.domain
       http {
         # Upload Service
         path {
