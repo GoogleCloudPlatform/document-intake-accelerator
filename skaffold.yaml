@@ -1,0 +1,75 @@
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Master Skaffold
+apiVersion: skaffold/v2beta12
+kind: Config
+metadata:
+  name: all-services
+requires:
+- path: ./common
+  configs: [common]
+  activeProfiles: &all_profiles
+  - name: custom
+    activatedBy: [custom]
+  - name: prod
+    activatedBy: [prod]
+  - name: dev
+    activatedBy: [dev]
+
+#- path: ./microservices/sample_service
+#  configs: [sample-service]
+#  activeProfiles:  *all_profiles
+
+- path: ./microservices/upload_service
+  configs: [upload-service]
+  activeProfiles:  *all_profiles
+
+- path: ./microservices/classification_service
+  configs: [classification-service]
+  activeProfiles:  *all_profiles
+
+- path: ./microservices/extraction_service
+  configs: [ extraction-service ]
+  activeProfiles: *all_profiles
+
+- path: ./microservices/validation_service
+  configs: [validation-service]
+  activeProfiles:  *all_profiles
+
+- path: ./microservices/hitl_service
+  configs: [hitl-service]
+  activeProfiles:  *all_profiles
+
+- path: ./microservices/config_service
+  configs: [config-service]
+  activeProfiles:  *all_profiles
+
+- path: ./microservices/document_status_service
+  configs: [document-status-service]
+  activeProfiles:  *all_profiles
+
+- path: ./microservices/matching_service
+  configs: [matching-service]
+  activeProfiles:  *all_profiles
+
+- path: ./microservices/adp_ui
+  configs: [adp-ui]
+  activeProfiles:  *all_profiles
+
+profiles:
+- name: custom
+- name: prod
+- name: dev
+

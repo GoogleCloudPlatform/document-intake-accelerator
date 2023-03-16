@@ -1,0 +1,115 @@
+{
+  "image_file": "fake_data_generation/california_2.png",
+  "image_name_prefix": "california-test-form2-",
+  "viewport_width": 800,
+  "viewport_height": 1200,
+  "font_options": [
+      {
+      "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+      "font_family": "Indie Flower",
+      "font_size": 11
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "ssn",
+        "position_x": 189,
+        "position_y": 110,
+        "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+        "regex_match_group": 1    
+      },
+      {
+        "name": "ssn",
+        "position_x": 274,
+        "position_y": 110,
+        "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "ssn",
+        "position_x": 335,
+        "position_y": 110,
+        "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+        "regex_match_group": 3
+      },  
+      {
+        "function": "text",
+        "text": "✔",
+        "position_x": 381,
+        "position_y": 145
+      },
+      {
+        "name": "state",
+        "position_x": 567,
+        "position_y": 180
+      },
+      {
+        "name": "driver_license",
+        "position_x": 537,
+        "position_y": 199
+      },
+      {
+        "name": "phone_number",
+        "position_x": 385,
+        "position_y": 375,
+        "regex": "(\\d{3})-(\\d{3})-(\\d{3})",
+        "regex_match_group": 1
+      },
+      {
+        "name": "phone_number",
+        "position_x": 441,
+        "position_y": 375,
+        "regex": "(\\d{3})-(\\d{3})-(\\d{3})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "phone_number",
+        "position_x": 494,
+        "position_y": 375,
+        "regex": "(\\d{3})-(\\d{3})-(\\d{3})",
+        "regex_match_group": 3
+      },
+      {
+        "name": "full_address",
+        "position_x": 420,
+        "position_y": 444
+      },
+      {
+        "name": "city",
+        "position_x": 425,
+        "position_y": 460
+      },
+      {
+        "name": "state",
+        "position_x": 418,
+        "position_y": 480
+      },
+      {
+        "name": "zip_code",
+        "position_x": 532,
+        "position_y": 480
+      },
+      {
+        "function": "text",
+        "text": "✔",
+        "position_x": 380,
+        "position_y": 508
+      },
+      {
+        "name": "race",
+        "position_x": 92,
+        "position_y": 675
+      },
+      {
+        "name": "ethnicity",
+        "position_x": 355,
+        "position_y": 675
+      },
+      {
+        "name": "language",
+        "position_x": 638,
+        "position_y": 673
+      }
+    ]
+  }

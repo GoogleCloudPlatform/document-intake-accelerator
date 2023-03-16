@@ -1,0 +1,455 @@
+{
+    "image_file": "form.png",
+    "image_name_prefix": "pa-form-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+        "font_family": "Seris",
+        "font_size": 14,
+        "text_color": "red"
+      }
+    
+  ],
+  "row_limit": 1,
+  "fields": [
+  {
+    "name": "name",
+    "position_x": 65,
+    "position_y": 127
+      
+  },
+  {
+    "name": "phone",
+    "position_x": 403,
+    "position_y": 127
+  },
+  {
+    "name": "fax",
+    "position_x": 552,
+    "position_y": 127
+  },
+  {
+    "name": "date",
+    "position_x": 689,
+    "position_y": 127
+  },
+  {
+    "name": "isNonUrgent",
+    "position_x": 146,
+    "position_y": 178
+  },
+  {
+    "name": "isUrgent",
+    "position_x": 258,
+    "position_y": 178
+  },
+  {
+    "name": "urgencyReason",
+    "position_x": 520,
+    "position_y": 178
+  },
+  {
+    "name": "isInitialRequest",
+    "position_x": 146,
+    "position_y": 202
+  },
+  {
+    "name": "isNonInitialRequest",
+    "position_x": 258,
+    "position_y": 202
+  },
+  {
+    "name": "paNumber",
+    "position_x": 590,
+    "position_y": 201
+  },
+  {
+    "name": "beneficiaryName",
+    "position_x": 60,
+    "position_y": 264
+  },
+  {
+    "name": "beneficiaryPhone",
+    "position_x": 352,
+    "position_y": 264
+  },
+  {
+    "name": "beneficiaryDateOfBirth",
+    "position_x": 501,
+    "position_y": 264
+  },
+  {
+    "name": "isGenderMale",
+    "position_x": 596,
+    "position_y": 251
+  },
+  {
+    "name": "isGenderFemale",
+    "position_x": 678,
+    "position_y": 251
+  },
+  {
+    "name": "isGenderOther",
+    "position_x": 596,
+    "position_y": 267
+  },
+  {
+    "name": "isGenderUnknown",
+    "position_x": 678,
+    "position_y": 267
+  },
+  {
+    "name": "subscriberName",
+    "position_x": 60,
+    "position_y": 305
+  },
+  {
+    "name": "subscriberID",
+    "position_x": 301,
+    "position_y": 305
+  },
+  {
+    "name": "subscriberGroupNumber",
+    "position_x": 551,
+    "position_y": 305
+  },
+  {
+    "name": "rpName",
+    "position_x": 101,
+    "position_y": 374
+  },
+  {
+    "name": "rpNpi",
+    "position_x": 97,
+    "position_y": 398
+  },
+  {
+    "name": "rpSpecialty",
+    "position_x": 296,
+    "position_y": 398
+  },
+  {
+    "name": "rpPhone",
+    "position_x": 102,
+    "position_y": 423
+  },
+  {
+    "name": "rpFax",
+    "position_x": 274,
+    "position_y": 423
+  },
+  {
+    "name": "rpContactName",
+    "position_x": 60,
+    "position_y": 460
+  },
+  {
+    "name": "rpContactPhone",
+    "position_x": 275,
+    "position_y": 460
+  },
+  {
+    "name": "rpDate",
+    "position_x": 230,
+    "position_y": 500
+  },
+  {
+    "name": "spName",
+    "position_x": 474,
+    "position_y": 374
+  },
+  {
+    "name": "spNpi",
+    "position_x": 468,
+    "position_y": 398
+  },
+  {
+    "name": "spSpecialty",
+    "position_x": 645,
+    "position_y": 398
+  },
+  {
+    "name": "spPhone",
+    "position_x": 474,
+    "position_y": 423
+  },
+  {
+    "name": "spFax",
+    "position_x": 649,
+    "position_y": 423
+  },
+  {
+    "name": "pcpName",
+    "position_x": 426,
+    "position_y": 460
+  },
+  {
+    "name": "pcpPhone",
+    "position_x": 426,
+    "position_y": 500
+  },
+  {
+    "name": "pcpFax",
+    "position_x": 621,
+    "position_y": 500
+  },
+  {
+    "name": "procedure1",
+    "position_x": 63,
+    "position_y": 575
+  },
+  {
+    "name": "startDate1",
+    "position_x": 345,
+    "position_y": 575
+  },
+  {
+    "name": "endDate1",
+    "position_x": 415,
+    "position_y": 575
+  },
+  {
+    "name": "diagnosis1",
+    "position_x": 493,
+    "position_y": 575
+  },
+  {
+    "name": "procedure2",
+    "position_x": 63,
+    "position_y": 599
+  },
+  {
+    "name": "startDate2",
+    "position_x": 345,
+    "position_y": 599
+  },
+  {
+    "name": "endDate2",
+    "position_x": 415,
+    "position_y": 599
+  },
+  {
+    "name": "diagnosis2",
+    "position_x": 493,
+    "position_y": 599
+  },
+  {
+    "name": "procedure3",
+    "position_x": 63,
+    "position_y": 623
+  },
+  {
+    "name": "startDate3",
+    "position_x": 345,
+    "position_y": 623
+  },
+  {
+    "name": "endDate3",
+    "position_x": 415,
+    "position_y": 623
+  },
+  {
+    "name": "diagnosis3",
+    "position_x": 493,
+    "position_y": 623
+  },
+  {
+    "name": "procedure4",
+    "position_x": 63,
+    "position_y": 647
+  },
+  {
+    "name": "startDate4",
+    "position_x": 345,
+    "position_y": 647
+  },
+  {
+    "name": "endDate4",
+    "position_x": 415,
+    "position_y": 647
+  },
+  {
+    "name": "diagnosis4",
+    "position_x": 493,
+    "position_y": 647
+  },
+  {
+    "name": "isInpatient",
+    "position_x": 62,
+    "position_y": 672
+  },
+  {
+    "name": "isOutpatient",
+    "position_x": 138,
+    "position_y": 672
+  },
+  {
+    "name": "isProviderOffice",
+    "position_x": 225,
+    "position_y": 672
+  },
+  {
+    "name": "isObservation",
+    "position_x": 333,
+    "position_y": 672
+  },
+  {
+    "name": "isHome",
+    "position_x": 428,
+    "position_y": 672
+  },
+  {
+    "name": "isDaySurgery",
+    "position_x": 487,
+    "position_y": 672
+  },
+  {
+    "name": "isProcTypeOther",
+    "position_x": 581,
+    "position_y": 672
+  },
+  {
+    "name": "otherProcType",
+    "position_x": 640,
+    "position_y": 672
+  },
+  {
+    "name": "isPhysicalTherapy",
+    "position_x": 62,
+    "position_y": 696
+  },
+  {
+    "name": "isOccupationalTherapy",
+    "position_x": 179,
+    "position_y": 696
+  },
+  {
+    "name": "isSpeechTherapy",
+    "position_x": 333,
+    "position_y": 696
+  },
+  {
+    "name": "isCardiacRehab",
+    "position_x": 452,
+    "position_y": 696
+  },
+  {
+    "name": "isMentalHealth",
+    "position_x": 564,
+    "position_y": 696
+  },
+  {
+    "name": "ptSessions",
+    "position_x": 194,
+    "position_y": 715
+  },
+  {
+    "name": "ptDuration",
+    "position_x": 325,
+    "position_y": 715
+  },
+  {
+    "name": "ptFrequency",
+    "position_x": 495,
+    "position_y": 715
+  },
+  {
+    "name": "ptOther",
+    "position_x": 607,
+    "position_y": 715
+  },
+  {
+    "name": "isHomeHealth",
+    "position_x": 62,
+    "position_y": 740
+  },
+  {
+    "name": "hhMdSignedAttachedYes",
+    "position_x": 316,
+    "position_y": 740
+  },
+  {
+    "name": "hhMdSignedAttachedNo",
+    "position_x": 363,
+    "position_y": 740
+  },
+  {
+    "name": "hhRnAssmtAttachedYes",
+    "position_x": 603,
+    "position_y": 740
+  },
+  {
+    "name": "hhRnAssmtAttachedNo",
+    "position_x": 650,
+    "position_y": 740
+  },
+  {
+    "name": "hhQty",
+    "position_x": 178,
+    "position_y": 760
+  },
+  {
+    "name": "hhDuration",
+    "position_x": 325,
+    "position_y": 760
+  },
+  {
+    "name": "hhFrequency",
+    "position_x": 495,
+    "position_y": 760
+  },
+  {
+    "name": "hhOther",
+    "position_x": 607,
+    "position_y": 760
+  },
+  {
+    "name": "isDME",
+    "position_x": 62,
+    "position_y": 785
+  },
+  {
+    "name": "dmeMdSignedAttachedYes",
+    "position_x": 269,
+    "position_y": 785
+  },
+  {
+    "name": "dmeMdSignedAttachedNo",
+    "position_x": 316,
+    "position_y": 785
+  },
+  {
+    "name": "dmeTitle19CertAttachedYes",
+    "position_x": 650,
+    "position_y": 785
+  },
+  {
+    "name": "dmeTitle19CertAttachedNo",
+    "position_x": 697,
+    "position_y": 784
+  },
+  {
+    "name": "dmeEquipment",
+    "position_x": 345,
+    "position_y": 804
+  },
+  {
+    "name": "dmeDuration",
+    "position_x": 660,
+    "position_y": 804
+  },
+  {
+    "name": "otherNotes",
+    "position_x": 62,
+    "position_y": 860,
+    "text_width": 600
+  },
+  {
+    "name": "rpContactPhone",
+    "position_x": 519,
+    "position_y": 956
+  }
+  ]
+}

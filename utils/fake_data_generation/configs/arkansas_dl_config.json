@@ -1,0 +1,114 @@
+{
+    "image_file": "fake_data_generation/arkansas_dl_converted.png",
+    "image_name_prefix": "arkansas-driver-form-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Open+Sans",
+        "font_family": "Open Sans",
+        "font_size": 14
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+        {
+            "name": "name",
+            "position_x": 306,
+            "position_y": 189,
+            "regex": "(\\w+) (\\w+)",
+            "regex_match_group": 1
+        },
+        {
+            "name": "middle_name",
+            "position_x": 375,
+            "position_y": 189
+        },
+        {
+            "name": "name",
+            "position_x": 321,
+            "position_y": 215,
+            "regex": "(\\w+) (\\w+)",
+            "regex_match_group": 2
+        },
+        {
+            "name": "name",
+            "position_x": 100,
+            "position_y": 457,
+            "regex": "(\\w+) (\\w+)",
+            "regex_match_group": 1
+        },
+        {
+            "name": "MI",
+            "position_x": 165,
+            "position_y": 457
+        },
+        {
+            "name": "name",
+            "position_x": 200,
+            "position_y": 457,
+            "regex": "(\\w+) (\\w+)",
+            "regex_match_group": 2
+        },
+        {
+            "name": "full_address",
+            "position_x": 311,
+            "position_y": 273
+        },
+        {
+            "name": "license_iss_date",
+            "position_x": 320,
+            "position_y": 342
+        },
+        {
+            "name": "license_end_date",
+            "position_x": 480,
+            "position_y": 342
+        },
+        {
+            "name": "gender",
+            "position_x": 325,
+            "position_y": 395
+        },
+        {
+            "name": "ht",
+            "position_x": 407,
+            "position_y": 395
+        },
+        {
+            "name": "eyes",
+            "position_x": 505,
+            "position_y": 395
+        },
+        {
+            "name": "end",
+            "position_x": 387,
+            "position_y": 423
+        },
+        {
+            "name": "rest",
+            "position_x": 406,
+            "position_y": 448
+        },
+        {
+            "name": "dd",
+            "position_x": 360,
+            "position_y": 482
+        },
+        {
+            "name": "class",
+            "position_x": 634,
+            "position_y": 126
+        },
+        {
+            "name": "date_of_birth",
+            "position_x": 607,
+            "position_y": 159
+        },
+        {
+            "name": "driver_license",
+            "position_x": 382,
+            "position_y": 153
+        }
+    ]
+  }

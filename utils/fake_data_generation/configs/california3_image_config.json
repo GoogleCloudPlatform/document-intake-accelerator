@@ -1,0 +1,94 @@
+{
+  "image_file": "fake_data_generation/california_3.png",
+  "image_name_prefix": "california-test-form3-",
+  "viewport_width": 800,
+  "viewport_height": 1200,
+  "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+        "font_family": "Indie Flower",
+        "font_size": 11
+      }
+  ],
+  "row_limit": 1,
+  "fields": [
+    {
+      "name": "ssn",
+      "position_x": 189,
+      "position_y": 110,
+      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+      "regex_match_group": 1    
+    },
+    {
+      "name": "ssn",
+      "position_x": 274,
+      "position_y": 110,
+      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+      "regex_match_group": 2
+    },
+    {
+      "name": "ssn",
+      "position_x": 335,
+      "position_y": 110,
+      "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+      "regex_match_group": 3
+    },  
+    {
+      "name": "employer",
+      "position_x": 117,
+      "position_y": 375
+    },
+    {
+      "name": "employer_address",
+      "position_x": 106,
+      "position_y": 405
+    },
+    {
+      "name": "employer_city",
+      "position_x": 100,
+      "position_y": 420
+    },
+    {
+      "name": "employer_state",
+      "position_x": 98,
+      "position_y": 435
+    },
+    {
+      "name": "employer_zip",
+      "position_x": 215,
+      "position_y": 435
+    },
+    {
+      "name": "work_start_date",
+      "position_x": 411,
+      "position_y": 374
+    },
+    {
+      "name": "work_end_date",
+      "position_x": 411,
+      "position_y": 390
+    },
+    {
+      "name": "net_total",
+      "position_x": 522,
+      "position_y": 374
+    },
+    {
+      "name": "paid",
+      "position_x": 655,
+      "position_y": 374
+    },
+    {
+      "name": "hour_week",
+      "position_x": 651,
+      "position_y": 450
+    },
+    {
+      "function": "text",
+      "text": "✔",
+      "position_x": 263,
+      "position_y": 452
+    }
+    
+  ]
+}

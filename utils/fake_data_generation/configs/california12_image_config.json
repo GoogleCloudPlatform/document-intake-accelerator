@@ -1,0 +1,48 @@
+{
+    "image_file": "fake_data_generation/california_12.png",
+    "image_name_prefix": "california-test-form12-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+        "font_family": "Indie Flower",
+        "font_size": 11
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "ssn",
+        "position_x": 190,
+        "position_y": 117,
+        "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+        "regex_match_group": 1
+      },
+      {
+        "name": "ssn",
+        "position_x": 275,
+        "position_y": 117,
+        "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "ssn",
+        "position_x": 340,
+        "position_y": 117,
+        "regex": "(\\d{3})-(\\d{2})-(\\d{4})",
+        "regex_match_group": 3
+      },
+      {
+        "name": "today_date",
+        "position_x": 140,
+        "position_y": 658
+      },
+      {
+        "function": "text",
+        "text": "✔",
+        "position_x": 257,
+        "position_y": 660
+      }
+    ]
+  }

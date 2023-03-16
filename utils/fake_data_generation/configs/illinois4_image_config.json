@@ -1,0 +1,29 @@
+{
+    "image_file": "fake_data_generation/Illinois_state_4.png",
+    "image_name_prefix": "illinois-test-form4-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+        "font_family": "Indie Flower",
+        "font_size": 14
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "name",
+        "position_x": 444,
+        "position_y": 79,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+        "name": "ssn",
+        "position_x": 140,
+        "position_y": 79
+      }
+      
+    ]
+  }
