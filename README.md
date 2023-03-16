@@ -46,7 +46,7 @@ Or, change the following Organization policy constraints in [GCP Console](https:
 As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.tfvars).
 Check this [documentation page](docs/NetworkConfiguration.md) on preparation for Shared VPC usage when deploying this solution.
 
-
+You could also reserve a static IP address to be used for the front end. be sure, though, to reserve the IP address in the Service Project (not in the VPC host project).
 ## Installation Using Cloud Shell
 
 Following steps describe installation using Google Cloud Shell console. 
@@ -94,6 +94,21 @@ Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (need
 > export API_DOMAIN=IP.ADDRESS.HERE
 > ```
 
+When using a domain, make sure to have DNS zone created and add  DNS A record pointing to the reserved external IP address.
+
+- From Cloud DNS, click on CREATE ZONE.
+- Create a DNS record set of type A and point to the reserved external IP:
+  - On the Zone details page, click Add record set.
+  - Select A from the Resource Record Type menu.
+  - For IPv4 Address, enter the external IP address that have been reserved.
+
+To verify dns domain is working, run following command:
+
+```shell
+nslookup $API_DOMAIN
+```
+Setting up DNS A record for the domain needs to be done before running `init.sh` in the next step, because when Ingress is provisioned, it creates a certificate for the domain and that requires a valid DNS A record already to be in there.
+For a workaround, when adding HTTPS and domain later [Adding HTTPS and domain](#https)
 
 #### Terraform
 Run init step (will prepare for terraform execution and do terraform apply with auto-approve):
@@ -116,8 +131,8 @@ kubectl describe ingress default-ingress | grep Address
   Address: 123.123.123.123
   ```
 
-**NOTE**: If you don’t have a custom domain ( if you left `mydomain.com` above as API_DOMAIN and have **NOT** used Static external IP ), then you need  to use the Ingress IP address as the API endpoint.
-If you have already used external IP address, this step could be skipped.
+**NOTE**: ONLY If you don’t have a custom domain ( if you left `mydomain.com` above as API_DOMAIN and have **NOT** used Static external IP ), then you need  to use the Ingress IP address as the API endpoint.
+If you have already used external IP address to set for API_DOMAIN, this step could be skipped.
 - Change the API_DOMAIN to the Ingress endpoint, and re-deploy CloudRun.
   ```shell
   export API_DOMAIN=$(kubectl describe ingress default-ingress | grep Address | awk '{print $2}')
@@ -131,22 +146,20 @@ If you have already used external IP address, this step could be skipped.
 - Select Google in the Additional providers
 - Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.
 - Go to Settings > Authorized domain, add the following to the Authorized domains:
-  - Web App Domain (e.g. adp-dev.cloudpssolutions.com) - or empry, if you do not have a custom domain.
+  - Web App Domain (e.g. adp-dev.cloudpssolutions.com) - or skip this step if you do not have a custom domain.
   - API endpoint IP address (from kubectl describe ingress | grep Address)
-  - localhost
 - Go to Project Overview > Project settings, you will use this info in the next step.
 - In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. VSCode), and change the following values accordingly.
   - REACT_APP_BASE_URL
-    - The custom Web App Domain that you added in the previous step.
-    - Alternatively, you can use the API Domain IP Address (Ingress), e.g. http://123.123.123.123
-  - REACT_APP_API_KEY - Web API Key
+    - `https://<your_domain_name>` The custom Web App Domain that you added in the previous step. Make sure to use `https`
+    - Alternatively, you can use the API Domain IP Address (Ingress), e.g. http://123.123.123.123 (not https)
+  - REACT_APP_FIREBASE_API_KEY - Web API Key
   - REACT_APP_FIREBASE_AUTH_DOMAIN - $PROJECT_ID.firebaseapp.com
   - REACT_APP_STORAGE_BUCKET - $PROJECT_ID.appspot.com
   - REACT_APP_MESSAGING_SENDER_ID
     - You can find this ID in the Project settings > Cloud Messaging
   - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
 
-Optional: [register you domain](https://cloud.google.com/dns/docs/tutorials/create-domain-tutorial)
 #### Deploy microservices
 
 With kustomize 5.0 there are breaking changes on passing the environment variables.
@@ -226,6 +239,76 @@ For example, to trigger pipeline to parse  the sample form:
 > touch START_PIPELINE
 > gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<my-dir>/
 > ```
+
+
+## <a name="https"></a>Adding HTTPS after deployment 
+If you have deployed solution using IP address and now want to migrate to domain+https, there are few steps to be done for that. 
+
+Note down the Ingress IP:
+```shell
+kubectl describe ingress default-ingress | grep Address | awk '{print $2}'
+```
+
+- From Cloud DNS, click on CREATE ZONE and create new zone.
+- Create a DNS record set of type A and point to the IP address of the Ingress.
+  - On the Zone details page, click Add record set.
+  - Select A from the Resource Record Type menu.
+  - For IPv4 Address, enter the external IP address that have been reserved.
+
+
+**Re-apply terraform modules:**
+```shell
+export PROJECT_ID=<your CDA service project ID>
+export API_DOMAIN=<your_domain_here>
+./utils/init_domain.sh
+```
+
+**Update Firebase settings:**
+- In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. VSCode), and change the following value accordingly.
+  - REACT_APP_BASE_URL
+    - `https://<your_domain_name>` The custom Web App Domain that you added in the previous step. Make sure to use `https`
+
+- Go to [Firebase Console UI](https://console.firebase.google.com/).
+- On the left panel of Firebase Console UI, go to Build > Authentication -> Settings > Authorized domain. Add your domain to the list:
+  - Web App Domain (e.g. adp-dev.cloudpssolutions.com).
+
+
+**Re-Deploy microservices**
+```shell
+- ./deploy.sh
+```
+
+**Debugging**
+
+- To validate if valid certificate was created:
+
+```shell
+kubectl get certificate
+```
+
+```shell
+kubectl describe certificate
+```
+
+```shell
+kubectl describe ing default-ingress
+```
+
+To force re-creation of the certificate, delete and create ingress manually:
+```shell
+kubectl get ing default-ingress -o yaml > ingress.yaml
+cat ingress.yaml
+```
+
+```shell
+kubectl delete  ing default-ingress
+```
+
+```shell
+kubectl apply -f ingress.yaml
+```
+
+
 
 ## Installation from the developer machine
 
@@ -426,8 +509,8 @@ pip3 install -r utils/requirements.tx
 
 # Configuration Service
 Config Service (used by adp ui):
-- http://$API_DOMAIN/config_service/v1/get_config?name=document_types_config
-- http://$API_DOMAIN/config_service/v1/get_config
+- `http://$API_DOMAIN/config_service/v1/get_config?name=document_types_config`
+- `http://$API_DOMAIN/config_service/v1/get_config`
 
 ## Deployment Troubleshoot
 

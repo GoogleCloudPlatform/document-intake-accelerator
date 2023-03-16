@@ -19,18 +19,23 @@ if [[ -z "${PROJECT_ID}" ]]; then
   exit
 fi
 
-# Only first time copy to GCS .env, next when re-deploying, retrieve back those variables.
-ENV_CONFIG="gs://${TF_VAR_config_bucket}/adp_ui.env"
-gsutil -q stat "$ENV_CONFIG" 2> /dev/null | tee -a "$LOG"
-RETURN=$?
-if [[ $RETURN -gt 0 ]]; then
-    echo "UI config does not exist in gs://${TF_VAR_config_bucket}/.env" | tee -a "$LOG"
-    echo "Copying frontend settings to GCS as a safe backup storage..." | tee -a "$LOG"
-    gsutil cp "${DIR}/microservices/adp_ui/.env" "$ENV_CONFIG" | tee -a "$LOG"
-else
-  echo "Retrieving frontend config from GCS backup:" | tee -a "$LOG"
-  gsutil cp "$ENV_CONFIG" "${DIR}/microservices/adp_ui/.env" | tee -a "$LOG"
-fi
+
+
+#Copy .env file to GCS for tracking changes
+gsutil cp "${DIR}/microservices/adp_ui/.env" "gs://${TF_VAR_config_bucket}/.env" | tee -a "$LOG"
+
+## Only first time copy to GCS .env, next when re-deploying, retrieve back those variables.
+#ENV_CONFIG="gs://${TF_VAR_config_bucket}/.env"
+#gsutil -q stat "$ENV_CONFIG" 2> /dev/null | tee -a "$LOG"
+#RETURN=$?
+#if [[ $RETURN -gt 0 ]]; then
+#    echo "UI config does not exist in gs://${TF_VAR_config_bucket}/.env" | tee -a "$LOG"
+#    echo "Copying frontend settings to GCS as a safe backup storage..." | tee -a "$LOG"
+#    gsutil cp "${DIR}/microservices/adp_ui/.env" "$ENV_CONFIG" | tee -a "$LOG"
+#else
+#  echo "Retrieving frontend config from GCS backup:" | tee -a "$LOG"
+#  gsutil cp "$ENV_CONFIG" "${DIR}/microservices/adp_ui/.env" | tee -a "$LOG"
+#fi
 
 
 gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
