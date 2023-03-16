@@ -1,7 +1,7 @@
 connection: "healthcare-demo"
 
 # include all the views
-include: "/views/**/*.view"
+include: "/cda-analytics/views/**/*.view"
 
 datagroup: cas_demo_default_datagroup {
   # sql_trigger: SELECT MAX(id) FROM etl_log;;
