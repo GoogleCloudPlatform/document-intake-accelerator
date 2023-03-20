@@ -46,6 +46,7 @@ async def create_document(case_id: str, filename: str, context: str, user=None):
        500 : If something fails
      """
   try:
+    Logger.info(f"create_document with case_id={case_id}, filename={filename}, context={context}")
     document = Document()
     document.case_id = case_id
     document.upload_timestamp = datetime.datetime.utcnow()
