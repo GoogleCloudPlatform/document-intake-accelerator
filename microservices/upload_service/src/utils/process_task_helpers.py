@@ -226,7 +226,7 @@ def extract_documents(doc: Dict, document_type):
         update_autoapproval_status(case_id, uid, STATUS_SUCCESS,
                                    autoapproval_status[0], "yes")
   else:
-    Logger.error(f"extraction failed for {document_type} {document_class} case_id={case_id} uid={uid}")
+    Logger.error(f"extraction failed for document with gcs_url={gcs_url} uid={uid} document_type={document_type} document_class={document_class} case_id={case_id}")
   # extraction_score = None
   return extraction_score, extraction_field_min_score, extraction_entities
 

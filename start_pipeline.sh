@@ -48,7 +48,7 @@ if [ -d "$dir"/ ]; then
   else
     URL="gs://$PROJECT_ID-pa-forms/$gs_dir/"
     echo "Copying data from ${INPUT} to ${URL}"
-    gsutil -m cp "${INPUT}/*" "${URL}/"
+    gsutil -m cp "${INPUT}/*.pdf" "${URL}/"
     echo "Triggering pipeline for ${URL}"
     gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${URL}"
   fi
@@ -74,4 +74,4 @@ fi
 #./start_pipeline.sh -d sample_data/bsc_demo -l demo-package -p
 # ./start_pipeline.sh -d sample_data/forms-10  -l demo-batch
 # ./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
-# ./start_pipeline.sh -d sample_data/demo/form.pdf  -l srini01
+# ./start_pipeline.sh -d sample_data/demo/form.pdf  -l test
