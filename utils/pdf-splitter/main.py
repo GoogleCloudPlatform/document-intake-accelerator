@@ -22,6 +22,7 @@ import sys
 from typing import Sequence
 import re
 import glob
+import time
 
 from google.api_core.exceptions import InternalServerError
 from google.api_core.exceptions import RetryError
@@ -266,6 +267,8 @@ def process_file_batch(client, project_id, multi_region_location, dir_path, proc
 
 def main(args: argparse.Namespace) -> int:
     """This project splits a PDF document using the Document AI API to identify split points"""
+    start = time.time()
+
     if not args.project_id:
         _, project_id = google.auth.default()
         args.project_id = project_id
@@ -303,6 +306,8 @@ def main(args: argparse.Namespace) -> int:
             print("Not Yet Implemented: batch processing for a directory locally ... ")
             dir_path = os.path.abspath(args.dir_uri)
 
+    elapsed ="{:.0f}".format(time.time() - start)
+    print(f"Elapsed time for operation {elapsed} seconds")
 
 def get_or_create_processor(
     client: DocumentProcessorServiceClient,
