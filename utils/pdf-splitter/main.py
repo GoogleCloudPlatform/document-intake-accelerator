@@ -94,7 +94,10 @@ def batch_process_document(
 
     # Cloud Storage URI for the Output Directory
     # This must end with a trailing forward slash `/`
-    destination_uri = f"gs://{gcs_output_bucket}/{gcs_output_uri_prefix}/"
+    destination_uri = f"gs://{gcs_output_bucket}/"
+    if gcs_output_uri_prefix != "":
+        destination_uri = f"{destination_uri}/{gcs_output_uri_prefix}/"
+
     print(f"batch_process_documents with processor_name={processor_name} gcs_input_uri={gcs_input_uri} destination_uri={destination_uri}")
     gcs_output_config = documentai.DocumentOutputConfig.GcsOutputConfig(
         gcs_uri=destination_uri, field_mask=field_mask
@@ -218,7 +221,7 @@ def get_processor(
         f'* Location: "{multi_region_location}"\n'
         f'* Processor Name "{processor_name}"\n'
         f'* Processor Id "{processor_name}"\n'
-        f'* Input PDF "{os.path.basename(file_path)}"\n'
+        f'* Input PDF "{file_path}"\n'
         f'* Output directory: "{output_dir}"\n'
     )
     return processor_name
@@ -241,6 +244,7 @@ def process_file_batch(client, project_id, multi_region_location, dir_path, proc
     processor_name = get_processor(client, project_id, multi_region_location, dir_path, output_dir, processor_id)
 
     in_bucket_name, in_prefix = helper.split_uri_2_bucket_prefix(dir_path)
+    print(f"process_file_batch dir_path={dir_path} in_bucket_name={in_bucket_name} in_prefix={in_prefix}")
     blobs = storage_client.list_blobs(in_bucket_name, prefix=in_prefix)
 
     out_bucket_name, out_prefix = helper.split_uri_2_bucket_prefix(output_dir)
