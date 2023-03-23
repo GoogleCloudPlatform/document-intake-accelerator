@@ -17,6 +17,7 @@
 import argparse
 import os
 import random
+import shutil
 import string
 import sys
 from typing import Sequence
@@ -184,7 +185,7 @@ def batch_process_document(
                     os.path.join(gcs_output_uri_prefix,
                                  os.path.splitext(file_name)[0]))
       try:
-        os.remove(tempfolder)
+        shutil.rmtree(tempfolder)
       except OSError as er:
         print(f"Error while deleting {tempfolder}, {er}")
         pass
