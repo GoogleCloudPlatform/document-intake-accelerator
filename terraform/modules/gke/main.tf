@@ -34,6 +34,8 @@ module "gke_cluster" {
   ip_range_pods              = var.secondary_ranges_pods
   ip_range_services          = var.secondary_ranges_services
   http_load_balancing        = true
+  enable_private_nodes       = var.enable_private_nodes
+  master_ipv4_cidr_block     = var.master_ipv4_cidr_block
   network_project_id         = var.network_project_id
   identity_namespace         = "enabled"
   horizontal_pod_autoscaling = true

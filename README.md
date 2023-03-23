@@ -26,21 +26,6 @@ When following this  practice, before deployment create two projects and note do
 ### Classifier Access
 Classifier is currently in Preview. Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform), so that Project is whitelisted.
 
-### GCP Organization policy
-
-Run the following commands to update Organization policies (Required for managed environments such as Argolis):
-```
-ORGANIZATION_ID=$(gcloud organizations list --format="value(name)")
-gcloud resource-manager org-policies disable-enforce constraints/compute.requireOsLogin --organization=$ORGANIZATION_ID
-gcloud resource-manager org-policies delete constraints/compute.vmExternalIpAccess --organization=$ORGANIZATION_ID
-```
-
-If you have multiple Organizations, set the ORGANIZATION_ID manually to the Organization ID
-
-Or, change the following Organization policy constraints in [GCP Console](https://console.cloud.google.com/iam-admin/orgpolicies)
-- constraints/compute.requireOsLogin - Enforced Off
-- constraints/compute.vmExternalIpAccess - Allow All
-
 ### Using Shared Virtual Private Cloud (VPC) for the deployment
 
 As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.tfvars).
@@ -82,10 +67,14 @@ Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (need
 >  region = "us-central1"
 > }
 >```
->  
+> When the **default GKE Control Plane CIDR Range (172.16.0.0/28) overlaps** with your network:
+> - Edit `terraform.tfvars` in the editor, uncomment `master_ipv4_cidr_block` and fill in the value of the GKE Control Plane CIDR /28 range:
+> ```shell
+> master_ipv4_cidr_block = "MASTER.CIDR/28.HERE"
+> ```
+>
 > For the **Reserved External IP**:
 > - Edit `terraform.tfvars` in the editor,  uncomment `cda_external_ip` and fill in the value of the reserved IP address (without http(s) prefix):
->
 > ```
 > cda_external_ip = "IP.ADDRESS.HERE"
 > ```

@@ -97,3 +97,14 @@ variable "service_account_name" {
   type        = string
   description = "Google Service Account name"
 }
+
+variable "enable_private_nodes" {
+  type        = bool
+  description = "Whether nodes have internal IP addresses only"
+  default     = true
+}
+
+variable "master_ipv4_cidr_block" {
+  type        = string
+  description = "The IP range in CIDR notation to use for the hosted master network"
+}
