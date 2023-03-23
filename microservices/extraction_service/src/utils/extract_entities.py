@@ -472,7 +472,8 @@ def extract_entities(gcs_doc_path: str, doc_class: str, context: str):
           processor, dai_client, gcs_doc_path, doc_class, context)
 
     # calling standard entity mapping function to standardize the entities
-    final_extracted_entities = standard_entity_mapping(desired_entities_list)
+    final_extracted_entities = desired_entities_list
+    #final_extracted_entities = standard_entity_mapping(desired_entities_list) #Very unclear logic
     # calling post processing utility function
     # input json is the extracted json file after your mapping script
     input_dict = get_json_format_for_processing(final_extracted_entities)
