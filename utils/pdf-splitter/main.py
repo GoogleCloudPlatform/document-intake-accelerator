@@ -177,6 +177,7 @@ def batch_process_document(
       in_bucket, blob_name = helper.split_uri_2_bucket_prefix(input_gcs_source)
 
       tempfolder, local_file_name = download_from_gcs(in_bucket, blob_name)
+
       splitter_out = os.path.join(tempfolder, os.path.splitext(file_name)[0])
       split_pdf(document.entities, local_file_name, output_dir=splitter_out)
       upload_to_gcs(splitter_out, output_bucket,
@@ -184,7 +185,8 @@ def batch_process_document(
                                  os.path.splitext(file_name)[0]))
       try:
         os.remove(tempfolder)
-      except OSError:
+      except OSError as er:
+        print(f"Error while deleting {tempfolder}, {er}")
         pass
 
       # For a full list of Document object attributes, please reference this page:
@@ -435,6 +437,7 @@ def download_from_gcs(bucket_name, source_blob_name):
 
   letters = string.ascii_lowercase
   temp_folder = "".join(random.choice(letters) for i in range(10))
+  temp_folder = os.path.join(os.getcwd(), temp_folder)
   if not os.path.exists(temp_folder):
     print(f"Output directory used for extraction locally: {temp_folder}")
     os.mkdir(temp_folder)
