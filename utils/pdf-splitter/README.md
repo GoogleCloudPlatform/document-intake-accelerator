@@ -13,8 +13,7 @@ For more information about Document AI Splitters, check out [Document splitters 
 ```
 2. Granting Access and Permissions
    1. When running from the development machine, setup application default authentication, run: `gcloud auth application-default login`
-   2. When running from Cloud Shell, need to set `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to the service account key with following storage and docai roles:
-      Service account with [DOCA permissions](https://cloud.google.com/document-ai/docs/access-control/iam-roles) and read/write access to the bucket:
+   2. When running from Cloud Shell, `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to the service account key with required storage (input/output gcs bucket) and [DOCAI permissions](https://cloud.google.com/document-ai/docs/access-control/iam-roles):
 
     ```shell
     export DOCAI_PROJECT_ID=<doca-project-id>
