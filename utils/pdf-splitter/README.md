@@ -17,52 +17,55 @@ For more information about Document AI Splitters, check out [Document splitters 
       Service account with [DOCA permissions](https://cloud.google.com/document-ai/docs/access-control/iam-roles) and read/write access to the bucket:
 
     ```shell
-        export DOCAI_PROJECT_ID=<doca-project-id>
+    export DOCAI_PROJECT_ID=<doca-project-id>
+    gcloud config set project $DOCAI_PROJECT_ID
     ```
 
     ```shell
-        SA_NAME=cda-docai
-        gcloud iam service-accounts create $SA_NAME \
+    SA_NAME=cda-docai
+    gcloud iam service-accounts create $SA_NAME \
             --description="docai invoker" \
             --display-name="cda docai invoker"
         
-        # DOCAI Access
-        gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID \
-            --member="serviceAccount:$SA_NAME@$DOCAI_PROJECT_ID.iam.gserviceaccount.com" \
+    # DOCAI Access
+    gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID \
+            --member="serviceAccount:${SA_NAME}@${DOCAI_PROJECT_ID}.iam.gserviceaccount.com" \
             --role="roles/documentai.apiUser"
-        gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID \
-            --member="serviceAccount:$SA_NAMEi@$DOCAI_PROJECT_ID.iam.gserviceaccount.com" \
+    gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID \
+            --member="serviceAccount:${SA_NAME}@${DOCAI_PROJECT_ID}.iam.gserviceaccount.com" \
             --role="roles/documentai.editor"
               
-        gcloud iam service-accounts keys create cda_docai_key \
+    gcloud iam service-accounts keys create cda_docai_key \
             --iam-account=cda-docai@$DOCAI_PROJECT_ID.iam.gserviceaccount.com
                     
-        export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/cda_docai_key
+    export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/cda_docai_key
+    echo $GOOGLE_APPLICATION_CREDENTIALS
     ```
    
     When using Cloud Storage Buckets for input and output, additional steps are required:
 
      ```shell
-        export IN_BUCKET=gs://<path-to-input>
-        export OUT_BUCKET=gs://<path-to-output>
+    export IN_BUCKET=gs://<path-to-input>
+    export OUT_BUCKET=gs://<path-to-output>
      ```
+   
     ```shell
-            
-        # Cloud Storage Access
-        gcloud storage buckets add-iam-policy-binding  ${IN_BUCKET}  \
+      # Cloud Storage Access
+      gcloud storage buckets add-iam-policy-binding  ${IN_BUCKET}  \
           --member="serviceAccount:$SA_NAME@$DOCAI_PROJECT_ID.iam.gserviceaccount.com" \
           --role="roles/storage.objectViewer"
-        gcloud storage buckets add-iam-policy-binding  ${OUT_BUCKET}  \
+      gcloud storage buckets add-iam-policy-binding  ${OUT_BUCKET}  \
           --member="serviceAccount:$SA_NAME@$DOCAI_PROJECT_ID.iam.gserviceaccount.com" \
           --role="roles/storage.admin"
+   
+      # Grant DocAI service account access to the buckets:
+      PROJECT_DOCAI_NUMBER=$(gcloud projects describe "$DOCAI_PROJECT_ID" --format='get(projectNumber)')
+      gcloud storage buckets add-iam-policy-binding  ${OUT_BUCKET} --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.admin"
+      gcloud storage buckets add-iam-policy-binding  ${IN_BUCKET} --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"
+
     ```
 
-   Grant DocAI service account access to the buckets:
-    ```shell
-    PROJECT_DOCAI_NUMBER=$(gcloud projects describe "$DOCAI_PROJECT_ID" --format='get(projectNumber)')
-    gcloud storage buckets add-iam-policy-binding  ${OUT_BUCKET} --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.admin"
-    gcloud storage buckets add-iam-policy-binding  ${IN_BUCKET} --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"
-    ```
+
 
 3. Run the sample on a single local file (-f): 
 ```shell
