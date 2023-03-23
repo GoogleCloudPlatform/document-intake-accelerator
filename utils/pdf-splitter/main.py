@@ -56,30 +56,29 @@ def batch_process_document(
     client: DocumentProcessorServiceClient,
     processor_name: str,
     gcs_input_uri: str,
-    input_mime_type: str,
     gcs_output_bucket: str,
     gcs_output_uri_prefix: str,
     field_mask: str = None,
     timeout: int = 400,
 ):
 
-    gcs_documents = documentai.GcsDocuments(documents=[{
-        "gcs_uri": gcs_input_uri,
-        "mime_type": input_mime_type
-    }])
-    input_config = documentai.BatchDocumentsInputConfig \
-        (gcs_documents=gcs_documents)
+    # gcs_documents = documentai.GcsDocuments(documents=[{
+    #     "gcs_uri": gcs_input_uri,
+    #     "mime_type": input_mime_type
+    # }])
+    # input_config = documentai.BatchDocumentsInputConfig \
+    #     (gcs_documents=gcs_documents)
 
     # input_documents = []
     # for doc in gcs_input_uris:
     #     # Cloud Storage URI for the Input Document
     #     input_documents.append(
     #         documentai.GcsDocument(
-    #             gcs_uri=doc, mime_type=input_mime_type
+    #             gcs_uri=doc, mime_type=PDF_MIME_TYPE
     #         )
     #     )
-    #
-    # # Load GCS Input URI into a List of document files
+
+    # Load GCS Input URI into a List of document files
     # input_config = documentai.BatchDocumentsInputConfig(
     #     gcs_documents=documentai.GcsDocuments(documents=input_documents)
     # )
@@ -88,8 +87,8 @@ def batch_process_document(
     # NOTE: Alternatively, specify a GCS URI Prefix to process an entire directory
     #
     # gcs_input_uri = "gs://bucket/directory/"
-    # gcs_prefix = documentai.GcsPrefix(gcs_uri_prefix=gcs_input_uri)
-    # input_config = documentai.BatchDocumentsInputConfig(gcs_prefix=gcs_prefix)
+    gcs_prefix = documentai.GcsPrefix(gcs_uri_prefix=gcs_input_uri)
+    input_config = documentai.BatchDocumentsInputConfig(gcs_prefix=gcs_prefix)
 
 
     # Cloud Storage URI for the Output Directory
@@ -98,9 +97,9 @@ def batch_process_document(
     if gcs_output_uri_prefix != "":
         destination_uri = f"{destination_uri}/{gcs_output_uri_prefix}/"
 
-    print(f"batch_process_documents with processor_name={processor_name} gcs_input_uri={gcs_input_uri} destination_uri={destination_uri}")
+    # print(f"batch_process_documents with processor_name={processor_name} gcs_input_uri={gcs_input_uri} destination_uri={destination_uri}")
     gcs_output_config = documentai.DocumentOutputConfig.GcsOutputConfig(
-        gcs_uri=destination_uri, field_mask=field_mask
+        gcs_uri=os.path.join(destination_uri, "json"), field_mask=field_mask
     )
 
     # Where to write results
@@ -144,21 +143,18 @@ def batch_process_document(
     if metadata.state != documentai.BatchProcessMetadata.State.SUCCEEDED:
         raise ValueError(f"Batch Process Failed: {metadata.state_message}")
 
-    print("Output files:")
     # One process per Input Document
     for process in metadata.individual_process_statuses:
         # output_gcs_destination format: gs://BUCKET/PREFIX/OPERATION_NUMBER/INPUT_FILE_NUMBER/
         # The Cloud Storage API requires the bucket name and URI prefix separately
         matches = re.match(r"gs://(.*?)/(.*)", process.output_gcs_destination)
         if not matches:
-            print(
-                "Could not parse output GCS destination:",
-                process.output_gcs_destination,
-            )
+            print(f"Could not parse output GCS destination:[{process.output_gcs_destination}]")
             continue
 
         output_bucket, output_prefix = matches.groups()
-
+        input_gcs_source = process.input_gcs_source
+        print(f"input_gcs_source = {input_gcs_source}, output_gcs_destination = {process.output_gcs_destination}")
         # Get List of Document Objects from the Output Bucket
         output_blobs = storage_client.list_blobs(output_bucket, prefix=output_prefix)
 
@@ -176,10 +172,10 @@ def batch_process_document(
             document = documentai.Document.from_json(
                 blob.download_as_bytes(), ignore_unknown_fields=True
             )
-            dirs, file_name = helper.split_uri_2_path_filename(gcs_input_uri)
-            in_bucket, in_prefix = helper.split_uri_2_bucket_prefix(gcs_input_uri)
+            dirs, file_name = helper.split_uri_2_path_filename(input_gcs_source)
+            in_bucket, blob_name = helper.split_uri_2_bucket_prefix(input_gcs_source)
 
-            tempfolder, local_file_name = download_from_gcs(in_bucket, in_prefix)
+            tempfolder, local_file_name = download_from_gcs(in_bucket, blob_name)
             splitter_out = os.path.join(tempfolder, os.path.splitext(file_name)[0])
             split_pdf(document.entities, local_file_name, output_dir=splitter_out)
             upload_to_gcs(splitter_out, output_bucket, os.path.join(gcs_output_uri_prefix, os.path.splitext(file_name)[0]))
@@ -245,28 +241,34 @@ def process_file_batch(client, project_id, multi_region_location, dir_path, proc
 
     in_bucket_name, in_prefix = helper.split_uri_2_bucket_prefix(dir_path)
     print(f"process_file_batch dir_path={dir_path} in_bucket_name={in_bucket_name} in_prefix={in_prefix}")
-    blobs = storage_client.list_blobs(in_bucket_name, prefix=in_prefix)
+    # blobs = storage_client.list_blobs(in_bucket_name, prefix=in_prefix)
 
     out_bucket_name, out_prefix = helper.split_uri_2_bucket_prefix(output_dir)
+    # blob_uris = []
+    #
+    # for blob in blobs:
+    #     uri = f"gs://{dir_path}/{blob.name}"
+    #     print(f"Processing {uri} {blob.content_type}")
+    #     if str(blob.name).endswith(".pdf"):
+    #         blob_uris.append(f"gs://{in_bucket_name}/{blob.name}")
 
-    for blob in blobs:
-        uri = f"gs://{dir_path}/{blob.name}"
-        print(f"Processing {uri} {blob.content_type}")
-        if str(blob.name).endswith(".pdf"):
-            batch_process_document(client, processor_name,
-                                   f"gs://{in_bucket_name}/{blob.name}",
-                                   blob.content_type, out_bucket_name,
-                                   out_prefix)
+    #     batch_process_document(client, processor_name,
+    #                            dir_path,
+    #                            out_bucket_name,
+    #                            out_prefix)
 
-    # document = online_process(client, processor_name, file_path)
-    #
-    # document_json = write_document_json(document, file_path, output_dir=output_dir)
-    # print(f"Document AI Output: {document_json}")
-    #
-    # split_pdf(document.entities, file_path, output_dir=output_dir)
-    #
-    # print("Done.")
-    # return 0
+    batch_process_document(client, processor_name,
+                           dir_path,
+                           out_bucket_name,
+                           out_prefix)
+
+    # print(f"Sending for batch processing {len(blob_uris)} documents")
+    # batch_process_document(client, processor_name,
+    #                        blob_uris,
+    #                        out_bucket_name,
+    #                        out_prefix)
+
+    print("Done.")
 
 
 def main(args: argparse.Namespace) -> int:
