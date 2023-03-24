@@ -129,6 +129,8 @@ module "vpc_network" {
   subnetwork                = var.subnetwork
   secondary_ranges_pods     = var.secondary_ranges_pods
   secondary_ranges_services = var.secondary_ranges_services
+  master_cidr_ranges        = ["${var.master_ipv4_cidr_block}"]
+  node_pools_tags           = ["gke-${var.cluster_name}"]
 }
 
 module "gke" {
@@ -143,6 +145,7 @@ module "gke" {
   network_project_id        = local.network_config.host_project
   secondary_ranges_pods     = local.network_config.gke_secondary_ranges.pods
   secondary_ranges_services = local.network_config.gke_secondary_ranges.services
+  master_ipv4_cidr_block    = var.master_ipv4_cidr_block
   region                    = var.region
   min_node_count            = 1
   max_node_count            = 10

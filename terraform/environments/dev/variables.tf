@@ -174,3 +174,9 @@ variable "service_account_name_gke" {
   # This service account will be created in both GCP and GKE, and will be
   # used for workload federation in all microservices.
 }
+
+variable "master_ipv4_cidr_block" {
+  type        = string
+  description = "The IP range in CIDR notation to use for the hosted master network"
+  default     = "172.16.0.0/28"
+}

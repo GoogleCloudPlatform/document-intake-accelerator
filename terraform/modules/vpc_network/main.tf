@@ -26,7 +26,7 @@ module "vpc" {
     {
       subnet_name               = var.subnetwork
       subnet_ip                 = "10.0.0.0/16"
-      subnet_region             = "us-central1"
+      subnet_region             = var.region
       subnet_flow_logs          = "true"
       subnet_flow_logs_interval = "INTERVAL_10_MIN"
       subnet_flow_logs_sampling = 0.7
@@ -40,6 +40,40 @@ module "vpc" {
       var.secondary_ranges_services,
     ]
   }
+
+  firewall_rules = [{
+    name                    = "gke-ingress-nginx-webhook"
+    description             = null
+    direction               = "INGRESS"
+    priority                = null
+    ranges                  = var.master_cidr_ranges
+    source_tags             = null
+    source_service_accounts = null
+    target_tags             = var.node_pools_tags
+    target_service_accounts = null
+    allow = [{
+      protocol = "tcp"
+      ports    = ["8443"]
+    }]
+    deny = []
+    log_config = {
+      metadata = "EXCLUDE_ALL_METADATA"
+    }
+  }]
+}
+
+module "cloud-nat" {
+  source                             = "terraform-google-modules/cloud-nat/google"
+  version                            = "~> 1.2"
+  name                               = format("%s-%s-nat", var.project_id, var.region)
+  create_router                      = true
+  router                             = format("%s-%s-router", var.project_id, var.region)
+  project_id                         = var.project_id
+  region                             = var.region
+  network                            = module.vpc.network_id
+  source_subnetwork_ip_ranges_to_nat = var.source_subnetwork_ip_ranges_to_nat
+  log_config_enable                  = true
+  log_config_filter                  = "ERRORS_ONLY"
 }
 
 # resource "google_compute_network" "vpc_network" {
@@ -54,19 +88,6 @@ module "vpc" {
 #   network_name = var.vpc_network
 #   routing_mode = "GLOBAL"
 #   auto_create_subnetworks = true
-# }
-
-# module "cloud-nat" {
-#   source            = "terraform-google-modules/cloud-nat/google"
-#   version           = "~> 1.2"
-#   name              = format("%s-%s-nat", var.project_id, var.region)
-#   create_router     = true
-#   router            = format("%s-%s-router", var.project_id, var.region)
-#   project_id        = var.project_id
-#   region            = var.region
-#   network           = module.vpc.network_id
-#   log_config_enable = true
-#   log_config_filter = "ERRORS_ONLY"
 # }
 
 # resource "google_compute_router" "router" {

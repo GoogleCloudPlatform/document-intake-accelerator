@@ -9,3 +9,4 @@
 //  region = "us-central1"
 //}
 //cda_external_ip = "IP.ADDRESS.HERE"
+//master_ipv4_cidr_block = "MASTER.CIDR/28.HERE" 
