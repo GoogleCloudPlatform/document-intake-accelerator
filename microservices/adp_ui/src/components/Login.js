@@ -137,14 +137,6 @@ function Login() {
       <h4 className="loginTitle">Automated Document Processing</h4> <br/>
         {isSubmitted ? <Redirect to="/" /> : renderForm}
       </div>
-      <div className="register-container">
-       
-         <FcGoogle className="googleImg" />
-       <Button variant="success" onClick={signInWithGoogle} className="signInGoogle">        
-       Sign in with Google</Button>            
-  
-  
-   </div>
     </div>
   );
 
