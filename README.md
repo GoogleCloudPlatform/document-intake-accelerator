@@ -29,9 +29,9 @@ Classifier is currently in Preview. Early access can be granted using this [form
 ### Using Shared Virtual Private Cloud (VPC) for the deployment
 
 As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.tfvars).
-Check this [documentation page](docs/NetworkConfiguration.md) on preparation for Shared VPC usage when deploying this solution.
+For the preparation steps to set up VPC Host Project and Service project, refer to the steps described in [here](docs/SharedVPC_steps.md).
 
-You could also reserve a static IP address to be used for the front end. be sure, though, to reserve the IP address in the Service Project (not in the VPC host project).
+You could also reserve a static IP address to be used for the front end. The reserved external IP must be in the Service Project, must be regional and in the same region as GKE cluster (us-cdentral1).
 ## Installation Using Cloud Shell
 
 Following steps describe installation using Google Cloud Shell console. 
@@ -126,10 +126,14 @@ kubectl describe ingress default-ingress | grep Address
   ```
 
 **NOTE**: ONLY If you don’t have a custom domain ( if you left `mydomain.com` above as API_DOMAIN and have **NOT** used Static external IP ), then you need  to use the Ingress IP address as the API endpoint.
-If you have already used external IP address to set for API_DOMAIN, this step could be skipped.
-- Change the API_DOMAIN to the Ingress endpoint, and re-deploy CloudRun.
+
+In the file `terraform/modules/ingress/main.tf` remove Line 104: 
+`host = var.domain` 
+
+> The host is needed for HTTPS connection to work, but require a valid DNS name and will not work with the IP address.
+
+- Re-deploy CloudRun and Ingress with the External IP being used instead of the domain:
   ```shell
-  export API_DOMAIN=$(kubectl describe ingress default-ingress | grep Address | awk '{print $2}')
   source ./init_domain_with_ip.sh
   ```
 
@@ -137,8 +141,9 @@ If you have already used external IP address to set for API_DOMAIN, this step co
 - Before enabling firebase, make sure [Firebase Management API](https://console.cloud.google.com/apis/api/firebase.googleapis.com/metrics) should be disabled in GCP API & Services.
 - Go to [Firebase Console UI](https://console.firebase.google.com/) to add your existing project. Select “Pay as you go” and Confirm plan.
 - On the left panel of Firebase Console UI, go to Build > Authentication, and click Get Started.
-- Select Google in the Additional providers
-- Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.
+- Select Email/Password as a Sign in method and click Enable.
+- Go to users and add email/password for a valid Sign in method.
+[//]: # (- Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.)
 - Go to Settings > Authorized domain, add the following to the Authorized domains:
   - Web App Domain (e.g. adp-dev.cloudpssolutions.com) - or skip this step if you do not have a custom domain.
   - API endpoint IP address (from kubectl describe ingress | grep Address)

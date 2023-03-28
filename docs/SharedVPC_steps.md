@@ -1,3 +1,7 @@
+## Setting up Shared VPC
+
+Refer to this [guide](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-shared-vpc) for in-detail  information on setting up shared VPC.
+
 ## Prerequisite  steps for Shared VPC Setup
 
 - Create Project used for Shared VPC  (HOST_PROJECT_ID)
