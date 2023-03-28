@@ -79,13 +79,14 @@ resource "kubernetes_ingress_v1" "default_ingress" {
   metadata {
     name = "default-ingress"
     annotations = {
-      "kubernetes.io/ingress.class"                        = "nginx"
-      "cert-manager.io/cluster-issuer"                     = module.cert_manager.cluster_issuer_name
-      "nginx.ingress.kubernetes.io/enable-cors"            = "true"
-      "nginx.ingress.kubernetes.io/cors-allow-methods"     = "PUT,GET,POST,DELETE,OPTIONS"
-      "nginx.ingress.kubernetes.io/cors-allow-origin"      = var.cors_allow_origin
-      "nginx.ingress.kubernetes.io/cors-allow-credentials" = "true"
-      "nginx.ingress.kubernetes.io/proxy-read-timeout"     = "3600"
+      "kubernetes.io/ingress.class"                        = "gce"
+      "kubernetes.io/ingress.global-static-ip-name"        = "cda-ip"
+//      "cert-manager.io/cluster-issuer"                     = module.cert_manager.cluster_issuer_name
+//      "nginx.ingress.kubernetes.io/enable-cors"            = "true"
+//      "nginx.ingress.kubernetes.io/cors-allow-methods"     = "PUT,GET,POST,DELETE,OPTIONS"
+//      "nginx.ingress.kubernetes.io/cors-allow-origin"      = var.cors_allow_origin
+//      "nginx.ingress.kubernetes.io/cors-allow-credentials" = "true"
+//      "nginx.ingress.kubernetes.io/proxy-read-timeout"     = "3600"
     }
   }
 
