@@ -74,6 +74,7 @@ Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (need
 > ```
 >
 > For the **Reserved External IP**:
+
 > - Edit `terraform.tfvars` in the editor,  uncomment `cda_external_ip` and fill in the value of the reserved IP address (without http(s) prefix):
 > ```
 > cda_external_ip = "IP.ADDRESS.HERE"
@@ -798,3 +799,22 @@ Test for PR changes
 ### (For Developers) Microservices Assumptions
 * app_registration_id used on the ui is referred as case_id in the API code
 * case_id is referred as external case_id in the firestore
+
+## Troubleshooting Commands
+```shell
+terraform destroy -target=module.ingress
+```
+
+```shell
+helm ls -n ingress-nginx
+```
+
+```shell
+helm history ingress-nginx -n ingress-nginx
+```
+
+```shell
+terraform state list
+terraform state rm <...>
+
+```
