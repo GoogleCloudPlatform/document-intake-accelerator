@@ -1,7 +1,7 @@
 ## Pre-req steps for Shared VPC Setup
 
-- Create Project used for Shared VPC 
-- Create Project used for the Service 
+- Create Project used for Shared VPC  (HOST_PROJECT_ID)
+- Create Project used for the Service (PROJECT_ID)
 - Prepare Env Variables:
   ```shell
   export HOST_PROJECT_ID=
@@ -9,30 +9,25 @@
   ```
 - Run following scripts (will follow instructions as described in [here](docs/NetworkConfiguration.md)):
 
+  ````shell
+  gcloud config set project $PROJECT_ID
+  bash -e setup/setup_host_vpc_project.sh
+  bash -e setup/setup_vpc_shared_project.sh
+  ````
 
-```shell
-gcloud config set project $PROJECT_ID
-bash setup_host_vpc_project.sh
-bash setup/setup_vpc_shared_project.sh
-```
+- Reserve External Global Static IP (note down the IP) in the Service Project VPC (TODO: Find out how to reserve IP in the Host VPC project and make that work)
 
-- Reserve External Global Static IP (note down the IP)
 
 - Prepare `terraform/environments/dev/terraform.tfvars`
-  - `cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars`
-  - Fill in parameters
+  ```shell
+  cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
+  ```
+  - Uncomment and fill in parameters for host_project (HOST_PROJECT_ID) and cda_external_ip (With reserved External IP)
 
 
-
-
-### Setup
-
-
-- Purchase Domain, register DNS record tie it to the reserved external IP
-- Cloud Domain:
-  - Enable Cloud Domains API
-  - Register Domain
-- Cloud DNS:
-  - Enable Cloud DNS API
-  - Create Zone
+```shell
+export API_DOMAIN=mydomain.com
+export DOCAI_PROJECT_ID=
+./init.sh
+```
 

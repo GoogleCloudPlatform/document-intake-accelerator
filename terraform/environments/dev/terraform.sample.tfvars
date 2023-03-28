@@ -9,4 +9,4 @@
 //  region = "us-central1"
 //}
 //cda_external_ip = "IP.ADDRESS.HERE"
-//master_ipv4_cidr_block = "MASTER.CIDR/28.HERE"  #Example: 172.16.16.0/28
+//master_ipv4_cidr_block = "172.16.0.0/28" #MASTER.CIDR/28  #Alternative Example: 172.16.16.0/28
