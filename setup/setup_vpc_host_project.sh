@@ -4,7 +4,11 @@ export CLOUD_ROUTER_NAME=cda-router
 export CLOUD_NAT_NAME=cda-nat
 export REGION=us-central1
 export FW_RULE_NAME=fw-i-a-gkemaster-gkeworkers-tcp-8443-webhook
-export MASTER_IPV4_CIDR="172.16.0.0/28" # default range if not changed in terraform.tfvars
+
+# default range if not changed in terraform.tfvars
+# When changed, needs also to be updated in  terraform.tfvars, since needs a firewall rule for master node to communicate with the nodes.
+export MASTER_IPV4_CIDR="172.16.0.0/28"
+
 export GKE_NETWORK_TAG=gke-main-cluster
 
 export NETWORK=cda-vpc

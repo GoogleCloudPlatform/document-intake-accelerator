@@ -73,9 +73,13 @@ Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (need
 > master_ipv4_cidr_block = "MASTER.CIDR/28.HERE"
 > ```
 >
+>  
 > For the **Reserved External IP**:
-> You can reserve internal and external IP addresses for your Shared VPC clusters. **Ensure that the IP addresses are reserved in the service project**.
-> - Edit `terraform.tfvars` in the editor,  uncomment `cda_external_ip` and fill in the value of the reserved IP address (without http(s) prefix):
+> You can reserve external IP addresses for your Shared VPC clusters. Following Hard requirements must be met:
+> - IP address **must be reserved in the service project** (not in the VPC host Project).
+> - Must be regional
+> - Must be in the same GKE region
+- Edit `terraform.tfvars` in the editor,  uncomment `cda_external_ip` and fill in the value of the reserved IP address (without http(s) prefix):
 > ```
 > cda_external_ip = "IP.ADDRESS.HERE"
 > ```
