@@ -19,7 +19,7 @@ metadata:
 spec:
   healthCheck:
     type: HTTP
-    requestPath: /index
+    requestPath: /ping
     port: 80
 ---
 apiVersion: v1
