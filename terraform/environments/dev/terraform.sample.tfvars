@@ -1,10 +1,10 @@
 //network_config = {
 //  host_project      = "HOST_PROJECT_ID"
-//  network = "SHARED_VPC_NETWORK_NAME"
-//  subnet  = "SUBNET_NAME"
+//  network = "cda-vpc"   #SHARED_VPC_NETWORK_NAME"
+//  subnet  = "tier-1"    #SUBNET_NAME
 //  gke_secondary_ranges = {
-//    pods     = "SECONDARY_SUBNET_PODS_RANGE_NAME"
-//    services = "SECONDARY_SUBNET_SERVICES_RANGE_NAME"
+//    pods     = "tier-1-services"   #SECONDARY_SUBNET_PODS_RANGE_NAME
+//    services = "tier-2-services"   #SECONDARY_SUBNET_SERVICES_RANGE_NAME"
 //  }
 //  region = "us-central1"
 //}

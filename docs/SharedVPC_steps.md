@@ -1,17 +1,18 @@
 ## Pre-req steps for Shared VPC Setup
 
-- Create Project used for Shared VPC and create VPC inside with subnetwork following these [instructions](docs/NetworkConfiguration.md) 
-  - Create NAT and Router
-- Create Service Project
+- Create Project used for Shared VPC 
+- Create Project used for the Service 
+- Prepare Env Variables:
+  ```shell
+  export HOST_PROJECT_ID=
+  export PROJECT_ID=
+  ```
+- Run following scripts (will follow instructions as described in [here](docs/NetworkConfiguration.md)):
 
-```shell
-export HOST_PROJECT_ID=
-export PROJECT_ID=
-export API_DOMAIN=mydomain.com
-```
 
 ```shell
 gcloud config set project $PROJECT_ID
+bash setup_host_vpc_project.sh
 bash setup/setup_vpc_shared_project.sh
 ```
 
@@ -20,16 +21,6 @@ bash setup/setup_vpc_shared_project.sh
 - Prepare `terraform/environments/dev/terraform.tfvars`
   - `cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars`
   - Fill in parameters
-
-
-
-
-- Go to VPC Host Project -> Shared VPC page
-  - Attach Service Project to the VPC Host Project (Kubernetes Engine access - must be checked in)
-  - Select all subnetworks
-  - Other parameters can be left default
-- Grant required permissions for the Service project to access Host Project [instructions](docs/NetworkConfiguration.md)
-
 
 
 
