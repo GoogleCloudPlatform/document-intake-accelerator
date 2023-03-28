@@ -33,3 +33,8 @@ gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
 gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
     --member=serviceAccount:$SERVICE_PROJECT_NUM@cloudservices.gserviceaccount.com \
     --role=roles/compute.networkUser
+
+
+gcloud container subnets list-usable \
+    --project $PROJECT_ID \
+    --network-project $HOST_PROJECT_ID
