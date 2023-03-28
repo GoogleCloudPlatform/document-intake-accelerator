@@ -134,7 +134,7 @@ function Login() {
       <div className="login-form">
       <Image src={imgFile} width='260px' height='70px' style={{display: 'block',
     margin: '0 auto'}}/>
-      <h4 className="loginTitle">Automated Document Processing</h4> <br/>
+      <h4 className="loginTitle">Claims Data Activator</h4> <br/>
         {isSubmitted ? <Redirect to="/" /> : renderForm}
       </div>
     </div>
