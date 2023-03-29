@@ -93,7 +93,7 @@ def batch_process_document(
   # This must end with a trailing forward slash `/`
   destination_uri = f"gs://{gcs_output_bucket}/"
   if gcs_output_uri_prefix != "":
-    destination_uri = f"{destination_uri}/{gcs_output_uri_prefix}/"
+    destination_uri = f"{destination_uri}{gcs_output_uri_prefix}/"
 
   # print(f"batch_process_documents with processor_name={processor_name} gcs_input_uri={gcs_input_uri} destination_uri={destination_uri}")
   gcs_output_config = documentai.DocumentOutputConfig.GcsOutputConfig(
