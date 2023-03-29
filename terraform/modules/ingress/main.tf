@@ -48,7 +48,7 @@ module "cert_manager" {
 
 
 resource "google_compute_address" "ingress_ip_address" {
-  count        = var.external_address == null ? 1 : 0
+  count        = var.external_ip_name == null ? 1 : 0
   project      = var.project_id # Service Project ID
   name         = "ingress-ip"
   address_type = "EXTERNAL"

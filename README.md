@@ -77,17 +77,17 @@ Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (need
 > For the **Reserved External IP**:
 > You can reserve external IP addresses for your Shared VPC clusters. Following Hard requirements must be met:
 > - IP address **must be reserved in the service project** (not in the VPC host Project).
-> - Must be regional
-> - Must be in the same GKE region
+> - Must be global
 - Edit `terraform.tfvars` in the editor,  uncomment `cda_external_ip` and fill in the value of the reserved IP address (without http(s) prefix):
 > ```
-> cda_external_ip = "IP.ADDRESS.HERE"
+> cda_external_ip = "IP-ADDRESS-_NAME-HERE"
 > ```
 > - Set API_DOMAIN to the External IP (when not using dedicated domain name): 
 > ```shell
 > export API_DOMAIN=IP.ADDRESS.HERE
 > ```
 
+###Steps when using domain
 When using a domain, make sure to have DNS zone created and add  DNS A record pointing to the reserved external IP address.
 
 - From Cloud DNS, click on CREATE ZONE.
@@ -103,6 +103,8 @@ nslookup $API_DOMAIN
 ```
 Setting up DNS A record for the domain needs to be done before running `init.sh` in the next step, because when Ingress is provisioned, it creates a certificate for the domain and that requires a valid DNS A record already to be in there.
 For a workaround, when adding HTTPS and domain later [Adding HTTPS and domain](#https)
+
+### Steps when not using a domain
 
 #### Terraform
 Run init step (will prepare for terraform execution and do terraform apply with auto-approve):
