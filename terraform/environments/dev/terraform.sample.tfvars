@@ -8,5 +8,5 @@
 //  }
 //  region = "us-central1"
 //}
-//cda_external_ip = "IP.ADDRESS.HERE"
+//cda_external_ip = "IP-ADDRESS-NAME"   # Name of the reserved IP address. Must be reserved in the Service Project, Global IP address
 //master_ipv4_cidr_block = "172.16.0.0/28" # MASTER.CIDR/28  When using a different cidr block, make sure to add a firewall rule on port 8443 (see setup/setup_vpc_host_project.sh)

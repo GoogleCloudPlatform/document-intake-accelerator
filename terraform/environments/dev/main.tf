@@ -171,7 +171,7 @@ module "ingress" {
   domain            = var.api_domain
   region            = local.region
   cors_allow_origin = local.cors_origin
-  external_address  = var.cda_external_ip
+  external_ip_name  = var.cda_external_ip
 }
 
 

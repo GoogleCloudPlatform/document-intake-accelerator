@@ -24,7 +24,7 @@ variable "region" {
   type        = string
   description = "GCP region"
 }
-variable "external_address" {
+variable "external_ip_name" {
   type    = string
   default = null
 }

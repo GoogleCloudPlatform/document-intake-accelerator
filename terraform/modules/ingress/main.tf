@@ -30,13 +30,14 @@ terraform {
 }
 
 locals {
-  address = (
-      var.external_address != null
-      ? var.external_address
-      : google_compute_address.ingress_ip_address[0].address
-    )
-  }
+  ip_name = (
+    var.external_ip_name != null
+    ? var.external_ip_name
+    : google_compute_address.ingress_ip_address[0].name
+  )
+}
 
+# Todo - replace with GCP Managed Certificates
 module "cert_manager" {
   source = "terraform-iaac/cert-manager/kubernetes"
 
@@ -45,48 +46,27 @@ module "cert_manager" {
   cluster_issuer_private_key_secret_name = "cert-manager-private-key"
 }
 
-resource "kubernetes_namespace" "ingress_nginx" {
-  metadata {
-    name = "ingress-nginx"
-  }
-}
 
 resource "google_compute_address" "ingress_ip_address" {
-  count = var.external_address == null ? 1: 0
-  name   = "nginx-controller"
-  region = var.region
+  count        = var.external_address == null ? 1 : 0
+  project      = var.project_id # Service Project ID
+  name         = "ingress-ip"
+  address_type = "EXTERNAL"
 }
 
-
-module "nginx-controller" {
-  source    = "terraform-iaac/nginx-controller/helm"
-  version   = "2.1.0"
-  namespace = "ingress-nginx"
-
-  ip_address = local.address
-
-  # TODO: does this require cert_manager up and running or can they be completed in parallel
-  depends_on = [
-    module.cert_manager, kubernetes_namespace.ingress_nginx
-  ]
-}
 
 resource "kubernetes_ingress_v1" "default_ingress" {
-  depends_on = [
-    module.nginx-controller
-  ]
-
   metadata {
     name = "default-ingress"
     annotations = {
-      "kubernetes.io/ingress.class"                        = "gce"
-      "kubernetes.io/ingress.global-static-ip-name"        = "cda-ip"
-//      "cert-manager.io/cluster-issuer"                     = module.cert_manager.cluster_issuer_name
-//      "nginx.ingress.kubernetes.io/enable-cors"            = "true"
-//      "nginx.ingress.kubernetes.io/cors-allow-methods"     = "PUT,GET,POST,DELETE,OPTIONS"
-//      "nginx.ingress.kubernetes.io/cors-allow-origin"      = var.cors_allow_origin
-//      "nginx.ingress.kubernetes.io/cors-allow-credentials" = "true"
-//      "nginx.ingress.kubernetes.io/proxy-read-timeout"     = "3600"
+      "kubernetes.io/ingress.class"                 = "gce"
+      "kubernetes.io/ingress.global-static-ip-name" = local.ip_name
+      //      "cert-manager.io/cluster-issuer"                     = module.cert_manager.cluster_issuer_name
+      //      "nginx.ingress.kubernetes.io/enable-cors"            = "true"
+      //      "nginx.ingress.kubernetes.io/cors-allow-methods"     = "PUT,GET,POST,DELETE,OPTIONS"
+      //      "nginx.ingress.kubernetes.io/cors-allow-origin"      = var.cors_allow_origin
+      //      "nginx.ingress.kubernetes.io/cors-allow-credentials" = "true"
+      //      "nginx.ingress.kubernetes.io/proxy-read-timeout"     = "3600"
     }
   }
 
