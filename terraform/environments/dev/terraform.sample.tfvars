@@ -3,8 +3,8 @@
 //  network = "cda-vpc"   #SHARED_VPC_NETWORK_NAME"
 //  subnet  = "tier-1"    #SUBNET_NAME
 //  gke_secondary_ranges = {
-//    pods     = "tier-1-services"   #SECONDARY_SUBNET_PODS_RANGE_NAME
-//    services = "tier-2-services"   #SECONDARY_SUBNET_SERVICES_RANGE_NAME"
+//    pods     = "tier-1-pods"       #SECONDARY_SUBNET_PODS_RANGE_NAME
+//    services = "tier-1-services"   #SECONDARY_SUBNET_SERVICES_RANGE_NAME"
 //  }
 //  region = "us-central1"
 //}

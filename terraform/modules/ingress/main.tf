@@ -26,6 +26,10 @@ terraform {
       source  = "hashicorp/helm"
       version = ">= 2.7.0"
     }
+    google = {
+      source  = "hashicorp/google"
+      version = "~>4.0"
+    }
   }
 }
 
@@ -37,15 +41,19 @@ locals {
   )
 }
 
-# Todo - replace with GCP Managed Certificates
-module "cert_manager" {
-  source = "terraform-iaac/cert-manager/kubernetes"
-
-  cluster_issuer_email                   = var.cert_issuer_email
-  cluster_issuer_name                    = "letsencrypt"
-  cluster_issuer_private_key_secret_name = "cert-manager-private-key"
+# TODO: switch to hashicorp k8s provider, use side by side
+# k2tf
+resource "kubectl_manifest" "managed_certificate" {
+  yaml_body = <<YAML
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: gclb-managed-cert
+spec:
+  domains:
+    - ${var.domain}
+YAML
 }
-
 
 resource "google_compute_address" "ingress_ip_address" {
   count        = var.external_ip_name == null ? 1 : 0
@@ -61,12 +69,8 @@ resource "kubernetes_ingress_v1" "default_ingress" {
     annotations = {
       "kubernetes.io/ingress.class"                 = "gce"
       "kubernetes.io/ingress.global-static-ip-name" = local.ip_name
-      //      "cert-manager.io/cluster-issuer"                     = module.cert_manager.cluster_issuer_name
-      //      "nginx.ingress.kubernetes.io/enable-cors"            = "true"
-      //      "nginx.ingress.kubernetes.io/cors-allow-methods"     = "PUT,GET,POST,DELETE,OPTIONS"
-      //      "nginx.ingress.kubernetes.io/cors-allow-origin"      = var.cors_allow_origin
-      //      "nginx.ingress.kubernetes.io/cors-allow-credentials" = "true"
-      //      "nginx.ingress.kubernetes.io/proxy-read-timeout"     = "3600"
+      "networking.gke.io/managed-certificates" = kubectl_manifest.managed_certificate.name
+      "networking.gke.io/v1beta1.FrontendConfig" = kubectl_manifest.frontend_config.name
     }
   }
 
@@ -197,11 +201,26 @@ resource "kubernetes_ingress_v1" "default_ingress" {
       }
     }
 
-    tls {
-      hosts = [
-        var.domain,
-      ]
-      secret_name = "cert-manager-private-key"
-    }
   }
 }
+
+
+resource "kubectl_manifest" "frontend_config" {
+  yaml_body = <<YAML
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: ingress-security-config
+spec:
+  sslPolicy: ${google_compute_ssl_policy.gke-ingress-ssl-policy.name}
+  redirectToHttps:
+    enabled: true
+YAML
+}
+
+resource "google_compute_ssl_policy" "gke-ingress-ssl-policy" {
+  name            = "gke-ingress-ssl-policy"
+  profile         = "MODERN"
+  min_tls_version = "TLS_1_2"
+}
+

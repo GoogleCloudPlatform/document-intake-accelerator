@@ -26,69 +26,68 @@ When following this  practice, before deployment create two projects and note do
 ### Classifier Access
 Classifier is currently in Preview. Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform), so that Project is whitelisted.
 
-### Using Shared Virtual Private Cloud (VPC) for the deployment
 
-As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.tfvars).
-For the preparation steps to set up VPC Host Project and Service project, refer to the steps described in [here](docs/SharedVPC_steps.md).
+### Installation Using Cloud Shell
 
-You could also reserve a static IP address to be used for the front end. The reserved external IP must be in the Service Project, must be regional and in the same region as GKE cluster (us-cdentral1).
-## Installation Using Cloud Shell
-
-Following steps describe installation using Google Cloud Shell console. 
-
+Following steps describe installation using Google Cloud Shell console.
 Make sure to clone this repository before starting.
 
 *Important*: User needs to have Project **owner** role in order to deploy  terraform setup.
 
-Setup environment variables, which are needed during the instrallation:
+## Preparations
+
+### Reserving External IP
+For this solution you need to reserve an external global IP in the CDA Engine Project, that will be used for the Ingress and bound to the Domain name (if used).
+This could be done from the GCP console, or by running following Cloud Shell commands:
+
+From the GCP Console:
+- Go to VPC networks (you will have to enable Compute Engine API)
+- Go to IP addresses and reserve External **global** Static IP address with a chosen ADDRESS_NAME (for example, `cda-ip`).
+- Note down the name given.
+
+From the Cloud Shell:
 ```shell
-export PROJECT_ID=<GCP Project ID to host CDA Pipeline Engine>
-export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors>
-export API_DOMAIN=mydomain.com
+gcloud config set project <PROJECT_ID>
+gcloud services enable compute.googleapis.com
+gcloud compute addresses create ADDRESS_NAME  --global
 ```
-Note, If you do not have a custom domain, leave a dummy one `mydomain.com` (needs to be set to a legal name as a placeholder) and then later run an optional step below to configure using Ingress IP address instead.
+
+ ```shell
+cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
+```
+Edit `terraform/environments/dev/terraform.tfvars` in the editor,  uncomment `cda_external_ip` and fill in the name of the reserved IP address (ADDRESS_NAME):
+ ```
+ cda_external_ip = "IP-ADDRESS-NAME-HERE"
+ ```
+
+### Deploying using Shared VPC
+As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.tfvars).
+For the preparation steps to set up VPC Host Project and Service project, refer to the steps described in [here](docs/SharedVPC_steps.md).
+
+ - Edit `terraform/environments/dev/terraform.tfvars` in the editor,  uncomment `network_config` and fill in required parameters inside `network_config` (when using the [steps](docs/SharedVPC_steps.md), you will only need to set `HOST_PROJECT_ID`:
+ ```
+network_config = {
+  host_project      = "HOST_PROJECT_ID"
+  network = "cda-vpc"   #SHARED_VPC_NETWORK_NAME"
+  subnet  = "tier-1"    #SUBNET_NAME
+  gke_secondary_ranges = {
+    pods     = "tier-1-pods"       #SECONDARY_SUBNET_PODS_RANGE_NAME
+    services = "tier-1-services"   #SECONDARY_SUBNET_SERVICES_RANGE_NAME"
+  }
+  region = "us-central1"
+}
+```
+
+When the **default GKE Control Plane CIDR Range (172.16.0.0/28) overlaps** with your network:
+ - Edit `terraform.tfvars` in the editor, uncomment `master_ipv4_cidr_block` and fill in the value of the GKE Control Plane CIDR /28 range:
+ ```shell
+ master_ipv4_cidr_block = "MASTER.CIDR/28.HERE"
+ ```
 
 
-> If, you wish to deploy using shared VPC or external static IP address: 
-> ```shell
-> cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
->```
-> For **Shared VPC**:
-> - Edit `terraform.tfvars` in the editor,  uncomment `network_config` and fill in required parameters inside `network_config`:
-> ```
-> network_config = {
->  host_project      = "HOST_PROJECT_ID"
->  network = "SHARED_VPC_NETWORK_NAME"
->  subnet  = "SUBNET_NAME"
->  gke_secondary_ranges = {
->    pods     = "SECONDARY_SUBNET_PODS_RANGE_NAME"
->    services = "SECONDARY_SUBNET_SERVICES_RANGE_NAME"
->  }
->  region = "us-central1"
-> }
->```
-> When the **default GKE Control Plane CIDR Range (172.16.0.0/28) overlaps** with your network:
-> - Edit `terraform.tfvars` in the editor, uncomment `master_ipv4_cidr_block` and fill in the value of the GKE Control Plane CIDR /28 range:
-> ```shell
-> master_ipv4_cidr_block = "MASTER.CIDR/28.HERE"
-> ```
->
->  
-> For the **Reserved External IP**:
-> You can reserve external IP addresses for your Shared VPC clusters. Following Hard requirements must be met:
-> - IP address **must be reserved in the service project** (not in the VPC host Project).
-> - Must be global
-- Edit `terraform.tfvars` in the editor,  uncomment `cda_external_ip` and fill in the value of the reserved IP address (without http(s) prefix):
-> ```
-> cda_external_ip = "IP-ADDRESS-_NAME-HERE"
-> ```
-> - Set API_DOMAIN to the External IP (when not using dedicated domain name): 
-> ```shell
-> export API_DOMAIN=IP.ADDRESS.HERE
-> ```
-
-###Steps when using domain
-When using a domain, make sure to have DNS zone created and add  DNS A record pointing to the reserved external IP address.
+### Steps when using DNS domain
+#### Add DNS Record
+When using a domain, make sure to have DNS zone created and add DNS A record pointing to the reserved external IP address.
 
 - From Cloud DNS, click on CREATE ZONE.
 - Create a DNS record set of type A and point to the reserved external IP:
@@ -104,9 +103,38 @@ nslookup $API_DOMAIN
 Setting up DNS A record for the domain needs to be done before running `init.sh` in the next step, because when Ingress is provisioned, it creates a certificate for the domain and that requires a valid DNS A record already to be in there.
 For a workaround, when adding HTTPS and domain later [Adding HTTPS and domain](#https)
 
-### Steps when not using a domain
+#### Environment Variables
+```shell
+export API_DOMAIN=<YOUR_DOMAIN>
+export PROJECT_ID=<GCP Project ID to host CDA Pipeline Engine>
+```
 
-#### Terraform
+Optionally, when deploying processors to different Project:
+```shell
+export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors> #
+```
+
+### Steps when **NOT** using a domain
+
+#### Changes to Ingress
+In the file `terraform/modules/ingress/main.tf` comment out Line 79: 
+`// host = var.domain` 
+> The host is needed for HTTPS connection to work, but require a valid DNS name and will not work with the IP address.
+
+#### Environment Variables
+```shell
+export API_DOMAIN=<STATIC_IP_ADDRESS_RESERVED>
+export PROJECT_ID=<GCP Project ID to host CDA Pipeline Engine>
+```
+
+Optionally, when deploying processors to different Project:
+```shell
+export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors> #
+```
+
+
+## Installation
+### Terraform 
 Run init step (will prepare for terraform execution and do terraform apply with auto-approve):
 ```shell
 ./init.sh
@@ -118,28 +146,9 @@ Run init step (will prepare for terraform execution and do terraform apply with 
 >  nohup bash -c "time ./init.sh" &
 >  tail -f nohup.out
 >  ```
-Get the API endpoint IP address, this will be used in Firebase Auth later.
-```
-kubectl describe ingress default-ingress | grep Address
-```
-- This will print the Ingress IP like below:
-  ```
-  Address: 123.123.123.123
-  ```
 
-**NOTE**: ONLY If you don’t have a custom domain ( if you left `mydomain.com` above as API_DOMAIN and have **NOT** used Static external IP ), then you need  to use the Ingress IP address as the API endpoint.
-
-In the file `terraform/modules/ingress/main.tf` remove Line 104: 
-`host = var.domain` 
-
-> The host is needed for HTTPS connection to work, but require a valid DNS name and will not work with the IP address.
-
-- Re-deploy CloudRun and Ingress with the External IP being used instead of the domain:
-  ```shell
-  source ./init_domain_with_ip.sh
-  ```
-
-#### Enable Firebase Auth
+  
+### Enable Firebase Auth
 - Before enabling firebase, make sure [Firebase Management API](https://console.cloud.google.com/apis/api/firebase.googleapis.com/metrics) should be disabled in GCP API & Services.
 - Go to [Firebase Console UI](https://console.firebase.google.com/) to add your existing project. Select “Pay as you go” and Confirm plan.
 - On the left panel of Firebase Console UI, go to Build > Authentication, and click Get Started.
@@ -148,12 +157,12 @@ In the file `terraform/modules/ingress/main.tf` remove Line 104:
 [//]: # (- Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.)
 - Go to Settings > Authorized domain, add the following to the Authorized domains:
   - Web App Domain (e.g. adp-dev.cloudpssolutions.com) - or skip this step if you do not have a custom domain.
-  - API endpoint IP address (from kubectl describe ingress | grep Address)
+  - API endpoint IP address (Reserved External IP address)
 - Go to Project Overview > Project settings, you will use this info in the next step.
 - In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. VSCode), and change the following values accordingly.
   - REACT_APP_BASE_URL
     - `https://<your_domain_name>` The custom Web App Domain that you added in the previous step. Make sure to use `https`
-    - Alternatively, you can use the API Domain IP Address (Ingress), e.g. http://123.123.123.123 (not https)
+    - Alternatively, you can use the API Domain IP Address (Ingress), Reserved External IP address e.g. http://123.123.123.123 (not https)
   - REACT_APP_FIREBASE_API_KEY - Web API Key
   - REACT_APP_FIREBASE_AUTH_DOMAIN - $PROJECT_ID.firebaseapp.com
   - REACT_APP_STORAGE_BUCKET - $PROJECT_ID.appspot.com
@@ -161,7 +170,7 @@ In the file `terraform/modules/ingress/main.tf` remove Line 104:
     - You can find this ID in the Project settings > Cloud Messaging
   - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
 
-#### Deploy microservices
+### Deploy microservices
 
 With kustomize 5.0 there are breaking changes on passing the environment variables.
 While we are making solution to account for those changes and work with kustomize 5.0, as a temporal workaround, please be sure to downgrade to 4.5.7 version when using Cloud Shell:
@@ -245,23 +254,20 @@ For example, to trigger pipeline to parse  the sample form:
 ## <a name="https"></a>Adding HTTPS after deployment 
 If you have deployed solution using IP address and now want to migrate to domain+https, there are few steps to be done for that. 
 
-Note down the Ingress IP:
-```shell
-kubectl describe ingress default-ingress | grep Address | awk '{print $2}'
-```
-
 - From Cloud DNS, click on CREATE ZONE and create new zone.
-- Create a DNS record set of type A and point to the IP address of the Ingress.
+- Create a DNS record set of type A and point to the IP address of the Ingress (Reserved External IP).
   - On the Zone details page, click Add record set.
   - Select A from the Resource Record Type menu.
   - For IPv4 Address, enter the external IP address that have been reserved.
 
+Uncomment line 79 in `terraform/modules/ingress/main.tf`:
+//      host = var.domain
 
 **Re-apply terraform modules:**
 ```shell
 export PROJECT_ID=<your CDA service project ID>
 export API_DOMAIN=<your_domain_here>
-./utils/init_domain.sh
+./setup/init_domain.sh
 ```
 
 **Update Firebase settings:**

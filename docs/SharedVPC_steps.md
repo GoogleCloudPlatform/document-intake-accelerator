@@ -12,7 +12,7 @@ Refer to this [guide](https://cloud.google.com/kubernetes-engine/docs/how-to/clu
   export PROJECT_ID=
   ```
 - Run following scripts (will follow instructions as described [here](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-shared-vpc)).
-  This will create `tier-1` and `tier-2` subnets inside `cda-vpc` network inside the VPC Host Project and grant access for the Service Project:
+  This will create `tier-1` and `tier-2` subnets inside `cda-vpc` network of the VPC Host Project and grant access for the Service Project. `tier-1` subnet will have two secondary ranges for GKE services `tier-1-services` and GKE pods `tier-1-pods`:
   ````shell
   gcloud config set project $PROJECT_ID
   bash -e setup/setup_vpc_host_project.sh
@@ -76,7 +76,6 @@ Failure while deploying Ingress:
 │
 ```
 Resolution:
-- Make sure that external static IP address is Regional (not Global) and in the same region as GKE cluster
 - Make sure that there is a firewall rule allowing Master Node communicate with the worker Nodes:
   - Ingress allowed for the network from MASTER_IPV4_CIDR on port 8443
 
