@@ -15,18 +15,22 @@
 apiVersion: cloud.google.com/v1
 kind: BackendConfig
 metadata:
-  name: upload-backend-config
+  name: iap-backend-config
 spec:
   healthCheck:
     type: HTTP
     requestPath: /ping
     port: 80
+#  iap:
+#    enabled: true
+#    oauthclientCredentials:
+#      secretName: cda-ip
 ---
 apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    cloud.google.com/backend-config: '{"default": "upload-backend-config"}'
+    cloud.google.com/backend-config: '{"default": "iap-backend-config"}'
     cloud.google.com/neg: '{"ingress": true}'
   name: upload-service
   labels:
