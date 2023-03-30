@@ -43,5 +43,5 @@ $ ./get_helm.sh
 
 ### Clone Git Repository
 ```
-$ git clone [https://github.com/hcls-solutions/hde-accelerators](https://github.com/hcls-solutions/claims-data-activator/edit/main/cda-analytics).git
+$ git clone https://github.com/hcls-solutions/claims-data-activator/edit/main/cda-analytics.git
 ```
