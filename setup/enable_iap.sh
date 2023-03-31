@@ -1,4 +1,17 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 gcloud config set project $PROJECT_ID
 export DISPLAY_NAME="cda-ui"
@@ -7,8 +20,6 @@ export IAP_SECRET_NAME=cda-iap
 export SA_START_PIPELINE="cloudrun-startpipeline-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 export SA_QUEUE="cloudrun-queue-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 
-
-gcloud services enable iap.googleapis.com --project $PROJECT_ID
 
 # Configuring the OAuth consent screen
 gcloud alpha iap oauth-brands create \
@@ -44,10 +55,11 @@ kubectl create secret generic $IAP_SECRET_NAME \
 
 function add_user(){
   USER=$1
+  BACKEND=$2
   if  [ -n "${USER}" ]; then
     gcloud iap web add-iam-policy-binding \
       --resource-type=backend-services \
-      --service="$validation_be" \
+      --service="$BACKEND" \
       --member=user:$USER \
       --role='roles/iap.httpsResourceAccessor'
   fi
@@ -57,14 +69,16 @@ function enable_iap(){
   validation_be=$(gcloud compute backend-services list --format='get(NAME)' | grep $service_name)
   echo "service=$service_name backend=$validation_be"
   if [ -n "$validation_be" ]; then
-    gcloud iap web enable --resource-type=backend-services \
-        --oauth2-client-id=$CLIENT_ID \
-        --oauth2-client-secret=$CLIENT_SECRET \
-        --service="$validation_be"
+      gcloud iap web enable --resource-type=backend-services \
+          --oauth2-client-id=$CLIENT_ID \
+          --oauth2-client-secret=$CLIENT_SECRET \
+          --service="$validation_be"
+
+      add_user "${USER_EMAIL}" "${validation_be}"
+      add_user "${SA_START_PIPELINE}" "${validation_be}"
+      add_user "${SA_QUEUE}" "${validation_be}"
+
   fi
-  add_user "${USER_EMAIL}"
-  add_user "${SA_START_PIPELINE}"
-  add_user "${SA_QUEUE}"
 
 }
 
