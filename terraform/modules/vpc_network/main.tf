@@ -27,6 +27,28 @@ module "vpc" {
       subnet_name               = var.subnetwork
       subnet_ip                 = "10.0.0.0/16"
       subnet_region             = var.region
+      subnet_private_access     = "true"
+      subnet_flow_logs          = "true"
+      subnet_flow_logs_interval = "INTERVAL_10_MIN"
+      subnet_flow_logs_sampling = 0.7
+      subnet_flow_logs_metadata = "INCLUDE_ALL_METADATA"
+    },
+    {
+      subnet_name               = var.serverless_subnet
+      subnet_ip                 = "10.10.10.0/28"
+      subnet_region             = var.region
+      subnet_private_access     = "true"
+      subnet_flow_logs          = "true"
+      subnet_flow_logs_interval = "INTERVAL_10_MIN"
+      subnet_flow_logs_sampling = 0.7
+      subnet_flow_logs_metadata = "INCLUDE_ALL_METADATA"
+    },
+    {
+      subnet_name               = "proxy-only-subnet"
+      subnet_ip                 = "10.129.0.0/23"
+      subnet_region             = var.region
+      purpose                   = "REGIONAL_MANAGED_PROXY"
+      subnet_private_access     = "true"
       subnet_flow_logs          = "true"
       subnet_flow_logs_interval = "INTERVAL_10_MIN"
       subnet_flow_logs_sampling = 0.7
@@ -41,25 +63,122 @@ module "vpc" {
     ]
   }
 
-  firewall_rules = [{
-    name                    = "gke-ingress-nginx-webhook"
-    description             = null
-    direction               = "INGRESS"
-    priority                = null
-    ranges                  = var.master_cidr_ranges
-    source_tags             = null
-    source_service_accounts = null
-    target_tags             = var.node_pools_tags
-    target_service_accounts = null
-    allow = [{
-      protocol = "tcp"
-      ports    = ["8443"]
-    }]
-    deny = []
-    log_config = {
-      metadata = "EXCLUDE_ALL_METADATA"
+  firewall_rules = [
+    {
+      name                    = "gke-ingress-nginx-webhook"
+      description             = null
+      direction               = "INGRESS"
+      priority                = null
+      ranges                  = var.master_cidr_ranges
+      source_tags             = null
+      source_service_accounts = null
+      target_tags             = var.node_pools_tags
+      target_service_accounts = null
+      allow = [{
+        protocol = "tcp"
+        ports    = ["8443"]
+      }]
+      deny = []
+      log_config = {
+        metadata = "EXCLUDE_ALL_METADATA"
+      }
+    },
+    {
+      name                    = "serverless-to-vpc-connector"
+      description             = null
+      direction               = "INGRESS"
+      priority                = null
+      ranges                  = ["107.178.230.64/26", "35.199.224.0/19"]
+      source_tags             = null
+      source_service_accounts = null
+      target_tags             = ["vpc-connector"]
+      target_service_accounts = null
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = ["667"]
+        },
+        {
+          protocol = "udp"
+          ports    = ["665", "666"]
+        },
+        {
+          protocol = "icmp"
+          ports    = []
+        }
+      ]
+      deny = []
+      log_config = {
+        metadata = "EXCLUDE_ALL_METADATA"
+      }
+    },
+    {
+      name                    = "vpc-connector-to-serverless"
+      description             = null
+      direction               = "EGRESS"
+      priority                = null
+      ranges                  = ["107.178.230.64/26", "35.199.224.0/19"]
+      source_tags             = null
+      source_service_accounts = null
+      target_tags             = ["vpc-connector"]
+      target_service_accounts = null
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = ["667"]
+        },
+        {
+          protocol = "udp"
+          ports    = ["665", "666"]
+        },
+        {
+          protocol = "icmp"
+          ports    = []
+        }
+      ]
+      deny = []
+      log_config = {
+        metadata = "EXCLUDE_ALL_METADATA"
+      }
+    },
+    {
+      name                    = "vpc-connector-health-checks"
+      description             = null
+      direction               = "INGRESS"
+      priority                = null
+      ranges                  = ["130.211.0.0/22", "35.191.0.0/16", "108.170.220.0/23"]
+      source_tags             = null
+      source_service_accounts = null
+      target_tags             = ["vpc-connector"]
+      target_service_accounts = null
+      allow                   = []
+      deny                    = []
+      log_config = {
+        metadata = "EXCLUDE_ALL_METADATA"
+      }
+    },
+    {
+      name                    = "allow-proxy-connection"
+      description             = null
+      direction               = "INGRESS"
+      priority                = null
+      ranges                  = ["10.129.0.0/23"]
+      source_tags             = null
+      source_service_accounts = null
+      target_tags             = ["vpc-connector"]
+      target_service_accounts = null
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = []
+        },
+      ]
+      deny = []
+      log_config = {
+        metadata = "EXCLUDE_ALL_METADATA"
+      }
     }
-  }]
+  ]
 }
 
 module "cloud-nat" {

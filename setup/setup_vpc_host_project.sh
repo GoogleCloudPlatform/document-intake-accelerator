@@ -14,6 +14,7 @@ export GKE_NETWORK_TAG=gke-main-cluster
 export NETWORK=cda-vpc
 export SUBNET1=tier-1
 export SUBNET2=tier-2
+export SUBNET3=serverless-subnet
 
 gcloud services enable container.googleapis.com --project $HOST_PROJECT_ID
 gcloud compute networks create $NETWORK \
@@ -34,6 +35,20 @@ gcloud compute networks subnets create $SUBNET2 \
     --region us-central1 \
     --secondary-range tier-2-services=172.16.16.0/20,tier-2-pods=172.20.0.0/14
 
+gcloud compute networks subnets create $SUBNET3 \
+    --project $HOST_PROJECT_ID \
+    --network=$NETWORK \
+    --range=10.8.0.0/28 \
+    --region=us-central1
+
+gcloud compute networks subnets create proxy-only-subnet \
+    --project $HOST_PROJECT_ID \
+    --purpose=REGIONAL_MANAGED_PROXY \
+    --role=ACTIVE \
+    --region=us-central1 \
+    --network=$NETWORK \
+    --range=10.129.0.0/23
+  
 #If you have Shared VPC Admin role at the organizational level:
 gcloud compute shared-vpc enable $HOST_PROJECT_ID
 
@@ -62,3 +77,35 @@ gcloud compute firewall-rules create $FW_RULE_NAME \
   --target-tags $GKE_NETWORK_TAG \
   --rules=tcp:8443 \
   --project $HOST_PROJECT_ID
+
+gcloud compute firewall-rules create serverless-to-vpc-connector \
+  --allow tcp:667,udp:665-666,icmp \
+  --source-ranges 107.178.230.64/26,35.199.224.0/19 \
+  --direction=INGRESS \
+  --target-tags vpc-connector \
+  --network=$NETWORK \
+  --project $HOST_PROJECT_ID
+
+  
+gcloud compute firewall-rules create vpc-connector-to-serverless \
+  --allow tcp:667,udp:665-666,icmp \
+  --destination-ranges 107.178.230.64/26,35.199.224.0/19 \
+  --direction=EGRESS \
+  --target-tags vpc-connector \
+  --network=$NETWORK\
+  --project $HOST_PROJECT_ID
+  
+  
+gcloud compute firewall-rules create vpc-connector-health-checks \
+  --allow tcp:667 \
+  --source-ranges 130.211.0.0/22,35.191.0.0/16,108.170.220.0/23 \
+  --direction=INGRESS \
+  --target-tags vpc-connector \
+  --network=$NETWORK\
+  --project $HOST_PROJECT_ID
+
+  gcloud compute firewall-rules create allow-proxy-connection \
+    --allow=TCP \
+    --source-ranges=10.129.0.0/23 \
+    --network=$NETWORK\
+    --project $HOST_PROJECT_ID

@@ -29,6 +29,10 @@ variable "subnetwork" {
   type = string
 }
 
+variable "serverless_subnet" {
+  type = string
+}
+
 variable "region" {
   type        = string
   description = "GCP region"

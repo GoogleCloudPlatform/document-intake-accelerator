@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+gcloud services enable vpcaccess.googleapis.com --project $PROJECT_ID
 gcloud services enable container.googleapis.com --project $PROJECT_ID
 gcloud services enable container.googleapis.com --project $HOST_PROJECT_ID
 
@@ -34,6 +35,13 @@ gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
     --member=serviceAccount:$SERVICE_PROJECT_NUM@cloudservices.gserviceaccount.com \
     --role=roles/compute.networkUser
 
+gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
+--role "roles/compute.networkUser" \
+--member "serviceAccount:service-$SERVICE_PROJECT_NUM@gcp-sa-vpcaccess.iam.gserviceaccount.com"
+
+gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
+--role "roles/compute.networkUser" \
+--member "serviceAccount:$SERVICE_PROJECT_NUM@cloudservices.gserviceaccount.com"
 
 gcloud container subnets list-usable \
     --project $PROJECT_ID \

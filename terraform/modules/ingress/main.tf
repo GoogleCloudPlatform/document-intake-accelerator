@@ -44,6 +44,7 @@ locals {
 # TODO: switch to hashicorp k8s provider, use side by side
 # k2tf
 resource "kubectl_manifest" "managed_certificate" {
+  count     = var.cda_external_ui == true ? 1 : 0
   yaml_body = <<YAML
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
@@ -56,21 +57,43 @@ YAML
 }
 
 resource "google_compute_address" "ingress_ip_address" {
-  count        = var.external_ip_name == null ? 1 : 0
+  count        = var.external_ip_name == null && var.cda_external_ui == true ? 1 : 0
   project      = var.project_id # Service Project ID
   name         = "ingress-ip"
   address_type = "EXTERNAL"
 }
 
-
-resource "kubernetes_ingress_v1" "default_ingress" {
+resource "kubernetes_ingress_v1" "external_ingress" {
+  count = var.cda_external_ui == true ? 1 : 0
   metadata {
-    name = "default-ingress"
+    name = "external-ingress"
     annotations = {
       "kubernetes.io/ingress.class"                 = "gce"
       "kubernetes.io/ingress.global-static-ip-name" = local.ip_name
-      "networking.gke.io/managed-certificates" = kubectl_manifest.managed_certificate.name
-      "networking.gke.io/v1beta1.FrontendConfig" = kubectl_manifest.frontend_config.name
+      "networking.gke.io/managed-certificates"      = kubectl_manifest.managed_certificate[0].name
+      "networking.gke.io/v1beta1.FrontendConfig"    = kubectl_manifest.frontend_config[0].name
+    }
+  }
+
+  spec {
+    # Default backend to UI app.
+    default_backend {
+      service {
+        name = "adp-ui"
+        port {
+          number = 80
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_ingress_v1" "internal_ingress" {
+  metadata {
+    name = "internal-ingress"
+    annotations = {
+      "kubernetes.io/ingress.class"                   = "gce-internal"
+      "kubernetes.io/ingress.regional-static-ip-name" = var.internal_ip_name
     }
   }
 
@@ -204,21 +227,22 @@ resource "kubernetes_ingress_v1" "default_ingress" {
   }
 }
 
-
 resource "kubectl_manifest" "frontend_config" {
+  count     = var.cda_external_ui == true ? 1 : 0
   yaml_body = <<YAML
 apiVersion: networking.gke.io/v1beta1
 kind: FrontendConfig
 metadata:
   name: ingress-security-config
 spec:
-  sslPolicy: ${google_compute_ssl_policy.gke-ingress-ssl-policy.name}
+  sslPolicy: ${google_compute_ssl_policy.gke-ingress-ssl-policy[0].name}
   redirectToHttps:
     enabled: true
 YAML
 }
 
 resource "google_compute_ssl_policy" "gke-ingress-ssl-policy" {
+  count           = var.cda_external_ui == true ? 1 : 0
   name            = "gke-ingress-ssl-policy"
   profile         = "MODERN"
   min_tls_version = "TLS_1_2"

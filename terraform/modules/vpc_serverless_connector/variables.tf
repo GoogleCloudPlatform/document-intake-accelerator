@@ -17,41 +17,20 @@
 
 variable "project_id" {
   type        = string
-  description = "project ID"
 }
 
 variable "region" {
   type        = string
-  description = "GCP region"
 }
 
-variable "internal_ip_name" {
-  type    = string
-  default = null
-}
-
-variable "external_ip_name" {
-  type    = string
-  default = null
-}
-
-variable "cert_issuer_email" {
+variable "subnet_name" {
   type        = string
-  description = "email of the cert issuer"
 }
 
-variable "domain" {
+variable "host_project_id" {
   type        = string
-  description = "Ingress base domain, excluding protocol. E.g. api.example.com"
 }
 
-variable "cors_allow_origin" {
-  type        = string
-  description = "CORS allow origins, comma-seperated."
-}
-
-variable "cda_external_ui" {
-  type        = bool
-  description = "Expose UI to public internet"
-  default     = false
+variable "vpc_connector_name" {
+  type = string
 }

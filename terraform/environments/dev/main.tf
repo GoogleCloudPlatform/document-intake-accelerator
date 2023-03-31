@@ -44,6 +44,10 @@ locals {
     "run.googleapis.com",                  # Cloud Run
     "secretmanager.googleapis.com",        # Secret Manager
     "storage.googleapis.com",              # Cloud Storage
+    "certificatemanager.googleapis.com",   # Certificate Manager
+    "serviceusage.googleapis.com",         # Service Usage
+    "vpcaccess.googleapis.com",            # VPC Access Connector
+    "dns.googleapis.com",                  # Cloud DNS
   ]
 
   services_docai = [
@@ -63,9 +67,10 @@ locals {
   )
 
   network_config = {
-    host_project = (local.use_shared_vpc ? var.network_config.host_project : var.project_id)
-    network      = (local.use_shared_vpc ? var.network_config.network : var.network)
-    subnet       = (local.use_shared_vpc ? var.network_config.subnet : var.subnetwork)
+    host_project      = (local.use_shared_vpc ? var.network_config.host_project : var.project_id)
+    network           = (local.use_shared_vpc ? var.network_config.network : var.network)
+    subnet            = (local.use_shared_vpc ? var.network_config.subnet : var.subnetwork)
+    serverless_subnet = (local.use_shared_vpc ? var.network_config.serverless_subnet : var.serverless_subnet)
     gke_secondary_ranges = {
       pods     = (local.use_shared_vpc ? var.network_config.gke_secondary_ranges.pods : var.secondary_ranges_pods.range_name)
       services = (local.use_shared_vpc ? var.network_config.gke_secondary_ranges.services : var.secondary_ranges_services.range_name)
@@ -127,10 +132,35 @@ module "vpc_network" {
   vpc_network               = var.network
   region                    = var.region
   subnetwork                = var.subnetwork
+  serverless_subnet         = var.serverless_subnet
   secondary_ranges_pods     = var.secondary_ranges_pods
   secondary_ranges_services = var.secondary_ranges_services
   master_cidr_ranges        = ["${var.master_ipv4_cidr_block}"]
   node_pools_tags           = ["gke-${var.cluster_name}"]
+}
+
+module "vpc_serverless_connector" {
+  depends_on = [module.project_services, module.vpc_network]
+
+  source             = "../../modules/vpc_serverless_connector"
+  vpc_connector_name = var.vpc_connector_name
+  project_id         = var.project_id
+  region             = var.region
+  subnet_name        = local.network_config.serverless_subnet
+  host_project_id    = local.shared_vpc_project
+}
+
+module "clouddns" {
+  depends_on = [module.project_services, module.vpc_network]
+
+  source             = "../../modules/clouddns"
+  project_id         = var.project_id
+  region             = var.region
+  api_domain         = var.api_domain
+  internal_ip_name   = var.internal_ip_name
+  vpc_network        = local.network_config.network
+  vpc_subnetwork     = local.network_config.subnet
+  network_project_id = local.network_config.host_project
 }
 
 module "gke" {
@@ -168,35 +198,40 @@ module "ingress" {
   cert_issuer_email = var.admin_email
 
   # Domains for API endpoint, excluding protocols.
+  cda_external_ui   = var.cda_external_ui
   domain            = var.api_domain
   region            = local.region
   cors_allow_origin = local.cors_origin
   external_ip_name  = var.cda_external_ip
+  internal_ip_name  = var.internal_ip_name
 }
-
 
 module "cloudrun-queue" {
   depends_on = [
     time_sleep.wait_for_project_services,
-    module.vpc_network
+    module.vpc_network,
+    module.vpc_serverless_connector
   ]
-  source     = "../../modules/cloudrun"
-  project_id = var.project_id
-  name       = "queue"
-  region     = local.region
-  api_domain = var.api_domain
+  source             = "../../modules/cloudrun"
+  project_id         = var.project_id
+  name               = "queue"
+  region             = local.region
+  api_domain         = var.api_domain
+  vpc_connector_name = var.vpc_connector_name
 }
 
 module "cloudrun-start-pipeline" {
   depends_on = [
     time_sleep.wait_for_project_services,
-    module.vpc_network
+    module.vpc_network,
+    module.vpc_serverless_connector
   ]
-  source     = "../../modules/cloudrun"
-  project_id = var.project_id
-  name       = "startpipeline"
-  region     = local.region
-  api_domain = var.api_domain
+  source             = "../../modules/cloudrun"
+  project_id         = var.project_id
+  name               = "startpipeline"
+  region             = local.region
+  api_domain         = var.api_domain
+  vpc_connector_name = var.vpc_connector_name
 }
 
 
