@@ -26,6 +26,9 @@ When following this  practice, before deployment create two projects and note do
 ### Classifier Access
 Classifier is currently in Preview. Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform), so that Project is whitelisted.
 
+### Domain Name Registration
+For this solution you need a valid domain name registered.
+
 
 ### Installation Using Cloud Shell
 
@@ -47,24 +50,32 @@ From the GCP Console:
 
 From the Cloud Shell:
 ```shell
-gcloud config set project <PROJECT_ID>
+export PROJECT_ID=
+gcloud config set project $PROJECT_ID
 gcloud services enable compute.googleapis.com
-gcloud compute addresses create ADDRESS_NAME  --global
+gcloud compute addresses create cda-ip  --global
 ```
 
+To see the reserved IP:
+```shell
+gcloud compute addresses describe cda-ip --global
+```
+
+Copy terraform sample variable file:
  ```shell
 cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
 ```
-Edit `terraform/environments/dev/terraform.tfvars` in the editor,  uncomment `cda_external_ip` and fill in the name of the reserved IP address (ADDRESS_NAME):
+
+Verify `cda_external_ip` points to the reserved External IP name inside `terraform/environments/dev/terraform.tfvars`:
  ```
- cda_external_ip = "IP-ADDRESS-NAME-HERE"
+ cda_external_ip = "cda-ip"   #IP-ADDRESS-NAME-HERE
  ```
 
-### Deploying using Shared VPC
+### When deploying using Shared VPC
 As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.tfvars).
 For the preparation steps to set up VPC Host Project and Service project, refer to the steps described in [here](docs/SharedVPC_steps.md).
 
- - Edit `terraform/environments/dev/terraform.tfvars` in the editor,  uncomment `network_config` and fill in required parameters inside `network_config` (when using the [steps](docs/SharedVPC_steps.md), you will only need to set `HOST_PROJECT_ID`:
+ - Edit `terraform/environments/dev/terraform.tfvars` in the editor,  uncomment `network_config` and fill in required parameters inside `network_config` (when using the [steps](docs/SharedVPC_steps.md), only need to set `HOST_PROJECT_ID`:
  ```
 network_config = {
   host_project      = "HOST_PROJECT_ID"
@@ -85,23 +96,78 @@ When the **default GKE Control Plane CIDR Range (172.16.0.0/28) overlaps** with 
  ```
 
 
-### Steps when using DNS domain
-#### Add DNS Record
-When using a domain, make sure to have DNS zone created and add DNS A record pointing to the reserved external IP address.
+### Configure DNS `A` record for your domain with IP address reserved above
+
+You can use gcloud command to get information about reserved address.
+```shell
+gcloud compute addresses describe cda-ip --global
+```
 
 - From Cloud DNS, click on CREATE ZONE.
 - Create a DNS record set of type A and point to the reserved external IP:
   - On the Zone details page, click Add record set.
   - Select A from the Resource Record Type menu.
-  - For IPv4 Address, enter the external IP address that have been reserved.
+- For IPv4 Address, enter the external IP address that have been reserved.
 
-To verify dns domain is working, run following command:
+Once configured, verify that your domain name resolves to the reserved IP address.
+
+  ```bash
+  $ nslookup -query=a mydomain.com
+  ...(output omitted)..
+
+  ```
+
+### IAP setup
+
+IAP setup can be done from [Google Cloud Console](https://console.cloud.google.com/).
+
+1. Configure oAuth consent screen
+
+  * Browse to [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)
+  * Select desired usage type: *Internal* or *External* and click **Create** button
+  * As a minimum, fill all required fields: **app name**, **user support email**,
+    **developer contact email**
+  * Click **Save and Continue** button
+
+2. Configure oAuth credentials
+
+  * Browse to [API & Services Credentials screen](https://console.cloud.google.com/apis/credentials/)
+  * Click **Create Credentials** from bottom menu and select *OAuth Client ID* from drop-down list
+  * Select *Web application* as application type
+  * Fill name of your oAuth client
+  * Click **Create** button
+  * Once client is created, select it from the list to open details page
+  * Notice **Client ID** and **Client Secret**  - you will use them in later configurations.
+    They can be also downloaded in JSON format.
+  * Add **Authorized redirect URI** in a format `https://iap.googleapis.com/v1/oauth/clientIds/CLIENT_ID:handleRedirect`
+    *(replace CLIENT_ID with your valid one)*
+
+### Configure GKE secret
+
+Create kubernetes secret with oAuth client credentials from the previous step  [IAP setup prerequisite](#prerequisite-iap-setup)
 
 ```shell
-nslookup $API_DOMAIN
+export CLIENT_ID=
+export CLIENT_SECRET=
 ```
-Setting up DNS A record for the domain needs to be done before running `init.sh` in the next step, because when Ingress is provisioned, it creates a certificate for the domain and that requires a valid DNS A record already to be in there.
-For a workaround, when adding HTTPS and domain later [Adding HTTPS and domain](#https)
+   ```bash
+   kubectl create secret generic cda-iap \
+   --from-literal=client_id=$CLIENT_ID \
+   --from-literal=client_secret=$CLIENT_SECRET
+   ```
+
+### Enable IAP on backend services
+
+Once backend service is created, enable IAP protection on it and update IAM policies.
+This can be done from [Google Cloud Console](https://console.cloud.google.com/).
+
+* Browse to [Identity-Aware Proxy](https://console.cloud.google.com/security/iap) page
+* Locate your backend service on a resources list under *HTTPS Resources* tab
+* **Toggle IAP protection** for your backend service
+* Select checkbox next to your service so that info panel appears on the right
+* Click **Add Member** button on the right panel to add members
+* Add *Google Account* or  *Service Account* with **IAP-secured Web App User** role
+
 
 #### Environment Variables
 ```shell

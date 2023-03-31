@@ -21,10 +21,10 @@ spec:
     type: HTTP
     requestPath: /ping
     port: 80
-#  iap:
-#    enabled: true
-#    oauthclientCredentials:
-#      secretName: cda-ip
+  iap:
+    enabled: true
+    oauthclientCredentials:
+      secretName: cda-ip
 ---
 apiVersion: v1
 kind: Service

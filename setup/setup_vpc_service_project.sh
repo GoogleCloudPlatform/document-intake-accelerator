@@ -41,8 +41,10 @@ gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
 function set_subnet_policy(){
   SUBNET=$1
   ETAG=$(gcloud compute networks subnets get-iam-policy $SUBNET  --project $HOST_PROJECT_ID  --region $REGION --format="value(etag)")
+  echo
   sed 's|SERVICE_PROJECT_NUM|'"$SERVICE_PROJECT_NUM"'|g; s|ETAG|'"$ETAG"'|g; ' setup/subnet-policy.yaml > setup/"${SUBNET}"-policy.yaml
   cat setup/"${SUBNET}"-policy.yaml
+  echo ""
   gcloud compute networks subnets set-iam-policy $SUBNET \
       setup/"${SUBNET}"-policy.yaml \
       --project $HOST_PROJECT_ID \
