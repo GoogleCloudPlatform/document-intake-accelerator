@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "${DIR}"/../SET
+
 gcloud services enable container.googleapis.com --project $PROJECT_ID
 gcloud services enable container.googleapis.com --project $HOST_PROJECT_ID
 
@@ -34,6 +37,20 @@ gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
     --member=serviceAccount:$SERVICE_PROJECT_NUM@cloudservices.gserviceaccount.com \
     --role=roles/compute.networkUser
 
+# Set IAm Policy for created subnets
+function set_subnet_policy(){
+  SUBNET=$1
+  ETAG=$(gcloud compute networks subnets get-iam-policy $SUBNET  --project $HOST_PROJECT_ID  --region $REGION --format="value(etag)")
+  sed 's|SERVICE_PROJECT_NUM|'"SERVICE_PROJECT_NUM"'|g; s|ETAG|'"$ETAG"'|g; ' setup/subnet-policy.yaml > setup/"${SUBNET}"-policy.yaml
+  cat setup/"${SUBNET}"-policy.yaml
+  gcloud compute networks subnets set-iam-policy $SUBNET \
+      setup/"${SUBNET}"-policy.yaml \
+      --project $HOST_PROJECT_ID \
+      --region $REGION
+}
+
+set_subnet_policy $SUBNET1
+set_subnet_policy $SUBNET2
 
 gcloud container subnets list-usable \
     --project $PROJECT_ID \

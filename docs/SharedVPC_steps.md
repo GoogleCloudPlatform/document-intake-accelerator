@@ -19,8 +19,23 @@ Refer to this [guide](https://cloud.google.com/kubernetes-engine/docs/how-to/clu
   bash -e setup/setup_vpc_service_project.sh
   ````
 
-- Get the IAM policy for the tier-1 subnet:
+- Get the IAM policy for the `tier-1` subnet:
   ```shell
+
+  SERVICE_PROJECT_NUM=$(gcloud projects describe "$PROJECT_ID" --format='get(projectNumber)') 
+  SUBNET=tier-1
+  ETAG=$(gcloud compute networks subnets get-iam-policy $SUBNET  --project $HOST_PROJECT_ID  --region us-central1 --format="value(etag)")  
+  sed 's|SERVICE_PROJECT_NUM|'"SERVICE_PROJECT_NUM"'|g; s|ETAG|'"$ETAG"'|g; ' setup/subnet-policy.yaml > setup/"${SUBNET}"-policy.yaml
+  gcloud compute networks subnets set-iam-policy $SUBNET \
+      setup/"${SUBNET}"-policy.yaml \
+      --project $HOST_PROJECT_ID \
+      --region us-central1
+  
+  SUBNET=tier-2
+  
+  ETAG=$(gcloud compute networks subnets get-iam-policy $SUBNET  --project $HOST_PROJECT_ID  --region us-central1 --format="value(etag)")
+  sed 's|SERVICE_PROJECT_NUM|'"$SERVICE_PROJECT_NUM"'|g; s|ETAG|'"$ETAG"'|g; ' setup/subnet-policy.yaml > setup/"${SUBNET}"-policy.yaml
+   
   gcloud compute networks subnets get-iam-policy tier-1 \
      --project $HOST_PROJECT_ID \
      --region us-central1
@@ -28,8 +43,9 @@ Refer to this [guide](https://cloud.google.com/kubernetes-engine/docs/how-to/clu
   The output contains an ETAG field. Make a note of the etag value.
 - Find out PROJECT_NUMBER of the Service Project:
   ```shell
-  SERVICE_PROJECT_NUM=$(gcloud projects describe "$PROJECT_ID" --format='get(projectNumber)')
+  
   ```
+
 - Create a file named `tier-1-policy.yaml` that has the following content (Replace SERVICE_PROJECT_NUM below with the actual value and ETAG_STRING with ETAG tag):
   ```shell
   bindings:
