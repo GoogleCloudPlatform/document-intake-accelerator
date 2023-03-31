@@ -295,3 +295,23 @@
     col: 8
     width: 8
     height: 6
+  - title: Beneficiaries by State
+    name: Beneficiaries by State
+    model: healthcare_demo
+    explore: bsc_pa_forms
+    type: looker_google_map
+    fields: [bsc_pa_forms.__beneficiary_state, bsc_pa_forms.count]
+    sorts: [bsc_pa_forms.count desc 0]
+    limit: 500
+    column_limit: 50
+    hidden_fields: []
+    hidden_points_if_no: []
+    series_labels: {}
+    show_view_names: true
+    series_types: {}
+    defaults_version: 0
+    listen: {}
+    row: 6
+    col: 16
+    width: 8
+    height: 6
