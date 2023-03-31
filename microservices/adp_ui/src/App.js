@@ -47,7 +47,7 @@ GlobalDebug(false);
           <Router> 
         <Switch>
 <Route path='/login' component={Login} />
-{localStorage.getItem('login') ?  
+{/*{localStorage.getItem('login') ?  */}
             <>
             <Route exact path="/">
               <Dashboard />
