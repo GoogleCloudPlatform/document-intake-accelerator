@@ -142,7 +142,7 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
           "manual_extraction": False,
           "key_coordinates": parser_entities_dict[key][2],
           "corrected_value": None,
-          "page_no": page_no + 1,
+          "page_no": int(page_no + 1),
           "page_width": int(pages_dimensions[page_no]["width"]),
           "page_height": int(pages_dimensions[page_no]["height"])
       }
@@ -404,7 +404,7 @@ def standard_entity_mapping(desired_entities_list):
     .mean().reset_index().round(2)
   # if parser_name == "FormParser":
   df_page_no = df_json.groupby(["entity"])[group_by_columns[4]].mean() \
-    .reset_index().round(2)
+    .reset_index().round(1)
   df_page_width = df_json.groupby(["entity"])[group_by_columns[5]].mean() \
     .reset_index().round(2)
   df_page_height = df_json.groupby(["entity"])[group_by_columns[6]].mean() \

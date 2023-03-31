@@ -15,7 +15,7 @@ if [[ -n  "$exists" ]]; then
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
     echo "Cleaning up ${TO_DELETE} then..."
-#    gsutil -m rm -a -r "${TO_DELETE}/**"
+    gsutil -m rm -a -r "${TO_DELETE}/**"
   fi
 fi
 

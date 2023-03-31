@@ -1,4 +1,5 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PWD=$(pwd)
 is_package='false'
 
 
@@ -25,7 +26,7 @@ if [ -z "$gs_dir" ]; then
   gs_dir=$dir
 fi
 GS_URL="gs://$PROJECT_ID-pa-forms/$gs_dir/"
-INPUT=${DIR}/$dir
+INPUT=${PWD}/$dir
 i=0
 
 echo ">>> Source=[$dir], Destination=[$GS_URL], packaged=$is_package"
@@ -47,7 +48,7 @@ if [ -d "$dir"/ ]; then
   else
     URL="gs://$PROJECT_ID-pa-forms/$gs_dir/"
     echo "Copying data from ${INPUT} to ${URL}"
-    gsutil cp "${INPUT}/*" "${URL}/"
+    gsutil -m cp "${INPUT}/*.pdf" "${URL}/"
     echo "Triggering pipeline for ${URL}"
     gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${URL}"
   fi
@@ -62,7 +63,8 @@ elif [ -f "$dir" ]; then
   gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${GS_URL}"
 fi
 
-#echo "Triggering pipeline for ${GS_URL}"
+#echo "Triggering pipeline for ${GS_URL}n
+
 #gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${GS_URL}"
 
 
@@ -72,3 +74,4 @@ fi
 #./start_pipeline.sh -d sample_data/bsc_demo -l demo-package -p
 # ./start_pipeline.sh -d sample_data/forms-10  -l demo-batch
 # ./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
+# ./start_pipeline.sh -d sample_data/demo/form.pdf  -l test

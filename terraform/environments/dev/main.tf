@@ -154,7 +154,7 @@ module "gke" {
   service_account_name = var.service_account_name_gke
 
   # See latest stable version at https://cloud.google.com/kubernetes-engine/docs/release-notes-stable
-  kubernetes_version = "1.23.13-gke.900"
+  kubernetes_version = "1.24.9-gke.3200"
 
 }
 

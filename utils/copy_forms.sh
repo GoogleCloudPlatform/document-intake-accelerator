@@ -21,12 +21,13 @@ x=0
 
 echo "Copying $form form to $dest $count times"
 
-while [ $x -lt $(( $count - 1)) ]
+while [ $x -le $(( $count - 1)) ]
 do
    x=$(( $x + 1 ))
    #basename $form .pdf
    f="$(basename -- $form .pdf)"
-   new_form=" ${f}_${x}.pdf"
-   echo "Copying ${new_form} to $dest"
-   gsutil cp "$form" "$dest/$new_form"
+   echo [$f]
+   new_form="${f}_${x}.pdf"
+   echo "Copying [${new_form}] to [${dest}]"
+   gsutil cp "$form" "${dest}/${new_form}"
 done

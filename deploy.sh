@@ -7,6 +7,7 @@ timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
 echo "$timestamp - Running $filename ... " | tee "$LOG"
 
 source "${DIR}"/SET
+gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
 
 if [[ -z "${API_DOMAIN}" ]]; then
   echo API_DOMAIN env variable is not set. Using External Ingress IP address... | tee -a "$LOG"
@@ -38,7 +39,6 @@ gsutil cp "${DIR}/microservices/adp_ui/.env" "gs://${TF_VAR_config_bucket}/.env"
 #fi
 
 
-gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
 skaffold run -p prod --default-repo=gcr.io/${PROJECT_ID} | tee -a "$LOG"
 
 #TODO terraform to re-deploy cloud-run instead

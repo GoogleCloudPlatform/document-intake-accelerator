@@ -115,6 +115,13 @@ async def start_pipeline(request: Request, response: Response):
         # create a record in database for uploaded document
         output = create_document(case_id, blob.name, context)
         uid = output
+        if uid is None:
+          Logger.error(f"Error: could not create a document")
+          raise HTTPException(
+              status_code=500,
+              detail="Error "
+                     "in uploading document in gcs bucket")
+
         Logger.info(f"Created document with uid={uid} for case_id={case_id}, file_path={blob.name}, file_name={blob_filename}")
         uid_list.append(uid)
 
@@ -205,6 +212,7 @@ async def start_pipeline(request: Request, response: Response):
 def create_document(case_id, filename, context, user=None):
   uid = None
   try:
+    Logger.info(f"create_document with case_id = {case_id} filename = {filename} context = {context}")
     base_url = f"{DOCUMENT_STATUS_URL}"
     req_url = f"{base_url}/create_document"
     url = f"{req_url}?case_id={case_id}&filename={filename}&context={context}&user={user}"
