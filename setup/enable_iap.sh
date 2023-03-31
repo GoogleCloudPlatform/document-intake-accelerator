@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
+
+gcloud config set project $PROJECT_ID
 export DISPLAY_NAME="cda-ui"
 export USER_EMAIL=$(gcloud config list account --format "value(core.account)")
 export IAP_SECRET_NAME=cda-iap
 export SA_START_PIPELINE="cloudrun-startpipeline-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 export SA_QUEUE="cloudrun-queue-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+
+
+gcloud services enable iap.googleapis.com --project $PROJECT_ID
 
 # Configuring the OAuth consent screen
 gcloud alpha iap oauth-brands create \

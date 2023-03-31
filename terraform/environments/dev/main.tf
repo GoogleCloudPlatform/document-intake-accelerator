@@ -44,6 +44,7 @@ locals {
     "run.googleapis.com",                  # Cloud Run
     "secretmanager.googleapis.com",        # Secret Manager
     "storage.googleapis.com",              # Cloud Storage
+    "iap.googleapis.com",                  # IAP
   ]
 
   services_docai = [
