@@ -24,7 +24,7 @@ spec:
   iap:
     enabled: true
     oauthclientCredentials:
-      secretName: cda-ip
+      secretName: cda-iap
 ---
 apiVersion: v1
 kind: Service
