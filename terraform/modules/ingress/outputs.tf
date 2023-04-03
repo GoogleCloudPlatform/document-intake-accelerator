@@ -16,5 +16,5 @@
  */
 
 output "ingress_ip_address" {
-  value = local.ip_name
+  value = local.external_ip_name
 }

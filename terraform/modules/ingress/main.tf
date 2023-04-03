@@ -34,10 +34,10 @@ terraform {
 }
 
 locals {
-  ip_name = (
-    var.external_ip_name != null
-    ? var.external_ip_name
-    : google_compute_address.ingress_ip_address[0].name
+  external_ip_name = (
+    var.external_ip_name == null && var.cda_external_ui == true
+    ? google_compute_global_address.ingress_ip_address[0].name
+    : var.external_ip_name
   )
 }
 
@@ -56,7 +56,7 @@ spec:
 YAML
 }
 
-resource "google_compute_address" "ingress_ip_address" {
+resource "google_compute_global_address" "ingress_ip_address" {
   count        = var.external_ip_name == null && var.cda_external_ui == true ? 1 : 0
   project      = var.project_id # Service Project ID
   name         = "ingress-ip"
@@ -69,7 +69,7 @@ resource "kubernetes_ingress_v1" "external_ingress" {
     name = "external-ingress"
     annotations = {
       "kubernetes.io/ingress.class"                 = "gce"
-      "kubernetes.io/ingress.global-static-ip-name" = local.ip_name
+      "kubernetes.io/ingress.global-static-ip-name" = local.external_ip_name
       "networking.gke.io/managed-certificates"      = kubectl_manifest.managed_certificate[0].name
       "networking.gke.io/v1beta1.FrontendConfig"    = kubectl_manifest.frontend_config[0].name
     }

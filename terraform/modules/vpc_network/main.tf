@@ -44,15 +44,11 @@ module "vpc" {
       subnet_flow_logs_metadata = "INCLUDE_ALL_METADATA"
     },
     {
-      subnet_name               = "proxy-only-subnet"
-      subnet_ip                 = "10.129.0.0/23"
-      subnet_region             = var.region
-      purpose                   = "REGIONAL_MANAGED_PROXY"
-      subnet_private_access     = "true"
-      subnet_flow_logs          = "true"
-      subnet_flow_logs_interval = "INTERVAL_10_MIN"
-      subnet_flow_logs_sampling = 0.7
-      subnet_flow_logs_metadata = "INCLUDE_ALL_METADATA"
+      subnet_name   = "proxy-only-subnet"
+      subnet_ip     = "10.129.0.0/23"
+      subnet_region = var.region
+      purpose       = "REGIONAL_MANAGED_PROXY"
+      role          = "ACTIVE"
     }
   ]
 
@@ -151,8 +147,13 @@ module "vpc" {
       source_service_accounts = null
       target_tags             = ["vpc-connector"]
       target_service_accounts = null
-      allow                   = []
-      deny                    = []
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = [667]
+        }
+      ]
+      deny = []
       log_config = {
         metadata = "EXCLUDE_ALL_METADATA"
       }
