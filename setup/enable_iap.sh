@@ -121,5 +121,5 @@ enable_iap adp-ui
 kubectl patch backendconfig adp-backend-config --type=merge '{"spec": {"iap": {"enabled": true}}}'
 kubectl patch backendconfig iap-backend-config --type=merge '{"spec": {"iap": {"enabled": true}}}'
 
-#TODO Add User Group to IAP for real life scenario
+#TODO Add User Group to IAP for real life scenario using external Google Group
 

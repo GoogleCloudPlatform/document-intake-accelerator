@@ -100,17 +100,20 @@ When the **default GKE Control Plane CIDR Range (172.16.0.0/28) overlaps** with 
 
 
 ### Configure DNS `A` record for your domain with IP address reserved above
+For this step you will need a registered Cloud Domain. 
+You could register a domain via [cloud shell](https://console.cloud.google.com/net-services/domains/registrations/create?cloudshell=true).
+
+- From [Cloud DNS](https://console.cloud.google.com/net-services/dns/zones) after registering Cloud Domain:
+- Create a DNS record set of type A and point to the reserved external IP:
+  - On the Zone details page, click on zone name (will be created by the previous step, after registering Cloud Domain).
+  - Add record set.
+  - Select A from the Resource Record Type menu.
+- For IPv4 Address, enter the external IP address that have been reserved.
 
 You can use gcloud command to get information about reserved address.
 ```shell
 gcloud compute addresses describe cda-ip --global
 ```
-
-- From Cloud DNS, click on CREATE ZONE.
-- Create a DNS record set of type A and point to the reserved external IP:
-  - On the Zone details page, click Add record set.
-  - Select A from the Resource Record Type menu.
-- For IPv4 Address, enter the external IP address that have been reserved.
 
 Once configured, verify that your domain name resolves to the reserved IP address.
 
@@ -135,10 +138,11 @@ export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors> #
 
 ## Installation
 ### Terraform 
-Run init step (will prepare for terraform execution and do terraform apply with auto-approve):
+Run init step to provision required resources in GCP (will run terraform apply with auto-approve):
 ```shell
 ./init.sh
 ```
+This command will take ~15 minutes to complete.
 
 > If Cloud shell times out during the operation, a workaround is to use `nohup` command to make sure a command does not exit when Cloud Shell times out.
 >
@@ -163,9 +167,10 @@ sed 's|PROJECT_ID|'"$PROJECT_ID"'|g; s|API_DOMAIN|'"$API_DOMAIN"'|g; ' microserv
 [//]: # (- Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.)
 - Go to Settings > Authorized domain, add the following to the Authorized domains:
   - Web App Domain (e.g. adp-dev.cloudpssolutions.com).
-- Go to Project Overview > Project settings, you will use this info in the next step.
-- In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. VSCode), and change the following values accordingly.
-  - REACT_APP_MESSAGING_SENDER_ID
+- Go to Project Overview > Project settings, copy  `Web API Key` you will use this info in the next step.
+- In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. `vi`), and change the following values accordingly.
+  - REACT_APP_FIREBASE_API_KEY=`Web API Key copied above`
+  - REACT_APP_BASE_URL=`https://you-domain.com`
   - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
     - You can find this ID in the Project settings > Cloud Messaging
 
@@ -181,6 +186,7 @@ sudo ./install_kustomize 4.5.7 /usr/local/bin
 kustomize version
 ```
 
+To build/depliy microservices (using skaffold+kustomize). This command will take ~10 minutes to complete. 
 ```shell
 ./deploy.sh
 ```

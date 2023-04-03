@@ -7,12 +7,12 @@ timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
 echo "$timestamp - Running $filename ... " | tee "$LOG"
 
 source "${DIR}"/SET
-gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
 
 if [[ -z "${API_DOMAIN}" ]]; then
-  echo API_DOMAIN env variable is not set. Using External Ingress IP address... | tee -a "$LOG"
-  export API_DOMAIN=$(kubectl describe ingress default-ingress | grep Address | awk '{print $2}')
-  echo API_DOMAIN="$API_DOMAIN"| tee -a "$LOG"
+  echo API_DOMAIN env variable is not set.  | tee -a "$LOG"
+  exit
+#  export API_DOMAIN=$(kubectl describe ingress default-ingress | grep Address | awk '{print $2}')
+#  echo API_DOMAIN="$API_DOMAIN"| tee -a "$LOG"
 fi
 
 if [[ -z "${PROJECT_ID}" ]]; then
@@ -20,6 +20,7 @@ if [[ -z "${PROJECT_ID}" ]]; then
   exit
 fi
 
+gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
 
 
 #Copy .env file to GCS for tracking changes

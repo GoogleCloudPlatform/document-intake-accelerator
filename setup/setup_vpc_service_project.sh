@@ -44,7 +44,6 @@ function set_subnet_policy(){
   ETAG=$(gcloud compute networks subnets get-iam-policy $SUBNET  --project $HOST_PROJECT_ID  --region $REGION --format="value(etag)")
   echo
   sed 's|SERVICE_PROJECT_NUM|'"$SERVICE_PROJECT_NUM"'|g; s|ETAG|'"$ETAG"'|g; ' setup/subnet-policy.yaml > setup/"${SUBNET}"-policy.yaml
-  sed 's|PROJECT_ID|'"$PROJECT_ID"'|g; s|API_DOMAIN|'"$API_DOMAIN"'|g; ' microservices/adp_ui/.sample.env > microservices/adp_ui/.env
 
   cat setup/"${SUBNET}"-policy.yaml
   echo ""
