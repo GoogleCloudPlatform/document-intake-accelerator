@@ -48,6 +48,7 @@ locals {
     "serviceusage.googleapis.com",         # Service Usage
     "vpcaccess.googleapis.com",            # VPC Access Connector
     "dns.googleapis.com",                  # Cloud DNS
+    "iap.googleapis.com",                  # IAP
   ]
 
   services_docai = [

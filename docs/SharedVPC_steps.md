@@ -19,50 +19,6 @@ Refer to this [guide](https://cloud.google.com/kubernetes-engine/docs/how-to/clu
   bash -e setup/setup_vpc_service_project.sh
   ````
 
-- Get the IAM policy for the tier-1 subnet:
-  ```shell
-  gcloud compute networks subnets get-iam-policy tier-1 \
-     --project $HOST_PROJECT_ID \
-     --region us-central1
-  ```
-  The output contains an ETAG field. Make a note of the etag value.
-- Find out PROJECT_NUMBER of the Service Project:
-  ```shell
-  SERVICE_PROJECT_NUM=$(gcloud projects describe "$PROJECT_ID" --format='get(projectNumber)')
-  ```
-- Create a file named `tier-1-policy.yaml` that has the following content (Replace SERVICE_PROJECT_NUM below with the actual value and ETAG_STRING with ETAG tag):
-  ```shell
-  bindings:
-  - members:
-    - serviceAccount:SERVICE_PROJECT_NUM@cloudservices.gserviceaccount.com
-    - serviceAccount:service-SERVICE_PROJECT_NUM@container-engine-robot.iam.gserviceaccount.com
-    role: roles/compute.networkUser
-  etag: ETAG_STRING
-  ```
-  
-- Set the IAM policy for the tier-1 subnet:
-  ```shell
-  gcloud compute networks subnets set-iam-policy tier-1 \
-      tier-1-policy.yaml \
-      --project $HOST_PROJECT_ID \
-      --region us-central1
-  ```
-- Reserve External **Regional** Static IP in the Service Project VPC. Should be same region as the GKE cluster (us-central1)
-
-
-- Prepare `terraform/environments/dev/terraform.tfvars`
-  ```shell
-  cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
-  ```
-  - Uncomment and fill in parameters for host_project (HOST_PROJECT_ID) and cda_external_ip (With reserved External IP)
-
-- Follow the deployment instructions:
-  ```shell
-  export API_DOMAIN=mydomain.com
-  export DOCAI_PROJECT_ID=
-  ./init.sh
-  ...
-  ```
 
 ## Troubleshooting
 Failure while deploying Ingress: 
