@@ -123,8 +123,23 @@ resource "google_cloud_run_service" "cloudrun-service" {
   name     = "${var.name}-cloudrun"
   location = var.region
 
+  metadata {
+    annotations = {
+      # internal traffic only
+      "run.googleapis.com/ingress" = "internal"
+    }
+  }
+
   template {
     metadata {
+      annotations = {
+        # Limit scale up to prevent any cost blow outs!
+        "autoscaling.knative.dev/maxScale" = "5"
+        # Use the VPC Connector
+        "run.googleapis.com/vpc-access-connector" = var.vpc_connector_name
+        # all egress from the service should go through the VPC Connector
+        "run.googleapis.com/vpc-access-egress" = "all-traffic"
+      }
       labels = {
         goog-packaged-solution = "prior-authorization"
       }
@@ -155,5 +170,21 @@ resource "google_cloud_run_service" "cloudrun-service" {
   traffic {
     percent         = 100
     latest_revision = true
+  }
+    lifecycle {
+    ignore_changes = [
+      # Some common annotations which we don't care about.
+      template[0].metadata[0].annotations["client.knative.dev/user-image"],
+      template[0].metadata[0].annotations["run.googleapis.com/client-name"],
+      template[0].metadata[0].annotations["run.googleapis.com/client-version"],
+      metadata[0].annotations["run.googleapis.com/operation-id"],
+
+      # These are only changed when "run.googleapis.com/launch-stage" is "BETA".
+      # It's non-trivial to make ignore_changes dependent on input variables so
+      # we always ignore these annotations even if, strictly speaking, we only
+      # need to do so is var.enable_beta_launch_stage is true.
+      metadata[0].annotations["serving.knative.dev/creator"],
+      metadata[0].annotations["serving.knative.dev/lastModifier"],
+    ]
   }
 }

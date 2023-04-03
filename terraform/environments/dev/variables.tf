@@ -77,10 +77,11 @@ variable "cluster_name" {
 variable "network_config" {
   description = "Shared VPC network configurations to use. If null networks will be created in projects with preconfigured values."
   type = object({
-    host_project = string
-    network      = string
-    subnet       = string
-    region       = string
+    host_project      = string
+    network           = string
+    subnet            = string
+    serverless_subnet = string
+    region            = string
     gke_secondary_ranges = object({
       pods     = string
       services = string
@@ -93,6 +94,11 @@ variable "cda_external_ip" {
   type        = string
   description = "External Reserved IP address for the UI"
   default     = null
+}
+
+variable "internal_ip_name" {
+  type    = string
+  default = "cda-internal-ip"
 }
 
 variable "network" {
@@ -128,6 +134,15 @@ variable "subnetwork" {
   default = "cde-subnetwork-01"
 }
 
+variable "serverless_subnet" {
+  type    = string
+  default = "cda-subnet"
+}
+
+variable "vpc_connector_name" {
+  type    = string
+  default = "cda-vpc-serverless"
+}
 
 #adding new variables for the updated scripts
 
@@ -179,4 +194,10 @@ variable "master_ipv4_cidr_block" {
   type        = string
   description = "The IP range in CIDR notation to use for the hosted master network"
   default     = "172.16.0.0/28"
+}
+
+variable "cda_external_ui" {
+  type        = bool
+  description = "Expose UI to public internet"
+  default     = false
 }

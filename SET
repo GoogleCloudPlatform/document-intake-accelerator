@@ -19,6 +19,12 @@ export CONFIG_BUCKET=${TF_VAR_config_bucket}
 
 export DEBUG=True
 
+#Shared VPC Config
+export NETWORK=cda-vpc
+export SUBNET1=tier-1
+export SUBNET2=tier-2
+export SUBNET3=serverless-subnet
+
 echo "Using PROJECT_ID=$TF_VAR_project_id  HOST_PROJECT_ID=$HOST_PROJECT_ID TF_VAR_api_domain=$TF_VAR_api_domain DOCAI_PROJECT_ID=$TF_VAR_docai_project_id"
 # Fix Workload Identity Name
 # kubectl get serviceaccount ksa -o json | jq '.metadata.name = "gke-sa"' | kubectl apply -f -

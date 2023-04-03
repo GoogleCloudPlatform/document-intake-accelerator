@@ -34,3 +34,8 @@ variable "api_domain" {
   type        = string
   description = "API domain"
 }
+
+variable "vpc_connector_name" {
+  type        = string
+  description = "VPC connector name"
+}
