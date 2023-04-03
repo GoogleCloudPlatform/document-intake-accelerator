@@ -51,6 +51,8 @@ From the GCP Console:
 From the Cloud Shell:
 ```shell
 export PROJECT_ID=
+``` 
+```shell
 gcloud config set project $PROJECT_ID
 gcloud services enable compute.googleapis.com
 gcloud compute addresses create cda-ip  --global
@@ -64,6 +66,7 @@ gcloud compute addresses describe cda-ip --global
 Copy terraform sample variable file:
  ```shell
 cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
+vi terraform/environments/dev/terraform.tfvars
 ```
 
 Verify `cda_external_ip` points to the reserved External IP name inside `terraform/environments/dev/terraform.tfvars`:
