@@ -93,7 +93,7 @@ def batch_process_document(
   # This must end with a trailing forward slash `/`
   destination_uri = f"gs://{gcs_output_bucket}/"
   if gcs_output_uri_prefix != "":
-    destination_uri = f"{destination_uri}/{gcs_output_uri_prefix}/"
+    destination_uri = f"{destination_uri}{gcs_output_uri_prefix}/"
 
   # print(f"batch_process_documents with processor_name={processor_name} gcs_input_uri={gcs_input_uri} destination_uri={destination_uri}")
   gcs_output_config = documentai.DocumentOutputConfig.GcsOutputConfig(
@@ -153,9 +153,10 @@ def batch_process_document(
       continue
 
     output_bucket, output_prefix = matches.groups()
+    output_gcs_destination = process.output_gcs_destination
     input_gcs_source = process.input_gcs_source
     print(
-      f"input_gcs_source = {input_gcs_source}, output_gcs_destination = {process.output_gcs_destination}")
+      f"output_bucket = {output_bucket}, output_prefix={output_prefix}, input_gcs_source = {input_gcs_source}, output_gcs_destination = {output_gcs_destination}")
     # Get List of Document Objects from the Output Bucket
     output_blobs = storage_client.list_blobs(output_bucket,
                                              prefix=output_prefix)
@@ -170,7 +171,7 @@ def batch_process_document(
         continue
 
       # Download JSON File as bytes object and convert to Document Object
-      print(f"Fetching gs://{blob.name}")
+      print(f"Fetching gs://{output_bucket}/{blob.name}")
       document = documentai.Document.from_json(
           blob.download_as_bytes(), ignore_unknown_fields=True
       )
@@ -261,7 +262,7 @@ def process_file_batch(client, project_id, multi_region_location, dir_path,
   out_bucket_name, out_prefix = helper.split_uri_2_bucket_prefix(output_dir)
   blob_uris = []
 
-  # TODO send 5 requests a time
+  # TODO send 5 requests a time in parallel
   for blob in blobs:
       uri = f"gs://{dir_path}/{blob.name}"
       print(f"Processing {uri} {blob.content_type}")
@@ -341,36 +342,6 @@ def main(args: argparse.Namespace) -> int:
 
   elapsed = "{:.0f}".format(time.time() - start)
   print(f"Elapsed time for operation {elapsed} seconds")
-
-
-def get_or_create_processor(
-    client: DocumentProcessorServiceClient,
-    project_id: str,
-    location: str,
-    processor_type: str,
-) -> str:
-  """
-    Searches for a processor name for a given processor type.
-    Creates processor if one doesn't exist
-    """
-  parent = client.common_location_path(project_id, location)
-
-  for processor in client.list_processors(parent=parent):
-    if processor.type_ == processor_type:
-      # Processor names have the form:
-      # `projects/{project}/locations/{location}/processors/{processor_id}`
-      # See https://cloud.google.com/document-ai/docs/create-processor for more information.
-      return processor.name
-
-  print(
-      f"No split processor found. "
-      f'creating new processor of type "{processor_type}"',
-  )
-  processor = client.create_processor(
-      parent=parent,
-      processor=Processor(display_name=processor_type, type_=processor_type),
-  )
-  return processor.name
 
 
 def online_process(

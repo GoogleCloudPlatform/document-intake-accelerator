@@ -40,6 +40,7 @@ provider "google" {
 
 data "google_client_config" "default" {}
 
+
 # Used by module.gke.
 provider "kubernetes" {
   host                   = "https://${module.gke.endpoint}"
@@ -52,7 +53,7 @@ provider "kubectl" {
   host                   = "https://${module.gke.endpoint}"
   token                  = data.google_client_config.default.access_token
   cluster_ca_certificate = base64decode(module.gke.ca_certificate)
-  load_config_file       = false
+//  load_config_file       = false  # Uncomment this line if you do not have .kube/config file
 }
 
 provider "helm" {
