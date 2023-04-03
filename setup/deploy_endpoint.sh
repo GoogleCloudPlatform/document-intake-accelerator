@@ -4,10 +4,11 @@ K8S_NAME=cda-service
 K8S_INGRESS_IP=$1
 
 if [ -z "$K8S_INGRESS_IP" ]; then
-  echo "must provide Reserved IP address as a parameter"
+  echo "Must provide Reserved IP address as a parameter"
+  exit
 fi
 
-echo "Deploying end point ${FQDN} with reserved IP $K8S_INGRESS_IP"
+echo "Deploying end point [${FQDN}] with reserved IP [$K8S_INGRESS_IP]"
 cat <<EOF > ${K8S_NAME}-openapi.yaml
 swagger: "2.0"
 info:
