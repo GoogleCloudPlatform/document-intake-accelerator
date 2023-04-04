@@ -35,9 +35,9 @@ terraform {
 
 locals {
   external_ip_name = (
-    var.external_ip_name == null && var.cda_external_ui == true
-    ? google_compute_global_address.ingress_ip_address[0].name
-    : var.external_ip_name
+  var.external_ip_name == null && var.cda_external_ui == true
+  ? google_compute_global_address.ingress_ip_address[0].name
+  : var.external_ip_name
   )
 }
 
@@ -85,6 +85,123 @@ resource "kubernetes_ingress_v1" "external_ingress" {
         }
       }
     }
+
+    rule {
+      host = var.domain
+      http {
+        # Upload Service
+        path {
+          backend {
+            service {
+              name = "upload-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/upload_service"
+        }
+
+        # classification Service
+        path {
+          backend {
+            service {
+              name = "classification-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/classification_service"
+        }
+
+        # validation Service
+        path {
+          backend {
+            service {
+              name = "validation-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/validation_service"
+        }
+
+        # extraction Service
+        path {
+          backend {
+            service {
+              name = "extraction-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/extraction_service"
+        }
+
+        # hitl Service
+        path {
+          backend {
+            service {
+              name = "hitl-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/hitl_service"
+        }
+
+        # document-status Service
+        path {
+          backend {
+            service {
+              name = "document-status-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/document_status_service"
+        }
+
+        # matching Service
+        path {
+          backend {
+            service {
+              name = "matching-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path = "/matching_service"
+        }
+
+        # Config Service
+        path {
+          backend {
+            service {
+              name = "config-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/config_service"
+        }
+      }
+    }
+
   }
 }
 
