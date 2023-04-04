@@ -120,8 +120,22 @@ enable_iap config-service
 enable_iap classification-service
 enable_iap adp-ui
 
-kubectl patch backendconfig adp-backend-config --type=merge '{"spec": {"iap": {"enabled": true}}}'
-kubectl patch backendconfig iap-backend-config --type=merge '{"spec": {"iap": {"enabled": true}}}'
+kubectl apply -f "$DIR"/k8s/backend-config.yaml
 
-#TODO Add User Group to IAP for real life scenario using external Google Group
+function annotate(){
+  SERVICE=$1
+  kubectl annotate svc "$SERVICE" cloud.google.com/backend-config="{\"default\": $BE_CONFIG}"
+}
+BE_CONFIG="adp-backend-config"
+annotate adp-ui
+
+BE_CONFIG="iap-backend-config"
+annotate validation-service
+annotate upload-service
+annotate matching-service
+annotate hitl-service
+annotate extraction-service
+annotate document-status-service
+annotate config-service
+annotate classification-service
 

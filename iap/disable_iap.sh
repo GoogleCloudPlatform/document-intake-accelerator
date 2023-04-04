@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,20 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    cloud.google.com/neg: '{"ingress": true}'
-  name: upload-service
-  labels:
-    app: upload-service
-spec:
-  type: NodePort
-  ports:
-  - port: 80
-    protocol: TCP
-    targetPort: 80
-  selector:
-    app: upload-service
+kubectl patch backendconfig adp-backend-config --type=merge '{"spec": {"iap": {"enabled": false}}}'
+kubectl patch backendconfig iap-backend-config --type=merge '{"spec": {"iap": {"enabled": false}}}'

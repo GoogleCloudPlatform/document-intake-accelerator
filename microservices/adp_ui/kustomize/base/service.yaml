@@ -12,30 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: cloud.google.com/v1
-kind: BackendConfig
-metadata:
-  name: adp-backend-config
-spec:
-  healthCheck:
-    type: HTTP
-    requestPath: /index
-    port: 80
-  iap:
-    enabled: false
-    oauthclientCredentials:
-      secretName: cda-iap
-  customRequestHeaders:
-    headers:
-    - "Access-Control-Allow-Origin:*"
-    - "Access-Control-Allow-Methods: PUT,GET,POST,DELETE,OPTIONS"
-    - "Access-Control-Allow-Headers: Content-Type"
----
 kind: Service
 apiVersion: v1
 metadata:
   annotations:
-    cloud.google.com/backend-config: '{"default": "adp-backend-config"}'
+#    cloud.google.com/backend-config: '{"default": "adp-backend-config"}'
     cloud.google.com/neg: '{"ingress": true}'
   name: adp-ui
 spec:
