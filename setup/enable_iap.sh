@@ -73,12 +73,14 @@ fi
 function add_user(){
   USER=$1
   BACKEND=$2
+  ROLE='roles/iap.httpsResourceAccessor'
+  echo "Adding $USER to $BACKEND as $ROLE"
   if  [ -n "${USER}" ]; then
     gcloud iap web add-iam-policy-binding \
       --resource-type=backend-services \
       --service="$BACKEND" \
-      --member=$USER \
-      --role='roles/iap.httpsResourceAccessor'
+      --member="$USER" \
+      --role=$ROLE
   fi
 }
 
