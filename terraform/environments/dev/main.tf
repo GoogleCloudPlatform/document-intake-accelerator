@@ -86,6 +86,15 @@ locals {
     : "${local.addresses},http://${var.cda_external_ip},https://${var.cda_external_ip}"
   )
 
+  //  INTERNAL
+  //  adp_ui/.env must be HTTP
+  //  cloudrun must be HTTP
+  //
+  //  EXTERNAL
+  //  adp_ui/.env must be HTTPS
+  //  cloudrun must be HTTPS
+  cloud_run_protocol = (var.cda_external_ui == true ? "https" : "http")
+
 }
 
 data "google_project" "project" {}
@@ -219,6 +228,7 @@ module "cloudrun-queue" {
   region             = local.region
   api_domain         = var.api_domain
   vpc_connector_name = var.vpc_connector_name
+  protocol           = local.cloud_run_protocol
 }
 
 module "cloudrun-start-pipeline" {
@@ -233,6 +243,7 @@ module "cloudrun-start-pipeline" {
   region             = local.region
   api_domain         = var.api_domain
   vpc_connector_name = var.vpc_connector_name
+  protocol           = local.cloud_run_protocol
 }
 
 

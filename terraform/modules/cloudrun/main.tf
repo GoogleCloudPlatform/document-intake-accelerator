@@ -163,6 +163,11 @@ resource "google_cloud_run_service" "cloudrun-service" {
           name  = "API_DOMAIN"
           value = var.api_domain
         }
+        env {
+          # PROTOCOL
+          name  = "PROTOCOL"
+          value = var.protocol
+        }
       }
       service_account_name = module.cloud-run-service-account.email
     }

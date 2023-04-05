@@ -35,6 +35,11 @@ variable "api_domain" {
   description = "API domain"
 }
 
+variable "protocol" {
+  type        = string
+  description = "Protocol to be used for Cloud Run outbound requests"
+}
+
 variable "vpc_connector_name" {
   type        = string
   description = "VPC connector name"
