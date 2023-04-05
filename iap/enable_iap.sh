@@ -20,15 +20,18 @@ export IAP_SECRET_NAME=cda-iap
 export SA_START_PIPELINE="serviceAccount:cloudrun-startpipeline-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 export SA_QUEUE="serviceAccount:cloudrun-queue-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 export APPLICATION_NAME="CDA Application"
-PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='get(projectNumber)')
+export PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='get(projectNumber)')
 
 # Configuring the OAuth consent screen
-if gcloud alpha iap oauth-brands  list  --format="value(applicationTitle)" | grep "$APPLICATION_NAME"; then
-  echo "Already exists OAuth consent screen for $APPLICATION_NAME"
+echo "Configuring the OAuth consent screen..."
+BRAND=$(gcloud alpha iap oauth-brands  list  --format="value(applicationTitle)")
+if [ -n "$BRAND" ]; then
+  echo "Already exists OAuth consent screen for brand $BRAND"
 else
   gcloud alpha iap oauth-brands create \
       --application_title="$APPLICATION_NAME" \
-      --support_email="$USER_EMAIL"
+      --support_email="$USER_EMAIL" --project=$PROJECT_ID
+
 fi
 
 
@@ -52,7 +55,7 @@ echo CLIENT_ID=$CLIENT_ID
 echo "gcloud alpha iap oauth-clients describe $CLIENT_NAME"
 
 export CLIENT_SECRET=$(gcloud alpha iap oauth-clients describe $CLIENT_NAME --format='value(secret)')
-exit
+
 echo "Generated CLIENT_ID=$CLIENT_ID CLIENT_SECRET=$CLIENT_SECRET"
 
 if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
@@ -63,11 +66,12 @@ fi
 echo "Creating GKE Secret"
 if kubectl get secret $IAP_SECRET_NAME 2>/dev/null ; then
   echo "Secret already exists $IAP_SECRET_NAME"
-else
-  kubectl create secret generic $IAP_SECRET_NAME \
-     --from-literal=client_id=$CLIENT_ID \
-     --from-literal=client_secret=$CLIENT_SECRET
+  kubectl delete secret $IAP_SECRET_NAME
 fi
+
+kubectl create secret generic $IAP_SECRET_NAME \
+   --from-literal=client_id=$CLIENT_ID \
+   --from-literal=client_secret=$CLIENT_SECRET
 
 
 function add_user(){
@@ -84,12 +88,11 @@ function add_user(){
   fi
 }
 
-
 function enable_iap(){
   service_name=$1
-  validation_be=$(gcloud compute backend-services list --format='get(NAME)' | grep $service_name)
-  echo "service=$service_name backend=$validation_be"
-  if [ -n "$validation_be" ]; then
+  back_ends=$(gcloud compute backend-services list --format='get(NAME)' | grep $service_name)
+  for validation_be in $back_ends; do
+    echo "service=$service_name backend=$validation_be"
       gcloud iap web enable --resource-type=backend-services \
           --oauth2-client-id=$CLIENT_ID \
           --oauth2-client-secret=$CLIENT_SECRET \
@@ -100,14 +103,10 @@ function enable_iap(){
             --resource-type=compute \
             --service="$validation_be"
 
-      #origin_request_header 'Access-Control-Allow-Origin'
-
       add_user "user:${USER_EMAIL}" "${validation_be}"
       add_user "${SA_START_PIPELINE}" "${validation_be}"
       add_user "${SA_QUEUE}" "${validation_be}"
-
-  fi
-
+  done
 }
 
 enable_iap validation-service
@@ -124,7 +123,8 @@ kubectl apply -f "$DIR"/k8s/backend-config.yaml
 
 function annotate(){
   SERVICE=$1
-  kubectl annotate svc "$SERVICE" cloud.google.com/backend-config="{\"default\": $BE_CONFIG}"
+  kubectl annotate svc "$SERVICE" cloud.google.com/backend-config-
+  kubectl annotate svc "$SERVICE" cloud.google.com/backend-config="{\"default\": \"$BE_CONFIG\"}"
 }
 BE_CONFIG="adp-backend-config"
 annotate adp-ui

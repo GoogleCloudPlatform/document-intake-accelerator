@@ -13,5 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-kubectl patch backendconfig adp-backend-config --type=merge '{"spec": {"iap": {"enabled": false}}}'
-kubectl patch backendconfig iap-backend-config --type=merge '{"spec": {"iap": {"enabled": false}}}'
+kubectl patch backendconfig adp-backend-config --type=merge -p '{"spec": {"iap": {"enabled": false}}}'
+kubectl patch backendconfig iap-backend-config --type=merge -p '{"spec": {"iap": {"enabled": false}}}'
