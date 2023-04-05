@@ -119,9 +119,7 @@ enable_iap config-service
 enable_iap classification-service
 enable_iap adp-ui
 
-kubectl apply -f "$DIR"/k8s/backend-config.yaml
-kubectl patch backendconfig adp-backend-config --type=merge -p '{"spec": {"iap": {"enabled": true}}}'
-kubectl patch backendconfig iap-backend-config --type=merge -p '{"spec": {"iap": {"enabled": true}}}'
+kubectl apply -f "$DIR"/k8s/backend_config_iap_enabled.yaml
 
 #function annotate(){
 #  SERVICE=$1
