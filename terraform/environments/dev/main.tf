@@ -161,8 +161,8 @@ module "vpc_serverless_connector" {
 }
 
 module "clouddns" {
-  depends_on = [module.project_services, module.vpc_network]
-
+  depends_on         = [module.project_services, module.vpc_network]
+  count              = var.cda_external_ui == false ? 1 : 0
   source             = "../../modules/clouddns"
   project_id         = var.project_id
   region             = var.region
