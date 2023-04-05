@@ -24,13 +24,13 @@ PORT = os.environ.get("PORT") or 80
 
 # URL of Process Task API
 API_DOMAIN = os.getenv("API_DOMAIN")
+PROTOCOL = os.getenv("PROTOCOL", "https")
 
-# FIXME: Use HTTPS instead of HTTP
 URL = f"{API_DOMAIN}/{DOCUMENT_STATUS_API_PATH}".replace("//", "/")
-DOCUMENT_STATUS_URL = f"http://{URL}"
+DOCUMENT_STATUS_URL = f"{PROTOCOL}://{URL}"
 
-# FIXME: Use HTTPS instead of HTTP
+
 URL = f"{API_DOMAIN}/{UPLOAD_API_PATH}".replace("//", "/")
-UPLOAD_URL = f"http://{URL}"
+UPLOAD_URL = f"{PROTOCOL}://{URL}"
 
 
