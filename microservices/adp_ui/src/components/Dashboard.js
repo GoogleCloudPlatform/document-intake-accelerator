@@ -590,104 +590,104 @@ function Dashboard() {
 
       <br />
 
-      <Container className="overviewTrendsContainer">
-        <Accordion defaultActiveKey="0">
-          <Accordion.Item eventKey="0">
-            <Accordion.Header><label className="overviewTrends">Overview Trends</label></Accordion.Header>
-            <Accordion.Body>
+      {/*<Container className="overviewTrendsContainer">*/}
+      {/*  <Accordion defaultActiveKey="0">*/}
+      {/*    <Accordion.Item eventKey="0">*/}
+      {/*      <Accordion.Header><label className="overviewTrends">Overview Trends</label></Accordion.Header>*/}
+      {/*      <Accordion.Body>*/}
 
-              <Row className="chart1">
-                <Col className='col-6'>
-                  {isChartLoading ? <Spinner animation="border" variant="primary" /> :
-                    <div>
-                      <Card className="docTrends">
-                        <Card.Body>
-                          <Card.Title>Document Trends (Weekly Trends)</Card.Title>
-                          <br />
-                          <Card.Text as='div'>
-                            <Line data={documentDataTrends}
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                  legend: { display: true, position: "left", align: "start", maxWidth: 200, labels: { font: { weight: 'bold' }, color: 'black' } },
-                                  tooltip: {
-                                    callbacks: {
-                                      label: function (context) {
-                                        let label = (context.dataset.label).split(" ")[0] || '';
+      {/*        <Row className="chart1">*/}
+      {/*          <Col className='col-6'>*/}
+      {/*            {isChartLoading ? <Spinner animation="border" variant="primary" /> :*/}
+      {/*              <div>*/}
+      {/*                <Card className="docTrends">*/}
+      {/*                  <Card.Body>*/}
+      {/*                    <Card.Title>Document Trends (Weekly Trends)</Card.Title>*/}
+      {/*                    <br />*/}
+      {/*                    <Card.Text as='div'>*/}
+      {/*                      <Line data={documentDataTrends}*/}
+      {/*                        options={{*/}
+      {/*                          responsive: true,*/}
+      {/*                          maintainAspectRatio: false,*/}
+      {/*                          plugins: {*/}
+      {/*                            legend: { display: true, position: "left", align: "start", maxWidth: 200, labels: { font: { weight: 'bold' }, color: 'black' } },*/}
+      {/*                            tooltip: {*/}
+      {/*                              callbacks: {*/}
+      {/*                                label: function (context) {*/}
+      {/*                                  let label = (context.dataset.label).split(" ")[0] || '';*/}
 
-                                        if (label) {
-                                          label += ': ';
-                                        }
-                                        if (context.parsed.y !== null) {
-                                          label += context.formattedValue;
-                                        }
-                                        return label;
-                                      }
-                                    }
-                                  }
-                                }
-                              }} />
-                          </Card.Text>
-                        </Card.Body>
-                      </Card>
-                    </div>
-                  }
-                </Col>
-                <Col className='col-6'>
-                  {isChartLoading ? <Spinner animation="border" variant="primary" /> :
-                    <div>
-                      <Card className="dailyDoc">
-                        <Card.Body>
-                          <Card.Title>Daily Document (Previous Day)</Card.Title>
-                          <Card.Text as='div'>
-                            <Doughnut
-                              data={dailyDocumentData}
+      {/*                                  if (label) {*/}
+      {/*                                    label += ': ';*/}
+      {/*                                  }*/}
+      {/*                                  if (context.parsed.y !== null) {*/}
+      {/*                                    label += context.formattedValue;*/}
+      {/*                                  }*/}
+      {/*                                  return label;*/}
+      {/*                                }*/}
+      {/*                              }*/}
+      {/*                            }*/}
+      {/*                          }*/}
+      {/*                        }} />*/}
+      {/*                    </Card.Text>*/}
+      {/*                  </Card.Body>*/}
+      {/*                </Card>*/}
+      {/*              </div>*/}
+      {/*            }*/}
+      {/*          </Col>*/}
+      {/*          <Col className='col-6'>*/}
+      {/*            {isChartLoading ? <Spinner animation="border" variant="primary" /> :*/}
+      {/*              <div>*/}
+      {/*                <Card className="dailyDoc">*/}
+      {/*                  <Card.Body>*/}
+      {/*                    <Card.Title>Daily Document (Previous Day)</Card.Title>*/}
+      {/*                    <Card.Text as='div'>*/}
+      {/*                      <Doughnut*/}
+      {/*                        data={dailyDocumentData}*/}
 
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                  legend: { display: true, position: "left", align: "start", labels: { font: { weight: 'bold' }, color: 'black' } },
+      {/*                        options={{*/}
+      {/*                          responsive: true,*/}
+      {/*                          maintainAspectRatio: false,*/}
+      {/*                          plugins: {*/}
+      {/*                            legend: { display: true, position: "left", align: "start", labels: { font: { weight: 'bold' }, color: 'black' } },*/}
 
-                                  datalabels: {
-                                    display: true,
-                                    color: "black",
-                                  },
+      {/*                            datalabels: {*/}
+      {/*                              display: true,*/}
+      {/*                              color: "black",*/}
+      {/*                            },*/}
 
-                                  tooltip: {
-                                    callbacks: {
-                                      label: function (context) {
-                                        console.log("CONTEXTT", context)
-                                        let label = (context.label).split(" ")[0] || '';
+      {/*                            tooltip: {*/}
+      {/*                              callbacks: {*/}
+      {/*                                label: function (context) {*/}
+      {/*                                  console.log("CONTEXTT", context)*/}
+      {/*                                  let label = (context.label).split(" ")[0] || '';*/}
 
-                                        if (label) {
-                                          label += ': ';
-                                        }
-                                        if (context.parsed.y !== null) {
-                                          label += context.formattedValue;
-                                        }
-                                        return label;
-                                      }
-                                    }
-                                  }
-                                }
-                              }}
-                            />
-                          </Card.Text>
-                        </Card.Body>
-                      </Card>
+      {/*                                  if (label) {*/}
+      {/*                                    label += ': ';*/}
+      {/*                                  }*/}
+      {/*                                  if (context.parsed.y !== null) {*/}
+      {/*                                    label += context.formattedValue;*/}
+      {/*                                  }*/}
+      {/*                                  return label;*/}
+      {/*                                }*/}
+      {/*                              }*/}
+      {/*                            }*/}
+      {/*                          }*/}
+      {/*                        }}*/}
+      {/*                      />*/}
+      {/*                    </Card.Text>*/}
+      {/*                  </Card.Body>*/}
+      {/*                </Card>*/}
 
-                    </div>
+      {/*              </div>*/}
 
 
-                  }
-                </Col>
-              </Row>
-            </Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
-      </Container>
+      {/*            }*/}
+      {/*          </Col>*/}
+      {/*        </Row>*/}
+      {/*      </Accordion.Body>*/}
+      {/*    </Accordion.Item>*/}
+      {/*  </Accordion>*/}
+      {/*</Container>*/}
       {' '}
       {/* Table data render on the UI */}
 
