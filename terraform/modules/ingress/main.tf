@@ -41,6 +41,8 @@ locals {
   )
 }
 
+# External Ingress
+
 # TODO: switch to hashicorp k8s provider, use side by side
 # k2tf
 resource "kubectl_manifest" "managed_certificate" {
@@ -61,6 +63,27 @@ resource "google_compute_global_address" "ingress_ip_address" {
   project      = var.project_id # Service Project ID
   name         = "ingress-ip"
   address_type = "EXTERNAL"
+}
+
+resource "kubectl_manifest" "frontend_config" {
+  count     = var.cda_external_ui == true ? 1 : 0
+  yaml_body = <<YAML
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: ingress-security-config
+spec:
+  sslPolicy: ${google_compute_ssl_policy.gke-ingress-ssl-policy[0].name}
+  redirectToHttps:
+    enabled: true
+YAML
+}
+
+resource "google_compute_ssl_policy" "gke-ingress-ssl-policy" {
+  count           = var.cda_external_ui == true ? 1 : 0
+  name            = "gke-ingress-ssl-policy"
+  profile         = "MODERN"
+  min_tls_version = "TLS_1_2"
 }
 
 resource "kubernetes_ingress_v1" "external_ingress" {
@@ -205,7 +228,10 @@ resource "kubernetes_ingress_v1" "external_ingress" {
   }
 }
 
+# Internal Ingress
+
 resource "kubernetes_ingress_v1" "internal_ingress" {
+  count = var.cda_external_ui == false ? 1 : 0
   metadata {
     name = "internal-ingress"
     annotations = {
@@ -343,25 +369,3 @@ resource "kubernetes_ingress_v1" "internal_ingress" {
 
   }
 }
-
-resource "kubectl_manifest" "frontend_config" {
-  count     = var.cda_external_ui == true ? 1 : 0
-  yaml_body = <<YAML
-apiVersion: networking.gke.io/v1beta1
-kind: FrontendConfig
-metadata:
-  name: ingress-security-config
-spec:
-  sslPolicy: ${google_compute_ssl_policy.gke-ingress-ssl-policy[0].name}
-  redirectToHttps:
-    enabled: true
-YAML
-}
-
-resource "google_compute_ssl_policy" "gke-ingress-ssl-policy" {
-  count           = var.cda_external_ui == true ? 1 : 0
-  name            = "gke-ingress-ssl-policy"
-  profile         = "MODERN"
-  min_tls_version = "TLS_1_2"
-}
-
