@@ -700,8 +700,13 @@ def extraction_accuracy_calc(total_entities_list, flag=True):
                           total_entities_list if not each_entity.
                           get("manual_extraction")]
 
-  extraction_field_min_score = min(entity_accuracy_list)
-  extraction_accuracy = round(sum(entity_accuracy_list) /
-                              len(entity_accuracy_list), 3)
+  if len(entity_accuracy_list) == 0:
+    Logger.warning(f"No entity present with extraction_confidence field")
+    extraction_accuracy = 0
+    extraction_field_min_score = 0
+  else:
+    extraction_field_min_score = min(entity_accuracy_list, default=0)
+    extraction_accuracy = round(sum(entity_accuracy_list) /
+                                len(entity_accuracy_list), 3)
 
   return extraction_accuracy, extraction_status, extraction_field_min_score
