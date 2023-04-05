@@ -120,22 +120,24 @@ enable_iap classification-service
 enable_iap adp-ui
 
 kubectl apply -f "$DIR"/k8s/backend-config.yaml
+kubectl patch backendconfig adp-backend-config --type=merge -p '{"spec": {"iap": {"enabled": true}}}'
+kubectl patch backendconfig iap-backend-config --type=merge -p '{"spec": {"iap": {"enabled": true}}}'
 
-function annotate(){
-  SERVICE=$1
-  kubectl annotate svc "$SERVICE" cloud.google.com/backend-config-
-  kubectl annotate svc "$SERVICE" cloud.google.com/backend-config="{\"default\": \"$BE_CONFIG\"}"
-}
-BE_CONFIG="adp-backend-config"
-annotate adp-ui
-
-BE_CONFIG="iap-backend-config"
-annotate validation-service
-annotate upload-service
-annotate matching-service
-annotate hitl-service
-annotate extraction-service
-annotate document-status-service
-annotate config-service
-annotate classification-service
+#function annotate(){
+#  SERVICE=$1
+#  kubectl annotate svc "$SERVICE" cloud.google.com/backend-config-
+#  kubectl annotate svc "$SERVICE" cloud.google.com/backend-config="{\"default\": \"$BE_CONFIG\"}"
+#}
+#BE_CONFIG="adp-backend-config"
+#annotate adp-ui
+#
+#BE_CONFIG="iap-backend-config"
+#annotate validation-service
+#annotate upload-service
+#annotate matching-service
+#annotate hitl-service
+#annotate extraction-service
+#annotate document-status-service
+#annotate config-service
+#annotate classification-service
 

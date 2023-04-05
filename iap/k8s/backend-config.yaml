@@ -27,7 +27,7 @@ spec:
     requestPath: /ping
     port: 80
   iap:
-    enabled: true
+    enabled: false
     oauthclientCredentials:
       secretName: cda-iap
   customRequestHeaders:

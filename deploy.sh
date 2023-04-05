@@ -39,6 +39,7 @@ gsutil cp "${DIR}/microservices/adp_ui/.env" "gs://${TF_VAR_config_bucket}/.env"
 #  gsutil cp "$ENV_CONFIG" "${DIR}/microservices/adp_ui/.env" | tee -a "$LOG"
 #fi
 
+kubectl apply -f "$DIR"/iap/k8s/backend-config.yaml
 
 skaffold run -p prod --default-repo=gcr.io/${PROJECT_ID} | tee -a "$LOG"
 
