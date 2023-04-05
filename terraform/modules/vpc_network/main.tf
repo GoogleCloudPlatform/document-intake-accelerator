@@ -166,7 +166,7 @@ module "vpc" {
       ranges                  = ["10.129.0.0/23"]
       source_tags             = null
       source_service_accounts = null
-      target_tags             = ["vpc-connector"]
+      target_tags             = null
       target_service_accounts = null
       allow = [
         {
