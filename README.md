@@ -17,14 +17,16 @@ You will almost certainly need to modify elements to fit your organization's spe
 We strongly recommend you fork this repo, so you can have full control over your unique setup.
 While you will find end-to-end tools to help spin up a fully functional sandbox environment, most likely you will find yourself customizing solution further down the line.  
 
+
 ## Prerequisites
 
 ### Project(s) Creation
 It is recommended to deploy into two projects: one for the CDA Pipeline Engine (`PROJECT_ID`), and another for the Document AI processors (`DOCAI_PROJECT_ID`). Both projects need to belong to the same Org.
 When following this  practice, before deployment create two projects and note down.
 
-### Classifier Access
-Classifier is currently in Preview. Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform), so that Project is whitelisted.
+### Classifier/Splitter Access
+Custom Document Classifier and Custom Document Splitter are currently in Preview. 
+Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSc_6s8jsHLZWWE0aSX0bdmk24XDoPiE_oq5enDApLcp1VKJ-Q/viewform), so that Project is whitelisted.
 
 ### Domain Name Registration
 For this solution you need a valid domain name registered.
@@ -48,7 +50,7 @@ From the GCP Console:
 - Go to IP addresses and reserve External **global** Static IP address with a chosen ADDRESS_NAME (for example, `cda-ip`).
 - Note down the name given.
 
-From the Cloud Shell:
+From the Cloud Shell, reserve external global ip named `cda-ip`:
 ```shell
 export PROJECT_ID=
 ``` 
@@ -63,7 +65,7 @@ To see the reserved IP:
 gcloud compute addresses describe cda-ip --global
 ```
 
-Copy terraform sample variable file:
+Copy terraform sample variable file as `terraform.tfvars`:
  ```shell
 cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
 vi terraform/environments/dev/terraform.tfvars
@@ -73,6 +75,19 @@ Verify `cda_external_ip` points to the reserved External IP name inside `terrafo
  ```
  cda_external_ip = "cda-ip"   #IP-ADDRESS-NAME-HERE
  ```
+
+### Private vs Public End Point
+You have an option to expose UI externally in public internet, or make it fully internal within the internal network. 
+When exposed, the end point (via domain name) will be accessible via Internet and protected by Firebase Authentication and optionally IAP, enforced 
+on all the end points.
+When protected, you will need machine in the same internal network in order to access the UI (for testing, you could create Windows VM in the same network and access it via RDP using IAP tunnel).
+
+The preference can be set in `terraform/environments/dev/terraform.tfvars` file via `cda_external_ui` parameter:
+
+```shell
+cda_external_ui = true       # Expose UI to the Internet: true or false
+```
+
 
 ### When deploying using Shared VPC
 As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.tfvars).
@@ -98,6 +113,21 @@ When the **default GKE Control Plane CIDR Range (172.16.0.0/28) overlaps** with 
  master_ipv4_cidr_block = "MASTER.CIDR/28.HERE"
  ```
 
+For example, if you have already one CDA installation in your shared vpc and want a second installation, you should manually set master_ipv4_cidr_block to avoid conflicts:
+ ```shell
+master_ipv4_cidr_block =172.16.16.0/28
+ ```
+
+### Register Cloud Domain
+Enable Cloud Dns api and Cloud domain APIs:
+
+```shell
+gcloud services enable dns.googleapis.com
+gcloud services enable domains.googleapis.com
+```
+
+Via [Cloud Domain](https://pantheon.corp.google.com/marketplace/product/google/domains.googleapis.com?project=ek-cda-engine) Register Domain (pick desired name and fill in the forms).
+
 
 ### Configure DNS `A` record for your domain with IP address reserved above
 For this step you will need a registered Cloud Domain. 
@@ -108,7 +138,7 @@ You could register a domain via [cloud shell](https://console.cloud.google.com/n
   - On the Zone details page, click on zone name (will be created by the previous step, after registering Cloud Domain).
   - Add record set.
   - Select A from the Resource Record Type menu.
-- For IPv4 Address, enter the external IP address that have been reserved.
+- For IPv4 Address, enter the external IP address that has been reserved.
 
 You can use gcloud command to get information about reserved address.
 ```shell
@@ -124,13 +154,17 @@ Once configured, verify that your domain name resolves to the reserved IP addres
   ```
 
 
-#### Environment Variables
+### Environment Variables
 ```shell
 export API_DOMAIN=<YOUR_DOMAIN>
 export PROJECT_ID=<GCP Project ID to host CDA Pipeline Engine>
 ```
 
-Optionally, when deploying processors to different Project:
+Optionally, when deploying processors to a different Project, you can set `DOCAI_PROJECT_ID`.
+However, If you are deploying CDA engine and already have DOCAI project setup and 
+running as a result from the previous installation, DO NOT set `DOCAI_PROJECT_ID` variable and leave it blank.
+Otherwise, terraform will fail, since it will try to create resources, which already were provisioned (and are owned by a different terraform run).
+
 ```shell
 export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors> #
 ```
@@ -142,7 +176,7 @@ Run init step to provision required resources in GCP (will run terraform apply w
 ```shell
 ./init.sh
 ```
-This command will take ~15 minutes to complete.
+This command will take **~15 minutes** to complete.
 
 > If Cloud shell times out during the operation, a workaround is to use `nohup` command to make sure a command does not exit when Cloud Shell times out.
 >
@@ -158,6 +192,11 @@ Run following command to propagate front end with the Domain name and Project ID
 sed 's|PROJECT_ID|'"$PROJECT_ID"'|g; s|API_DOMAIN|'"$API_DOMAIN"'|g; ' microservices/adp_ui/.sample.env > microservices/adp_ui/.env
 ```
 
+Edit `microservices/adp_ui/.env` and chose between `http` and `https` protocol depending on internal vs external ui configuration you have selected above:
+**Important:** 
+* When not exposing UI externally (`cda_external_ui = false`), REACT_APP_BASE_URL needs to use `http://` Protocol (e.g. http://mydomain.com)
+* When exposing UI externally (`cda_external_ui = true`), REACT_APP_BASE_URL needs to use `https://` Protocol (e.g. https://mydomain.com)
+
 ### Enable Firebase Auth
 - Before enabling firebase, make sure [Firebase Management API](https://console.cloud.google.com/apis/api/firebase.googleapis.com/metrics) should be disabled in GCP API & Services.
 - Go to [Firebase Console UI](https://console.firebase.google.com/) to add your existing project. Select “Pay as you go” and Confirm plan.
@@ -170,7 +209,9 @@ sed 's|PROJECT_ID|'"$PROJECT_ID"'|g; s|API_DOMAIN|'"$API_DOMAIN"'|g; ' microserv
 - Go to Project Overview > Project settings, copy  `Web API Key` you will use this info in the next step.
 - In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. `vi`), and change the following values accordingly.
   - REACT_APP_FIREBASE_API_KEY=`Web API Key copied above`
-  - REACT_APP_BASE_URL=`https://you-domain.com`
+  - REACT_APP_BASE_URL:
+    - `http://you-domain.com` for Internal UI 
+    - `https://you-domain.com` for External UI
   - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
     - You can find this ID in the Project settings > Cloud Messaging
 
@@ -186,62 +227,76 @@ sudo ./install_kustomize 4.5.7 /usr/local/bin
 kustomize version
 ```
 
-To build/depliy microservices (using skaffold+kustomize). This command will take ~10 minutes to complete. 
+Build/deploy microservices (using skaffold + kustomize): 
 ```shell
 ./deploy.sh
 ```
-
-### (Optional) IAP setup
-
-IAP setup can be done from [Google Cloud Console](https://console.cloud.google.com/).
-
-1. Configure oAuth consent screen
-
-* Browse to [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)
-* Select desired usage type: *Internal* or *External* and click **Create** button
-* As a minimum, fill all required fields: **app name**, **user support email**,
-  **developer contact email**
-* Click **Save and Continue** button
-
-2. Configure oAuth credentials
-
-* Browse to [API & Services Credentials screen](https://console.cloud.google.com/apis/credentials/)
-* Click **Create Credentials** from bottom menu and select *OAuth Client ID* from drop-down list
-* Select *Web application* as application type
-* Fill name of your oAuth client
-* Click **Create** button
-* Once client is created, select it from the list to open details page
-* Notice **Client ID** and **Client Secret**  - you will use them in later configurations.
-  They can be also downloaded in JSON format.
-* Add **Authorized redirect URI** in a format `https://iap.googleapis.com/v1/oauth/clientIds/CLIENT_ID:handleRedirect`
-  *(replace CLIENT_ID with your valid one)*
+This command will take **~10 minutes** to complete, and it will take another **10-15 minutes** for ingress to get ready.  
+You could check status of ingress by either navigating using Cloud Shell to
+[GKE Ingress](https://console.cloud.google.com/kubernetes/ingress/us-central1/main-cluster/default/external-ingress/details) and waiting till it appears as green.
 
 
-3. In the backendConfig Set iap enable from `false` to `true`
+##(Optional) IAP setup
 
-### Configure GKE secret and enable IAP on backend service
+Optionally, it is possibly to enable [IAP](https://cloud.google.com/iap/docs/enabling-kubernetes-howto) to protect all the backend services. 
+Make sure that if you already have created [oAuth Consent screen](https://console.cloud.google.com/apis/credentials/consent), it is marked as Internal type. 
+
+Run following script to enable IAP:
 
 ```shell
-bash -e setup/enable_iap.sh
+bash -e iap/enable_iap.sh
 ```
 
+Run following command to disable IAP:
+```shell
+bash -e iap/disable_iap.sh
+```
 
-[//]: # (Once backend service is created, enable IAP protection on it and update IAM policies.)
+### IAP With External identity
+When not using GCP identity for IAP, following steps to be executed: 
 
-[//]: # (This can be done from [Google Cloud Console]&#40;https://console.cloud.google.com/&#41;.)
+1. Modify `Domain restricted sharing` [Org Policy](https://console.cloud.google.com/iam-admin/orgpolicies/) and make it to _Allow All_
+2. Go to [oAuth Consent Screen](https://console.cloud.google.com/apis/credentials/consent) and make **User type**  _External_
+3. [Create google group](https://groups.google.com/my-groups) and add required members to it.
+4. [Grant](https://console.cloud.google.com/iam-admin/iam) `IAP-secured Web-App User` Role to the newly created google group as the Principal 
 
-[//]: # ()
-[//]: # (* Browse to [Identity-Aware Proxy]&#40;https://console.cloud.google.com/security/iap&#41; page)
+**Troubleshooting**
 
-[//]: # (* Locate your backend service on a resources list under *HTTPS Resources* tab)
+## Checking SSL certificates
 
-[//]: # (* **Toggle IAP protection** for your backend service)
+```shell
+gcloud compute ssl-certificates list
+```
 
-[//]: # (* Select checkbox next to your service so that info panel appears on the right)
+```shell
+kubectl describe managedcertificate
+```
 
-[//]: # (* Click **Add Member** button on the right panel to add members)
+```shell
+gcloud compute ssl-policies list
+```
 
-[//]: # (* Add *Google Account* or  *Service Account* with **IAP-secured Web App User** role)
+## Errors
+When getting error:
+```
+Access blocked: CDA Application can only be used within its organization
+```
+
+Make sure that steps 1 and 2 above are executed.
+
+
+## Testing when Using Private Access
+
+- Create Windows VM in the VPC network used to deploy CDA Solution
+- Create firewall rules to open up TCP:3389 port for RDP connection 
+- [Connect to Windows VM using RDP](https://cloud.google.com/compute/docs/instances/connecting-to-windows)
+  - OpenUp IAP Tunnel by running following command:
+
+  ```shell
+  gcloud compute start-iap-tunnel VM_INSTANCE_NAME 3389     --local-host-port=localhost:3389     --zone=<YOUR_ONE> --project=$PROJECT_ID
+  ```
+
+
 ### Out of the box Demo Flow
 
 Quick test to trigger pipeline to parse  the sample form:
@@ -341,35 +396,6 @@ export API_DOMAIN=<your_domain_here>
 - ./deploy.sh
 ```
 
-**Debugging**
-
-- To validate if valid certificate was created:
-
-```shell
-kubectl get certificate
-```
-
-```shell
-kubectl describe certificate
-```
-
-```shell
-kubectl describe ing default-ingress
-```
-
-To force re-creation of the certificate, delete and create ingress manually:
-```shell
-kubectl get ing default-ingress -o yaml > ingress.yaml
-cat ingress.yaml
-```
-
-```shell
-kubectl delete  ing default-ingress
-```
-
-```shell
-kubectl apply -f ingress.yaml
-```
 
 
 

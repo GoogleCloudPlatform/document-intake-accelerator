@@ -98,7 +98,7 @@ function enable_iap(){
           --oauth2-client-secret=$CLIENT_SECRET \
           --service="$validation_be"
 
-      gcloud iap settings set "iap_settings" \
+      gcloud iap settings set "${DIR}/iap_settings" \
             --project="$PROJECT_ID" \
             --resource-type=compute \
             --service="$validation_be"

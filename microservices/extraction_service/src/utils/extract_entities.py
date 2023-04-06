@@ -182,6 +182,7 @@ def specialized_parser_extraction(processor, dai_client, gcs_doc_path: str,
 
   # Get corresponding mapping dict, for specific context or fallback to "all" or generate new one on the fly
   docai_entity_mapping = get_docai_entity_mapping()
+  if context is None: context = "California" #TODO context is not used
   docai_entity_mapping_by_context = docai_entity_mapping.get(context)
   print(f"context = {context}, {docai_entity_mapping_by_context}, {doc_class not in docai_entity_mapping['all']}")
   if docai_entity_mapping_by_context is None:
