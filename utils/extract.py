@@ -83,6 +83,7 @@ def process_dir(dir_uri, doc_class):
 
 
 def process_file(file_uri, doc_class):
+  print(f"file_uri={file_uri} doc_class={doc_class}")
   bucket_name, name = helper.split_uri_2_bucket_prefix(file_uri)
   bucket = storage_client.bucket(bucket_name)
   stats = storage.Blob(bucket=bucket, name=name).exists(storage_client)
