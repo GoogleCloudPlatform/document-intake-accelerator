@@ -34,11 +34,13 @@ view: bsc_pa_forms {
 
   dimension: __beneficiary_state {
     type: string
+    map_layer_name: us_states
     sql: ${TABLE}.__beneficiaryState ;;
   }
 
   dimension: __beneficiary_zip {
-    type: string
+    type: zipcode
+    map_layer_name: us_zipcode_tabulation_areas
     sql: ${TABLE}.__beneficiaryZip ;;
   }
 
