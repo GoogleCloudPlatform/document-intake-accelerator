@@ -45,17 +45,17 @@ from .correct_key_value import data_transformation
 from .utils_functions import entities_extraction, download_pdf_gcs, \
   extract_form_fields, del_gcs_folder, \
   form_parser_entities_mapping, extraction_accuracy_calc, \
-  clean_form_parser_keys, standard_entity_mapping, strip_value
+  clean_form_parser_keys, strip_value
 from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME, \
   DOCAI_ATTRIBUTES_TO_IGNORE
-from common.config import get_parser_config, get_docai_entity_mapping, get_document_types_config
+from common.config import  get_docai_entity_mapping
 from common.utils.logging_handler import Logger
 import warnings
 from google.cloud import storage
 from google.api_core.exceptions import InternalServerError
 from google.api_core.exceptions import RetryError
 warnings.simplefilter(action="ignore")
-from google.cloud import documentai_v1beta3
+
 
 MIME_TYPE = "application/pdf"
 
@@ -162,14 +162,23 @@ def specialized_parser_extraction(processor, dai_client, gcs_doc_path: str,
   print("Extracted Entities:")
   for key in document_entities.keys():
     for val in document_entities[key]:
-      if len(val) >= 3:  # There are Parent Key labels without values
+      if len(val) == 2:  # Flat Labels
+        key_name = key
+        value = val[0]
+        confidence = val[1]
+      elif len(val) == 3:  # Nested Labels
         key_name = val[0]
         value = val[1]
-        names.append(key_name)
-        values.append(value)
-        value_confidence.append(val[2])
-        default_mappings[key_name] = [key_name, ]
-        print(f"Field Name = {key_name}, Value = {value}, Confidence = {val[2]}")
+        confidence = val[2]
+      else:
+        continue
+
+      names.append(key_name)
+      values.append(value)
+      value_confidence.append(confidence)
+      default_mappings[key_name] = [key_name, ]
+      print(f"Field Name = {key_name}, Value = {value}, Confidence = {confidence}")
+
   df = pd.DataFrame(
       {
           "Field Name": names,
@@ -472,6 +481,7 @@ def extract_entities(gcs_doc_path: str, doc_class: str, context: str):
       desired_entities_list, flag = form_parser_extraction(
           processor, dai_client, gcs_doc_path, doc_class, context)
 
+    # TODO remove all these magic legacy ADP conversions which break
     # calling standard entity mapping function to standardize the entities
     final_extracted_entities = desired_entities_list
     #final_extracted_entities = standard_entity_mapping(desired_entities_list) #Very unclear logic

@@ -109,25 +109,43 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
     val = strip_value(val)
     parser_entities_dict[key] = [val, confidence]
 
-    for prop in each_entity.get("properties", []):
-      key, val, confidence = prop.get("type", ""), \
-                             prop.get("mentionText", ""), \
-                             round(prop.get("confidence", 0), 2)
-      val = strip_value(val)
+    #TODO Fully refactor this
+    if len(each_entity.get("properties", [])) == 0:
+       #Flat labels
+       pa = each_entity.get("pageAnchor")
+       if pa and len(pa.get("pageRefs", [])) > 0:
+         page_no = int(pa.get("pageRefs")[0].get("page"))
+         value_coordinates = []
+         value_coordinates_dic = pa.get("pageRefs")[0].get("boundingPoly").get(
+             "normalizedVertices")
+         for coordinate in value_coordinates_dic:
+           value_coordinates.append(float(coordinate["x"]))
+           value_coordinates.append(float(coordinate["y"]))
+       else:
+         value_coordinates = []
 
-      pa = prop.get("pageAnchor")
-      if pa and len(pa.get("pageRefs", [])) > 0:
-        page_no = int(pa.get("pageRefs")[0].get("page"))
-        value_coordinates = []
-        value_coordinates_dic = pa.get("pageRefs")[0].get("boundingPoly").get(
-            "normalizedVertices")
-        for coordinate in value_coordinates_dic:
-          value_coordinates.append(float(coordinate["x"]))
-          value_coordinates.append(float(coordinate["y"]))
-      else:
-        value_coordinates = []
+       parser_entities_dict[key] = [val, confidence, value_coordinates]
+    else:
+      # For Nested Labels
+      for prop in each_entity.get("properties", []):
+        key, val, confidence = prop.get("type", ""), \
+                               prop.get("mentionText", ""), \
+                               round(prop.get("confidence", 0), 2)
+        val = strip_value(val)
 
-      parser_entities_dict[key] = [val, confidence, value_coordinates]
+        pa = prop.get("pageAnchor")
+        if pa and len(pa.get("pageRefs", [])) > 0:
+          page_no = int(pa.get("pageRefs")[0].get("page"))
+          value_coordinates = []
+          value_coordinates_dic = pa.get("pageRefs")[0].get("boundingPoly").get(
+              "normalizedVertices")
+          for coordinate in value_coordinates_dic:
+            value_coordinates.append(float(coordinate["x"]))
+            value_coordinates.append(float(coordinate["y"]))
+        else:
+          value_coordinates = []
+
+        parser_entities_dict[key] = [val, confidence, value_coordinates]
 
   entity_dict = {}
 
