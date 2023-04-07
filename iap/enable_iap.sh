@@ -36,7 +36,8 @@ fi
 
 
 # Creating an IAP OAuth Client
-if gcloud alpha iap oauth-clients list projects/$PROJECT_ID/brands/$PROJECT_NUMBER  2>/dev/null ; then
+OAUTH_CLIENT=$(gcloud alpha iap oauth-clients list projects/$PROJECT_ID/brands/$PROJECT_NUMBER  --filter="displayName:$DISPLAY_NAME" 2>/dev/null)
+if [ -n "$OAUTH_CLIENT" ]; then
   echo "oAuth Client $DISPLAY_NAME already exists "
 else
   gcloud alpha iap oauth-clients create \
