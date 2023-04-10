@@ -7,6 +7,7 @@ from fastapi.concurrency import run_in_threadpool
 from config import DOCUMENT_STATUS_URL, UPLOAD_URL
 from common.utils.copy_gcs_documents import copy_blob
 from common.utils.helper import split_uri_2_path_filename
+from common.utils.iap import send_iap_request
 import uuid
 import requests
 import traceback
@@ -217,7 +218,7 @@ def create_document(case_id, filename, context, user=None):
     req_url = f"{base_url}/create_document"
     url = f"{req_url}?case_id={case_id}&filename={filename}&context={context}&user={user}"
     Logger.info(f"Posting request to {url}")
-    response = requests.post(url)
+    response = send_iap_request(url, method="POST")
     response = response.json()
     Logger.info(f"Response received ={response}")
     uid = response.get("uid")

@@ -1,33 +1,33 @@
 export REGION=us-central1
 export BASE_DIR=$(pwd)
 
-# A custom domain like your-domain.com, or leave it blank for using the Ingress IP address instead.
-export TF_LOG_PATH="$BASE_DIR"/tf.log
-#export TF_LOG="DEBUG"
-export TF_VAR_api_domain=$API_DOMAIN
-
-export TF_VAR_project_id=$PROJECT_ID
-export TF_VAR_docai_project_id=${DOCAI_PROJECT_ID:-$PROJECT_ID}
-
-export TF_BUCKET_NAME="${PROJECT_ID}-tfstate"
-export TF_BUCKET_LOCATION="us"
-
-echo TF_BUCKET_NAME="$TF_BUCKET_NAME"
-export TF_VAR_config_bucket="${PROJECT_ID}-config"
-
+# used by Microservices
 export CONFIG_BUCKET=${TF_VAR_config_bucket}
-
 export DEBUG=True
 
-#Shared VPC Config
+# Shared VPC Config
 export NETWORK=cda-vpc
 export SUBNET1=tier-1
 export SUBNET2=tier-2
 export SUBNET3=serverless-subnet
 
-echo "Using PROJECT_ID=$TF_VAR_project_id  HOST_PROJECT_ID=$HOST_PROJECT_ID TF_VAR_api_domain=$TF_VAR_api_domain DOCAI_PROJECT_ID=$TF_VAR_docai_project_id"
-# Fix Workload Identity Name
-# kubectl get serviceaccount ksa -o json | jq '.metadata.name = "gke-sa"' | kubectl apply -f -
+# IAP Setup used by iap/enable_iap.sh
+export DISPLAY_NAME="cda-ui"
+export IAP_SECRET_NAME="cda-iap-secret"
+export SA_START_PIPELINE="serviceAccount:cloudrun-startpipeline-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+  export SA_QUEUE="serviceAccount:cloudrun-queue-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+export APPLICATION_NAME="CDA Application"
 
-#manually pushing
-# git push -u repo branch
+# Terraform Variable
+export TF_LOG_PATH="$BASE_DIR"/tf.log
+#export TF_LOG="DEBUG"
+export TF_VAR_api_domain=$API_DOMAIN
+export TF_VAR_project_id=$PROJECT_ID
+export TF_VAR_docai_project_id=${DOCAI_PROJECT_ID:-$PROJECT_ID}
+export TF_BUCKET_NAME="${PROJECT_ID}-tfstate"
+export TF_BUCKET_LOCATION="us"
+export TF_VAR_config_bucket="${PROJECT_ID}-config"
+export TF_VAR_region=$REGION
+export TF_VAR_iap_secret_name="${IAP_SECRET_NAME}"
+
+echo "Using PROJECT_ID=$TF_VAR_project_id  HOST_PROJECT_ID=$HOST_PROJECT_ID TF_VAR_api_domain=$TF_VAR_api_domain DOCAI_PROJECT_ID=$TF_VAR_docai_project_id"

@@ -45,8 +45,7 @@ async def process_task(payload: ProcessTask,
     """
 
   payload = payload.dict()
-  Logger.info(f"Processing the documents : {payload}")
-  print(f"Processing the documents : {payload}")
+  Logger.info(f"Processing the documents: {payload}")
 
   # Run the pipeline in the background
   background_task.add_task(run_pipeline, payload, is_hitl, is_reassign)

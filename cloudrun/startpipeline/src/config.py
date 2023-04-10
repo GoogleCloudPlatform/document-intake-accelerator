@@ -29,7 +29,6 @@ PROTOCOL = os.getenv("PROTOCOL", "https")
 URL = f"{API_DOMAIN}/{DOCUMENT_STATUS_API_PATH}".replace("//", "/")
 DOCUMENT_STATUS_URL = f"{PROTOCOL}://{URL}"
 
-
 URL = f"{API_DOMAIN}/{UPLOAD_API_PATH}".replace("//", "/")
 UPLOAD_URL = f"{PROTOCOL}://{URL}"
 

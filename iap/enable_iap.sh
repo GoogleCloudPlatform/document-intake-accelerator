@@ -13,13 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+# patch for running system that would not go via Terraform
+# secretmanager.googleapis.com
+# iap.googleapis.com
+gcloud services enable iap.googleapis.com
+gcloud services enable secretmanager.googleapis.com
+
+
+# roles/secretmanager.secretAccessor
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export DISPLAY_NAME="cda-ui"
+
+source "${DIR}/../SET"
+
+if [ -z "$PROJECT_ID" ]; then
+  echo "PROJECT_ID is not set, quitting..."
+  exit
+fi
+
 export USER_EMAIL=$(gcloud config list account --format "value(core.account)")
-export IAP_SECRET_NAME=cda-iap
-export SA_START_PIPELINE="serviceAccount:cloudrun-startpipeline-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-export SA_QUEUE="serviceAccount:cloudrun-queue-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-export APPLICATION_NAME="CDA Application"
 export PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='get(projectNumber)')
 
 # Configuring the OAuth consent screen
@@ -36,7 +49,8 @@ fi
 
 
 # Creating an IAP OAuth Client
-if gcloud alpha iap oauth-clients list projects/$PROJECT_ID/brands/$PROJECT_NUMBER  2>/dev/null ; then
+OAUTH_CLIENT=$(gcloud alpha iap oauth-clients list projects/$PROJECT_ID/brands/$PROJECT_NUMBER  --filter="displayName:$DISPLAY_NAME" 2>/dev/null)
+if [ -n "$OAUTH_CLIENT" ]; then
   echo "oAuth Client $DISPLAY_NAME already exists "
 else
   gcloud alpha iap oauth-clients create \
@@ -51,7 +65,10 @@ export CLIENT_NAME=$(gcloud alpha iap oauth-clients list \
 echo CLIENT_NAME=$CLIENT_NAME
 export CLIENT_ID=${CLIENT_NAME##*/}
 
-echo CLIENT_ID=$CLIENT_ID
+
+
+gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
+
 echo "gcloud alpha iap oauth-clients describe $CLIENT_NAME"
 
 export CLIENT_SECRET=$(gcloud alpha iap oauth-clients describe $CLIENT_NAME --format='value(secret)')
@@ -63,7 +80,35 @@ if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
   exit
 fi
 
-echo "Creating GKE Secret"
+echo "Creating a GCP Secret"
+if gcloud secrets describe "$IAP_SECRET_NAME" 2>/dev/null ; then
+  echo "GCP Secret $IAP_SECRET_NAME already exists"
+else
+  echo -n "${CLIENT_ID}" | gcloud secrets create "$IAP_SECRET_NAME" --data-file=-
+fi
+gcloud secrets describe "$IAP_SECRET_NAME"
+
+# Allow service account to access secret
+gcloud secrets add-iam-policy-binding ${SECRET_NAME} \
+  --member serviceAccount:${SERVICE_ACCOUNT}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com \
+  --role roles/secretmanager.secretAccessor
+
+gcloud secrets add-iam-policy-binding "$IAP_SECRET_NAME" \
+    --member "$SA_START_PIPELINE" \
+    --role roles/secretmanager.secretAccessor
+gcloud secrets add-iam-policy-binding "$IAP_SECRET_NAME" \
+    --member="$SA_QUEUE" \
+    --role=roles/secretmanager.secretAccessor
+
+gcloud secrets add-iam-policy-binding "$IAP_SECRET_NAME" \
+    --member="$SA_QUEUE" \
+    --role=roles/logging.logWriter
+
+#gcloud projects add-iam-policy-binding $PROJECT_ID \
+#    --member="$SA_QUEUE" \
+#    --role=roles/logging.logWriter
+
+echo "Creating GKE Secret for IAP"
 if kubectl get secret $IAP_SECRET_NAME 2>/dev/null ; then
   echo "Secret already exists $IAP_SECRET_NAME"
   kubectl delete secret $IAP_SECRET_NAME

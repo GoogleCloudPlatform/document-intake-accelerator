@@ -32,8 +32,6 @@ def run_pipeline(payload: List[Dict], is_hitl: bool, is_reassign: bool):
     is_hitl : It is used to run the pipeline for unclassified documents
     is_reassign : It is used to run the pipeline for reassigned document
   """
-  Logger.info(f"Processing the documents: {payload}")
-
   extraction_score = None
   applications = []
   supporting_docs = []
@@ -78,7 +76,7 @@ def run_pipeline(payload: List[Dict], is_hitl: bool, is_reassign: bool):
             extraction_entities = extraction_output[2]
             Logger.info(f" Executing pipeline for normal scenario {doc}")
             if extraction_score is not None and extraction_entities:
-              Logger.info(f"extraction score is {extraction_score},{doc}")
+              Logger.info(f"extraction score is {extraction_score}, {doc}")
               validate_match_approve(doc, extraction_score, extraction_field_min_score, extraction_entities)
           else:
             Logger.info(f" Executing pipeline for reassign scenario "

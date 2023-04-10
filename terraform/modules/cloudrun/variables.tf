@@ -44,3 +44,8 @@ variable "vpc_connector_name" {
   type        = string
   description = "VPC connector name"
 }
+
+variable "iap_secret_name" {
+  type        = string
+  description = "Secret to store CLinet id and client secret for IAP"
+}

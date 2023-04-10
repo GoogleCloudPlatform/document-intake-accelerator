@@ -27,7 +27,6 @@ API_DOMAIN = os.getenv("API_DOMAIN")
 PROTOCOL = os.getenv("PROTOCOL", "https")
 URL = f"{API_DOMAIN}/{PROCESS_TASK_API_PATH}".replace("//", "/")
 
-# FIXME: Use HTTPS instead of HTTP
 PROCESS_TASK_URL = f"{PROTOCOL}://{URL}"
 
 assert API_DOMAIN, "API_DOMAIN is not defined."

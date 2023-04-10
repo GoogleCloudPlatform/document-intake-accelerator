@@ -7,6 +7,7 @@ from config import UPLOAD_URL
 from fastapi import APIRouter
 from common.utils.helper import split_uri_2_path_filename
 from common.utils.logging_handler import Logger
+from common.utils.iap import send_iap_request
 
 # API clients
 gcs = None
@@ -54,7 +55,10 @@ def upload_file(bucket_name, files, case_id):
     print(f"Downloaded {file_uri} to  {destination_file_name}")
     # uploadFilesList.append(("files", (file_name, open(destination_file_name,"rb"), "application/pdf")))
     files = {'file': (file_name, open(destination_file_name, 'rb'))}
-    response = requests.post(f"{UPLOAD_URL}/upload_service/v1/upload_files?context={CONTEXT}&case_id={case_id}", files=files)
+    upload_task_url = f"{UPLOAD_URL}/upload_service/v1/upload_files?context={CONTEXT}&case_id={case_id}"
+    process_task_response = send_iap_request(upload_task_url, method="POST", files=files)
+
+    print(f"response={process_task_response.text} with status code={process_task_response.status_code}")
     # assert response.status_code == 200
     # data = response.json().get("configs")
     # print(data)

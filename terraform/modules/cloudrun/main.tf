@@ -168,6 +168,10 @@ resource "google_cloud_run_service" "cloudrun-service" {
           name  = "PROTOCOL"
           value = var.protocol
         }
+        env {
+          name  = "IAP_SECRET_NAME"
+          value = var.iap_secret_name
+        }
       }
       service_account_name = module.cloud-run-service-account.email
     }

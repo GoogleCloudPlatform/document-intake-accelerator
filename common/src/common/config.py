@@ -16,14 +16,15 @@ limitations under the License.
 import time
 from google.cloud import storage
 from common.utils.logging_handler import Logger
+
 """
 Config module to setup common environment
 """
 
 import os, json
+
 # API clients
 gcs = None
-
 
 # ========= Overall =============================
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
@@ -31,10 +32,10 @@ if PROJECT_ID != "":
   os.environ["GOOGLE_CLOUD_PROJECT"] = PROJECT_ID
 assert PROJECT_ID, "Env var PROJECT_ID is not set."
 
-
 REGION = "us-central1"
 PROCESS_TIMEOUT_SECONDS = 600
 
+IAP_SECRET_NAME = os.getenv("IAP_SECRET_NAME", "cda-iap-secret")
 
 # Doc approval status, will reflect on the Frontend app.
 STATUS_APPROVED = "Approved"
@@ -89,7 +90,7 @@ def load_config(bucketname, filename):
       Logger.error(f"Error: bucket does not exist {bucketname}")
   except Exception as e:
     Logger.error(
-      f"Error: while obtaining file from GCS gs://{bucketname}/{filename} {e}")
+        f"Error: while obtaining file from GCS gs://{bucketname}/{filename} {e}")
     return None
 
   # Fall-back to local file
@@ -109,7 +110,7 @@ def get_config(config_name=None):
   process_time = time.time() - start_time
   time_elapsed = round(process_time * 1000)
   Logger.info(
-    f"Retrieving config_name={config_name} took : {str(time_elapsed)} ms")
+      f"Retrieving config_name={config_name} took : {str(time_elapsed)} ms")
   return config
 
 
@@ -168,7 +169,7 @@ def get_classification_default_class():
     return classification_default_class
 
   Logger.warning(
-    f"Classification default label {classification_default_class} is not a valid Label or missing a corresponding parser in parser_config")
+      f"Classification default label {classification_default_class} is not a valid Label or missing a corresponding parser in parser_config")
   return CLASSIFICATION_UNDETECTABLE
 
 
@@ -194,8 +195,10 @@ def get_document_class_by_classifier_label(label_name):
   for k, v in get_document_types_config().items():
     if v.get("classifier_label") == label_name:
       return k
-  Logger.error(f"classifier_label={label_name} is not assigned to any document in the config")
+  Logger.error(
+    f"classifier_label={label_name} is not assigned to any document in the config")
   return None
+
 
 # ========= HITL and Frontend UI =======================
 

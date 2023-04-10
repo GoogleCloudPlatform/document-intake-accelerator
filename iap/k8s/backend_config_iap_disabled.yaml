@@ -7,10 +7,10 @@ spec:
     type: HTTP
     requestPath: /index
     port: 80
-    iap:
-      enabled: false
-      oauthclientCredentials:
-        secretName: cda-iap
+  iap:
+    enabled: false
+    oauthclientCredentials:
+      secretName: cda-iap
   customRequestHeaders:
     headers:
     - "Access-Control-Allow-Origin:*"
@@ -26,10 +26,10 @@ spec:
     type: HTTP
     requestPath: /ping
     port: 80
-    iap:
-      enabled: false
-      oauthclientCredentials:
-        secretName: cda-iap
+  iap:
+    enabled: false
+    oauthclientCredentials:
+      secretName: cda-iap
   customRequestHeaders:
     headers:
     - "Access-Control-Allow-Origin:*"

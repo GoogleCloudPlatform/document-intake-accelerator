@@ -35,6 +35,11 @@ variable "docai_project_id" {
   }
 }
 
+variable "iap_secret_name" {
+  type        = string
+  default = "cda-iap-secret"
+}
+
 variable "region" {
   type        = string
   description = "GCP Region"
@@ -67,7 +72,6 @@ variable "env" {
   type    = string
   default = "dev"
 }
-
 
 variable "cluster_name" {
   type    = string

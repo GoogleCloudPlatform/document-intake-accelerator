@@ -49,6 +49,7 @@ locals {
     "vpcaccess.googleapis.com",            # VPC Access Connector
     "dns.googleapis.com",                  # Cloud DNS
     "iap.googleapis.com",                  # IAP
+    "secretmanager.googleapis.com",        # Secret Manager
   ]
 
   services_docai = [
@@ -216,6 +217,7 @@ module "ingress" {
   internal_ip_name  = var.internal_ip_name
 }
 
+
 module "cloudrun-queue" {
   depends_on = [
     time_sleep.wait_for_project_services,
@@ -229,6 +231,7 @@ module "cloudrun-queue" {
   api_domain         = var.api_domain
   vpc_connector_name = var.vpc_connector_name
   protocol           = local.cloud_run_protocol
+  iap_secret_name    = var.iap_secret_name
 }
 
 module "cloudrun-start-pipeline" {
@@ -244,6 +247,7 @@ module "cloudrun-start-pipeline" {
   api_domain         = var.api_domain
   vpc_connector_name = var.vpc_connector_name
   protocol           = local.cloud_run_protocol
+  iap_secret_name    = var.iap_secret_name
 }
 
 

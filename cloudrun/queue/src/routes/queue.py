@@ -19,12 +19,13 @@ from fastapi import APIRouter, Request
 import base64
 import firebase_admin
 import os
-from firebase_admin import credentials, firestore, initialize_app
-import requests
+from firebase_admin import credentials, firestore
+
 import json
 from fastapi import status, Response
 from config import PROCESS_TASK_URL, API_DOMAIN
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+from common.config import STATUS_SUCCESS
+from common.utils.iap import send_iap_request
 from common.utils.logging_handler import Logger
 
 PROJECT_ID = os.environ.get("PROJECT_ID")
@@ -104,11 +105,13 @@ async def publish_msg(request: Request, response: Response):
     print(f"Sending data to {PROCESS_TASK_URL}:")
     print(request_body)
 
-    process_task_response = requests.post(PROCESS_TASK_URL, json=request_body)
+    process_task_response = send_iap_request(PROCESS_TASK_URL, method="POST", json=request_body)
+
     process_time = time.time() - start_time
     time_elapsed = round(process_time * 1000)
     print(f"Response from {PROCESS_TASK_URL}, Time elapsed: {str(time_elapsed)} ms")
-    print(process_task_response.json())
+
+    print(f"response={process_task_response.text} with status code={process_task_response.status_code}")
 
     response.status_code = process_task_response.status_code
     return response
