@@ -49,6 +49,7 @@ module "cloud-run-service-account" {
       "roles/iam.serviceAccountTokenCreator",
       "roles/run.invoker",
       "roles/pubsub.serviceAgent",
+      "roles/secretmanager.secretAccessor"
     ]
   }
 }

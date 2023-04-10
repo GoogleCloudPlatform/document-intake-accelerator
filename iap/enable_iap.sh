@@ -17,7 +17,7 @@
 # patch for running system that would not go via Terraform
 gcloud services enable iap.googleapis.com
 gcloud services enable secretmanager.googleapis.com
-###########
+##########################################################
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${DIR}/../SET"
@@ -81,11 +81,9 @@ else
 fi
 gcloud secrets describe "$IAP_SECRET_NAME"
 
-# Allow service account to access secret
-gcloud secrets add-iam-policy-binding ${SECRET_NAME} \
-  --member serviceAccount:${SERVICE_ACCOUNT}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com \
-  --role roles/secretmanager.secretAccessor
 
+# This is also Patch for existing running Environments
+# Allow service account to access secret
 gcloud secrets add-iam-policy-binding "$IAP_SECRET_NAME" \
     --member "$SA_START_PIPELINE" \
     --role roles/secretmanager.secretAccessor
@@ -93,13 +91,13 @@ gcloud secrets add-iam-policy-binding "$IAP_SECRET_NAME" \
     --member="$SA_QUEUE" \
     --role=roles/secretmanager.secretAccessor
 
-gcloud secrets add-iam-policy-binding "$IAP_SECRET_NAME" \
-    --member="$SA_QUEUE" \
-    --role=roles/logging.logWriter
-
+#gcloud secrets add-iam-policy-binding "$IAP_SECRET_NAME" \
+#    --member="$SA_QUEUE" \
+#    --role=roles/logging.logWriter
 #gcloud projects add-iam-policy-binding $PROJECT_ID \
 #    --member="$SA_QUEUE" \
 #    --role=roles/logging.logWriter
+######################################################
 
 echo "Creating GKE Secret for IAP"
 if kubectl get secret $IAP_SECRET_NAME 2>/dev/null ; then
