@@ -172,11 +172,30 @@ export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors> #
 
 ## Installation
 ### Terraform 
+
+If you are missing `~/.kube/config` file on your system (never run `gcloud cluster get-credentials`), you will need to modify terraform file.
+
+If following command does not locate a file: 
+```shell
+ls ~/.kube/config
+```
+
+Uncomment Line 55 in `terraform/environments/dev/providers.tf` file:
+```shell
+  load_config_file  = false  # Uncomment this line if you do not have .kube/config file
+```
+
+
 Run init step to provision required resources in GCP (will run terraform apply with auto-approve):
 ```shell
-./init.sh
+bash -e ./init.sh
 ```
 This command will take **~15 minutes** to complete.
+After successfully execution, you should see line like this at the end:
+
+```shell
+Completed! Saved Log into ... 
+```
 
 > If Cloud shell times out during the operation, a workaround is to use `nohup` command to make sure a command does not exit when Cloud Shell times out.
 >
@@ -241,8 +260,13 @@ You could check status of ingress by either navigating using Cloud Shell to
 Optionally, it is possibly to enable [IAP](https://cloud.google.com/iap/docs/enabling-kubernetes-howto) to protect all the backend services. 
 Make sure that if you already have created [oAuth Consent screen](https://console.cloud.google.com/apis/credentials/consent), it is marked as Internal type. 
 
-Run following script to enable IAP:
 
+Make sure Env variables are set:
+```shell
+export PROJECT_ID=
+```
+
+Run following script to enable IAP:
 ```shell
 bash -e iap/enable_iap.sh
 ```
@@ -360,42 +384,6 @@ For example, to trigger pipeline to parse  the sample form:
 > touch START_PIPELINE
 > gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<my-dir>/
 > ```
-
-
-## <a name="https"></a>Adding HTTPS after deployment 
-If you have deployed solution using IP address and now want to migrate to domain+https, there are few steps to be done for that. 
-
-- From Cloud DNS, click on CREATE ZONE and create new zone.
-- Create a DNS record set of type A and point to the IP address of the Ingress (Reserved External IP).
-  - On the Zone details page, click Add record set.
-  - Select A from the Resource Record Type menu.
-  - For IPv4 Address, enter the external IP address that have been reserved.
-
-Uncomment line 79 in `terraform/modules/ingress/main.tf`:
-//      host = var.domain
-
-**Re-apply terraform modules:**
-```shell
-export PROJECT_ID=<your CDA service project ID>
-export API_DOMAIN=<your_domain_here>
-./setup/init_domain.sh
-```
-
-**Update Firebase settings:**
-- In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. VSCode), and change the following value accordingly.
-  - REACT_APP_BASE_URL
-    - `https://<your_domain_name>` The custom Web App Domain that you added in the previous step. Make sure to use `https`
-
-- Go to [Firebase Console UI](https://console.firebase.google.com/).
-- On the left panel of Firebase Console UI, go to Build > Authentication -> Settings > Authorized domain. Add your domain to the list:
-  - Web App Domain (e.g. adp-dev.cloudpssolutions.com).
-
-
-**Re-Deploy microservices**
-```shell
-- ./deploy.sh
-```
-
 
 
 
@@ -527,13 +515,12 @@ Where:
 
 
 ## Cross-Project Setup
-If you want to enable cross project access, following steps need to be done manually.
-
 Limitations: Two projects need to be within the same ORG. 
 For further reference, lets define the two projects:
 - GCP Project to run the Claims Data Activator - Engine (**Project CDA**)
 - GCP Project to train and serve Document AI Processors and Classifier  (**Project DocAI**)
 
+If you want to enable cross project access, following steps need to be done:
 1) Inside Project DocAI [add](https://medium.com/@tanujbolisetty/gcp-impersonate-service-accounts-36eaa247f87c) following service account of the Project CDA `gke-sa@{PROJECT_CDA_ID}.iam.gserviceaccount.com` (used for GKE Nodes) and grant following  [roles](https://cloud.google.com/document-ai/docs/access-control/iam-roles):
    - **Document AI Viewer** - To grant access to view all resources and process documents in Document AI
    Where `{PROJECT_CDA_ID}` - to be replaced with the ID of the Project CDA
@@ -542,12 +529,25 @@ For further reference, lets define the two projects:
    - **Storage Object Admin**  - To allow DocAI processor to save extracted entities as json files inside `${PROJECT_CDA_ID}-output` bucket of the Project CDA  (This could be done on the `${PROJECT_CDA_ID}-output` bucket level).
    Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the Project DocAI
 
+Above is equivalent to the following `gcloud` commands:
 ```shell
   gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"  --role="roles/documentai.viewer"
   PROJECT_DOCAI_NUMBER=$(gcloud projects describe "$DOCAI_PROJECT_ID" --format='get(projectNumber)')
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-docai-output --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.admin"
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-document-upload --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"
 ```
+
+Or running of the following script:
+
+```shell
+export DOCAI_PROJECT_ID=cda-001-processors
+export PROJECT_ID=cda-ext-iap
+```
+
+```shell
+./setup/setup_docai_access.sh
+```
+
 ## Rebuild / Re-deploy Microservices
 
 Updated sources from the Git repo:

@@ -15,16 +15,11 @@
 
 
 # patch for running system that would not go via Terraform
-# secretmanager.googleapis.com
-# iap.googleapis.com
 gcloud services enable iap.googleapis.com
 gcloud services enable secretmanager.googleapis.com
-
-
-# roles/secretmanager.secretAccessor
+###########
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 source "${DIR}/../SET"
 
 if [ -z "$PROJECT_ID" ]; then
@@ -66,11 +61,9 @@ echo CLIENT_NAME=$CLIENT_NAME
 export CLIENT_ID=${CLIENT_NAME##*/}
 
 
-
 gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
 
 echo "gcloud alpha iap oauth-clients describe $CLIENT_NAME"
-
 export CLIENT_SECRET=$(gcloud alpha iap oauth-clients describe $CLIENT_NAME --format='value(secret)')
 
 echo "Generated CLIENT_ID=$CLIENT_ID CLIENT_SECRET=$CLIENT_SECRET"

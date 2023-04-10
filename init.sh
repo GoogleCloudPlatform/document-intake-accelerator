@@ -1,4 +1,18 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 set -e # Exit if error is detected during pipeline execution => terraform failing
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -28,11 +42,6 @@ gcloud config set project $PROJECT_ID
 export ORGANIZATION_ID=$(gcloud organizations list --format="value(name)")
 export ADMIN_EMAIL=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
 export TF_VAR_admin_email=${ADMIN_EMAIL}
-
-# For Argolis Only
-#gcloud resource-manager org-policies disable-enforce constraints/compute.requireOsLogin --organization=$ORGANIZATION_ID
-#gcloud resource-manager org-policies delete constraints/compute.vmExternalIpAccess --organization=$ORGANIZATION_ID
-#gcloud resource-manager org-policies delete constraints/compute.requireShieldedVm --organization=$ORGANIZATION_ID
 
 
 bash "${DIR}"/setup/setup_terraform.sh  2>&1 | tee -a "$LOG"
@@ -77,4 +86,4 @@ fi
 
 gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
-echo "$timestamp Finished. Saved Log into $LOG" | tee -a "$LOG"
+echo "$timestamp Completed! Saved Log into $LOG" | tee -a "$LOG"

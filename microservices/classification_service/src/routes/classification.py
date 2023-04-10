@@ -122,10 +122,11 @@ async def classification(case_id: str, uid: str, gcs_url: str):
     # Making prediction
     doc_prediction_result = predict_doc_type(case_id, uid, gcs_url)
 
-    if doc_prediction_result:
+    if doc_prediction_result and doc_prediction_result["predicted_class"] is not None:
       classification_score = doc_prediction_result["model_conf"]
       Logger.info(f"Classification confidence for {case_id} and {uid} is"\
         f" {classification_score}")
+
       if doc_prediction_result["predicted_class"].lower(
       ) == CLASSIFICATION_UNDETECTABLE.lower():
         #DocumentStatus api call

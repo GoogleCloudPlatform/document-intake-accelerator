@@ -13,5 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "${DIR}/../SET"
+
+if [ -z "$PROJECT_ID" ]; then
+  echo "PROJECT_ID is not set, quitting..."
+  exit
+fi
+
+gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
+
 kubectl patch backendconfig adp-backend-config --type=merge -p '{"spec": {"iap": {"enabled": false}}}'
 kubectl patch backendconfig iap-backend-config --type=merge -p '{"spec": {"iap": {"enabled": false}}}'

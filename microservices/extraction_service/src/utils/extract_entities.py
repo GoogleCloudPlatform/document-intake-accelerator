@@ -466,7 +466,8 @@ def extract_entities(gcs_doc_path: str, doc_class: str, context: str):
 
     dai_client = documentai.DocumentProcessorServiceClient(client_options=opts)
     processor = dai_client.get_processor(name=processor_path)
-
+    # default_version = processor.default_processor_version
+    # specific_version =  #TODO Add processor version info into Firestore and BigQuery for extracted data
     print(f"parser_type={processor.type_}, parser_name={processor.display_name}")
     # Todo Refactor to extract based on selected strategy (to be configured) and not per parser type.
     if processor.type_ == "CUSTOM_EXTRACTION_PROCESSOR":

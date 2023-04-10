@@ -104,7 +104,7 @@ def get_config(config_name=None):
   config = load_config(CONFIG_BUCKET, CONFIG_FILE_NAME)
   assert config, f"Unable to locate '{config_name} or incorrect JSON file'"
   if config_name:
-    config = config.get(config_name)
+    config = config.get(config_name, [])
     Logger.info(f"{config_name}={config}")
 
   process_time = time.time() - start_time
