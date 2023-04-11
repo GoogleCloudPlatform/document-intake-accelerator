@@ -103,10 +103,17 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
   # retrieve parser given entities
   for each_entity in parser_entities:
     # print(each_entity)
-    key, val, confidence = each_entity.get("type", ""), \
-                           each_entity.get("mentionText", ""), round(
-        each_entity.get("confidence", 0), 2)
-    val = strip_value(val)
+    key, val, normalizedVal, confidence = each_entity.get("type", ""), \
+                           each_entity.get("mentionText", ""), \
+                           each_entity.get("normalizedValue", ""), \
+                           round(each_entity.get("confidence", 0), 2)
+    if isinstance(normalizedVal, dict):
+      if "booleanValue" in normalizedVal.keys():
+        val = normalizedVal.get("booleanValue")
+      # else:
+      #   Logger.info("Debugging ")
+    else:
+      val = strip_value(val)
     parser_entities_dict[key] = [val, confidence]
 
     #TODO Fully refactor this
@@ -128,10 +135,18 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
     else:
       # For Nested Labels
       for prop in each_entity.get("properties", []):
-        key, val, confidence = prop.get("type", ""), \
+        key, val, normalizedVal, confidence = prop.get("type", ""), \
                                prop.get("mentionText", ""), \
+                               prop.get("normalizedValue", ""), \
                                round(prop.get("confidence", 0), 2)
-        val = strip_value(val)
+        #TODO Refactor throw all away and replace with generic logic
+        if isinstance(normalizedVal, dict):
+          if "booleanValue" in normalizedVal.keys():
+            val = normalizedVal.get("booleanValue")
+          else:
+            Logger.info("Debugging ")
+        else:
+          val = strip_value(val)
 
         pa = prop.get("pageAnchor")
         if pa and len(pa.get("pageRefs", [])) > 0:

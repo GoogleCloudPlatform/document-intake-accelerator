@@ -1,9 +1,4 @@
 export REGION=us-central1
-export BASE_DIR=$(pwd)
-
-# used by Microservices
-export CONFIG_BUCKET=${TF_VAR_config_bucket}
-export DEBUG=True
 
 # Shared VPC Config
 export NETWORK=cda-vpc
@@ -15,7 +10,7 @@ export SUBNET3=serverless-subnet
 export DISPLAY_NAME="cda-ui"
 export IAP_SECRET_NAME="cda-iap-secret"
 export SA_START_PIPELINE="serviceAccount:cloudrun-startpipeline-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-  export SA_QUEUE="serviceAccount:cloudrun-queue-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+export SA_QUEUE="serviceAccount:cloudrun-queue-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 export APPLICATION_NAME="CDA Application"
 
 # Terraform Variable
@@ -30,4 +25,9 @@ export TF_VAR_config_bucket="${PROJECT_ID}-config"
 export TF_VAR_region=$REGION
 export TF_VAR_iap_secret_name="${IAP_SECRET_NAME}"
 
-echo "Using PROJECT_ID=$TF_VAR_project_id  HOST_PROJECT_ID=$HOST_PROJECT_ID TF_VAR_api_domain=$TF_VAR_api_domain DOCAI_PROJECT_ID=$TF_VAR_docai_project_id"
+# used by Microservices
+export CONFIG_BUCKET=${TF_VAR_config_bucket}
+export DEBUG=True
+
+echo "Using       PROJECT_ID=$TF_VAR_project_id, CONFIG_BUCKET=$CONFIG_BUCKET, API_DOMAIN=$TF_VAR_api_domain"
+echo "(Optional)  HOST_PROJECT_ID=$HOST_PROJECT_ID, DOCAI_PROJECT_ID=$TF_VAR_docai_project_id"

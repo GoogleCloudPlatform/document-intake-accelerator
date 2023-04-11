@@ -603,6 +603,9 @@ kubectl describe managedcertificate
 gcloud compute ssl-policies list
 ```
 
+```shell
+kubectl describe ingress
+```
 
 ### Terraform Troubleshoot
 
