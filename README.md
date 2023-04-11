@@ -126,12 +126,15 @@ gcloud services enable dns.googleapis.com
 gcloud services enable domains.googleapis.com
 ```
 
-Via [Cloud Domain](https://pantheon.corp.google.com/marketplace/product/google/domains.googleapis.com?project=ek-cda-engine) Register Domain (pick desired name and fill in the forms).
+Via [Cloud Domain](https://console.cloud.google.com/net-services/domains/registrations) Register Domain (pick desired name and fill in the forms).
 
 
 ### Configure DNS `A` record for your domain with IP address reserved above
-For this step you will need a registered Cloud Domain. 
-You could register a domain via [cloud shell](https://console.cloud.google.com/net-services/domains/registrations/create?cloudshell=true).
+For this step you will need a registered Cloud Domain.
+You can use gcloud command to get information about reserved address.
+```shell
+gcloud compute addresses describe cda-ip --global
+```
 
 - From [Cloud DNS](https://console.cloud.google.com/net-services/dns/zones) after registering Cloud Domain:
 - Create a DNS record set of type A and point to the reserved external IP:
@@ -139,11 +142,6 @@ You could register a domain via [cloud shell](https://console.cloud.google.com/n
   - Add record set.
   - Select A from the Resource Record Type menu.
 - For IPv4 Address, enter the external IP address that has been reserved.
-
-You can use gcloud command to get information about reserved address.
-```shell
-gcloud compute addresses describe cda-ip --global
-```
 
 Once configured, verify that your domain name resolves to the reserved IP address.
 
@@ -194,7 +192,7 @@ This command will take **~15 minutes** to complete.
 After successfully execution, you should see line like this at the end:
 
 ```shell
-Completed! Saved Log into ... 
+<...> Completed! Saved Log into /<...>/init.log
 ```
 
 > If Cloud shell times out during the operation, a workaround is to use `nohup` command to make sure a command does not exit when Cloud Shell times out.
@@ -252,7 +250,7 @@ Build/deploy microservices (using skaffold + kustomize):
 ```
 This command will take **~10 minutes** to complete, and it will take another **10-15 minutes** for ingress to get ready.  
 You could check status of ingress by either navigating using Cloud Shell to
-[GKE Ingress](https://console.cloud.google.com/kubernetes/ingress/us-central1/main-cluster/default/external-ingress/details) and waiting till it appears as green.
+[GKE Ingress](https://console.cloud.google.com/kubernetes/ingress/us-central1/main-cluster/default/external-ingress/details) and waiting till it appears as solid green.
 
 
 ##(Optional) IAP setup
