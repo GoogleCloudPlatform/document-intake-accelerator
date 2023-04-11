@@ -282,30 +282,13 @@ When not using GCP identity for IAP, following steps to be executed:
 3. [Create google group](https://groups.google.com/my-groups) and add required members to it.
 4. [Grant](https://console.cloud.google.com/iam-admin/iam) `IAP-secured Web-App User` Role to the newly created google group as the Principal 
 
-**Troubleshooting**
-
-## Checking SSL certificates
-
-```shell
-gcloud compute ssl-certificates list
-```
-
-```shell
-kubectl describe managedcertificate
-```
-
-```shell
-gcloud compute ssl-policies list
-```
-
-## Errors
+#### Errors
 When getting error:
 ```
 Access blocked: CDA Application can only be used within its organization
 ```
 
 Make sure that steps 1 and 2 above are executed.
-
 
 ## Testing when Using Private Access
 
@@ -600,6 +583,26 @@ Config Service (used by adp ui):
 - `http://$API_DOMAIN/config_service/v1/get_config`
 
 ## Deployment Troubleshoot
+
+
+### Checking SSL certificates
+
+```shell
+gcloud compute ssl-certificates list --global
+```
+
+```shell
+gcloud compute ssl-certificates describe CERTIFICATE_NAME  --global --format="get(name,managed.status, managed.domainStatus)"
+```
+
+```shell
+kubectl describe managedcertificate
+```
+
+```shell
+gcloud compute ssl-policies list
+```
+
 
 ### Terraform Troubleshoot
 
