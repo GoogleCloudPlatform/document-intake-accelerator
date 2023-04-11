@@ -315,10 +315,10 @@ def data_transformation(input_dict):
       corrected_dict = correction_script(corrected_dict, "convert_to_number")
       # check for noise
       corrected_dict = correction_script(corrected_dict, "clean_value")
-      # check for upper to lower
-      corrected_dict = correction_script(corrected_dict, "upper_to_lower")
-      # check for lower to upper
-      corrected_dict = correction_script(corrected_dict, "lower_to_upper")
+      # # check for upper to lower
+      # corrected_dict = correction_script(corrected_dict, "upper_to_lower")
+      # # check for lower to upper
+      # corrected_dict = correction_script(corrected_dict, "lower_to_upper")
       # check for multiple spaces
       corrected_dict = correction_script(corrected_dict, "clean_multiple_space")
       # check for date format
