@@ -253,7 +253,7 @@ You could check status of ingress by either navigating using Cloud Shell to
 [GKE Ingress](https://console.cloud.google.com/kubernetes/ingress/us-central1/main-cluster/default/external-ingress/details) and waiting till it appears as solid green.
 
 
-##(Optional) IAP setup
+## (Optional) IAP setup
 
 Optionally, it is possibly to enable [IAP](https://cloud.google.com/iap/docs/enabling-kubernetes-howto) to protect all the backend services. 
 Make sure that if you already have created [oAuth Consent screen](https://console.cloud.google.com/apis/credentials/consent), it is marked as Internal type. 
