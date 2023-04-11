@@ -61,16 +61,25 @@ elif [ -f "$dir" ]; then
   gsutil cp "${INPUT}" "$GS_URL"
   echo "Triggering pipeline for ${GS_URL}"
   gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${GS_URL}"
+elif [[ $dir = gs://* ]]; then
+  echo "Using Cloud Storage Location $dir"
+  echo "Copying data from ${dir} to ${GS_URL}"
+  for FILE in $(gsutil list "${dir}"/*.pdf); do
+    i=$((i+1))
+    URL="gs://$PROJECT_ID-pa-forms/${gs_dir}_${i}/"
+    echo " $i --- Copying data from ${FILE} to ${URL}"
+    gsutil cp "${FILE}" "${URL}"
+    echo "Triggering pipeline for ${URL}"
+    gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${URL}"
+  done
+
+
 fi
 
-#echo "Triggering pipeline for ${GS_URL}n
-
-#gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${GS_URL}"
-
-
-#./start_pipeline.sh sample_data/bsc_demo/ bsc
 
 # DEMO Sample Commands:
+# What comes after -l - will also be sued as a directory name inside pa-forms bucket
+#./start_pipeline.sh -d gs://sample_data/bsc_demo -l demo-package
 #./start_pipeline.sh -d sample_data/bsc_demo -l demo-package -p
 # ./start_pipeline.sh -d sample_data/forms-10  -l demo-batch
 # ./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
