@@ -487,9 +487,11 @@ function DocumentReview() {
                   </Row>
                 }
                 {inputList && inputList.map((x, i) => {
+                  console.log("Value for key", x['entity'], "=",  x['value'] )
                   return (
                     <Row>
                       <Col className={["col", "verticalLines"].join(" ")}>
+
                         <div className="box" key={x['entity']}>
                           {x['corrected_value'] === null ?
                             <FloatingLabel
@@ -499,7 +501,7 @@ function DocumentReview() {
                             >
                               <Form.Control type="text" name="value" className="extractedInputBox"
                                 placeholder="Enter extracted value"
-                                defaultValue={x['value'] || " "}
+                                defaultValue={x['value']}
                                 style={{ borderColor: x['extraction_confidence'] < 0.70 ? '#E93535' : '' }}
                                 onChange={e => handleInputChange(e, i, inputList[i])}
                                 onFocus={() => inputClicked(inputList[i])} />
@@ -512,7 +514,7 @@ function DocumentReview() {
                             >
                               <Form.Control type="text" name="corrected_value" className="extractedInputBox"
                                 placeholder="Enter Corrected value"
-                                defaultValue={x.corrected_value || " "}
+                                defaultValue={x.corrected_value }
                                 onChange={e => handleInputChange(e, i)}
                                 onFocus={() => inputClicked(inputList[i])} />
                             </FloatingLabel>
