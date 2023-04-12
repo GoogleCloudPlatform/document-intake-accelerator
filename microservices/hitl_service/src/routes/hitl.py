@@ -82,7 +82,7 @@ def get_doc_list_data(docs_list: list):
         if entity["entity"] == "name":
           if entity["corrected_value"]:
             name = entity["corrected_value"]
-          elif entity["value"]:
+          elif entity["value"] is not None:
             name = entity["value"]
     doc["applicant_name"] = name
 
