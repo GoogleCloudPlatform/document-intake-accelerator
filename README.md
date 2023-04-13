@@ -234,15 +234,23 @@ Edit `microservices/adp_ui/.env` and chose between `http` and `https` protocol d
 
 ### Deploy microservices
 
-With kustomize 5.0 there are breaking changes on passing the environment variables.
-While we are making solution to account for those changes and work with kustomize 5.0, as a temporal workaround, please be sure to downgrade to 4.5.7 version when using Cloud Shell:
-```shell
-kustomize version
-sudo rm /usr/local/bin/kustomize
-curl -Lo install_kustomize "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" && chmod +x install_kustomize
-sudo ./install_kustomize 4.5.7 /usr/local/bin
-kustomize version
-```
+[//]: # (With kustomize 5.0 there are breaking changes on passing the environment variables.)
+
+[//]: # (While we are making solution to account for those changes and work with kustomize 5.0, as a temporal workaround, please be sure to downgrade to 4.5.7 version when using Cloud Shell:)
+
+[//]: # (```shell)
+
+[//]: # (kustomize version)
+
+[//]: # (sudo rm /usr/local/bin/kustomize)
+
+[//]: # (curl -Lo install_kustomize "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" && chmod +x install_kustomize)
+
+[//]: # (sudo ./install_kustomize 4.5.7 /usr/local/bin)
+
+[//]: # (kustomize version)
+
+[//]: # (```)
 
 Build/deploy microservices (using skaffold + kustomize): 
 ```shell
