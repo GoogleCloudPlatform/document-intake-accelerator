@@ -29,7 +29,6 @@ fi
 
 if [ "$DOCAI_PROJECT_ID" != "$PROJECT_ID" ]; then
   gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"  --role="roles/documentai.viewer"  2>&1
-  gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:[cda-ext-iap-dev@cda-ext-iap.iam.gserviceaccount.com"  --role="roles/documentai.viewer"  2>&1
   PROJECT_DOCAI_NUMBER=$(gcloud projects describe "$DOCAI_PROJECT_ID" --format='get(projectNumber)')
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-docai-output --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.admin"  2>&1
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-document-upload --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"  2>&1
