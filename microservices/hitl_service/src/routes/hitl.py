@@ -26,7 +26,7 @@ from common.config import STATUS_APPROVED, STATUS_REVIEW, STATUS_REJECTED, \
 from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR, \
   STATUS_TIMEOUT
 from common.config import PROCESS_TIMEOUT_SECONDS
-from common.config import get_document_types_config
+from common.config import get_document_types_config, get_display_name_by_doc_class
 from common.utils.stream_to_bq import stream_document_to_bigquery
 from google.cloud import storage
 import datetime
@@ -84,6 +84,7 @@ def get_doc_list_data(docs_list: list):
             name = entity["corrected_value"]
           elif entity["value"] is not None:
             name = entity["value"]
+
     doc["applicant_name"] = name
 
     process_stage = "-"
@@ -490,7 +491,8 @@ def update_classification_status(case_id: str,
     uid: str,
     status: str,
     document_class: Optional[str] = None,
-    document_type: Optional[str] = None):
+    document_type: Optional[str] = None,
+    document_display_name: Optional[str] = None):
   """ Call status update api to update the classification output
     Args:
     case_id (str): Case id of the file ,
@@ -504,7 +506,8 @@ def update_classification_status(case_id: str,
   if status == STATUS_SUCCESS:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
               f"&status={status}&is_hitl={True}&document_class={document_class}" \
-              f"&document_type={document_type}"
+              f"&document_type={document_type}" \
+              f"&document_display_name={document_display_name}"
     response = requests.post(req_url)
     return response
 
@@ -567,6 +570,7 @@ async def update_hitl_classification(case_id: str, uid: str,
     Logger.info(f"Starting manual classification for case_id" \
                 f" {case_id} and uid {uid}")
     document_type = document_types_config[document_class].get("doc_type")
+    document_display_name = get_display_name_by_doc_class(document_class)
     if not document_type:
       Logger.error(f"Doc class {document_class} is not a valid doc class, because missing doc_type property")
       update_classification_status(case_id, uid, STATUS_ERROR)
@@ -581,7 +585,9 @@ async def update_hitl_classification(case_id: str, uid: str,
         uid,
         STATUS_SUCCESS,
         document_class=document_class,
-        document_type=document_type)
+        document_type=document_type,
+        document_display_name=document_display_name
+        )
     print(response)
     if response.status_code != 200:
       Logger.error(f"Document status update failed for {case_id} and {uid}")

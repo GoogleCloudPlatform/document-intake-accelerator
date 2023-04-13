@@ -122,6 +122,17 @@ def get_document_types_config():
   return get_config("document_types_config")
 
 
+def get_display_name_by_doc_class(doc_class):
+  doc = get_document_types_config().get(doc_class)
+  if not doc:
+    Logger.error(f"doc_class {doc_class} not present in document_types_config")
+    return None
+
+  display_name = doc.get("display_name")
+  Logger.info(f"Using doc_class={doc_class}, display_name={display_name}")
+  return display_name
+
+
 def get_parser_by_doc_class(doc_class):
   doc = get_document_types_config().get(doc_class)
   if not doc:
