@@ -41,6 +41,12 @@ gsutil cp "${DIR}/microservices/adp_ui/.env" "gs://${TF_VAR_config_bucket}/.env"
 
 kubectl apply -f "$DIR"/iap/k8s/backend-config.yaml
 
+kustomize version
+sudo rm /usr/local/bin/kustomize
+curl -Lo install_kustomize "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" && chmod +x install_kustomize
+sudo ./install_kustomize 4.5.7 /usr/local/bin
+kustomize version
+
 skaffold run -p prod --default-repo=gcr.io/${PROJECT_ID} | tee -a "$LOG"
 
 #TODO terraform to re-deploy cloud-run instead
