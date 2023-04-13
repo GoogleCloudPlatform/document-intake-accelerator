@@ -1,6 +1,59 @@
 # Claims Data Activator (CDA)
+- [Introduction](#introduction)
+  * [Key features](#key-features)
+  * [How To Use This Repo](#how-to-use-this-repo)
+- [Quick Start](#quick-start)
+  * [Prerequisites](#prerequisites)
+    + [Projects Creation](#project-creation)
+    + [Classifier/Splitter Access](#classifier-splitter-access)
+    + [Domain Name Registration](#domain-name-registration)
+    + [Installation Using Cloud Shell](#installation-using-cloud-shell)
+  * [Preparations](#preparations)
+    + [Reserving External IP](#reserving-external-ip)
+    + [Private vs Public End Point](#private-vs-public-end-point)
+    + [When deploying using Shared VPC](#when-deploying-using-shared-vpc)
+    + [Register Cloud Domain](#register-cloud-domain)
+    + [Configure DNS `A` record for your domain with IP address reserved above](#configure-dns-record)
+    + [Environment Variables](#environment-variables)
+  * [Installation](#installation)
+    + [Terraform](#terraform)
+    + [Front End Config](#front-end-config)
+    + [Enable Firebase Auth](#enable-firebase-auth)
+    + [Deploy microservices](#deploy-microservices)
+  * [(Optional) IAP setup](#iap-setup)
+    + [IAP With External identity](#iap-with-external-identity)
+- [Configuration](#configuration)
+  * [Setting up CDE and CDS](#setting-up-cde-and-cds)
+    + [Custom Document Extractor](#custom-document-extractor)
+    + [Custom Document Classifier](#custom-document-classifier)
+  * [Configuring the System](#configuring-the-system)
+    + [Adding Classifier](#adding-classifier)
+    + [Adding Support for Additional Type of Forms](#adding-support-for-additional-type-of-forms)
+    + [General Settings](#general-settings)
+  * [Cross-Project Setup](#cross-project-setup)
+- [CDA Usage](#cda-usage)
+  * [When Using Private Access](#when-using-private-access)
+  * [Out of the box Demo Flow](#out-of-the-box-demo-flow)
+    + [Working from the UI](#working-from-the-ui)
+    + [Triggering pipeline in a batch mode](#triggering-pipeline-in-a-batch-mode)
+- [HITL](#hitl)
+- [Rebuild / Re-deploy Microservices](#rebuild-redeploy-microservices)
+- [Utilities](#utilities)
+  * [Prerequisites](#prerequisites-1)
+  * [Testing Utilities](#testing-utilities)
+  * [Cleaning Data](#cleaning-data)
+  * [Configuration Service](#configuration-service)
+  * [Splitter](#splitter)
+- [Deployment Troubleshoot](#deployment-troubleshoot)
+  * [Checking SSL certificates](#checking-ssl-certificates)
+  * [Terraform Troubleshoot](#terraform-troubleshoot)
+    + [App Engine already exists](#app-engine-already-exists)
+  * [CloudRun Troubleshoot](#cloudrun-troubleshoot)
+  * [Frontend Web App](#frontend-web-app)
+  * [Troubleshooting Commands](#troubleshooting-commands)
+- [Development Guide](#development-guide)
 
-## Introduction
+# Introduction
 > A pre-packaged and customizable solution to accelerate the development of end-to-end document processing workflow incorporating Document AI parsers and other GCP products (Firestore, BigQuery, GKE, etc). The goal is to accelerate the development efforts in document workflow with many ready-to-use components.
 
 ## Key features
@@ -17,14 +70,14 @@ You will almost certainly need to modify elements to fit your organization's spe
 We strongly recommend you fork this repo, so you can have full control over your unique setup.
 While you will find end-to-end tools to help spin up a fully functional sandbox environment, most likely you will find yourself customizing solution further down the line.  
 
-
+# Quick Start
 ## Prerequisites
 
-### Project(s) Creation
+### Project Creation
 It is recommended to deploy into two projects: one for the CDA Pipeline Engine (`PROJECT_ID`), and another for the Document AI processors (`DOCAI_PROJECT_ID`). Both projects need to belong to the same Org.
 When following this  practice, before deployment create two projects and note down.
 
-### Classifier/Splitter Access
+### <a name="classifier-splitter-access"></a> Classifier/Splitter Access
 Custom Document Classifier and Custom Document Splitter are currently in Preview. 
 Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSc_6s8jsHLZWWE0aSX0bdmk24XDoPiE_oq5enDApLcp1VKJ-Q/viewform), so that Project is whitelisted.
 
@@ -90,10 +143,13 @@ cda_external_ui = true       # Expose UI to the Internet: true or false
 
 
 ### When deploying using Shared VPC
-As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.tfvars).
-For the preparation steps to set up VPC Host Project and Service project, refer to the steps described in [here](docs/SharedVPC_steps.md).
+As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) 
+via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.sample.tfvars).
+Follow [these steps](docs/SharedVPC_steps.md) to prepare environment with VPC Host Project and Service project.
 
- - Edit `terraform/environments/dev/terraform.tfvars` in the editor,  uncomment `network_config` and fill in required parameters inside `network_config` (when using the [steps](docs/SharedVPC_steps.md), only need to set `HOST_PROJECT_ID`:
+ - Edit `terraform/environments/dev/terraform.tfvars` in the editor, 
+ - uncomment `network_config` and fill in required parameters inside `network_config` (when using the [steps above](docs/SharedVPC_steps.md), 
+ - only need to set `HOST_PROJECT_ID`, all other variables are pre-filled correctly):
  ```
 network_config = {
   host_project      = "HOST_PROJECT_ID"
@@ -126,17 +182,18 @@ gcloud services enable dns.googleapis.com
 gcloud services enable domains.googleapis.com
 ```
 
-Via [Cloud Domain](https://console.cloud.google.com/net-services/domains/registrations) Register Domain (pick desired name and fill in the forms).
+Via [Cloud Domain](https://console.cloud.google.com/net-services/domains/registrations) register domain name 
+(pick desired name and fill in the forms).
 
 
-### Configure DNS `A` record for your domain with IP address reserved above
+### <a name="configure-dns-record"> </a> Configure DNS `A` record for your domain with IP address reserved above
 For this step you will need a registered Cloud Domain.
 You can use gcloud command to get information about reserved address.
 ```shell
 gcloud compute addresses describe cda-ip --global
 ```
 
-- From [Cloud DNS](https://console.cloud.google.com/net-services/dns/zones) after registering Cloud Domain:
+- Go to [Cloud DNS](https://console.cloud.google.com/net-services/dns/zones) after registering Cloud Domain.
 - Create a DNS record set of type A and point to the reserved external IP:
   - On the Zone details page, click on zone name (will be created by the previous step, after registering Cloud Domain).
   - Add record set.
@@ -171,20 +228,20 @@ export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors> #
 ## Installation
 ### Terraform 
 
-If you are missing `~/.kube/config` file on your system (never run `gcloud cluster get-credentials`), you will need to modify terraform file.
+> If you are missing `~/.kube/config` file on your system (never run `gcloud cluster get-credentials`), you will need to modify terraform file.
+> 
+> If following command does not locate a file: 
+> ```shell
+> ls ~/.kube/config
+> ```
+>
+> Uncomment Line 55 in `terraform/environments/dev/providers.tf` file:
+> ```shell
+>  load_config_file  = false  # Uncomment this line if you do not have .kube/config file
+> ```
 
-If following command does not locate a file: 
-```shell
-ls ~/.kube/config
-```
 
-Uncomment Line 55 in `terraform/environments/dev/providers.tf` file:
-```shell
-  load_config_file  = false  # Uncomment this line if you do not have .kube/config file
-```
-
-
-Run init step to provision required resources in GCP (will run terraform apply with auto-approve):
+Run **init** step to provision required resources in GCP (will run terraform apply with auto-approve):
 ```shell
 bash -e ./init.sh
 ```
@@ -210,9 +267,9 @@ sed 's|PROJECT_ID|'"$PROJECT_ID"'|g; s|API_DOMAIN|'"$API_DOMAIN"'|g; ' microserv
 ```
 
 Edit `microservices/adp_ui/.env` and chose between `http` and `https` protocol depending on internal vs external ui configuration you have selected above:
-**Important:** 
-* When not exposing UI externally (`cda_external_ui = false`), REACT_APP_BASE_URL needs to use `http://` Protocol (e.g. http://mydomain.com)
-* When exposing UI externally (`cda_external_ui = true`), REACT_APP_BASE_URL needs to use `https://` Protocol (e.g. https://mydomain.com)
+**Important!!!** 
+* When not exposing UI externally (`cda_external_ui = false`), REACT_APP_BASE_URL needs to use `http://` Protocol (e.g. **http**://mydomain.com)
+* When exposing UI externally (`cda_external_ui = true`), REACT_APP_BASE_URL needs to use `https://` Protocol (e.g. **https**://mydomain.com)
 
 ### Enable Firebase Auth
 - Before enabling firebase, make sure [Firebase Management API](https://console.cloud.google.com/apis/api/firebase.googleapis.com/metrics) should be disabled in GCP API & Services.
@@ -261,7 +318,7 @@ You could check status of ingress by either navigating using Cloud Shell to
 [GKE Ingress](https://console.cloud.google.com/kubernetes/ingress/us-central1/main-cluster/default/external-ingress/details) and waiting till it appears as solid green.
 
 
-## (Optional) IAP setup
+## <a name="iap-setup"></a>(Optional) IAP setup
 
 Optionally, it is possibly to enable [IAP](https://cloud.google.com/iap/docs/enabling-kubernetes-howto) to protect all the backend services. 
 Make sure that if you already have created [oAuth Consent screen](https://console.cloud.google.com/apis/credentials/consent), it is marked as Internal type. 
@@ -298,99 +355,10 @@ Access blocked: CDA Application can only be used within its organization
 
 Make sure that steps 1 and 2 above are executed.
 
-## Testing when Using Private Access
+# Configuration
+## Setting up CDE and CDS
 
-- Create Windows VM in the VPC network used to deploy CDA Solution
-- Create firewall rules to open up TCP:3389 port for RDP connection 
-- [Connect to Windows VM using RDP](https://cloud.google.com/compute/docs/instances/connecting-to-windows)
-  - OpenUp IAP Tunnel by running following command:
-
-  ```shell
-  gcloud compute start-iap-tunnel VM_INSTANCE_NAME 3389     --local-host-port=localhost:3389     --zone=<YOUR_ONE> --project=$PROJECT_ID
-  ```
-
-
-### Out of the box Demo Flow
-
-Quick test to trigger pipeline to parse  the sample form:
-```shell
-./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
-```
-
-#### Working from the UI
-In order to access the Application UI, Navigate to the API Domain IP Address or Domain Name (depending on the setup) in the browser and login with your Google credentials.
-Try Uploading the Document, using *Upload a Document* button.  From *Choose Program* drop-down, select a state ( pick any ).
-Right now, the Form Processor is set up as a default processor (since no classifier is deployed or trained), so each document will be processed with the Form Parser and extracted data will be streamed to the BigQuery.
-
-> The setting for the default processor is done through the following configuration setting  "settings_config" -> "classification_default_label".  Explained in details in the [Configuring the System](#system_config).
-
-As you click Refresh Icon on the top right, you will see different Status the Pipeline goes through: *Classifying -> Extracting -> Approved* or *Needs Review*.
-
-If you select *View* action, you will see the key/value pairs extracted from the Document.
-
-Navigate to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
-
-You could also run sample query from the Cloud Shell:
-```shell
-./sql-scripts/run_query.sh
-```
-
-#### Triggering pipeline in a batch mode
-*NB: Currently only pdf documents are supported, so if you have a jpg or png, please first convert it to pdf.*
-
-For example, to trigger pipeline to parse  the sample form:
-```shell
-./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
-```
-
-> The Pipeline is triggered when an empty file named START_PIPELINE is uploaded to the `${PROJECT_ID}-pa-forms` GCS bucket. When the START_PIPELINE document is uploaded, all `*.pdf` files containing in that folder are sent to the processing queue.  
-> All documents within the same gsc folder are treated as related documents, that belong to the same application (patient).
-> When processed, documents are copied to `gs://${PROJECT_ID}-document-upload` with unique identifiers.
->
-> Wrapper script to upload each document as a standalone application inside `${PROJECT_ID}-pa-forms`:
-> ```shell
-> ./start_pipeline.sh -d <local-dir-with-forms>  -l <batch-name>
-> ```
->
-> Or send all documents within the directory as single Application with same Case ID:
-> ```shell
-> ./start_pipeline.sh -d <local-dir-with-forms> -l <batch-name> -p
-> ```
->
-> Or send a pdf document by name:
-> ```shell
-> ./start_pipeline.sh -d <local-dir-with-forms>/<my_doc>.pdf  -l <batch-name>
-> ```
->
-> Alternatively, send a single document to processing:
-> - Upload *pdf* form to the gs://<PROJECT_ID>-pa-forms/my_dir and
-> - Drop empty START_PIPELINE file to trigger the pipeline execution.
-> After putting START_PIPELINE, the pipeline is automatically triggered  to process  all PDF documents inside the gs://${PROJECT_ID}-pa-forms/<mydir> folder.
->
-> ```shell
-> gsutil cp  <my-local-dir>/<my_document>.pdf
-> gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<my-dir>/
-> touch START_PIPELINE
-> gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<my-dir>/
-> ```
-
-
-
-## Installation from the developer machine
-
-For the in-depth instructions please refer to this [page](#steps_original.md).
-
-[//]: # ()
-[//]: # (In order to run the example and deploy on a shared VPC the identity running Terraform must have the following IAM role on the Shared VPC Host project.)
-
-[//]: # (- Compute Network Admin &#40;roles/compute.networkAdmin&#41;)
-
-[//]: # (- Compute Shared VPC Admin &#40;roles/compute.xpnAdmin&#41;)
-
-
-## Setting up CDE and CDS 
-
-**Pre-requisites** 
+**Pre-requisites**
 - There should be at least 20 (recommended 50) customer  forms with filled data (of the same type), which could be used for training the processor for extraction and classification.
 - All forms need to be in pdf format
 
@@ -411,37 +379,37 @@ The Custom Document Extractor has already been deployed, but not yet trained. Th
 You can deploy and train additional Custom Document Extractor if you navigate to **Document AI -> Workbench** and select **Custom Document Extractor** -> CREATE PROCESSOR
 
 ### Custom Document Classifier
-Classifier allows mapping the document class to the processor required for data extraction. 
+Classifier allows mapping the document class to the processor required for data extraction.
 
 Configure Custom Document Classifier (Currently feature is not available for GA and needs to be requested via the [form](https://docs.google.com/forms/d/e/1FAIpQLSfDuC9bGyEwnseEYIC3I2LvNjzz-XZ2n1RS4X5pnIk2eSbk3A/viewform))
-  - After Project has been whitelisted for using Classifier, navigate to **Document AI -> Workbench**  and select **Custom Document Classifier** -> CREATE PROCESSOR.
-  - Create New Labels for each document type you plan to use.  
-  - Train Classifier using sample forms to classify the labels.
-  - Deploy the new trained version via the UI.
-  - Set the new version as default and test it manually via the UI by uploading the test document. is it classified properly?
+- After Project has been whitelisted for using Classifier, navigate to **Document AI -> Workbench**  and select **Custom Document Classifier** -> CREATE PROCESSOR.
+- Create New Labels for each document type you plan to use.
+- Train Classifier using sample forms to classify the labels.
+- Deploy the new trained version via the UI.
+- Set the new version as default and test it manually via the UI by uploading the test document. is it classified properly?
 
 > If you have just one sample_form.pdf, and you want to use it for classifier, use following utility to copy same form into the gcs bucket, later to use for classification. At least 10 instances are needed (all for Training set).
 ```shell
 utils/copy_forms.sh -f sample_data/<path_to_form>.pdf -d gs://<path_to_gs_uri> -c 10
 ```
 
-## <a name="system_config"></a>Configuring the System
+## Configuring the System
 - Config file is stored in the GCS bucket and dynamically used by the pipeline: `gs://${PROJECT_ID}-config/config.json`
 
 
-  - For the config changes, download, edit, and upload the  `gs://${PROJECT_ID}-config/config.json` file:
+- For the config changes, download, edit, and upload the  `gs://${PROJECT_ID}-config/config.json` file:
 
-    ```shell
-    gsutil cp "gs://${PROJECT_ID}-config/config.json" common/src/common/configs/config.json 
-    ```
+  ```shell
+  gsutil cp "gs://${PROJECT_ID}-config/config.json" common/src/common/configs/config.json 
+  ```
 
-  - Apply required changes as discussed later in this section. 
+- Apply required changes as discussed later in this section.
 
-  - Upload config:
-    ```shell
-    gsutil cp common/src/common/configs/config.json "gs://${PROJECT_ID}-config/config.json"
+- Upload config:
+  ```shell
+  gsutil cp common/src/common/configs/config.json "gs://${PROJECT_ID}-config/config.json"
 
-### Adding Classifier 
+### Adding Classifier
 Since currently Classifier is not in GA and has to be manually created, following section needs to be added inside  `parser_config` to activate Classification step (replace  <PROJECT_ID> and <PROCESSOR_ID> accordingly):
 
 ```shell
@@ -497,26 +465,26 @@ Where:
 ### General Settings
 `settings_config` section currently supports the following parameters:
 
-- `extraction_confidence_threshold` - threshold to mark documents for HITL as *Needs Review*. Compared with the *calculated average* confidence score across all document  labels. 
+- `extraction_confidence_threshold` - threshold to mark documents for HITL as *Needs Review*. Compared with the *calculated average* confidence score across all document  labels.
 - `field_extraction_confidence_threshold` - threshold to mark documents for HITL as *Needs Review*. Compared with the *minimum* confidence score across all document labels.
-- `classification_confidence_threshold` - threshold to pass Classification step. When the confidence score as returned by the Classifier is less, the default behavior is determined by the `classification_default_class` setting. If the settings is "None" or non-existing document type, document remain *Unclassified*. 
+- `classification_confidence_threshold` - threshold to pass Classification step. When the confidence score as returned by the Classifier is less, the default behavior is determined by the `classification_default_class` setting. If the settings is "None" or non-existing document type, document remain *Unclassified*.
 - `classification_default_class` - the default behavior for the unclassified forms (or when classifier is not configured). Needs to be a valid  name of the document type, as configured in the `document_types_config`.
 
 
 ## Cross-Project Setup
-Limitations: Two projects need to be within the same ORG. 
+Limitations: Two projects need to be within the same ORG.
 For further reference, lets define the two projects:
 - GCP Project to run the Claims Data Activator - Engine (**Project CDA**)
 - GCP Project to train and serve Document AI Processors and Classifier  (**Project DocAI**)
 
 If you want to enable cross project access, following steps need to be done:
 1) Inside Project DocAI [add](https://medium.com/@tanujbolisetty/gcp-impersonate-service-accounts-36eaa247f87c) following service account of the Project CDA `gke-sa@{PROJECT_CDA_ID}.iam.gserviceaccount.com` (used for GKE Nodes) and grant following  [roles](https://cloud.google.com/document-ai/docs/access-control/iam-roles):
-   - **Document AI Viewer** - To grant access to view all resources and process documents in Document AI
-   Where `{PROJECT_CDA_ID}` - to be replaced with the ID of the Project CDA
+  - **Document AI Viewer** - To grant access to view all resources and process documents in Document AI
+    Where `{PROJECT_CDA_ID}` - to be replaced with the ID of the Project CDA
 2) Inside Project CDA grant following permissions to the default Document AI service account of the Project DocAI: `service-{PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com`
-   - **Storage Object Viewer** - [To make files in Project CDA accessible to Project DocAI](https://cloud.google.com/document-ai/docs/cross-project-setup) (This could be done on the `${PROJECT_CDA_ID}-document-upload` and `${PROJECT_CDA_ID}-docai-output` bucket level with the forms to handle).
-   - **Storage Object Admin**  - To allow DocAI processor to save extracted entities as json files inside `${PROJECT_CDA_ID}-output` bucket of the Project CDA  (This could be done on the `${PROJECT_CDA_ID}-output` bucket level).
-   Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the Project DocAI
+  - **Storage Object Viewer** - [To make files in Project CDA accessible to Project DocAI](https://cloud.google.com/document-ai/docs/cross-project-setup) (This could be done on the `${PROJECT_CDA_ID}-document-upload` and `${PROJECT_CDA_ID}-docai-output` bucket level with the forms to handle).
+  - **Storage Object Admin**  - To allow DocAI processor to save extracted entities as json files inside `${PROJECT_CDA_ID}-output` bucket of the Project CDA  (This could be done on the `${PROJECT_CDA_ID}-output` bucket level).
+    Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the Project DocAI
 
 Above is equivalent to the following `gcloud` commands:
 ```shell
@@ -537,7 +505,119 @@ export PROJECT_ID=cda-ext-iap
 ./setup/setup_docai_access.sh
 ```
 
-## Rebuild / Re-deploy Microservices
+# CDA Usage
+## When Using Private Access
+
+- Create Windows VM in the VPC network used to deploy CDA Solution
+- Create firewall rules to open up TCP:3389 port for RDP connection 
+- [Connect to Windows VM using RDP](https://cloud.google.com/compute/docs/instances/connecting-to-windows)
+  - OpenUp IAP Tunnel by running following command:
+
+  ```shell
+  gcloud compute start-iap-tunnel VM_INSTANCE_NAME 3389     --local-host-port=localhost:3389     --zone=<YOUR_ONE> --project=$PROJECT_ID
+  ```
+
+
+## Out of the box Demo Flow
+
+Quick test to trigger pipeline to parse  the sample form:
+```shell
+./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
+```
+
+### Working from the UI
+In order to access the Application UI, Navigate to the API Domain IP Address or Domain Name (depending on the setup) in the browser and login with your Google credentials.
+Try Uploading the Document, using *Upload a Document* button.  From *Choose Program* drop-down, select a state ( pick any ).
+Right now, the Form Processor is set up as a default processor (since no classifier is deployed or trained), so each document will be processed with the Form Parser and extracted data will be streamed to the BigQuery.
+
+> The setting for the default processor is done through the following configuration setting  "settings_config" -> "classification_default_label".  Explained in details in the [Configuring the System](#configuring-the-system).
+
+As you click Refresh Icon on the top right, you will see different Status the Pipeline goes through: *Classifying -> Extracting -> Approved* or *Needs Review*.
+
+If you select *View* action, you will see the key/value pairs extracted from the Document.
+
+Navigate to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
+
+You could also run sample query from the Cloud Shell:
+```shell
+./sql-scripts/run_query.sh
+```
+
+### Triggering pipeline in a batch mode
+*NB: Currently only pdf documents are supported, so if you have a jpg or png, please first convert it to pdf.*
+
+For example, to trigger pipeline to parse  the sample form:
+```shell
+./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
+```
+
+> The Pipeline is triggered when an empty file named START_PIPELINE is uploaded to the `${PROJECT_ID}-pa-forms` GCS bucket. When the START_PIPELINE document is uploaded, all `*.pdf` files containing in that folder are sent to the processing queue.  
+> All documents within the same gsc folder are treated as related documents, that belong to the same application (patient).
+> When processed, documents are copied to `gs://${PROJECT_ID}-document-upload` with unique identifiers.
+>
+> Wrapper script to upload each document as a standalone application inside `${PROJECT_ID}-pa-forms`:
+> ```shell
+> ./start_pipeline.sh -d <local-dir-with-forms>  -l <batch-name>
+> ```
+>
+> Or send all documents within the directory as single Application with same Case ID:
+> ```shell
+> ./start_pipeline.sh -d <local-dir-with-forms> -l <batch-name> -p
+> ```
+>
+> Or send a pdf document by name:
+> ```shell
+> ./start_pipeline.sh -d <local-dir-with-forms>/<my_doc>.pdf  -l <batch-name>
+> ```
+>
+> Alternatively, send a single document to processing:
+> - Upload *pdf* form to the gs://<PROJECT_ID>-pa-forms/my_dir and
+> - Drop empty START_PIPELINE file to trigger the pipeline execution.
+> After putting START_PIPELINE, the pipeline is automatically triggered  to process  all PDF documents inside the gs://${PROJECT_ID}-pa-forms/<mydir> folder.
+>
+> ```shell
+> gsutil cp  <my-local-dir>/<my_document>.pdf
+> gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<my-dir>/
+> touch START_PIPELINE
+> gsutil cp START_PIPELINE gs://${PROJECT_ID}-pa-forms/<my-dir>/
+> ```
+
+# HITL
+Using Frontend UI it is possible to review and correct the data extracted by the DocAI.
+Documents with low confidence score are marked for the Review Process.
+
+Corrected values are saved to the BigQuery and could be retrieved using sample query:
+
+```shell
+export PROJECT_ID=
+```
+```shell
+sql-scripts/run_query.sh query_corrected_values.sql
+```
+
+Sample output:
+
+```shell
++----------------------+--------------------------------------+--------------------+----------------------------+---------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------+------------------------------------------------------------+------------+----------------------------------------------------------+
+|         uid          |               case_id                |   document_class   |         timestamp          |                                                    gcs_doc_path                                                     |                       corrected_value                       |                           value                            | confidence |                           name                           |
++----------------------+--------------------------------------+--------------------+----------------------------+---------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------+------------------------------------------------------------+------------+----------------------------------------------------------+
+| uPFanqkU7XgxVs3hmSQ0 | demo02-package_b1ee7248-d954-11ed    | pa_form_texas      | 2023-04-12T18:59:11.154157 | gs://cda-001-engine-document-upload/demo02-package_b1ee7248-d954-11ed/uPFanqkU7XgxVs3hmSQ0/pa-form-1.pdf            | 10672096568                                                 | : 10672096568                                              |          0 | spPhone                                                  |
+| uPFanqkU7XgxVs3hmSQ0 | demo02-package_b1ee7248-d954-11ed    | pa_form_texas      | 2023-04-12T18:59:11.154157 | gs://cda-001-engine-document-upload/demo02-package_b1ee7248-d954-11ed/uPFanqkU7XgxVs3hmSQ0/pa-form-1.pdf            | 12441600016                                                 | : 12441600016                                              |          0 | spFax                                                    |
+| luDiPU4fuT3IkPPKZsTm | demo01-package_520e0466-d886-11ed    | pa_form_cda        | 2023-04-11T16:36:26.804722 | gs://cda-001-engine-document-upload/demo01-package_520e0466-d886-11ed/luDiPU4fuT3IkPPKZsTm/bsc-dme-pa-form-1.pdf    | Shepherdborough                                             | Shepherdboroughtate                                        |       0.33 | beneficiaryCity                                          |
+| U3du4Ujnxz6s10YilVh1 | batch2_9aee5ba4-d999-11ed            | pa_form_cda        | 2023-04-13T04:54:38.711255 | gs://cda-001-engine-document-upload/batch2_9aee5ba4-d999-11ed/U3du4Ujnxz6s10YilVh1/pg4_Prior_Auth_bsc-combined.pdf  | CA                                                          | San Ramon                                                  |       0.35 | beneficiaryState                                         |                               |
+| dR7NPclwqQa7fOB3ZD6r | b7050058-d963-11ed-9d35-da2bd0c976e4 | pa_form_texas      | 2023-04-13T15:21:19.771042 | gs://cda-001-engine-document-upload/b7050058-d963-11ed-9d35-da2bd0c976e4/dR7NPclwqQa7fOB3ZD6r/pa-form-test25.pdf    | 0-288-12345-8                                               | 0-288-04411-8                                              |          1 | prevAuthNumber                                           |
+| UHcBHasyDTjssIZDK8MF | batch2_9aee5ba4-d999-11ed            | health_intake_form | 2023-04-13T04:57:39.769887 | gs://cda-001-engine-document-upload/batch2_9aee5ba4-d999-11ed/UHcBHasyDTjssIZDK8MF/pg5_bsc_pa_form_bsc-combined.pdf | Sally.walker@cmail.com                                      | Sally, walker@cmail.com                                    |          1 | Email                                                    |cy                                 |
++----------------------+--------------------------------------+--------------------+----------------------------+---------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------+------------------------------------------------------------+------------+----------------------------------------------------------+
+
+```
+
+In order to use this data to uptrain the model:
+* Documents to be uploaded to the GCS bucket and imported as a training set for the DocAI model with auto-labeling on.
+* An operator to review the BoundingBoxes and fix them appropriately (those uploaded documents will appear as Auto-labeled). Only BoundingBoxes  could be changed/fixed for CDE.
+* If text is extracted wrongly due to the OCR, nothing could be done for this model (do not change the text field itself, that info will not be handled by the DocAI).
+* Uptrain and deploy new model.
+
+# <a name="rebuild-redeploy-microservices"></a> Rebuild / Re-deploy Microservices
 
 Updated sources from the Git repo:
 ```shell
@@ -548,7 +628,7 @@ The following wrapper script will use skaffold to rebuild/redeploy microservices
 ./deploy.sh
 ```
 
-You can additionally [clear all existing data (in GCS, Firestore and BigQuery)](#cleaning_data) 
+You can additionally [clear all existing data (in GCS, Firestore and BigQuery)](#cleaning-data). 
 
 
 # Utilities
@@ -565,11 +645,11 @@ pip3 install -r utils/requirements.tx
   python utils/gen_config_processor.py -f <my-local-dir>/<my-sample-form>.pdf 
   ```
 
-## <a name="cleaning_data"></a>Cleaning Data
+## Cleaning Data
 
 Make sure to first install dependency libraries for utilities:
 ```shell
-pip3 install -r utils/requirements.tx
+pip3 install -r utils/requirements.txt
 ```
 
 - Following script cleans all document related data (requires PROJECT_ID to be set upfront as an env variable):
@@ -583,17 +663,20 @@ pip3 install -r utils/requirements.tx
   ```
   
 > Please, note, that due to active StreamingBuffer, BigQuery can only be cleaned after a table has received no inserts for an extended interval of time (~ 90 minutes). Then the buffer is detached and DELETE statement is allowed.
-> For more details see [here](https://cloud.google.com/blog/products/bigquery/life-of-a-bigquery-streaming-insert) .
+> For more details see [here](https://cloud.google.com/blog/products/bigquery/life-of-a-bigquery-streaming-insert).
 
-# Configuration Service
+## Configuration Service
 Config Service (used by adp ui):
 - `http://$API_DOMAIN/config_service/v1/get_config?name=document_types_config`
 - `http://$API_DOMAIN/config_service/v1/get_config`
 
-## Deployment Troubleshoot
+## Splitter
+
+[Included splitter utility to split the documents](utils/pdf-splitter/README.md).
+# Deployment Troubleshoot
 
 
-### Checking SSL certificates
+## Checking SSL certificates
 
 ```shell
 gcloud compute ssl-certificates list --global
@@ -615,9 +698,9 @@ gcloud compute ssl-policies list
 kubectl describe ingress
 ```
 
-### Terraform Troubleshoot
+## Terraform Troubleshoot
 
-#### App Engine already exists
+### App Engine already exists
 ```
 │ Error: Error creating App Engine application: googleapi: Error 409: This application already exists and cannot be re-created., alreadyExists
 │
@@ -633,12 +716,12 @@ terraform import module.firebase.google_app_engine_application.firebase_init $PR
 
 ```
 
-### CloudRun Troubleshoot
+## CloudRun Troubleshoot
 
 The CloudRun service “queue” is used as the task dispatcher from listening to Pub/Sub “queue-topic”
 - Go to CloudRun logging to see the errors
 
-### Frontend Web App
+## Frontend Web App
 
 - When opening up the ADP UI for the first time, you’ll see the HTTPS not secure error, like below:
 ```
@@ -649,267 +732,6 @@ Your connection is not private
 - (Optional) Click the “Not Secure” icon on the top, and select the “Certificate is not valid” option, and select “Always Trust”.
 
 
-# Development
-
-### Prerequisites
-
-Install required packages:
-
-- For MacOS:
-  ```
-  brew install --cask skaffold kustomize google-cloud-sdk
-  ```
-
-- For Windows:
-  ```
-  choco install -y skaffold kustomize gcloudsdk
-  ```
-
-* Make sure to use __skaffold 1.24.1__ or later for development.
-
-### Initial setup for local development
-After cloning the repo, please set up for local development.
-
-* Export GCP project id and the namespace based on your Github handle (i.e. user ID)
-  ```
-  export PROJECT_ID=<Your Project ID>
-  export SKAFFOLD_NAMESPACE=<Replace with your Github user ID>
-  export REGION=us-central1
-  ```
-* Log in gcloud SDK:
-  ```
-  gcloud auth login
-  ```
-* Run the following to set up critical context and environment variables:
-  ```
-  ./setup/setup_local.sh
-  ```
-  This shell script does the following:
-  - Set the current context to `gke_autodocprocessing-demo_us-central1_default_cluster`. The default cluster name is `default_cluster`.
-    > **IMPORTANT**: Please do not change this context name.
-  - Create the namespace $SKAFFOLD_NAMESPACE and set this namespace for any further kubectl operations. It's okay if the namespace already exists.
-
-### Build and run all microservices in the default GKE cluster
-
-> **_NOTE:_**  By default, skaffold builds with CloudBuild and runs in GKE cluster, using the namespace set above.
-
-To build and run in cluster:
-```
-skaffold run --port-forward
-```
-
-### Build and run all microservices in Develompent mode with live reload
-
-To build and run in cluster with hot reload:
-```
-skaffold dev --port-forward
-```
-- Please note that any change in the code will trigger the build process.
-
-### Build and run with a specific microservice
-
-```
-skaffold run --port-forward -m <Microservice>
-```
-
-You can also run multiple specific microservices altogether. E.g.:
-
-```
-skaffold run --port-forward -m sample-service,other-service
-```
-
-### Build and run microservices with a custom Source Repository path
-```
-skaffold dev --default-repo=<Image registry path> --port-forward
-```
-
-E.g. you can point to a different GCP Cloud Source Repository path:
-```
-skaffold dev --default-repo=gcr.io/another-project-path --port-forward
-```
-
-### Run with local minikube cluster
-
-Install Minikube:
-
-```
-# For MacOS:
-brew install minikube
-
-# For Windows:
-choco install -y minikube
-```
-
-Make sure the Docker daemon is running locally. To start minikube:
-```
-minikube start
-```
-- This will reset the kubectl context to the local minikube.
-
-To build and run locally:
-```
-skaffold run --port-forward
-
-# Or, to build and run locally with hot reload:
-skaffold dev --port-forward
-```
-
-Optionally, you may want to set `GOOGLE_APPLICATION_CREDENTIALS` manually to a local JSON key file.
-```
-GOOGLE_APPLICATION_CREDENTIALS=<Path to Service Account key JSON file>
-```
-
-### Deploy to a specific GKE cluster
-
-> **IMPORTANT**: Please change gcloud project and kubectl context before running skaffold.
-
-Replace the `<Custom GCP Project ID>` with a specific project ID and run the following:
-```
-export PROJECT_ID=<Custom GCP Project ID>
-
-# Switch to a specific project.
-gcloud config set project $PROJECT_ID
-
-# Assuming the default cluster name is "default_cluster".
-gcloud container clusters get-credentials default_cluster --zone us-central1-a --project $PROJECT_ID
-```
-
-Run with skaffold:
-```
-skaffold run -p custom --default-repo=gcr.io/$PROJECT_ID
-
-# Or run with hot reload and live logs:
-skaffold dev -p custom --default-repo=gcr.io/$PROJECT_ID
-```
-
-### Build and run microservices with a different Skaffold profile
-```
-# Using custom profile
-skaffold dev -p custom --port-forward
-
-# Using prod profile
-skaffold dev -p prod --port-forward
-```
-
-### Skaffold profiles
-
-By default, the Skaffold YAML contains the following pre-defined profiles ready to use.
-
-- **dev** - This is the default profile for local development, which will be activated automatically with the Kubectl context set to the default cluster of this GCP project.
-- **prod** - This is the profile for building and deploying to the Prod environment, e.g. to a customer's Prod environment.
-- **custom** - This is the profile for building and deploying to a custom GCP project environments, e.g. to deploy to a staging or a demo environment.
-
-### Useful Kubectl commands
-
-To check if pods are deployed and running:
-```
-kubectl get po
-
-# Or, watch the live update in a separate terminal:
-watch kubectl get po
-```
-
-To create a namespace:
-```
-kubectl create ns <New namespace>
-```
-
-To set a specific namespace for further kubectl operations:
-```
-kubectl config set-context --current --namespace=<Your namespace>
-```
-
-## Code Submission Process
-
-### For the first-time setup:
-* Create a fork of a Git repository
-  - Go to the specific Git repository’s page, click Fork at the right corner of the page:
-* Choose your own Github profile to create this fork under your name.
-* Clone the repo to your local computer. (Replace the variables accordingly)
-  ```
-  cd ~/workspace
-  git clone git@github.com:$YOUR_GITHUB_ID/$REPOSITORY_NAME.git
-  cd $REPOSITORY_NAME
-  ```
-  - If you encounter permission-related errors while cloning the repo, follow [this guide](https://docs.github.com/en/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) to create and add an SSH key for Github access (especially when checking out code with git@github.com URLs)
-* Verify if the local git copy has the right remote endpoint.
-  ```
-  git remote -v
-  # This will display the detailed remote list like below.
-  # origin  git@github.com:jonchenn/$REPOSITORY_NAME.git (fetch)
-  # origin  git@github.com:jonchenn/$REPOSITORY_NAME.git (push)
-  ```
-
-  - If for some reason your local git copy doesn’t have the correct remotes, run the following:
-    ```
-    git remote add origin git@github.com:$YOUR_GITHUB_ID/$REPOSITORY_NAME.git
-    # or to reset the URL if origin remote exists
-    git remote set-url origin git@github.com:$YOUR_GITHUB_ID/$REPOSITORY_NAME.git
-    ```
-
-* Add the upstream repo to the remote list as **upstream**.
-  ```
-  git remote add upstream git@github.com:$UPSTREAM_REPOSITORY_NAME.git
-  ```
-  - In default case, the $UPSTREAM_REPOSITORY_NAME will be the repo that you make the fork from.
-
-
-### When making code changes
-
-* Sync your fork with the latest commits in upstream/master branch. (more info)
-  ```
-  # In your local fork repo folder.
-  git checkout -f master
-  git pull upstream master
-  ```
-
-* Create a new local branch to start a new task (e.g. working on a feature or a bug fix):
-  ```
-  # This will create a new branch.
-  git checkout -b feature_xyz
-  ```
-
-* After making changes, commit the local change to this custom branch and push to your fork repo on Github. Alternatively, you can use editors like VSCode to commit the changes easily.
-  ```
-  git commit -a -m 'Your description'
-  git push
-  # Or, if it doesn’t push to the origin remote by default.
-  git push --set-upstream origin $YOUR_BRANCH_NAME
-  ```
-  - This will submit the changes to your fork repo on Github.
-
-* Go to your Github fork repo web page, click the “Compare & Pull Request” in the notification. In the Pull Request form, make sure that:
-  - The upstream repo name is correct
-  - The destination branch is set to master.
-  - The source branch is your custom branch. (e.g. feature_xyz in the example above.)
-  - Alternatively, you can pick specific reviewers for this pull request.
-
-* Once the pull request is created, it will appear on the Pull Request list of the upstream origin repository, which will automatically run tests and checks via the CI/CD.
-
-* If any tests failed, fix the codes in your local branch, re-commit and push the changes to the same custom branch.
-  ```
-  # after fixing the code…
-  git commit -a -m 'another fix'
-  git push
-  ```
-  - This will update the pull request and re-run all necessary tests automatically.
-  - If all tests passed, you may wait for the reviewers’ approval.
-
-* Once all tests pass and get approvals from reviewer(s), the reviewer or Repo Admin will merge the pull request back to the origin master branch.
-
-### (For Repo Admins) Reviewing a Pull Request
-For code reviewers, go to the Pull Requests page of the origin repo on Github.
-
-* Go to the specific pull request, review and comment on the request.
-branch.
-* Alternatively, you can use Github CLI `gh` to check out a PR and run the codes locally: https://cli.github.com/manual/gh_pr_checkout
-* If all goes well with tests passed, click Merge pull request to merge the changes to the master.
-
-Test for PR changes
-
-### (For Developers) Microservices Assumptions
-* app_registration_id used on the ui is referred as case_id in the API code
-* case_id is referred as external case_id in the firestore
 
 ## Troubleshooting Commands
 ```shell
@@ -929,3 +751,7 @@ terraform state list
 terraform state rm <...>
 
 ```
+
+# Development Guide
+
+For development guide, refer [here](docs/Development.md).
