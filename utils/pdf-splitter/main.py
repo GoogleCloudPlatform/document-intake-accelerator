@@ -159,7 +159,7 @@ def batch_process_document(
             f"output_bucket = {output_bucket}, output_prefix={output_prefix}, input_gcs_source = {input_gcs_source}, output_gcs_destination = {output_gcs_destination}")
         # Get List of Document Objects from the Output Bucket
         output_blobs = storage_client.list_blobs(output_bucket,
-                                                 prefix=output_prefix)
+                                                 prefix=output_prefix + "/")
 
         # Document AI may output multiple JSON files per source file
         for blob in output_blobs:
@@ -264,7 +264,7 @@ def process_file_batch(client, project_id, multi_region_location, dir_path,
 
     print(
         f"process_file_batch in_bucket_name={in_bucket_name} in_prefix={in_prefix}")
-    blobs = storage_client.list_blobs(in_bucket_name, prefix=in_prefix)
+    blobs = storage_client.list_blobs(in_bucket_name, prefix=in_prefix + "/")
 
     batch_size = 20
     out_bucket_name, out_prefix = helper.split_uri_2_bucket_prefix(output_dir)
@@ -321,7 +321,6 @@ def main(args: argparse.Namespace) -> int:
         parser.print_help()
         exit()
 
-    print(f"main with file_uri={args.file_uri}, ")
     client = DocumentProcessorServiceClient(
         client_options=ClientOptions(
             api_endpoint=f"{args.multi_region_location}-documentai.googleapis.com"
