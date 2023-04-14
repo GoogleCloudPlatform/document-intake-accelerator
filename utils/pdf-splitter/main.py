@@ -126,7 +126,7 @@ def batch_process_document(
         operation.result(timeout=timeout)
     # Catch exception when operation doesn't finish before timeout
     except (RetryError, InternalServerError) as e:
-        print(e.message)
+        print(f"Error: {e.message}")
 
     # NOTE: Can also use callbacks for asynchronous processing
     #
@@ -177,6 +177,9 @@ def batch_process_document(
             )
             dirs, file_name = helper.split_uri_2_path_filename(input_gcs_source)
             in_bucket, blob_name = helper.split_uri_2_bucket_prefix(input_gcs_source)
+
+            print(f"batch_process_document dirs = {dirs}, file_name = {file_name}")
+            print(f"batch_process_document in_bucket = {dirs}, blob_name = {file_name}")
 
             tempfolder, local_file_name = download_from_gcs(in_bucket, blob_name)
 
@@ -250,24 +253,33 @@ def process_file_online(client, project_id, multi_region_location, file_path,
 
 def process_file_batch(client, project_id, multi_region_location, dir_path,
     processor_id, output_dir):
+    print(
+        f"process_file_batch project_id={project_id} multi_region_location={multi_region_location} "
+        f"dir_path={dir_path}, processor_id={processor_id}, output_dir={output_dir}")
     processor_name = get_processor(client, project_id, multi_region_location,
                                    dir_path, output_dir, processor_id)
 
     in_bucket_name, in_prefix = helper.split_uri_2_bucket_prefix(dir_path)
+
+
     print(
-        f"process_file_batch dir_path={dir_path} in_bucket_name={in_bucket_name} in_prefix={in_prefix}")
+        f"process_file_batch in_bucket_name={in_bucket_name} in_prefix={in_prefix}")
     blobs = storage_client.list_blobs(in_bucket_name, prefix=in_prefix)
 
     batch_size = 20
     out_bucket_name, out_prefix = helper.split_uri_2_bucket_prefix(output_dir)
+    print(
+        f"process_file_batch out_bucket_name={out_bucket_name} out_prefix={out_prefix}")
     blob_uris = []
 
     # TODO send 5 requests a time in parallel
     for blob in blobs:
-        uri = f"gs://{dir_path}/{blob.name}"
-        print(f"Processing {uri} {blob.content_type}")
+        uri = f"{dir_path}/{blob.name}"
+        print(f"blob = {blob.name},  {blob.content_type}")
         if str(blob.name).endswith(".pdf"):
-            blob_uris.append(f"gs://{in_bucket_name}/{blob.name}")
+            uri = f"gs://{in_bucket_name}/{blob.name}"
+            blob_uris.append(uri)
+            print(f"Appending {uri}")
             if len(blob_uris) == batch_size:
                 print(f"Sending batch of {len(blob_uris)} forms for batch processing:  {','.join(blob_uris)}")
 
@@ -309,6 +321,7 @@ def main(args: argparse.Namespace) -> int:
         parser.print_help()
         exit()
 
+    print(f"main with file_uri={args.file_uri}, ")
     client = DocumentProcessorServiceClient(
         client_options=ClientOptions(
             api_endpoint=f"{args.multi_region_location}-documentai.googleapis.com"
@@ -430,6 +443,7 @@ def split_pdf(entities: Sequence[Document.Entity], file_path: str,
     """
       Create subdocuments based on Splitter/Classifier output
       """
+    print(f"split_pdf using source file with file_path={file_path} and output_dir={output_dir}")
     with Pdf.open(file_path) as original_pdf:
         # Create New PDF for each SubDocument
         print(f"Total subdocuments: {len(entities)}")
@@ -439,17 +453,21 @@ def split_pdf(entities: Sequence[Document.Entity], file_path: str,
             end = int(entity.page_anchor.page_refs[-1].page)
             subdoc_type = entity.type_ or "subdoc"
             confidence = float('%.2f' % entity.confidence)
+
             # confidence = entity.confidence
             if start == end:
                 page_range = f"pg{start + 1}"
             else:
                 page_range = f"pg{start + 1}-{end + 1}"
-
             output_filename = f"{page_range}_{subdoc_type}"
+            print(f"start = {start}, end = {end}, subdoc_type={subdoc_type},"
+                  f" confidence={confidence}, page_range={page_range},"
+                  f" output_filename={output_filename}")
 
             print(
                 f"Creating subdocument {index + 1}: {output_filename} (confidence: {confidence})")
 
+            print(f"original_pdf.pages={original_pdf.pages}")
             subdoc = Pdf.new()
             for page_num in range(start, end + 1):
                 subdoc.pages.append(original_pdf.pages[page_num])
@@ -475,11 +493,11 @@ if __name__ == "__main__":
                         help="Path to file (gcs uri or local)")
 
     parser.add_argument(
-        "-o", "--output-dir",
+        "-o", "--output-dir", dest="output_dir",
         help="directory to save sub-documents, default: input PDF directory",
     )
     parser.add_argument(
-        "--project-id", help="Project ID to use to call the Document AI API"
+        "--project-id", dest="project_id", help="Project ID to use to call the Document AI API"
     )
     parser.add_argument(
         "--multi-region-location",
