@@ -122,17 +122,6 @@ def get_document_types_config():
   return get_config("document_types_config")
 
 
-def get_display_name_by_doc_class(doc_class):
-  doc = get_document_types_config().get(doc_class)
-  if not doc:
-    Logger.error(f"doc_class {doc_class} not present in document_types_config")
-    return None
-
-  display_name = doc.get("display_name")
-  Logger.info(f"Using doc_class={doc_class}, display_name={display_name}")
-  return display_name
-
-
 def get_parser_by_doc_class(doc_class):
   doc = get_document_types_config().get(doc_class)
   if not doc:
@@ -202,6 +191,17 @@ def get_document_type(doc_name):
   return None
 
 
+def get_display_name_by_doc_class(doc_class):
+  doc = get_document_types_config().get(doc_class)
+  if not doc:
+    Logger.error(f"doc_class {doc_class} not present in document_types_config")
+    return None
+
+  display_name = doc.get("display_name")
+  Logger.info(f"Using doc_class={doc_class}, display_name={display_name}")
+  return display_name
+
+
 def get_document_class_by_classifier_label(label_name):
   for k, v in get_document_types_config().items():
     if v.get("classifier_label") == label_name:
@@ -224,6 +224,7 @@ DB_KEYS = [
     "url",
     "context",
     "document_class",
+    "document_display_name",
     "document_type",
     "upload_timestamp",
     "extraction_score",
