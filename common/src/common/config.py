@@ -224,7 +224,6 @@ DB_KEYS = [
     "url",
     "context",
     "document_class",
-    "document_display_name",
     "document_type",
     "upload_timestamp",
     "extraction_score",

@@ -62,7 +62,6 @@ def update_classification_status(case_id: str,
                                  status: str,
                                  document_class: Optional[str] = None,
                                  document_type: Optional[str] = None,
-                                 document_display_name: Optional[str] = None,
 ):
   """ Call status update api to update the classification output
     Args:
@@ -77,8 +76,7 @@ def update_classification_status(case_id: str,
   if status == STATUS_SUCCESS:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
     f"&status={status}&document_class={document_class}"\
-      f"&document_type={document_type}"\
-      f"&document_display_name={document_display_name}"
+      f"&document_type={document_type}"
     response = requests.post(req_url)
     return response
 
@@ -161,8 +159,7 @@ async def classification(case_id: str, uid: str, gcs_url: str):
           uid,
           STATUS_SUCCESS,
           document_class=doc_class,
-          document_type=doc_type,
-          document_display_name=doc_display_name)
+          document_type=doc_type)
       Logger.info(response)
       if response.status_code != 200:
         Logger.error(f"Document status update failed for {case_id} and {uid}")

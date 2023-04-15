@@ -72,6 +72,12 @@ def strean_data_to_bq(doc):
   # Logger.info(f"returned status {bq_update_status}")
 
 
+def to_camel_case(input_str):
+  input_str = input_str.replace("_", "")
+  temp = input_str.split(' ')
+  res = ' '.join([*map(str.title, temp)])
+  return res
+
 def get_doc_list_data(docs_list: list):
   for doc in docs_list:
     print()
@@ -87,6 +93,18 @@ def get_doc_list_data(docs_list: list):
 
     doc["applicant_name"] = name
 
+    document_class = doc["document_class"]
+    document_display_name = None
+    if document_class is not None:
+      document_display_name = get_display_name_by_doc_class(document_class)
+
+    # Keep the Old Logic in case
+    if document_display_name is None:
+      doc_type = to_camel_case(doc['document_type']) if doc['document_type'] is not None else 'no type'
+      doc_class = to_camel_case(doc['document_type']) if doc['document_class'] is not None else 'unclassified'
+      document_display_name = f"{doc_type} > {doc_class}"
+
+    doc["document_display_name"] = document_display_name
     process_stage = "-"
     current_status = "-"
     status_last_updated_by = "-"
@@ -491,8 +509,7 @@ def update_classification_status(case_id: str,
     uid: str,
     status: str,
     document_class: Optional[str] = None,
-    document_type: Optional[str] = None,
-    document_display_name: Optional[str] = None):
+    document_type: Optional[str] = None):
   """ Call status update api to update the classification output
     Args:
     case_id (str): Case id of the file ,
@@ -506,8 +523,7 @@ def update_classification_status(case_id: str,
   if status == STATUS_SUCCESS:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
               f"&status={status}&is_hitl={True}&document_class={document_class}" \
-              f"&document_type={document_type}" \
-              f"&document_display_name={document_display_name}"
+              f"&document_type={document_type}"
     response = requests.post(req_url)
     return response
 
@@ -570,7 +586,6 @@ async def update_hitl_classification(case_id: str, uid: str,
     Logger.info(f"Starting manual classification for case_id" \
                 f" {case_id} and uid {uid}")
     document_type = document_types_config[document_class].get("doc_type")
-    document_display_name = get_display_name_by_doc_class(document_class)
     if not document_type:
       Logger.error(f"Doc class {document_class} is not a valid doc class, because missing doc_type property")
       update_classification_status(case_id, uid, STATUS_ERROR)
@@ -585,8 +600,7 @@ async def update_hitl_classification(case_id: str, uid: str,
         uid,
         STATUS_SUCCESS,
         document_class=document_class,
-        document_type=document_type,
-        document_display_name=document_display_name
+        document_type=document_type
         )
     print(response)
     if response.status_code != 200:

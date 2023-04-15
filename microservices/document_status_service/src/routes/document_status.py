@@ -81,7 +81,6 @@ async def update_classification_status(
     is_hitl: Optional[bool] = False,
     document_class: Optional[str] = None,
     document_type: Optional[str] = None,
-    document_display_name: Optional[str] = None,
 ):
   """takes case_id , uid , document_class ,document_type ,status of
         classification service as input
@@ -108,7 +107,6 @@ async def update_classification_status(
       #update  the document type and document class
       document.document_class = document_class
       document.document_type = document_type
-      document.document_display_name = document_display_name
       document.is_hitl_classified = is_hitl
       system_status = {
           "is_hitl": is_hitl,
