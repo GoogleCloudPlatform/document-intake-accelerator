@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import os.path
 import re
 
 import common.config
@@ -94,7 +95,7 @@ class DocClassifier:
     }
     # Configure the process request
     request = {"name": name, "raw_document": document}
-    Logger.info(f"Specialized parser extraction api called for processor {CLASSIFIER} with id={processor_path}")
+    Logger.info(f"get_classification_predictions for processor {CLASSIFIER} with id={processor_path}")
     # send request to parser
     result = client.process_document(request=request)
     parser_doc_data = result.document
@@ -102,12 +103,13 @@ class DocClassifier:
     scores = []
     labels = []
 
+    Logger.info(f"Classification predictions for {os.path.basename(self.doc_path)}")
     for entity in parser_doc_data.entities:
       label = entity.type_.replace("/", "_")
       # if label in DOC_CLASS_CONFIG_MAP.keys():
       #   label = DOC_CLASS_CONFIG_MAP[label]
       score = entity.confidence
-      Logger.info(f"Document Class = {label}  with confidence = {score}")
+      Logger.info(f"Classification prediction results:  document_class={label}  with confidence={score}")
       scores.append(score)
       labels.append(label)
     # # Sample raw prediction_result
@@ -149,12 +151,17 @@ class DocClassifier:
             predicted_score = prediction_result["scores"][index]
             predicted_class = get_document_class_by_classifier_label(label)
 
-      if predicted_score < get_classification_confidence_threshold():
+      classification_threshold = get_classification_confidence_threshold()
+      if predicted_score < classification_threshold:
         predicted_class = get_classification_default_class()
+        Logger.warning(f"Classification prediction score={predicted_score} "
+                       f" does not pass classification threshold={classification_threshold}."
+                       f" Falling back on default type={predicted_class}")
 
-      Logger.info(f"Classification results in predicted_class={predicted_class}, "
-                  f"predicted_score={predicted_score} for case_id={self.case_id}  "
-                  f"uid={self.uid} gcs_url={self.pdf_path}")
+      Logger.info(f"Classification prediction results: predicted_class={predicted_class}, "
+                  f"predicted_score={predicted_score} for  gcs_url={self.pdf_path},"
+                  f"case_id={self.case_id}, "
+                  f"uid={self.uid}")
 
       output = {
           'case_id': self.case_id,

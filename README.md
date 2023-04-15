@@ -51,6 +51,7 @@
   * [CloudRun Troubleshoot](#cloudrun-troubleshoot)
   * [Frontend Web App](#frontend-web-app)
   * [Troubleshooting Commands](#troubleshooting-commands)
+- [CDA Troubleshoot](#cda-troubleshoot)
 - [Development Guide](#development-guide)
 
 # Introduction
@@ -750,6 +751,21 @@ helm history ingress-nginx -n ingress-nginx
 terraform state list
 terraform state rm <...>
 
+```
+
+# CDA Troubleshoot
+
+## Classification Service Logs
+
+Search for `Classification prediction` to get summary of the prediction results:
+
+```shell
+2023-04-14 17:35:52.542 PDT | Classification predictions for 76983ddc-db25-11ed-90fd-faad96329953_aOA5oKoKS3jszgrQ7rTr_bsc-dme-pa-form-1.pdf
+2023-04-14 17:35:52.543 PDT | Classification prediction results: document_class=fax_cover_page with confidence=0.0008332811412401497
+2023-04-14 17:35:52.543 PDT | Classification prediction results: document_class=pa_form_texas with confidence=0.0009312000474892557
+2023-04-14 17:35:52.543 PDT | Classification prediction results: document_class=pa_form_cda with confidence=0.9972623586654663
+2023-04-14 17:35:52.543 PDT | Classification prediction results: document_class=health_intake_form with confidence=0.0009731759782880545
+2023-04-14 17:35:53.178 PDT | Classification prediction results: predicted_class=pa_form_cda, predicted_score=0.9972623586654663
 ```
 
 # Development Guide

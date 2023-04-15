@@ -24,8 +24,8 @@ import traceback
 from fastapi import APIRouter, HTTPException
 
 from common.utils.logging_handler import Logger
-from common.config import get_document_type
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+from common.config import get_document_type, get_display_name_by_doc_class
+from common.config import STATUS_SUCCESS, STATUS_ERROR
 from utils.classification.split_and_classify import DocClassifier
 
 # disabling for linting to pass
@@ -61,7 +61,9 @@ def update_classification_status(case_id: str,
                                  uid: str,
                                  status: str,
                                  document_class: Optional[str] = None,
-                                 document_type: Optional[str] = None):
+                                 document_type: Optional[str] = None,
+                                 document_display_name: Optional[str] = None,
+):
   """ Call status update api to update the classification output
     Args:
     case_id (str): Case id of the file ,
@@ -75,7 +77,8 @@ def update_classification_status(case_id: str,
   if status == STATUS_SUCCESS:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
     f"&status={status}&document_class={document_class}"\
-      f"&document_type={document_type}"
+      f"&document_type={document_type}"\
+      f"&document_display_name={document_display_name}"
     response = requests.post(req_url)
     return response
 
@@ -117,15 +120,15 @@ async def classification(case_id: str, uid: str, gcs_url: str):
 
   try:
 
-    Logger.info(f"Starting classification for {case_id} and {uid} with gcs_url {gcs_url}")
+    Logger.info(f"Starting classification for gcs_url={gcs_url}, case_id={case_id} and uid={uid} ")
 
     # Making prediction
     doc_prediction_result = predict_doc_type(case_id, uid, gcs_url)
 
     if doc_prediction_result and doc_prediction_result["predicted_class"] is not None:
       classification_score = doc_prediction_result["model_conf"]
-      Logger.info(f"Classification confidence for {case_id} and {uid} is"\
-        f" {classification_score}")
+      Logger.info(f"Classification confidence for gcs_url={gcs_url} is "\
+        f"{classification_score}")
 
       if doc_prediction_result["predicted_class"].lower(
       ) == CLASSIFICATION_UNDETECTABLE.lower():
@@ -143,7 +146,7 @@ async def classification(case_id: str, uid: str, gcs_url: str):
 
       doc_class = doc_prediction_result["predicted_class"]
       doc_type = get_document_type(doc_class)
-
+      doc_display_name = get_display_name_by_doc_class(doc_class)
       SUCCESS_RESPONSE["case_id"] = doc_prediction_result["case_id"]
       SUCCESS_RESPONSE["uid"] = uid
       SUCCESS_RESPONSE["doc_type"] = doc_type
@@ -158,7 +161,8 @@ async def classification(case_id: str, uid: str, gcs_url: str):
           uid,
           STATUS_SUCCESS,
           document_class=doc_class,
-          document_type=doc_type)
+          document_type=doc_type,
+          document_display_name=doc_display_name)
       Logger.info(response)
       if response.status_code != 200:
         Logger.error(f"Document status update failed for {case_id} and {uid}")
