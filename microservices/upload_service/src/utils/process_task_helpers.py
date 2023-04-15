@@ -75,7 +75,7 @@ def run_pipeline(payload: List[Dict], is_hitl: bool, is_reassign: bool):
             extraction_field_min_score = extraction_output[1]
             extraction_entities = extraction_output[2]
             Logger.info(f" Executing pipeline for normal scenario {doc}")
-            if extraction_score is not None and extraction_entities:
+            if extraction_score is not None:
               Logger.info(f"extraction score is {extraction_score}, {doc}")
               validate_match_approve(doc, extraction_score, extraction_field_min_score, extraction_entities)
           else:
