@@ -35,18 +35,26 @@ firebase_admin.initialize_app(credentials.ApplicationDefault(), {
 db = firestore.client()
 
 
-def delete_firestore_documents_by_caseid_prefix(collection_id, case_id_prefix, dryrun=False):
+def delete_document(document, dryrun):
+  print(f" ---> Document uid={document.uid}, case_id={document.case_id}")
+  if not dryrun:
+    print(f"      Deleting uid={document.uid}, url={document.url}")
+    document.delete_by_id(document.uid)
+
+
+def delete_firestore_documents_by_caseid_prefix(collection_id, case_id_prefix_include, case_id_prefix_exclude, dryrun=False):
   docs = db.collection(collection_id).stream()
 
   for doc in docs:
     document = Document.from_dict(doc.to_dict())
     case_id = document.case_id
-    if case_id is not None and case_id.startswith(case_id_prefix):
-      print(f" ---> Document uid={document.uid}, case_id={document.case_id}")
-      if not dryrun:
-        print(f"      Deleting uid={document.uid}, url={document.url}")
-        document.delete_by_id(document.uid)
-
+    if case_id is not None:
+      #If include list is empty, and exclude is not empty, remove all except those to be excluded
+      to_include = (len(case_id_prefix_include) == 0 and len(case_id_prefix_exclude) != 0) \
+                   or case_id.startswith(tuple(case_id_prefix_include))
+      to_exclude = case_id.startswith(tuple(case_id_prefix_exclude))
+      if to_include and not to_exclude:
+        delete_document(document, dryrun)
 
 
 def get_args():
@@ -62,22 +70,28 @@ def get_args():
       python delete_firestore_documents_by_caseid_prefix.py -c=batch002_
       """)
 
-  args_parser.add_argument('-c', dest="case_id_prefix", help="case_id prefix to filter")
-  args_parser.add_argument('-dry', dest="case_id_prefix", help="case_id prefix to filter")
+  args_parser.add_argument('-i', dest="include", help="case_id prefix of documents you want to cleanup", action="append", default=[])
+  args_parser.add_argument('-e', dest="exclude", help="case_id prefix of the document you want to keep after the operations", action="append", default=[])
   args_parser.add_argument('--dryrun', action='store_true',
                       help='Print the list of documents to be deleted instead of performing delete action '
                            'of running the commands.')
   return args_parser
 
+
 if __name__ == "__main__":
   parser = get_args()
   args = parser.parse_args()
 
-  if args.case_id_prefix is None:
-    raise Exception("case_id_prefix is not defined. Database cleanup skipped.")
+  include = args.include
+  exclude = args.exclude
+  if len(include) == 0 and len(exclude) == 0:
+    raise Exception("case_id_prefix not specified neither for include nor for exclude list. Database cleanup skipped.")
 
   if args.dryrun:
-    print(f"Performing dry run on firebase collection using case_id prefix=[{args.case_id_prefix}]")
+    print(f"Performing dry run on firebase collection using case_id prefix: to include={include}, to exclude={exclude}")
   else:
-    print(f"Deleting documents from firebase collection using case_id prefix=[{args.case_id_prefix}]")
-  delete_firestore_documents_by_caseid_prefix(f"document", args.case_id_prefix, dryrun=args.dryrun)
+    print(f"Deleting documents from firebase collection using case_id prefix: to include={include}, to exclude={exclude}")
+  delete_firestore_documents_by_caseid_prefix(f"document",
+                                              case_id_prefix_include=include,
+                                              case_id_prefix_exclude=exclude,
+                                              dryrun=args.dryrun)
