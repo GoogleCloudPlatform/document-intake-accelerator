@@ -334,7 +334,7 @@ def main(args: argparse.Namespace) -> int:
             file_path = os.path.abspath(args.file_uri)
             if not args.output_dir:
                 args.output_dir = os.path.dirname(file_path)
-            if PDF_EXTENSION not in args.file_path:
+            if not file_path.lower().endswith(PDF_EXTENSION.lower()):
                 print(f"Input file {args.file_path} is not a PDF")
                 return 1
             if not os.path.isfile(file_path):

@@ -34,7 +34,13 @@ if [ -z "$gs_dir" ]; then
   gs_dir="$(basename "$FROM_DIR")"
 fi
 GS_URL="gs://$PROJECT_ID-pa-forms/$gs_dir"
-INPUT=${PWD}/$FROM_DIR
+
+if [[ "$DIR" = /* ]]; then
+  INPUT="${FROM_DIR}"
+else
+  INPUT="${PWD}/${FROM_DIR}"
+fi
+
 i=0
 
 echo ">>> Source=[$FROM_DIR], Destination=[$GS_URL], packaged=$is_package"
@@ -115,7 +121,7 @@ fi
 # Will process all folders inside Batch1 as packaged cases
 #./start_pipeline.sh -d gs://cda-001-engine-sample-forms/Batch1  -p
 
-# What comes after -l - will also be sued as a directory name inside pa-forms bucket
+# What comes after -l - will also be used as a directory name inside pa-forms bucket
 #./start_pipeline.sh -d gs://sample_data/bsc_demo -l demo-package
 #./start_pipeline.sh -d sample_data/bsc_demo -l demo-package -p
 # ./start_pipeline.sh -d sample_data/forms-10  -l demo-batch
