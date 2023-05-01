@@ -35,21 +35,23 @@ if [ -z "$gs_dir" ]; then
 fi
 GS_URL="gs://$PROJECT_ID-pa-forms/$gs_dir"
 
-if [[ "$DIR" = /* ]]; then
+if [[ "$FROM_DIR" = /* ]]; then
   INPUT="${FROM_DIR}"
+  echo "absolute path"
 else
   INPUT="${PWD}/${FROM_DIR}"
+  echo "relative path"
 fi
 
 i=0
 
 echo ">>> Source=[$FROM_DIR], Destination=[$GS_URL], packaged=$is_package"
-
-if [ -d "$FROM_DIR"/ ]; then
-  echo "Using all PDF files inside directory $FROM_DIR"
+exit
+if [ -d "$INPUT"/ ]; then
+  echo "Using all PDF files inside directory $INPUT"
 
   if [ "$is_package" = "false" ]; then
-    cd "$FROM_DIR" || exit;
+    cd "$INPUT" || exit;
     for FILE in *.pdf; do
       i=$((i+1))
       URL="gs://$PROJECT_ID-pa-forms/${gs_dir}_${i}/"
