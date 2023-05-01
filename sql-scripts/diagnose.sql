@@ -1,0 +1,1 @@
+SELECT __beneficiaryZip as ZIP, __diagCode as DiagCode, __diagDescription as Description  FROM `validation.pa_forms_bsc_flat`

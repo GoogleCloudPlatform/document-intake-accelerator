@@ -22,8 +22,8 @@
 
 WITH latest AS (
     SELECT *
-    FROM `validation_table` t
-    WHERE timestamp = (SELECT MAX(timestamp) FROM `validation_table` WHERE uid = t.uid )
+    FROM `validation.validation_table` t
+    WHERE timestamp = (SELECT MAX(timestamp) FROM `validation.validation_table` WHERE uid = t.uid )
     ),
     flattened_1 AS (
 SELECT *,
@@ -35,3 +35,4 @@ FROM latest l
     CROSS JOIN UNNEST(JSON_QUERY_ARRAY(entities, "$")) parent
     )
 SELECT * except (entities, parent) FROM flattened_1
+ORDER BY confidence ASC

@@ -1,0 +1,1 @@
+SELECT value as Name, document_class as Form FROM `validation.entities` where name="patientName" or name="beneficiaryName" LIMIT 1000

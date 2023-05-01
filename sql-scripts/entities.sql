@@ -22,8 +22,8 @@
 
 WITH latest AS (
     SELECT *
-    FROM `validation_table` t
-    WHERE timestamp = (SELECT MAX(timestamp) FROM `validation_table` WHERE uid = t.uid )
+    FROM `validation.validation_table` t
+    WHERE timestamp = (SELECT MAX(timestamp) FROM `validation.validation_table` WHERE uid = t.uid )
     ),
     flattened_1 AS (
 SELECT *,
