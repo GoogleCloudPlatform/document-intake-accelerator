@@ -23,7 +23,7 @@
 WITH latest AS (
     SELECT *
     FROM `validation.validation_table` t
-    WHERE timestamp = (SELECT MAX(timestamp) FROM `validation.validation_table` WHERE uid = t.uid )
+    WHERE timestamp = (SELECT MAX(timestamp) FROM `validation.validation_table` WHERE uid = t.uid ) /*and  timestamp > cast('2023-05-02T19:00:00' as datetime)*/
     ),
     flattened_1 AS (
 SELECT *,

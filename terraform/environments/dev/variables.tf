@@ -25,6 +25,15 @@ variable "project_id" {
   }
 }
 
+variable "dataset_id" {
+  type        = string
+  description = "Dataset ID"
+  validation {
+    condition     = length(var.dataset_id) > 0
+    error_message = "The dataset_id value must be an non-empty string."
+  }
+}
+
 variable "docai_project_id" {
   type        = string
   description = "GCP Project ID where DocAI processors will be deployed"

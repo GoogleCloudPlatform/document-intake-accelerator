@@ -372,6 +372,18 @@ module "validation_bigquery" {
     time_sleep.wait_for_project_services
   ]
   source = "../../modules/bigquery"
+  dataset_id = var.dataset_id
+  project_id = var.project_id
+}
+
+# Create Views.
+resource "null_resource" "bigquery_views" {
+  depends_on = [
+    validation_bigquery
+  ]
+  provisioner "local-exec" {
+    command = "../../../sql-scripts/create_views.sh"
+  }
 }
 
 # ================= Document AI Parsers ====================

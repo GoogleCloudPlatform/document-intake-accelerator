@@ -1,1 +1,1 @@
-SELECT __beneficiaryZip as ZIP, __diagCode as DiagCode, __diagDescription as Description  FROM `validation.pa_forms_bsc_flat`
+SELECT __beneficiaryZip as ZIP, __diagCode as DiagCode, __diagDescription as Description  FROM `validation.pa_forms_bsc_flat` where timestamp > cast('2023-05-02T19:00:00' as datetime)
