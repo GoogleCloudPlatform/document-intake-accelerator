@@ -48,7 +48,7 @@ from .utils_functions import entities_extraction, download_pdf_gcs, \
   clean_form_parser_keys, strip_value
 from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME, \
   DOCAI_ATTRIBUTES_TO_IGNORE
-from common.config import  get_docai_entity_mapping
+from common.config import get_docai_entity_mapping
 from common.utils.logging_handler import Logger
 import warnings
 from google.cloud import storage
@@ -69,22 +69,27 @@ def get_key_values_dic(entity: documentai.Document.Entity,
   # the processor documentation:
   # https://cloud.google.com/document-ai/docs/processors-list
 
-  entity_key = entity.type_.replace("/", "_")
-  confidence = entity.confidence
-  normalized_value = getattr(entity, "normalized_value", None)
+  entity_key = entity.get("type", "").replace("/", "_")
+  confidence = entity.get("confidence")
+  normalized_value = entity.get("normalizedValue")
+
+  if normalized_value:
+    if isinstance(normalized_value, dict) and "booleanValue" in normalized_value.keys():
+      normalized_value = normalized_value.get("booleanValue")
+    else:
+      normalized_value = normalized_value.get("text")
 
   if parent_key is not None and parent_key in document_entities.keys():
     key = parent_key
     new_entity_value = (
         entity_key,
-        normalized_value.text if normalized_value else entity.mention_text,
+        normalized_value if normalized_value is not None else entity.get("mentionText"),
         confidence,
-
     )
   else:
     key = entity_key
     new_entity_value = (
-        normalized_value.text if normalized_value else entity.mention_text,
+        normalized_value if normalized_value is not None else entity.get("mentionText"),
         confidence,
     )
 
@@ -93,55 +98,15 @@ def get_key_values_dic(entity: documentai.Document.Entity,
     document_entities[key] = []
     existing_entity = document_entities.get(key)
 
-  if len(entity.properties) > 0:
+  if len(entity.get("properties", [])) > 0:
     # Sub-labels (only down one level)
-    for prop in entity.properties:
+    for prop in entity.get("properties", []):
       get_key_values_dic(prop, document_entities, entity_key)
   else:
     existing_entity.append(new_entity_value)
 
 
-def specialized_parser_extraction(processor, dai_client, gcs_doc_path: str,
-    doc_class: str, context: str):
-  """
-    This is specialized parser extraction main function.
-    It will send request to parser and retrieve response and call
-        default and derived entities functions
-
-    Parameters
-    ----------
-    parser_details: It has parser info like parser id, name, location, and etc
-    gcs_doc_path: Document gcs path
-    doc_class: Document class
-
-    Returns: Specialized parser response - list of dicts having entity,
-     value, confidence and manual_extraction information.
-    -------
-  """
-
-  blob = download_pdf_gcs(gcs_uri=gcs_doc_path)
-
-  document = {
-      "content": blob.download_as_bytes(),
-      "mime_type": "application/pdf"
-  }
-  # Configure the process request
-  request = {"name": processor.name, "raw_document": document}
-
-  Logger.info(f"Calling Specialized parser extraction api for processor with name={processor.name} type={processor.type_}")
-  start = time.time()
-  # send request to parser
-  result = dai_client.process_document(request=request)
-  elapsed ="{:.0f}".format(time.time() - start)
-  Logger.info(f"Elapsed time for operation {elapsed} seconds")
-
-  parser_doc_data = result.document
-  # convert to json
-  json_string = proto.Message.to_json(parser_doc_data)
-  # print("*********** Extracted data:")
-  # print(json.dumps(parser_doc_data.entities, indent=4))
-  # print("***********")
-  data = json.loads(json_string)
+def specialized_parser_extraction_from_json(data, doc_class: str, context: str):
   # remove unnecessary entities from parser
   for each_attr in DOCAI_ATTRIBUTES_TO_IGNORE:
     if "." in each_attr:
@@ -152,7 +117,7 @@ def specialized_parser_extraction(processor, dai_client, gcs_doc_path: str,
       data.pop(each_attr, None)
 
   document_entities: Dict[str, Any] = {}
-  for entity in parser_doc_data.entities:
+  for entity in data.get('entities'):
     get_key_values_dic(entity, document_entities)
 
   names = []
@@ -219,6 +184,50 @@ def specialized_parser_extraction(processor, dai_client, gcs_doc_path: str,
   return specialized_parser_entity_list
 
 
+def specialized_parser_extraction(processor, dai_client, gcs_doc_path: str, doc_class: str, context: str):
+  """
+    This is specialized parser extraction main function.
+    It will send request to parser and retrieve response and call
+        default and derived entities functions
+
+    Parameters
+    ----------
+    parser_details: It has parser info like parser id, name, location, and etc
+    gcs_doc_path: Document gcs path
+    doc_class: Document class
+
+    Returns: Specialized parser response - list of dicts having entity,
+     value, confidence and manual_extraction information.
+    -------
+  """
+
+  blob = download_pdf_gcs(gcs_uri=gcs_doc_path)
+
+  document = {
+      "content": blob.download_as_bytes(),
+      "mime_type": "application/pdf"
+  }
+  # Configure the process request
+  request = {"name": processor.name, "raw_document": document}
+
+  Logger.info(f"Calling Specialized parser extraction api for processor with name={processor.name} type={processor.type_}")
+  start = time.time()
+  # send request to parser
+  result = dai_client.process_document(request=request)
+  elapsed ="{:.0f}".format(time.time() - start)
+  Logger.info(f"Elapsed time for operation {elapsed} seconds")
+
+  parser_doc_data = result.document
+  # convert to json
+  json_string = proto.Message.to_json(parser_doc_data)
+  # print("*********** Extracted data:")
+  # print(json.dumps(parser_doc_data.entities, indent=4))
+  # print("***********")
+  data = json.loads(json_string)
+  return specialized_parser_extraction_from_json(data, doc_class, context)
+
+
+
 def write_config(bucket_name, blob_name, keys):
   storage_client = storage.Client()
   bucket = storage_client.bucket(bucket_name)
@@ -263,7 +272,7 @@ def form_parser_extraction(processor, dai_client, gcs_doc_path: str,
   gcs_output_uri = f"gs://{DOCAI_OUTPUT_BUCKET_NAME}"
   letters = string.ascii_lowercase
   temp_folder = "".join(random.choice(letters) for i in range(10))
-  gcs_output_uri_prefix = "temp_" + temp_folder
+  gcs_output_uri_prefix = "extractor_out_" + temp_folder
   # temp folder location
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
   # delete temp folder
@@ -482,35 +491,39 @@ def extract_entities(gcs_doc_path: str, doc_class: str, context: str):
       desired_entities_list, flag = form_parser_extraction(
           processor, dai_client, gcs_doc_path, doc_class, context)
 
-    # TODO remove all these magic legacy ADP conversions which break
-    # calling standard entity mapping function to standardize the entities
-    final_extracted_entities = desired_entities_list
-    #final_extracted_entities = standard_entity_mapping(desired_entities_list) #Very unclear logic
-    # calling post processing utility function
-    # input json is the extracted json file after your mapping script
-    input_dict = get_json_format_for_processing(final_extracted_entities)
-    input_dict, output_dict = data_transformation(input_dict)
-    final_extracted_entities = correct_json_format_for_db(
-        output_dict, final_extracted_entities)
-    # with open("{}.json".format(os.path.join(mapped_extracted_entities,
-    #         gcs_doc_path.split('/')[-1][:-4])),
-    #           "w") as outfile:
-    #     json.dump(final_extracted_entities, outfile, indent=4)
-
-    # extraction accuracy calculation
-    document_extraction_confidence, extraction_status, extraction_field_min_score = \
-      extraction_accuracy_calc(final_extracted_entities, flag)
-    # print(final_extracted_entities)
-    # print(document_extraction_confidence)
-    Logger.info(f"Extraction completed for {doc_class} {gcs_doc_path}:  "
-                f"document_extraction_confidence={document_extraction_confidence},"
-                f" extraction_status={extraction_status}, "
-                f"extraction_field_min_score={extraction_field_min_score}")
-
-    return final_extracted_entities, \
-           document_extraction_confidence, extraction_status, extraction_field_min_score
+    return post_processing(desired_entities_list, doc_class, gcs_doc_path, flag)
   else:
     # Parser not available
     Logger.error(f"Parser not available for this document: {doc_class}")
     # print("parser not available for this document")
     return None
+
+
+def post_processing(desired_entities_list, doc_class, gcs_doc_path, flag):
+  # TODO remove all these magic legacy ADP conversions which break
+  # calling standard entity mapping function to standardize the entities
+  final_extracted_entities = desired_entities_list
+  #final_extracted_entities = standard_entity_mapping(desired_entities_list) #Very unclear logic
+  # calling post processing utility function
+  # input json is the extracted json file after your mapping script
+  input_dict = get_json_format_for_processing(final_extracted_entities)
+  input_dict, output_dict = data_transformation(input_dict)
+  final_extracted_entities = correct_json_format_for_db(
+      output_dict, final_extracted_entities)
+  # with open("{}.json".format(os.path.join(mapped_extracted_entities,
+  #         gcs_doc_path.split('/')[-1][:-4])),
+  #           "w") as outfile:
+  #     json.dump(final_extracted_entities, outfile, indent=4)
+
+  # extraction accuracy calculation
+  document_extraction_confidence, extraction_status, extraction_field_min_score = \
+    extraction_accuracy_calc(final_extracted_entities, flag)
+  # print(final_extracted_entities)
+  # print(document_extraction_confidence)
+  Logger.info(f"Extraction completed for {doc_class} {gcs_doc_path}:  "
+              f"document_extraction_confidence={document_extraction_confidence},"
+              f" extraction_status={extraction_status}, "
+              f"extraction_field_min_score={extraction_field_min_score}")
+
+  return final_extracted_entities, \
+         document_extraction_confidence, extraction_status, extraction_field_min_score

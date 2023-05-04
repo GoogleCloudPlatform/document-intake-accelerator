@@ -13,6 +13,9 @@ export SA_START_PIPELINE="serviceAccount:cloudrun-startpipeline-sa@${PROJECT_ID}
 export SA_QUEUE="serviceAccount:cloudrun-queue-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 export APPLICATION_NAME="CDA Application"
 
+#Big Query
+export BIGQUERY_DATASET=validation
+
 # Terraform Variable
 export TF_LOG_PATH="$BASE_DIR"/tf.log
 #export TF_LOG="DEBUG"
@@ -24,6 +27,7 @@ export TF_BUCKET_LOCATION="us"
 export TF_VAR_config_bucket="${PROJECT_ID}-config"
 export TF_VAR_region=$REGION
 export TF_VAR_iap_secret_name="${IAP_SECRET_NAME}"
+export TF_VAR_dataset_id="${BIGQUERY_DATASET}"
 
 # used by Microservices
 export CONFIG_BUCKET=${TF_VAR_config_bucket}

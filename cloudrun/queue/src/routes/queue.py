@@ -20,7 +20,7 @@ import base64
 import firebase_admin
 import os
 from firebase_admin import credentials, firestore
-
+import time
 import json
 from fastapi import status, Response
 from config import PROCESS_TASK_URL, API_DOMAIN
@@ -52,8 +52,7 @@ async def publish_msg(request: Request, response: Response):
 
   try:
     envelope = await request.json()
-    print("Pub/Sub envelope:")
-    print(envelope)
+    print(f"Pub/Sub envelope: {envelope}")
 
   except json.JSONDecodeError:
     response.status_code = status.HTTP_400_BAD_REQUEST
@@ -72,58 +71,78 @@ async def publish_msg(request: Request, response: Response):
     print(f"error: {response.body}")
     return response
 
-  doc_count = get_count()
-  print(f"Current number of uploaded documents doc_count = {doc_count}")
+  # if batch_quota_ready(): # TODO this is not working
+  if True:
+    pubsub_message = envelope["message"]
+    # if doc_count < int(os.environ["BATCH_PROCESS_QUOTA"]):
+    Logger.info(f"Pub/Sub message: {pubsub_message}")
 
-  pubsub_message = envelope["message"]
+    if isinstance(pubsub_message, dict) and "data" in pubsub_message:
+      msg_data = base64.b64decode(
+          pubsub_message["data"]).decode("utf-8").strip()
+      name = json.loads(msg_data)
+      payload = name.get("message_list")
+      request_body = {"configs": payload}
+      Logger.info(f"Pub/Sub message configs: {request_body}")
+      # Sample request body
+      # {
+      #   "configs": [
+      #     {
+      #       "case_id": "6075e034-2763-11ed-8345-aa81c3a89f04",
+      #       "uid": "jcdQmUqUKrcs8GGsmojp",
+      #       "gcs_url": "gs://sample-project-dev-document-upload/6075e034-2763-11ed-8345-aa81c3a89f04/jcdQmUqUKrcs8GGsmojp/arizona-application-form.pdf",
+      #       "context": "arizona"
+      #     }
+      #   ]
+      # }
 
-  # if doc_count < int(os.environ["MAX_UPLOADED_DOCS"]):
-  print("Pub/Sub message:")
-  print(pubsub_message)
+      start_time = time.time()
+      print(f"Sending data to {PROCESS_TASK_URL}:")
+      print(request_body)
 
-  print(f"MAX_UPLOADED_DOCS={os.environ['MAX_UPLOADED_DOCS']}")
-  if isinstance(pubsub_message, dict) and "data" in pubsub_message:
-    msg_data = base64.b64decode(
-        pubsub_message["data"]).decode("utf-8").strip()
-    name = json.loads(msg_data)
-    payload = name.get("message_list")
-    request_body = {"configs": payload}
+      process_task_response = send_iap_request(PROCESS_TASK_URL, method="POST", json=request_body)
 
-    # Sample request body
-    # {
-    #   "configs": [
-    #     {
-    #       "case_id": "6075e034-2763-11ed-8345-aa81c3a89f04",
-    #       "uid": "jcdQmUqUKrcs8GGsmojp",
-    #       "gcs_url": "gs://sample-project-dev-document-upload/6075e034-2763-11ed-8345-aa81c3a89f04/jcdQmUqUKrcs8GGsmojp/arizona-application-form.pdf",
-    #       "context": "arizona"
-    #     }
-    #   ]
-    # }
+      process_time = time.time() - start_time
+      time_elapsed = round(process_time * 1000)
+      print(f"Response from {PROCESS_TASK_URL}, Time elapsed: {str(time_elapsed)} ms")
 
-    start_time = time.time()
-    print(f"Sending data to {PROCESS_TASK_URL}:")
-    print(request_body)
+      print(f"response={process_task_response.text} with status code={process_task_response.status_code}")
 
-    process_task_response = send_iap_request(PROCESS_TASK_URL, method="POST", json=request_body)
-
-    process_time = time.time() - start_time
-    time_elapsed = round(process_time * 1000)
-    print(f"Response from {PROCESS_TASK_URL}, Time elapsed: {str(time_elapsed)} ms")
-
-    print(f"response={process_task_response.text} with status code={process_task_response.status_code}")
-
-    response.status_code = process_task_response.status_code
+      response.status_code = process_task_response.status_code
+      return response
+  else:
+    print(f"Timeout while waiting for batch Quota to become available: {response.body}")
+    response.body = "Message not acknowledged"
+    response.status_code = status.HTTP_400_BAD_REQUEST
     return response
-
-  # if doc_count > int(os.environ["MAX_UPLOADED_DOCS"]):
-  #   print(f"unacknowledged: {response.body}")
-  #   response.body = "Message not acknowledged"
-  #   response.status_code = status.HTTP_400_BAD_REQUEST
-  #   return response
 
   # No Content
   return "", status.HTTP_204_NO_CONTENT
+
+
+BATCH_PROCESS_QUOTA = int(os.environ.get("BATCH_PROCESS_QUOTA", 5))
+print(f"BATCH_PROCESS_QUOTA={BATCH_PROCESS_QUOTA}")
+
+
+def check_batch_quota():
+  doc_count = get_count()
+  print(f"check_batch_quota doc_count={doc_count}")
+
+  if doc_count > BATCH_PROCESS_QUOTA:
+    print(f"check_batch_quota UNAVAILABLE")
+    return False
+  print(f"check_batch_quota AVAILABLE")
+  return True
+
+
+def batch_quota_ready(timeout=4000, period=10):
+  time_end = time.time() + timeout
+  while time.time() < time_end:
+    if check_batch_quota():
+      return True
+    print(f"Waiting for quota to become available for {period} seconds before re-checking")
+    time.sleep(period)
+  return False
 
 
 def get_count():

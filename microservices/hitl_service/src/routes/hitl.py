@@ -23,8 +23,8 @@ from common.utils.logging_handler import Logger
 from common.config import BUCKET_NAME, DB_KEYS, ENTITY_KEYS
 from common.config import STATUS_APPROVED, STATUS_REVIEW, STATUS_REJECTED, \
   STATUS_PENDING
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR, \
-  STATUS_TIMEOUT
+from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, \
+  STATUS_SPLIT, STATUS_ERROR, STATUS_TIMEOUT, STATUS_PROCESSED
 from common.config import PROCESS_TIMEOUT_SECONDS
 from common.config import get_document_types_config, get_display_name_by_doc_class
 from common.utils.stream_to_bq import stream_document_to_bigquery
@@ -80,8 +80,7 @@ def to_camel_case(input_str):
 
 def get_doc_list_data(docs_list: list):
   for doc in docs_list:
-    print()
-    print(doc)
+    print(f"get_doc_list_data for {doc['uid']} {doc}")
     name = "N/A"
     if doc["entities"]:
       for entity in doc["entities"]:
@@ -101,7 +100,7 @@ def get_doc_list_data(docs_list: list):
     # Keep the Old Logic in case
     if document_display_name is None:
       doc_type = to_camel_case(doc['document_type']) if doc['document_type'] is not None else 'no type'
-      doc_class = to_camel_case(doc['document_type']) if doc['document_class'] is not None else 'unclassified'
+      doc_class = to_camel_case(doc['document_class']) if doc['document_class'] is not None else 'unclassified'
       document_display_name = f"{doc_type} > {doc_class}"
 
     doc["document_display_name"] = document_display_name
@@ -157,7 +156,11 @@ def get_doc_list_data(docs_list: list):
 
       # Otherwise, check the last system status.
       else:
-        if last_system_status["stage"] == "auto_approval":
+        # Hack for Split Documents
+        if last_system_status["stage"] == "classification" and \
+          last_system_status["status"] == STATUS_SPLIT:
+            current_status = STATUS_PROCESSED.title()
+        elif last_system_status["stage"] == "auto_approval":
           if last_system_status["status"] == STATUS_SUCCESS:
             current_status = doc["auto_approval"].title()
           else:
@@ -188,7 +191,7 @@ def get_doc_list_data(docs_list: list):
     doc["status_last_updated_by"] = status_last_updated_by
     doc["last_update_timestamp"] = last_update_timestamp
     doc["audit_trail"] = audit_trail
-
+    print(f"get_doc_list_data after magic for {doc['uid']} {doc}")
   return docs_list
 
 
@@ -214,9 +217,8 @@ async def report_data():
     Logger.info(f"report_data docs_list len={len(docs_list)}")
     for doc in docs_list:
       Logger.info(f"{doc}")
-    response = {"status": STATUS_SUCCESS}
-    response["len"] = len(docs_list)
-    response["data"] = docs_list
+    response = {"status": STATUS_SUCCESS, "len": len(docs_list),
+                "data": docs_list}
     return response
 
   except Exception as e:
@@ -293,9 +295,8 @@ async def get_queue(hitl_status: str):
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
     Logger.info(f"get_queue result_queue={result_queue}")
 
-    response = {"status": STATUS_SUCCESS}
-    response["len"] = len(result_queue)
-    response["data"] = result_queue
+    response = {"status": STATUS_SUCCESS, "len": len(result_queue),
+                "data": result_queue}
     return response
 
   except Exception as e:

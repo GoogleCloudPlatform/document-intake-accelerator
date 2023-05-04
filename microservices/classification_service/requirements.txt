@@ -8,6 +8,6 @@ google-cloud-documentai==2.9.0
 
 # pdf splitter
 pypdf2==1.26.0
-
+pikepdf==6.2.0
 # pdf 2 image
 pdf2image==1.15.0

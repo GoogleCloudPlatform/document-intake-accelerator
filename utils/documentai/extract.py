@@ -1,15 +1,13 @@
 import argparse
 import os
-
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__),
-                             '../microservices/extraction_service/src'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '../common/src'))
+                             '../../microservices/extraction_service/src'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../common/src'))
 
 from utils import extract_entities
 from common.utils import helper
-from common.utils.stream_to_bq import stream_document_to_bigquery
 from common.utils.format_data_for_bq import format_data_for_bq
 
 # python utils/extract.py -f gs://
@@ -21,7 +19,7 @@ from common.utils.format_data_for_bq import format_data_for_bq
 # gcloud auth activate-service-account [ACCOUNT] --key-file=KEY_FILE
 # gcloud auth activate-service-account development@ek-cda-engine.iam.gserviceaccount.com --key-file=/Users/evekhm/ek-cda-engine-1e2875b4e6ec.json
 # gcloud iam service-accounts create local-dev --description="local development" --display-name="local dev"
-
+# export GOOGLE_APPLICATION_CREDENTIALS
 # gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:local-dev@$PROJECT_ID.iam.gserviceaccount.com"
 #         --role="roles/storage.admin"
 # gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:local-dev@$PROJECT_ID.iam.gserviceaccount.com" \
@@ -30,6 +28,8 @@ from common.utils.format_data_for_bq import format_data_for_bq
 # gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:local-dev@$PROJECT_ID.iam.gserviceaccount.com" \
 #         --role="roles/documentai.admin"
 
+#gcloud auth login
+#gcloud auth application-default login
 
 # gcloud iam service-accounts keys create ~/local_dev.json \
 #     --iam-account=local-dev@$PROJECT_ID.iam.gserviceaccount.com
@@ -41,7 +41,7 @@ os.environ["CONFIG_FILE"] = f"gs://{PROJECT_ID}-config/config.json"
 os.environ["DEBUG"] = 'True'
 
 
-def get_parser():
+def get_args():
   # Read command line arguments
   args_parser = argparse.ArgumentParser(
       formatter_class=argparse.RawTextHelpFormatter,
@@ -63,7 +63,6 @@ def get_parser():
 
 
 from google.cloud import storage
-
 storage_client = storage.Client()
 
 
@@ -104,7 +103,7 @@ def process_file(file_uri, doc_class):
 
 
 if __name__ == "__main__":
-  parser = get_parser()
+  parser = get_args()
   args = parser.parse_args()
 
   file_uri = args.file_uri

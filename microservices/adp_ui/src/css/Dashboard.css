@@ -100,6 +100,10 @@
   color: #93c47d;
 }
 
+.datatable-style-demo .processed {
+  font-weight: 700;
+  color: #89CFF0;
+}
 .datatable-style-demo .failed {
   font-weight: 700;
   color: #FF5252;

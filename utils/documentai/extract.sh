@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "$DIR"/../SET
+source "$DIR"/../../SET
 export DEBUG=true
 
 # Make sure to pass remote URL

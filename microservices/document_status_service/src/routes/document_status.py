@@ -18,7 +18,7 @@ limitations under the License.
 from common.config import BUCKET_NAME
 from common.models import Document
 from common.utils.logging_handler import Logger
-from common.config import STATUS_SUCCESS, STATUS_ERROR
+from common.config import STATUS_SUCCESS, STATUS_ERROR, STATUS_SPLIT
 import fireo
 from fastapi import APIRouter, HTTPException
 from typing import Optional, List, Dict
@@ -103,7 +103,7 @@ async def update_classification_status(
        """
   try:
     document = Document.find_by_uid(uid)
-    if status == STATUS_SUCCESS:
+    if status in [STATUS_SUCCESS, STATUS_SPLIT]:
       #update  the document type and document class
       document.document_class = document_class
       document.document_type = document_type
@@ -111,7 +111,7 @@ async def update_classification_status(
       system_status = {
           "is_hitl": is_hitl,
           "stage": "classification",
-          "status": STATUS_SUCCESS,
+          "status": status,
           "timestamp": datetime.datetime.utcnow()
       }
       document.system_status = fireo.ListUnion([system_status])

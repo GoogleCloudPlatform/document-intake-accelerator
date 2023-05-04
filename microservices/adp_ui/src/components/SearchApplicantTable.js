@@ -233,11 +233,14 @@ function SearchForApplicantTable(props) {
 	};
 	const statusBodyTemplate = (rowData) => {
 		const stockClassName = classNames({
-			'approved': rowData.current_status === 'Approved' || rowData.current_status === 'approved',
+			'approved': rowData.current_status === 'Approved' || rowData.current_status === 'approved' || rowData.current_status === 'Processed' || rowData.current_status === 'processed',
+			'processed':  rowData.current_status === 'Processed' || rowData.current_status === 'processed',
 			'rejected': rowData.current_status === 'Rejected' || rowData.current_status === 'rejected' || rowData.current_status === 'Failed',
 			'pending': rowData.current_status === 'Pending' || rowData.current_status === 'pending' || rowData.current_status === 'In Progress' || rowData.current_status === 'Review' || rowData.current_status === 'review',
 		});
 
+		console.log("current_status", rowData.current_status)
+		console.log("stockClassName", stockClassName)
 		return (
 			<div className={stockClassName}>
 				{rowData.current_status}

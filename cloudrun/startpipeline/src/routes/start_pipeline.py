@@ -1,24 +1,28 @@
-
-from google.cloud import storage
-from fastapi import Request, status, Response
+import datetime
 import json
+import os
+import traceback
+import uuid
+
+import requests
+from config import DOCUMENT_STATUS_URL
 from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import Request
+from fastapi import Response
+from fastapi import status
 from fastapi.concurrency import run_in_threadpool
-from config import DOCUMENT_STATUS_URL, UPLOAD_URL
+from google.cloud import storage
+
+from common.config import BUCKET_NAME
+from common.config import START_PIPELINE_FILENAME
+from common.config import STATUS_ERROR
+from common.config import STATUS_SUCCESS
+from common.models import Document
 from common.utils.copy_gcs_documents import copy_blob
 from common.utils.helper import split_uri_2_path_filename
 from common.utils.iap import send_iap_request
-import uuid
-import requests
-import traceback
-import datetime
-from fastapi import HTTPException
-from common.utils.logging_handler import Logger
-from common.models import Document
 from common.utils.publisher import publish_document
-from common.config import BUCKET_NAME
-from common.config import STATUS_SUCCESS, STATUS_ERROR
-import os
 
 # API clients
 gcs = None
@@ -33,8 +37,17 @@ MIME_TYPES = [
     # "image/webp"
 ]
 
-START_PIPELINE_FILENAME = os.environ.get("START_PIPELINE_NAME",
-                                         "START_PIPELINE")
+
+def generate_case_id(folder_name):
+  # generate a case_id
+  dirs_string = folder_name.replace("/", "_")
+  uuid_str = str(uuid.uuid1())
+  ll = max(len(str(dirs_string)), int(len(uuid_str)/2))
+  case_id = str(dirs_string) + "_" + str(uuid.uuid1())[:-ll]
+  return case_id
+
+from common.utils.logging_handler import Logger
+
 router = APIRouter(prefix="/start-pipeline", tags=["Start Pipeline"])
 
 
@@ -49,8 +62,7 @@ async def start_pipeline(request: Request, response: Response):
 
   try:
     envelope = await request.json()
-    Logger.info("Pub/Sub envelope:")
-    Logger.info(envelope)
+    Logger.info(f"Pub/Sub envelope: {envelope}")
 
   except json.JSONDecodeError:
     response.status_code = status.HTTP_400_BAD_REQUEST
@@ -72,135 +84,145 @@ async def start_pipeline(request: Request, response: Response):
 
   bucket_name = envelope['bucket']
   file_uri = envelope['name']
-  Logger.info(f"bucket_name={bucket_name}, file_uri={file_uri}")
+  Logger.info(f"start_pipeline bucket_name={bucket_name}, file_uri={file_uri}")
   comment = ""
-  context = "california" # TODO is a temp workaround
-  dirs, filename = split_uri_2_path_filename(file_uri)
-
-  Logger.info(
-      f"Received event for bucket[{bucket_name}] file_uri=[{file_uri}], filename=[{filename}]")
-
-  if filename != START_PIPELINE_FILENAME:
-    Logger.info(f"Skipping action, since waiting for {START_PIPELINE_FILENAME} to trigger pipe-line")
-    return "", status.HTTP_204_NO_CONTENT
-
-  Logger.info(
-      f"Starting pipeline to process documents inside {bucket_name} bucket and {dirs} folder")
-
-  global gcs
-  if not gcs:
-    gcs = storage.Client()
-
-    # Get List of Document Objects from the Output Bucket
-  blob_list = gcs.list_blobs(bucket_name, prefix=dirs + "/")
-  uid_list = []
-  message_list = []
-  # generate a case_id
-  dirs_string = dirs.replace("/", "_")
-  uuid_str = str(uuid.uuid1())
-  ll = max(len(str(dirs_string)), int(len(uuid_str)/2))
-  case_id = str(dirs_string) + "_" + str(uuid.uuid1())[:-ll]
-  event_id = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
+  context = "california"  # TODO is a temp workaround
 
   try:
-    # Browse through output Forms and identify matching Processor for each Form
-    for blob in blob_list:
-      if blob.name and not blob.name.endswith('/') and blob.name != START_PIPELINE_FILENAME:
-        mime_type = blob.content_type
-        if mime_type not in MIME_TYPES:
-          continue
-        d, blob_filename = split_uri_2_path_filename(blob.name)
-        Logger.info(
-          f"Handling case_id={case_id}, file_path={blob.name}, file_name={blob_filename}")
+    Logger.info(
+        f"run_pipeline - Starting pipeline to process documents inside {bucket_name} ")
+    event_id = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
+    dirs, filename = split_uri_2_path_filename(file_uri)
 
-        # create a record in database for uploaded document
-        output = create_document(case_id, blob.name, context)
-        uid = output
-        if uid is None:
-          Logger.error(f"Error: could not create a document")
-          raise HTTPException(
-              status_code=500,
-              detail="Error "
-                     "in uploading document in gcs bucket")
+    Logger.info(
+        f"Received event event_id={event_id} for bucket[{bucket_name}] file_uri=[{file_uri}], filename=[{filename}]")
 
-        Logger.info(f"Created document with uid={uid} for case_id={case_id}, file_path={blob.name}, file_name={blob_filename}")
-        uid_list.append(uid)
+    if filename != START_PIPELINE_FILENAME:
+      Logger.info(f"Skipping action, since waiting for {START_PIPELINE_FILENAME} to trigger pipe-line")
+      return "", status.HTTP_204_NO_CONTENT
 
-        # Copy document in GCS bucket
-        new_file_name = f"{case_id}/{uid}/{blob_filename}"
-        result = await run_in_threadpool(copy_blob, bucket_name, blob.name, new_file_name, BUCKET_NAME)
-        if result != STATUS_SUCCESS:
+    Logger.info(
+        f"Starting pipeline to process documents inside {bucket_name} bucket and "
+        f"{dirs} folder with event_id={event_id}")
+
+    global gcs
+    if not gcs:
+      gcs = storage.Client()
+
+    # Get List of Document Objects from the Output Bucket
+    if dirs is None or dirs == "":
+      blob_list = gcs.list_blobs(bucket_name)
+    else:
+      blob_list = gcs.list_blobs(bucket_name, prefix=dirs + "/")
+    uid_list = []
+    message_list = []
+
+    case_ids = {}
+    try:
+      # Browse through output Forms and identify matching Processor for each Form
+      for blob in blob_list:
+        if blob.name and not blob.name.endswith('/') and blob.name != START_PIPELINE_FILENAME:
+          mime_type = blob.content_type
+          if mime_type not in MIME_TYPES:
+            continue
+          d, blob_filename = split_uri_2_path_filename(blob.name)
+          dir_name = os.path.split(d)[-1]
+          if dir_name not in case_ids.keys():
+            case_id = generate_case_id(dir_name)
+            case_ids[dir_name] = case_id
+          else:
+            case_id = case_ids[dir_name]
+
+          Logger.info(
+              f"Handling case_id={case_id}, file_path={blob.name}, "
+              f"file_name={blob_filename}, event_id={event_id}")
+
+          # create a record in database for uploaded document
+          output = create_document(case_id, blob.name, context)
+          uid = output
+          if uid is None:
+            Logger.error(f"Error: could not create a document")
+            raise HTTPException(
+                status_code=500,
+                detail="Error "
+                       "in uploading document in gcs bucket")
+
+          Logger.info(f"Created document with uid={uid} for case_id={case_id}, "
+                      f"file_path={blob.name}, file_name={blob_filename}, "
+                      f"event_id={event_id}")
+          uid_list.append(uid)
+
+          # Copy document in GCS bucket
+          new_file_name = f"{case_id}/{uid}/{blob_filename}"
+          result = await run_in_threadpool(copy_blob, bucket_name, blob.name, new_file_name, BUCKET_NAME)
+          if result != STATUS_SUCCESS:
             # Update the document upload in GCS as failed
+            document = Document.find_by_uid(uid)
+            system_status = {
+                "stage": "upload",
+                "status": STATUS_ERROR,
+                "timestamp": datetime.datetime.utcnow(),
+                "comment": comment
+            }
+            document.system_status = [system_status]
+            document.update()
+            Logger.error(f"Error: {result}")
+            raise HTTPException(
+                status_code=500,
+                detail="Error "
+                       "in uploading document in gcs bucket")
+
+          Logger.info(f"File {blob.name} with case_id {case_id} and uid {uid}"
+                      f" uploaded successfully in GCS bucket")
+
+          # Update the document upload as success in DB
           document = Document.find_by_uid(uid)
-          system_status = {
-              "stage": "upload",
-              "status": STATUS_ERROR,
-              "timestamp": datetime.datetime.utcnow(),
-              "comment": comment
-          }
-          document.system_status = [system_status]
-          document.update()
-          Logger.error(f"Error: {result}")
-          raise HTTPException(
-              status_code=500,
-              detail="Error "
-                     "in uploading document in gcs bucket")
+          if document is not None:
+            gcs_base_url = f"gs://{BUCKET_NAME}"
+            document.url = f"{gcs_base_url}/{case_id}/{uid}/{blob_filename}"
+            system_status = {
+                "stage": "uploaded",
+                "status": STATUS_SUCCESS,
+                "timestamp": datetime.datetime.utcnow(),
+                "comment": comment
+            }
+            document.system_status = [system_status]
+            document.update()
+            message_list.append({
+                "case_id": case_id,
+                "uid": uid,
+                "gcs_url": document.url,
+                "context": context
+            })
+          else:
+            Logger.error(f"Could not retrieve document by id {uid}")
 
-        Logger.info(f"File {blob.name} with case_id {case_id} and uid {uid}"
-                    f" uploaded successfully in GCS bucket")
+      # Pushing Message To Pubsub
+      pubsub_msg = f"batch moved to bucket"
+      message_dict = {"message": pubsub_msg, "message_list": message_list}
+      publish_document(message_dict)
+      Logger.info(f"Message for event_id {event_id} published"
+                  f" successfully {uid_list} with {message_list}")
 
-        # Update the document upload as success in DB
-        document = Document.find_by_uid(uid)
-        if document is not None:
-          gcs_base_url = f"gs://{BUCKET_NAME}"
-          document.url = f"{gcs_base_url}/{case_id}/{uid}/{blob_filename}"
-          system_status = {
-              "stage": "uploaded",
-              "status": STATUS_SUCCESS,
-              "timestamp": datetime.datetime.utcnow(),
-              "comment": comment
-          }
-          document.system_status = [system_status]
-          document.update()
-          message_list.append({
-              "case_id": case_id,
-              "uid": uid,
-              "gcs_url": document.url,
-              "context": context
-          })
-        else:
-          Logger.error(f"Could not retrieve document by id {uid}")
+      return {
+          "status": f"Files for event_id {event_id} uploaded"
+                    f"successfully, the document"
+                    f" will be processed in sometime ",
+          "event_id": event_id,
+          "uid_list": uid_list,
+          "configs": message_list
+      }
 
-    # Pushing Message To Pubsub
-    pubsub_msg = f"batch for {case_id} moved to bucket"
-    message_dict = {"message": pubsub_msg, "message_list": message_list}
-    publish_document(message_dict)
-    Logger.info(f"Message with case id {case_id} published"
-                f" successfully {uid_list}")
+    except Exception as e:
+      Logger.error(e)
+      err = traceback.format_exc().replace("\n", " ")
+      Logger.error(err)
+      raise HTTPException(
+          status_code=500, detail="Error "
+                                  "in uploading document") from e
 
-    # TODO Temp Disabling moving to processed
-    # #move file to the processed folder
-    # destination_blob_name = f"processed/{dirs}/{event_id}/{blob_filename}"
-    # Logger.info(f"Moving file from {bucket_name}/{blob.name} to {bucket_name}/{destination_blob_name}")
-    # result = await run_in_threadpool(move_blob, bucket_name, blob.name, destination_blob_name)
-    # if result != STATUS_SUCCESS:
-    #   Logger.error(f"Error: {result}")
-    #   raise HTTPException(
-    #       status_code=500,
-    #       detail="Error "
-    #              "when copying to processed folder")
-    # Logger.info(f"File {blob.name} with case_id {case_id} and uid {uid} moved to {bucket_name}/{destination_blob_name}")
-
-
-    return {
-        "status": f"Files with case id {case_id} uploaded"
-                  f"successfully, the document"
-                  f" will be processed in sometime ",
-        "case_id": case_id,
-        "uid_list": uid_list,
-        "configs": message_list
-    }
-
+  except HTTPException as e:
+    raise e
   except Exception as e:
     Logger.error(e)
     err = traceback.format_exc().replace("\n", " ")
@@ -208,6 +230,7 @@ async def start_pipeline(request: Request, response: Response):
     raise HTTPException(
         status_code=500, detail="Error "
                                 "in uploading document") from e
+
 
 
 def create_document(case_id, filename, context, user=None):

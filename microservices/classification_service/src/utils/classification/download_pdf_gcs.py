@@ -20,9 +20,9 @@ from google.cloud import storage
 from common.utils.logging_handler import Logger
 
 def download_pdf_gcs(bucket_name=None,
-                     gcs_uri=None,
-                     file_to_download=None,
-                     output_filename='gcs.pdf') -> str:
+    gcs_uri=None,
+    file_to_download=None,
+    output_filename='gcs.pdf') -> str:
   """
   Function takes a path of an object/file stored in GCS bucket
   and downloads
@@ -52,6 +52,7 @@ def download_pdf_gcs(bucket_name=None,
 
   with open(output_filename, 'wb') as file_obj:
     blob.download_to_file(file_obj)
-    Logger.info(f"Downloaded {bucket_name}/{file_to_download} to {output_filename}")
+    Logger.info(
+      f"Downloaded gs://{bucket_name}/{file_to_download} to {output_filename}")
 
   return blob

@@ -473,38 +473,154 @@ Where:
 
 
 ## Cross-Project Setup
-Limitations: Two projects need to be within the same ORG.
+
+### Introduction
 For further reference, lets define the two projects:
-- GCP Project to run the Claims Data Activator - Engine (**Project CDA**)
-- GCP Project to train and serve Document AI Processors and Classifier  (**Project DocAI**)
+- GCP Project to run the Claims Data Activator - Engine (**Project CDA**) => Corresponds to `PROJECT_ID`
+- GCP Project to train and serve Document AI Processor  (**Project DocAI**) => Corresponds to `DOCAI_PROJECT_ID`
 
-If you want to enable cross project access, following steps need to be done:
-1) Inside Project DocAI [add](https://medium.com/@tanujbolisetty/gcp-impersonate-service-accounts-36eaa247f87c) following service account of the Project CDA `gke-sa@{PROJECT_CDA_ID}.iam.gserviceaccount.com` (used for GKE Nodes) and grant following  [roles](https://cloud.google.com/document-ai/docs/access-control/iam-roles):
-  - **Document AI Viewer** - To grant access to view all resources and process documents in Document AI
-    Where `{PROJECT_CDA_ID}` - to be replaced with the ID of the Project CDA
-2) Inside Project CDA grant following permissions to the default Document AI service account of the Project DocAI: `service-{PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com`
-  - **Storage Object Viewer** - [To make files in Project CDA accessible to Project DocAI](https://cloud.google.com/document-ai/docs/cross-project-setup) (This could be done on the `${PROJECT_CDA_ID}-document-upload` and `${PROJECT_CDA_ID}-docai-output` bucket level with the forms to handle).
-  - **Storage Object Admin**  - To allow DocAI processor to save extracted entities as json files inside `${PROJECT_CDA_ID}-output` bucket of the Project CDA  (This could be done on the `${PROJECT_CDA_ID}-output` bucket level).
-    Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the Project DocAI
-
-Above is equivalent to the following `gcloud` commands:
 ```shell
+export PROJECT_ID=
+export DOCAI_PROJECT_ID=
+```
+
+To enable cross project access, following permissions need to be granted retrospectively:
+1) Inside Project DocAI [add](https://medium.com/@tanujbolisetty/gcp-impersonate-service-accounts-36eaa247f87c) following service account of the Project CDA `gke-sa@$PROJECT_ID.iam.gserviceaccount.com` (used for GKE Nodes) and grant following  [roles](https://cloud.google.com/document-ai/docs/access-control/iam-roles):
+- **Document AI Viewer** - To grant access to view all resources and process documents in Document AI.
+2) Inside Project CDA grant following permissions to the default Document AI service account of the Project DocAI: `service-{PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com`
+- **Storage Object Viewer** - [To make files in Project CDA accessible to Project DocAI](https://cloud.google.com/document-ai/docs/cross-project-setup) (This could be done on the `${PROJECT_ID}-document-upload`).
+- **Storage Object Admin**  - To allow DocAI processor to save extracted entities as json files inside `${PROJECT_ID}-docai-output` bucket of the Project CDA  (This could be done on the `${PROJECT_ID}-docai-output` bucket level).
+  Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the `Project DocAI`.
+
+### Same Organizational Setup (Only) 
+When both projects are within organization, following steps to be executed:
+
+* Setting of the environment variables:
+
+```shell
+export DOCAI_PROJECT_ID=
+export PROJECT_ID=
+```
+
+* Running a utility script:
+```shell
+./setup/setup_docai_access.sh
+```
+
+### Two different Organizations - Cross Organization Setup (Only)
+When two projects are under different organizations, additional steps are required. 
+
+#### Reset Organization Policy for Domain restricted sharing
+This step is only required when two `Project CDA` and `Project DocAI` do not belong to the same organization.
+In that case following policy constraint `constraints/iam.allowedPolicyMemberDomain` needs to be modified for both of them and be set to  `Allowed All`.
+
+
+Go to GCP Cloud Shell of `PROJECT_ID`:
+```shell
+export PROJECT_ID=
+gcloud org-policies reset constraints/iam.allowedPolicyMemberDomains --project=$PROJECT_ID
+```
+
+To verify changes:
+```shell
+gcloud resource-manager org-policies list --project=$PROJECT_ID
+```
+Sample output:
+```shell
+CONSTRAINT: constraints/iam.allowedPolicyMemberDomains
+LIST_POLICY: SET
+BOOLEAN_POLICY: -
+ETAG: CMiArKIGENi33coC
+```
+
+Go to GCP Cloud Shell of `DOCAI_PROJECT_ID`:
+```shell
+export DOCAI_PROJECT_ID=
+gcloud org-policies reset constraints/iam.allowedPolicyMemberDomains --project=$DOCAI_PROJECT_ID
+```
+
+
+[//]: # (Alternatively, changing of organization Policy could be done via UI.)
+
+[//]: # (In order to do so, go to Cloud Console  IAM-> [Organization Policies]&#40;https://console.cloud.google.com/iam-admin/orgpolicies/list&#41; and find `constraints/iam.allowedPolicyMemberDomain` which refers to Domain restricted sharing.)
+
+[//]: # ()
+[//]: # (**Select `Manage policy` Icon**:)
+
+[//]: # (* Applies to: => Customize)
+
+[//]: # (* Policy Enforcement => Replace )
+
+[//]: # (* Add rule => `Allow All`)
+
+[//]: # ()
+[//]: # (**and submit Save**)
+
+[//]: # ()
+[//]: # (Perform step above for both `Project DocAI` and `Project CDA`.)
+
+### Grant Required permissions to DocAI Project
+
+#### Option 1 - using service account
+After modifying Organization Policy constraint, go to `Project DocAI` Console Shell and run following commands: 
+* Set env variables accordingly:
+```shell
+  export PROJECT_ID=
+  export DOCAI_PROJECT_ID=
+  gcloud config set project $DOCAI_PROJECT_ID
+```
+* Execute following commands to grant permissions:
+```shell
+  gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"  --role="roles/documentai.apiUser"
   gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"  --role="roles/documentai.viewer"
   PROJECT_DOCAI_NUMBER=$(gcloud projects describe "$DOCAI_PROJECT_ID" --format='get(projectNumber)')
+  echo PROJECT_DOCAI_NUMBER=$PROJECT_DOCAI_NUMBER
+```
+* Copy PROJECT_DOCAI_NUMBER from the output above
+
+### Option 1 - using managed Group (Alternative)
+Alternatively, you could create a group in the Organization of DOCAI_PROJECT, grant permissions to the group and assign members to that group.
+
+* Create a user group, that allows external users (later referred as `GROUP_EMAIL`) in the DocAI Project organization.
+
+* Set env variables accordingly:
+```shell
+  export PROJECT_ID=
+  export DOCAI_PROJECT_ID=
+  export GROUP_EMAIL=
+  gcloud config set project $DOCAI_PROJECT_ID
+```
+
+* Execute following commands to grant permissions:
+```shell
+gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID \
+--member="group:${GROUP_EMAIL}" \
+--role="roles/documentai.apiUser"
+gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID \
+--member="group:${GROUP_EMAIL}" \
+--role="roles/documentai.viewer"
+```
+
+* Add member to the group:
+```shell
+gcloud identity groups memberships add --group-email="${GROUP_EMAIL}" --member-email="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com" --roles=MEMBER
+```
+
+### Grant Required permissions to CDA engine Project
+Go to `Project CDA` Console Shell and run following commands:
+* Set env variables accordingly:
+```shell
+  export PROJECT_ID=
+  export DOCAI_PROJECT_ID=
+  export PROJECT_DOCAI_NUMBER=
+  gcloud config set project $PROJECT_ID
+```
+* Execute following commands:
+```shell
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-docai-output --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.admin"
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-document-upload --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"
 ```
 
-Or running of the following script:
-
-```shell
-export DOCAI_PROJECT_ID=cda-001-processors
-export PROJECT_ID=cda-ext-iap
-```
-
-```shell
-./setup/setup_docai_access.sh
-```
 
 # CDA Usage
 ## When Using Private Access
@@ -593,7 +709,7 @@ Corrected values are saved to the BigQuery and could be retrieved using sample q
 export PROJECT_ID=
 ```
 ```shell
-sql-scripts/run_query.sh query_corrected_values.sql
+sql-scripts/run_query.sh corrected_values.sql
 ```
 
 Sample output:
@@ -754,6 +870,22 @@ terraform state rm <...>
 ```
 
 # CDA Troubleshoot
+
+## Errors when using Classifier/Extractor
+
+Such as `400 Error, Failed to process all documents`.
+Make sure [Cross Project Access is setup](#cross-project-setup) between DocAI and CDA projects.
+
+Can be resolved by running this script:
+```shell
+export DOCAI_PROJECT_ID=
+export PROJECT_ID=
+```
+
+```shell
+./setup/setup_docai_access.sh
+```
+
 
 ## Classification Service Logs
 

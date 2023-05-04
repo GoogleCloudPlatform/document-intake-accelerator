@@ -553,7 +553,8 @@ function DataTables() {
 
   const statusBodyTemplate = (rowData) => {
     const stockClassName = classNames({
-      'approved': ['approved'].includes(rowData.current_status.toLowerCase()),
+      'approved': ['approved'].includes(rowData.current_status.toLowerCase()) ||  ['processed'].includes(rowData.current_status.toLowerCase()),
+      'processed': ['processed'].includes(rowData.current_status.toLowerCase()),
       'inprogress': ['in progress', 'inprogress', 'progress', 'processing'].includes(rowData.current_status.toLowerCase()),
       'pending': ['pending', 'review', 'need review'].includes(rowData.current_status.toLowerCase()),
       'rejected': ['rejected'].includes(rowData.current_status.toLowerCase()),
