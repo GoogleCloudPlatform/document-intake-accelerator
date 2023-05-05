@@ -46,7 +46,7 @@ fi
 i=0
 
 echo ">>> Source=[$FROM_DIR], Destination=[$GS_URL], packaged=$is_package"
-exit
+
 if [ -d "$INPUT"/ ]; then
   echo "Using all PDF files inside directory $INPUT"
 
