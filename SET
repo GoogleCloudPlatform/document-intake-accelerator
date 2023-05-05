@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+export BASE_DIR=$(pwd)
 export REGION=us-central1
 
 # Shared VPC Config

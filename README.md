@@ -66,12 +66,16 @@
 
 ## How To Use This Repo
 This repo is intended to be used as a reference for your own implementation and
-as such we designed many elements to be as generic as possible. 
-You will almost certainly need to modify elements to fit your organization's specific requirements. 
+as such we designed many elements to be as generic as possible.
+You will almost certainly need to modify elements to fit your organization's specific requirements.
 We strongly recommend you fork this repo, so you can have full control over your unique setup.
-While you will find end-to-end tools to help spin up a fully functional sandbox environment, most likely you will find yourself customizing solution further down the line.  
+While you will find end-to-end tools to help spin up a fully functional sandbox environment, most likely you will find yourself customizing solution further down the line.
 
 # Quick Start
+
+For a Quick Reference guide refer to the [Workshop Lab1](docs/Lab1.md), that explains how to install CDA engine into the GCP Argolis environment with a public external end point. 
+Use this README.md to explore in-depth customizations and installation options if needed.
+
 ## Prerequisites
 
 ### Project Creation
@@ -79,7 +83,7 @@ It is recommended to deploy into two projects: one for the CDA Pipeline Engine (
 When following this  practice, before deployment create two projects and note down.
 
 ### <a name="classifier-splitter-access"></a> Classifier/Splitter Access
-Custom Document Classifier and Custom Document Splitter are currently in Preview. 
+Custom Document Classifier and Custom Document Splitter are currently in Preview.
 Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSc_6s8jsHLZWWE0aSX0bdmk24XDoPiE_oq5enDApLcp1VKJ-Q/viewform), so that Project is whitelisted.
 
 ### Domain Name Registration
@@ -131,8 +135,8 @@ Verify `cda_external_ip` points to the reserved External IP name inside `terrafo
  ```
 
 ### Private vs Public End Point
-You have an option to expose UI externally in public internet, or make it fully internal within the internal network. 
-When exposed, the end point (via domain name) will be accessible via Internet and protected by Firebase Authentication and optionally IAP, enforced 
+You have an option to expose UI externally in public internet, or make it fully internal within the internal network.
+When exposed, the end point (via domain name) will be accessible via Internet and protected by Firebase Authentication and optionally IAP, enforced
 on all the end points.
 When protected, you will need machine in the same internal network in order to access the UI (for testing, you could create Windows VM in the same network and access it via RDP using IAP tunnel).
 
@@ -144,13 +148,13 @@ cda_external_ui = true       # Expose UI to the Internet: true or false
 
 
 ### When deploying using Shared VPC
-As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) 
+As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc)
 via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.sample.tfvars).
 Follow [these steps](docs/SharedVPC_steps.md) to prepare environment with VPC Host Project and Service project.
 
- - Edit `terraform/environments/dev/terraform.tfvars` in the editor, 
- - uncomment `network_config` and fill in required parameters inside `network_config` (when using the [steps above](docs/SharedVPC_steps.md), 
- - only need to set `HOST_PROJECT_ID`, all other variables are pre-filled correctly):
+- Edit `terraform/environments/dev/terraform.tfvars` in the editor,
+- uncomment `network_config` and fill in required parameters inside `network_config` (when using the [steps above](docs/SharedVPC_steps.md),
+- only need to set `HOST_PROJECT_ID`, all other variables are pre-filled correctly):
  ```
 network_config = {
   host_project      = "HOST_PROJECT_ID"
@@ -165,7 +169,7 @@ network_config = {
 ```
 
 When the **default GKE Control Plane CIDR Range (172.16.0.0/28) overlaps** with your network:
- - Edit `terraform.tfvars` in the editor, uncomment `master_ipv4_cidr_block` and fill in the value of the GKE Control Plane CIDR /28 range:
+- Edit `terraform.tfvars` in the editor, uncomment `master_ipv4_cidr_block` and fill in the value of the GKE Control Plane CIDR /28 range:
  ```shell
  master_ipv4_cidr_block = "MASTER.CIDR/28.HERE"
  ```
@@ -183,7 +187,7 @@ gcloud services enable dns.googleapis.com
 gcloud services enable domains.googleapis.com
 ```
 
-Via [Cloud Domain](https://console.cloud.google.com/net-services/domains/registrations) register domain name 
+Via [Cloud Domain](https://console.cloud.google.com/net-services/domains/registrations) register domain name
 (pick desired name and fill in the forms).
 
 
@@ -217,7 +221,7 @@ export PROJECT_ID=<GCP Project ID to host CDA Pipeline Engine>
 ```
 
 Optionally, when deploying processors to a different Project, you can set `DOCAI_PROJECT_ID`.
-However, If you are deploying CDA engine and already have DOCAI project setup and 
+However, If you are deploying CDA engine and already have DOCAI project setup and
 running as a result from the previous installation, DO NOT set `DOCAI_PROJECT_ID` variable and leave it blank.
 Otherwise, terraform will fail, since it will try to create resources, which already were provisioned (and are owned by a different terraform run).
 
@@ -227,11 +231,11 @@ export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors> #
 
 
 ## Installation
-### Terraform 
+### Terraform
 
 > If you are missing `~/.kube/config` file on your system (never run `gcloud cluster get-credentials`), you will need to modify terraform file.
-> 
-> If following command does not locate a file: 
+>
+> If following command does not locate a file:
 > ```shell
 > ls ~/.kube/config
 > ```
@@ -268,7 +272,7 @@ sed 's|PROJECT_ID|'"$PROJECT_ID"'|g; s|API_DOMAIN|'"$API_DOMAIN"'|g; ' microserv
 ```
 
 Edit `microservices/adp_ui/.env` and chose between `http` and `https` protocol depending on internal vs external ui configuration you have selected above:
-**Important!!!** 
+**Important!!!**
 * When not exposing UI externally (`cda_external_ui = false`), REACT_APP_BASE_URL needs to use `http://` Protocol (e.g. **http**://mydomain.com)
 * When exposing UI externally (`cda_external_ui = true`), REACT_APP_BASE_URL needs to use `https://` Protocol (e.g. **https**://mydomain.com)
 
@@ -278,14 +282,14 @@ Edit `microservices/adp_ui/.env` and chose between `http` and `https` protocol d
 - On the left panel of Firebase Console UI, go to Build > Authentication, and click Get Started.
 - Select Email/Password as a Sign in method and click Enable.
 - Go to users and add email/password for a valid Sign in method.
-[//]: # (- Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.)
+  [//]: # (- Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.)
 - Go to Settings > Authorized domain, add the following to the Authorized domains:
   - Web App Domain (e.g. adp-dev.cloudpssolutions.com).
 - Go to Project Overview > Project settings, copy  `Web API Key` you will use this info in the next step.
 - In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. `vi`), and change the following values accordingly.
   - REACT_APP_FIREBASE_API_KEY=`Web API Key copied above`
   - REACT_APP_BASE_URL:
-    - `http://you-domain.com` for Internal UI 
+    - `http://you-domain.com` for Internal UI
     - `https://you-domain.com` for External UI
   - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
     - You can find this ID in the Project settings > Cloud Messaging
@@ -310,7 +314,7 @@ Edit `microservices/adp_ui/.env` and chose between `http` and `https` protocol d
 
 [//]: # (```)
 
-Build/deploy microservices (using skaffold + kustomize): 
+Build/deploy microservices (using skaffold + kustomize):
 ```shell
 ./deploy.sh
 ```
@@ -321,8 +325,8 @@ You could check status of ingress by either navigating using Cloud Shell to
 
 ## <a name="iap-setup"></a>(Optional) IAP setup
 
-Optionally, it is possibly to enable [IAP](https://cloud.google.com/iap/docs/enabling-kubernetes-howto) to protect all the backend services. 
-Make sure that if you already have created [oAuth Consent screen](https://console.cloud.google.com/apis/credentials/consent), it is marked as Internal type. 
+Optionally, it is possibly to enable [IAP](https://cloud.google.com/iap/docs/enabling-kubernetes-howto) to protect all the backend services.
+Make sure that if you already have created [oAuth Consent screen](https://console.cloud.google.com/apis/credentials/consent), it is marked as Internal type.
 
 
 Make sure Env variables are set:
@@ -341,12 +345,12 @@ bash -e iap/disable_iap.sh
 ```
 
 ### IAP With External identity
-When not using GCP identity for IAP, following steps to be executed: 
+When not using GCP identity for IAP, following steps to be executed:
 
 1. Modify `Domain restricted sharing` [Org Policy](https://console.cloud.google.com/iam-admin/orgpolicies/) and make it to _Allow All_
 2. Go to [oAuth Consent Screen](https://console.cloud.google.com/apis/credentials/consent) and make **User type**  _External_
 3. [Create google group](https://groups.google.com/my-groups) and add required members to it.
-4. [Grant](https://console.cloud.google.com/iam-admin/iam) `IAP-secured Web-App User` Role to the newly created google group as the Principal 
+4. [Grant](https://console.cloud.google.com/iam-admin/iam) `IAP-secured Web-App User` Role to the newly created google group as the Principal
 
 #### Errors
 When getting error:
@@ -492,7 +496,7 @@ To enable cross project access, following permissions need to be granted retrosp
 - **Storage Object Admin**  - To allow DocAI processor to save extracted entities as json files inside `${PROJECT_ID}-docai-output` bucket of the Project CDA  (This could be done on the `${PROJECT_ID}-docai-output` bucket level).
   Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the `Project DocAI`.
 
-### Same Organizational Setup (Only) 
+### Same Organizational Setup (Only)
 When both projects are within organization, following steps to be executed:
 
 * Setting of the environment variables:
@@ -508,7 +512,7 @@ export PROJECT_ID=
 ```
 
 ### Two different Organizations - Cross Organization Setup (Only)
-When two projects are under different organizations, additional steps are required. 
+When two projects are under different organizations, additional steps are required.
 
 #### Reset Organization Policy for Domain restricted sharing
 This step is only required when two `Project CDA` and `Project DocAI` do not belong to the same organization.
@@ -518,6 +522,7 @@ In that case following policy constraint `constraints/iam.allowedPolicyMemberDom
 Go to GCP Cloud Shell of `PROJECT_ID`:
 ```shell
 export PROJECT_ID=
+gcloud services enable orgpolicy.googleapis.com
 gcloud org-policies reset constraints/iam.allowedPolicyMemberDomains --project=$PROJECT_ID
 ```
 
@@ -562,7 +567,7 @@ gcloud org-policies reset constraints/iam.allowedPolicyMemberDomains --project=$
 ### Grant Required permissions to DocAI Project
 
 #### Option 1 - using service account
-After modifying Organization Policy constraint, go to `Project DocAI` Console Shell and run following commands: 
+After modifying Organization Policy constraint, go to `Project DocAI` Console Shell and run following commands:
 * Set env variables accordingly:
 ```shell
   export PROJECT_ID=
@@ -626,7 +631,7 @@ Go to `Project CDA` Console Shell and run following commands:
 ## When Using Private Access
 
 - Create Windows VM in the VPC network used to deploy CDA Solution
-- Create firewall rules to open up TCP:3389 port for RDP connection 
+- Create firewall rules to open up TCP:3389 port for RDP connection
 - [Connect to Windows VM using RDP](https://cloud.google.com/compute/docs/instances/connecting-to-windows)
   - OpenUp IAP Tunnel by running following command:
 
@@ -643,33 +648,40 @@ Quick test to trigger pipeline to parse  the sample form:
 ```
 
 ### Working from the UI
-In order to access the Application UI, Navigate to the API Domain IP Address or Domain Name (depending on the setup) in the browser and login with your Google credentials.
-Try Uploading the Document, using *Upload a Document* button.  From *Choose Program* drop-down, select a state ( pick any ).
-Right now, the Form Processor is set up as a default processor (since no classifier is deployed or trained), so each document will be processed with the Form Parser and extracted data will be streamed to the BigQuery.
+* To access the Application UI, Navigate to Domain Name using the browser and login using username/password created in the previous steps.
+* Upload a sample document (e.g. [form.pdf](sample_data/demo/form.pdf))  using *Upload a Document* button.  From *Choose Program* drop-down, select `California` state.
+  * Right now, the Form Processor is set up as a default processor (since no classifier is deployed or trained), so each document will be processed with the **Form Parser** and extracted data will be streamed to the BigQuery.
+* As you click Refresh Icon on the top right, you will see different Status the Pipeline goes through: *Classifying -> Extracting -> Approved* or *Needs Review*.
 
+* If you select *View* action, you will see the key/value pairs extracted from the Document.
+
+* Navigate to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
+
+* You could also run sample query from the Cloud Shell (to output all extracted entities from the form):
+  ```shell
+  ./sql-scripts/run_query.sh entities
+  ```
+  
 > The setting for the default processor is done through the following configuration setting  "settings_config" -> "classification_default_label".  Explained in details in the [Configuring the System](#configuring-the-system).
 
-As you click Refresh Icon on the top right, you will see different Status the Pipeline goes through: *Classifying -> Extracting -> Approved* or *Needs Review*.
-
-If you select *View* action, you will see the key/value pairs extracted from the Document.
-
-Navigate to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
-
-You could also run sample query from the Cloud Shell:
-```shell
-./sql-scripts/run_query.sh
-```
 
 ### Triggering pipeline in a batch mode
 *NB: Currently only pdf documents are supported, so if you have a jpg or png, please first convert it to pdf.*
 
-For example, to trigger pipeline to parse  the sample form:
+For example, to trigger pipeline to parse the sample form:
 ```shell
 ./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
 ```
 
-> The Pipeline is triggered when an empty file named START_PIPELINE is uploaded to the `${PROJECT_ID}-pa-forms` GCS bucket. When the START_PIPELINE document is uploaded, all `*.pdf` files containing in that folder are sent to the processing queue.  
-> All documents within the same gsc folder are treated as related documents, that belong to the same application (patient).
+> The Pipeline is triggered when an empty file named START_PIPELINE is 
+> uploaded to the `${PROJECT_ID}-pa-forms` GCS bucket. When the START_PIPELINE 
+> document is uploaded, all `*.pdf` 
+> files containing in that folder (including sub-folders) are sent to the processing queue.  
+> <br>
+> All documents within the same GCS folder are treated as related documents, will become part of same package (will share case_id). Current limitation with that logic is that only one document of certain type could be used. If there are multiple documents of same type, only one is marked active, others are marked as in-active, as if they were a replacement. 
+> This is legacy business logic, subject to change in case it really becomes an obstacle.
+> <br>
+> 
 > When processed, documents are copied to `gs://${PROJECT_ID}-document-upload` with unique identifiers.
 >
 > Wrapper script to upload each document as a standalone application inside `${PROJECT_ID}-pa-forms`:
@@ -690,7 +702,7 @@ For example, to trigger pipeline to parse  the sample form:
 > Alternatively, send a single document to processing:
 > - Upload *pdf* form to the gs://<PROJECT_ID>-pa-forms/my_dir and
 > - Drop empty START_PIPELINE file to trigger the pipeline execution.
-> After putting START_PIPELINE, the pipeline is automatically triggered  to process  all PDF documents inside the gs://${PROJECT_ID}-pa-forms/<mydir> folder.
+    > After putting START_PIPELINE, the pipeline is automatically triggered  to process  all PDF documents inside the gs://${PROJECT_ID}-pa-forms/<mydir> folder.
 >
 > ```shell
 > gsutil cp  <my-local-dir>/<my_document>.pdf
@@ -709,7 +721,7 @@ Corrected values are saved to the BigQuery and could be retrieved using sample q
 export PROJECT_ID=
 ```
 ```shell
-sql-scripts/run_query.sh corrected_values.sql
+sql-scripts/run_query.sh corrected_values
 ```
 
 Sample output:
@@ -745,12 +757,12 @@ The following wrapper script will use skaffold to rebuild/redeploy microservices
 ./deploy.sh
 ```
 
-You can additionally [clear all existing data (in GCS, Firestore and BigQuery)](#cleaning-data). 
+You can additionally [clear all existing data (in GCS, Firestore and BigQuery)](#cleaning-data).
 
 
 # Utilities
 ## Prerequisites
-Make sure to install all required libraries prior to using utilities listed below: 
+Make sure to install all required libraries prior to using utilities listed below:
 ```shell
 pip3 install -r utils/requirements.tx
 ```
@@ -774,11 +786,11 @@ pip3 install -r utils/requirements.txt
   - BigQuery `validation` table
   - `${PROJECT_ID}-pa-forms` bucket
   - `${PROJECT_ID}-document-upload` bucket
-  
+
   ```shell
   utils/cleanup.sh
   ```
-  
+
 > Please, note, that due to active StreamingBuffer, BigQuery can only be cleaned after a table has received no inserts for an extended interval of time (~ 90 minutes). Then the buffer is detached and DELETE statement is allowed.
 > For more details see [here](https://cloud.google.com/blog/products/bigquery/life-of-a-bigquery-streaming-insert).
 
