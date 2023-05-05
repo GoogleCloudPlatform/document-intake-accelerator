@@ -72,6 +72,10 @@ We strongly recommend you fork this repo, so you can have full control over your
 While you will find end-to-end tools to help spin up a fully functional sandbox environment, most likely you will find yourself customizing solution further down the line.
 
 # Quick Start
+
+For a Quick Reference guide refer to the [Workshop Lab1](docs/Lab1.md), that explains how to install CDA engine into the GCP Argolis environment with a public external end point. 
+Use this README.md to explore in-depth customizations and installation options if needed.
+
 ## Prerequisites
 
 ### Project Creation
@@ -644,33 +648,40 @@ Quick test to trigger pipeline to parse  the sample form:
 ```
 
 ### Working from the UI
-In order to access the Application UI, Navigate to the API Domain IP Address or Domain Name (depending on the setup) in the browser and login with your Google credentials.
-Try Uploading the Document, using *Upload a Document* button.  From *Choose Program* drop-down, select a state ( pick any ).
-Right now, the Form Processor is set up as a default processor (since no classifier is deployed or trained), so each document will be processed with the Form Parser and extracted data will be streamed to the BigQuery.
+* To access the Application UI, Navigate to Domain Name using the browser and login using username/password created in the previous steps.
+* Upload a sample document (e.g. [form.pdf](sample_data/demo/form.pdf))  using *Upload a Document* button.  From *Choose Program* drop-down, select `California` state.
+  * Right now, the Form Processor is set up as a default processor (since no classifier is deployed or trained), so each document will be processed with the **Form Parser** and extracted data will be streamed to the BigQuery.
+* As you click Refresh Icon on the top right, you will see different Status the Pipeline goes through: *Classifying -> Extracting -> Approved* or *Needs Review*.
 
+* If you select *View* action, you will see the key/value pairs extracted from the Document.
+
+* Navigate to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
+
+* You could also run sample query from the Cloud Shell (to output all extracted entities from the form):
+  ```shell
+  ./sql-scripts/run_query.sh entities
+  ```
+  
 > The setting for the default processor is done through the following configuration setting  "settings_config" -> "classification_default_label".  Explained in details in the [Configuring the System](#configuring-the-system).
 
-As you click Refresh Icon on the top right, you will see different Status the Pipeline goes through: *Classifying -> Extracting -> Approved* or *Needs Review*.
-
-If you select *View* action, you will see the key/value pairs extracted from the Document.
-
-Navigate to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
-
-You could also run sample query from the Cloud Shell:
-```shell
-./sql-scripts/run_query.sh
-```
 
 ### Triggering pipeline in a batch mode
 *NB: Currently only pdf documents are supported, so if you have a jpg or png, please first convert it to pdf.*
 
-For example, to trigger pipeline to parse  the sample form:
+For example, to trigger pipeline to parse the sample form:
 ```shell
 ./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
 ```
 
-> The Pipeline is triggered when an empty file named START_PIPELINE is uploaded to the `${PROJECT_ID}-pa-forms` GCS bucket. When the START_PIPELINE document is uploaded, all `*.pdf` files containing in that folder are sent to the processing queue.  
-> All documents within the same gsc folder are treated as related documents, that belong to the same application (patient).
+> The Pipeline is triggered when an empty file named START_PIPELINE is 
+> uploaded to the `${PROJECT_ID}-pa-forms` GCS bucket. When the START_PIPELINE 
+> document is uploaded, all `*.pdf` 
+> files containing in that folder (including sub-folders) are sent to the processing queue.  
+> <br>
+> All documents within the same GCS folder are treated as related documents, will become part of same package (will share case_id). Current limitation with that logic is that only one document of certain type could be used. If there are multiple documents of same type, only one is marked active, others are marked as in-active, as if they were a replacement. 
+> This is legacy business logic, subject to change in case it really becomes an obstacle.
+> <br>
+> 
 > When processed, documents are copied to `gs://${PROJECT_ID}-document-upload` with unique identifiers.
 >
 > Wrapper script to upload each document as a standalone application inside `${PROJECT_ID}-pa-forms`:
@@ -710,7 +721,7 @@ Corrected values are saved to the BigQuery and could be retrieved using sample q
 export PROJECT_ID=
 ```
 ```shell
-sql-scripts/run_query.sh corrected_values.sql
+sql-scripts/run_query.sh corrected_values
 ```
 
 Sample output:
