@@ -379,7 +379,7 @@ module "validation_bigquery" {
 # Create Views.
 resource "null_resource" "bigquery_views" {
   depends_on = [
-    validation_bigquery
+    module.validation_bigquery
   ]
   provisioner "local-exec" {
     command = "../../../sql-scripts/create_views.sh"
