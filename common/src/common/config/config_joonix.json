@@ -13,7 +13,7 @@
       "processor_id": "projects/prior-auth-poc/locations/us/processors/7a076c1e2d462cce"
     },
     "classifier": {
-      "processor_id": "projects/prior-auth-poc/locations/us/processors/646be590edf17498"
+      "processor_id": "projects/prior-auth-poc/locations/us/processors/3a77fb3cb9dd3de1"
     },
     "driving_license_processor": {
       "processor_id": "projects/1089283405732/locations/us/processors/8e791dcdfc0dcfbf"
