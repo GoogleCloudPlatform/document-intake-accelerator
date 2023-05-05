@@ -66,10 +66,10 @@
 
 ## How To Use This Repo
 This repo is intended to be used as a reference for your own implementation and
-as such we designed many elements to be as generic as possible. 
-You will almost certainly need to modify elements to fit your organization's specific requirements. 
+as such we designed many elements to be as generic as possible.
+You will almost certainly need to modify elements to fit your organization's specific requirements.
 We strongly recommend you fork this repo, so you can have full control over your unique setup.
-While you will find end-to-end tools to help spin up a fully functional sandbox environment, most likely you will find yourself customizing solution further down the line.  
+While you will find end-to-end tools to help spin up a fully functional sandbox environment, most likely you will find yourself customizing solution further down the line.
 
 # Quick Start
 ## Prerequisites
@@ -79,7 +79,7 @@ It is recommended to deploy into two projects: one for the CDA Pipeline Engine (
 When following this  practice, before deployment create two projects and note down.
 
 ### <a name="classifier-splitter-access"></a> Classifier/Splitter Access
-Custom Document Classifier and Custom Document Splitter are currently in Preview. 
+Custom Document Classifier and Custom Document Splitter are currently in Preview.
 Early access can be granted using this [form](https://docs.google.com/forms/d/e/1FAIpQLSc_6s8jsHLZWWE0aSX0bdmk24XDoPiE_oq5enDApLcp1VKJ-Q/viewform), so that Project is whitelisted.
 
 ### Domain Name Registration
@@ -131,8 +131,8 @@ Verify `cda_external_ip` points to the reserved External IP name inside `terrafo
  ```
 
 ### Private vs Public End Point
-You have an option to expose UI externally in public internet, or make it fully internal within the internal network. 
-When exposed, the end point (via domain name) will be accessible via Internet and protected by Firebase Authentication and optionally IAP, enforced 
+You have an option to expose UI externally in public internet, or make it fully internal within the internal network.
+When exposed, the end point (via domain name) will be accessible via Internet and protected by Firebase Authentication and optionally IAP, enforced
 on all the end points.
 When protected, you will need machine in the same internal network in order to access the UI (for testing, you could create Windows VM in the same network and access it via RDP using IAP tunnel).
 
@@ -144,13 +144,13 @@ cda_external_ui = true       # Expose UI to the Internet: true or false
 
 
 ### When deploying using Shared VPC
-As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc) 
+As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc)
 via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.sample.tfvars).
 Follow [these steps](docs/SharedVPC_steps.md) to prepare environment with VPC Host Project and Service project.
 
- - Edit `terraform/environments/dev/terraform.tfvars` in the editor, 
- - uncomment `network_config` and fill in required parameters inside `network_config` (when using the [steps above](docs/SharedVPC_steps.md), 
- - only need to set `HOST_PROJECT_ID`, all other variables are pre-filled correctly):
+- Edit `terraform/environments/dev/terraform.tfvars` in the editor,
+- uncomment `network_config` and fill in required parameters inside `network_config` (when using the [steps above](docs/SharedVPC_steps.md),
+- only need to set `HOST_PROJECT_ID`, all other variables are pre-filled correctly):
  ```
 network_config = {
   host_project      = "HOST_PROJECT_ID"
@@ -165,7 +165,7 @@ network_config = {
 ```
 
 When the **default GKE Control Plane CIDR Range (172.16.0.0/28) overlaps** with your network:
- - Edit `terraform.tfvars` in the editor, uncomment `master_ipv4_cidr_block` and fill in the value of the GKE Control Plane CIDR /28 range:
+- Edit `terraform.tfvars` in the editor, uncomment `master_ipv4_cidr_block` and fill in the value of the GKE Control Plane CIDR /28 range:
  ```shell
  master_ipv4_cidr_block = "MASTER.CIDR/28.HERE"
  ```
@@ -183,7 +183,7 @@ gcloud services enable dns.googleapis.com
 gcloud services enable domains.googleapis.com
 ```
 
-Via [Cloud Domain](https://console.cloud.google.com/net-services/domains/registrations) register domain name 
+Via [Cloud Domain](https://console.cloud.google.com/net-services/domains/registrations) register domain name
 (pick desired name and fill in the forms).
 
 
@@ -217,7 +217,7 @@ export PROJECT_ID=<GCP Project ID to host CDA Pipeline Engine>
 ```
 
 Optionally, when deploying processors to a different Project, you can set `DOCAI_PROJECT_ID`.
-However, If you are deploying CDA engine and already have DOCAI project setup and 
+However, If you are deploying CDA engine and already have DOCAI project setup and
 running as a result from the previous installation, DO NOT set `DOCAI_PROJECT_ID` variable and leave it blank.
 Otherwise, terraform will fail, since it will try to create resources, which already were provisioned (and are owned by a different terraform run).
 
@@ -227,11 +227,11 @@ export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors> #
 
 
 ## Installation
-### Terraform 
+### Terraform
 
 > If you are missing `~/.kube/config` file on your system (never run `gcloud cluster get-credentials`), you will need to modify terraform file.
-> 
-> If following command does not locate a file: 
+>
+> If following command does not locate a file:
 > ```shell
 > ls ~/.kube/config
 > ```
@@ -268,7 +268,7 @@ sed 's|PROJECT_ID|'"$PROJECT_ID"'|g; s|API_DOMAIN|'"$API_DOMAIN"'|g; ' microserv
 ```
 
 Edit `microservices/adp_ui/.env` and chose between `http` and `https` protocol depending on internal vs external ui configuration you have selected above:
-**Important!!!** 
+**Important!!!**
 * When not exposing UI externally (`cda_external_ui = false`), REACT_APP_BASE_URL needs to use `http://` Protocol (e.g. **http**://mydomain.com)
 * When exposing UI externally (`cda_external_ui = true`), REACT_APP_BASE_URL needs to use `https://` Protocol (e.g. **https**://mydomain.com)
 
@@ -278,14 +278,14 @@ Edit `microservices/adp_ui/.env` and chose between `http` and `https` protocol d
 - On the left panel of Firebase Console UI, go to Build > Authentication, and click Get Started.
 - Select Email/Password as a Sign in method and click Enable.
 - Go to users and add email/password for a valid Sign in method.
-[//]: # (- Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.)
+  [//]: # (- Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.)
 - Go to Settings > Authorized domain, add the following to the Authorized domains:
   - Web App Domain (e.g. adp-dev.cloudpssolutions.com).
 - Go to Project Overview > Project settings, copy  `Web API Key` you will use this info in the next step.
 - In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. `vi`), and change the following values accordingly.
   - REACT_APP_FIREBASE_API_KEY=`Web API Key copied above`
   - REACT_APP_BASE_URL:
-    - `http://you-domain.com` for Internal UI 
+    - `http://you-domain.com` for Internal UI
     - `https://you-domain.com` for External UI
   - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
     - You can find this ID in the Project settings > Cloud Messaging
@@ -310,7 +310,7 @@ Edit `microservices/adp_ui/.env` and chose between `http` and `https` protocol d
 
 [//]: # (```)
 
-Build/deploy microservices (using skaffold + kustomize): 
+Build/deploy microservices (using skaffold + kustomize):
 ```shell
 ./deploy.sh
 ```
@@ -321,8 +321,8 @@ You could check status of ingress by either navigating using Cloud Shell to
 
 ## <a name="iap-setup"></a>(Optional) IAP setup
 
-Optionally, it is possibly to enable [IAP](https://cloud.google.com/iap/docs/enabling-kubernetes-howto) to protect all the backend services. 
-Make sure that if you already have created [oAuth Consent screen](https://console.cloud.google.com/apis/credentials/consent), it is marked as Internal type. 
+Optionally, it is possibly to enable [IAP](https://cloud.google.com/iap/docs/enabling-kubernetes-howto) to protect all the backend services.
+Make sure that if you already have created [oAuth Consent screen](https://console.cloud.google.com/apis/credentials/consent), it is marked as Internal type.
 
 
 Make sure Env variables are set:
@@ -341,12 +341,12 @@ bash -e iap/disable_iap.sh
 ```
 
 ### IAP With External identity
-When not using GCP identity for IAP, following steps to be executed: 
+When not using GCP identity for IAP, following steps to be executed:
 
 1. Modify `Domain restricted sharing` [Org Policy](https://console.cloud.google.com/iam-admin/orgpolicies/) and make it to _Allow All_
 2. Go to [oAuth Consent Screen](https://console.cloud.google.com/apis/credentials/consent) and make **User type**  _External_
 3. [Create google group](https://groups.google.com/my-groups) and add required members to it.
-4. [Grant](https://console.cloud.google.com/iam-admin/iam) `IAP-secured Web-App User` Role to the newly created google group as the Principal 
+4. [Grant](https://console.cloud.google.com/iam-admin/iam) `IAP-secured Web-App User` Role to the newly created google group as the Principal
 
 #### Errors
 When getting error:
@@ -473,44 +473,161 @@ Where:
 
 
 ## Cross-Project Setup
-Limitations: Two projects need to be within the same ORG.
+
+### Introduction
 For further reference, lets define the two projects:
-- GCP Project to run the Claims Data Activator - Engine (**Project CDA**)
-- GCP Project to train and serve Document AI Processors and Classifier  (**Project DocAI**)
+- GCP Project to run the Claims Data Activator - Engine (**Project CDA**) => Corresponds to `PROJECT_ID`
+- GCP Project to train and serve Document AI Processor  (**Project DocAI**) => Corresponds to `DOCAI_PROJECT_ID`
 
-If you want to enable cross project access, following steps need to be done:
-1) Inside Project DocAI [add](https://medium.com/@tanujbolisetty/gcp-impersonate-service-accounts-36eaa247f87c) following service account of the Project CDA `gke-sa@{PROJECT_CDA_ID}.iam.gserviceaccount.com` (used for GKE Nodes) and grant following  [roles](https://cloud.google.com/document-ai/docs/access-control/iam-roles):
-  - **Document AI Viewer** - To grant access to view all resources and process documents in Document AI
-    Where `{PROJECT_CDA_ID}` - to be replaced with the ID of the Project CDA
-2) Inside Project CDA grant following permissions to the default Document AI service account of the Project DocAI: `service-{PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com`
-  - **Storage Object Viewer** - [To make files in Project CDA accessible to Project DocAI](https://cloud.google.com/document-ai/docs/cross-project-setup) (This could be done on the `${PROJECT_CDA_ID}-document-upload` and `${PROJECT_CDA_ID}-docai-output` bucket level with the forms to handle).
-  - **Storage Object Admin**  - To allow DocAI processor to save extracted entities as json files inside `${PROJECT_CDA_ID}-output` bucket of the Project CDA  (This could be done on the `${PROJECT_CDA_ID}-output` bucket level).
-    Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the Project DocAI
-
-Above is equivalent to the following `gcloud` commands:
 ```shell
+export PROJECT_ID=
+export DOCAI_PROJECT_ID=
+```
+
+To enable cross project access, following permissions need to be granted retrospectively:
+1) Inside Project DocAI [add](https://medium.com/@tanujbolisetty/gcp-impersonate-service-accounts-36eaa247f87c) following service account of the Project CDA `gke-sa@$PROJECT_ID.iam.gserviceaccount.com` (used for GKE Nodes) and grant following  [roles](https://cloud.google.com/document-ai/docs/access-control/iam-roles):
+- **Document AI Viewer** - To grant access to view all resources and process documents in Document AI.
+2) Inside Project CDA grant following permissions to the default Document AI service account of the Project DocAI: `service-{PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com`
+- **Storage Object Viewer** - [To make files in Project CDA accessible to Project DocAI](https://cloud.google.com/document-ai/docs/cross-project-setup) (This could be done on the `${PROJECT_ID}-document-upload`).
+- **Storage Object Admin**  - To allow DocAI processor to save extracted entities as json files inside `${PROJECT_ID}-docai-output` bucket of the Project CDA  (This could be done on the `${PROJECT_ID}-docai-output` bucket level).
+  Where `{PROJECT_DOCAI_NUMBER}` - to be replaced with the Number of the `Project DocAI`.
+
+### Same Organizational Setup (Only)
+When both projects are within organization, following steps to be executed:
+
+* Setting of the environment variables:
+
+```shell
+export DOCAI_PROJECT_ID=
+export PROJECT_ID=
+```
+
+* Running a utility script:
+```shell
+./setup/setup_docai_access.sh
+```
+
+### Two different Organizations - Cross Organization Setup (Only)
+When two projects are under different organizations, additional steps are required.
+
+#### Reset Organization Policy for Domain restricted sharing
+This step is only required when two `Project CDA` and `Project DocAI` do not belong to the same organization.
+In that case following policy constraint `constraints/iam.allowedPolicyMemberDomain` needs to be modified for both of them and be set to  `Allowed All`.
+
+
+Go to GCP Cloud Shell of `PROJECT_ID`:
+```shell
+export PROJECT_ID=
+gcloud services enable orgpolicy.googleapis.com
+gcloud org-policies reset constraints/iam.allowedPolicyMemberDomains --project=$PROJECT_ID
+```
+
+To verify changes:
+```shell
+gcloud resource-manager org-policies list --project=$PROJECT_ID
+```
+Sample output:
+```shell
+CONSTRAINT: constraints/iam.allowedPolicyMemberDomains
+LIST_POLICY: SET
+BOOLEAN_POLICY: -
+ETAG: CMiArKIGENi33coC
+```
+
+Go to GCP Cloud Shell of `DOCAI_PROJECT_ID`:
+```shell
+export DOCAI_PROJECT_ID=
+gcloud org-policies reset constraints/iam.allowedPolicyMemberDomains --project=$DOCAI_PROJECT_ID
+```
+
+
+[//]: # (Alternatively, changing of organization Policy could be done via UI.)
+
+[//]: # (In order to do so, go to Cloud Console  IAM-> [Organization Policies]&#40;https://console.cloud.google.com/iam-admin/orgpolicies/list&#41; and find `constraints/iam.allowedPolicyMemberDomain` which refers to Domain restricted sharing.)
+
+[//]: # ()
+[//]: # (**Select `Manage policy` Icon**:)
+
+[//]: # (* Applies to: => Customize)
+
+[//]: # (* Policy Enforcement => Replace )
+
+[//]: # (* Add rule => `Allow All`)
+
+[//]: # ()
+[//]: # (**and submit Save**)
+
+[//]: # ()
+[//]: # (Perform step above for both `Project DocAI` and `Project CDA`.)
+
+### Grant Required permissions to DocAI Project
+
+#### Option 1 - using service account
+After modifying Organization Policy constraint, go to `Project DocAI` Console Shell and run following commands:
+* Set env variables accordingly:
+```shell
+  export PROJECT_ID=
+  export DOCAI_PROJECT_ID=
+  gcloud config set project $DOCAI_PROJECT_ID
+```
+* Execute following commands to grant permissions:
+```shell
+  gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"  --role="roles/documentai.apiUser"
   gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"  --role="roles/documentai.viewer"
   PROJECT_DOCAI_NUMBER=$(gcloud projects describe "$DOCAI_PROJECT_ID" --format='get(projectNumber)')
+  echo PROJECT_DOCAI_NUMBER=$PROJECT_DOCAI_NUMBER
+```
+* Copy PROJECT_DOCAI_NUMBER from the output above
+
+### Option 1 - using managed Group (Alternative)
+Alternatively, you could create a group in the Organization of DOCAI_PROJECT, grant permissions to the group and assign members to that group.
+
+* Create a user group, that allows external users (later referred as `GROUP_EMAIL`) in the DocAI Project organization.
+
+* Set env variables accordingly:
+```shell
+  export PROJECT_ID=
+  export DOCAI_PROJECT_ID=
+  export GROUP_EMAIL=
+  gcloud config set project $DOCAI_PROJECT_ID
+```
+
+* Execute following commands to grant permissions:
+```shell
+gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID \
+--member="group:${GROUP_EMAIL}" \
+--role="roles/documentai.apiUser"
+gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID \
+--member="group:${GROUP_EMAIL}" \
+--role="roles/documentai.viewer"
+```
+
+* Add member to the group:
+```shell
+gcloud identity groups memberships add --group-email="${GROUP_EMAIL}" --member-email="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com" --roles=MEMBER
+```
+
+### Grant Required permissions to CDA engine Project
+Go to `Project CDA` Console Shell and run following commands:
+* Set env variables accordingly:
+```shell
+  export PROJECT_ID=
+  export DOCAI_PROJECT_ID=
+  export PROJECT_DOCAI_NUMBER=
+  gcloud config set project $PROJECT_ID
+```
+* Execute following commands:
+```shell
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-docai-output --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.admin"
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-document-upload --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"
 ```
 
-Or running of the following script:
-
-```shell
-export DOCAI_PROJECT_ID=cda-001-processors
-export PROJECT_ID=cda-ext-iap
-```
-
-```shell
-./setup/setup_docai_access.sh
-```
 
 # CDA Usage
 ## When Using Private Access
 
 - Create Windows VM in the VPC network used to deploy CDA Solution
-- Create firewall rules to open up TCP:3389 port for RDP connection 
+- Create firewall rules to open up TCP:3389 port for RDP connection
 - [Connect to Windows VM using RDP](https://cloud.google.com/compute/docs/instances/connecting-to-windows)
   - OpenUp IAP Tunnel by running following command:
 
@@ -574,7 +691,7 @@ For example, to trigger pipeline to parse  the sample form:
 > Alternatively, send a single document to processing:
 > - Upload *pdf* form to the gs://<PROJECT_ID>-pa-forms/my_dir and
 > - Drop empty START_PIPELINE file to trigger the pipeline execution.
-> After putting START_PIPELINE, the pipeline is automatically triggered  to process  all PDF documents inside the gs://${PROJECT_ID}-pa-forms/<mydir> folder.
+    > After putting START_PIPELINE, the pipeline is automatically triggered  to process  all PDF documents inside the gs://${PROJECT_ID}-pa-forms/<mydir> folder.
 >
 > ```shell
 > gsutil cp  <my-local-dir>/<my_document>.pdf
@@ -593,7 +710,7 @@ Corrected values are saved to the BigQuery and could be retrieved using sample q
 export PROJECT_ID=
 ```
 ```shell
-sql-scripts/run_query.sh query_corrected_values.sql
+sql-scripts/run_query.sh corrected_values.sql
 ```
 
 Sample output:
@@ -629,12 +746,12 @@ The following wrapper script will use skaffold to rebuild/redeploy microservices
 ./deploy.sh
 ```
 
-You can additionally [clear all existing data (in GCS, Firestore and BigQuery)](#cleaning-data). 
+You can additionally [clear all existing data (in GCS, Firestore and BigQuery)](#cleaning-data).
 
 
 # Utilities
 ## Prerequisites
-Make sure to install all required libraries prior to using utilities listed below: 
+Make sure to install all required libraries prior to using utilities listed below:
 ```shell
 pip3 install -r utils/requirements.tx
 ```
@@ -658,11 +775,11 @@ pip3 install -r utils/requirements.txt
   - BigQuery `validation` table
   - `${PROJECT_ID}-pa-forms` bucket
   - `${PROJECT_ID}-document-upload` bucket
-  
+
   ```shell
   utils/cleanup.sh
   ```
-  
+
 > Please, note, that due to active StreamingBuffer, BigQuery can only be cleaned after a table has received no inserts for an extended interval of time (~ 90 minutes). Then the buffer is detached and DELETE statement is allowed.
 > For more details see [here](https://cloud.google.com/blog/products/bigquery/life-of-a-bigquery-streaming-insert).
 
@@ -754,6 +871,22 @@ terraform state rm <...>
 ```
 
 # CDA Troubleshoot
+
+## Errors when using Classifier/Extractor
+
+Such as `400 Error, Failed to process all documents`.
+Make sure [Cross Project Access is setup](#cross-project-setup) between DocAI and CDA projects.
+
+Can be resolved by running this script:
+```shell
+export DOCAI_PROJECT_ID=
+export PROJECT_ID=
+```
+
+```shell
+./setup/setup_docai_access.sh
+```
+
 
 ## Classification Service Logs
 
