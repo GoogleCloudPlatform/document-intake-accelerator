@@ -162,7 +162,7 @@ kubectl describe managedcertificate
 This relies on the available out-of-the box Form parser.
 
 * To access the Application UI, Navigate to Domain Name using the browser and login using username/password created in the previous steps.
-* Upload a sample document (e.g. [form.pdf](sample_data/demo/form.pdf))  using *Upload a Document* button.  From *Choose Program* drop-down, select `California` state.
+* Upload a sample document (e.g. [form.pdf](../sample_data/demo/form.pdf))  using *Upload a Document* button.  From *Choose Program* drop-down, select `California` state.
   * Right now, the Form Processor is set up as a default processor (since no classifier is deployed or trained), so each document will be processed with the **Form Parser** and extracted data will be streamed to the BigQuery.
 * As you click Refresh Icon on the top right, you will see different Status the Pipeline goes through: *Classifying -> Extracting -> Approved* or *Needs Review*.
 
@@ -260,9 +260,9 @@ gcloud identity groups memberships add --group-email="${GROUP_EMAIL}" --member-e
   
 ### Testing New Configuration
 
-Now you can use  DocAI Classifier and Specialized CDE trained for Prior-Auth Forms, such as [PA Texas Forms](sample_data/bsc_demo/pa-form-1.pdf) and [BSC PA Forms](sample_data/bsc_demo/bsc-dme-pa-form-1.pdf).
+Now you can use  DocAI Classifier and Specialized CDE trained for Prior-Auth Forms, such as [PA Texas Forms](../sample_data/bsc_demo/pa-form-1.pdf) and [BSC PA Forms](../sample_data/bsc_demo/bsc-dme-pa-form-1.pdf).
 
-* Upload a collection of different forms from [bsc_demo](sample_data/bsc_demo) directory and see how are they classified as `BSC Prior-Auth Form` , `Prior-Authorization Form` accordingly: 
+* Upload a collection of different forms from [bsc_demo](../sample_data/bsc_demo) directory and see how are they classified as `BSC Prior-Auth Form` , `Prior-Authorization Form` accordingly: 
 
   * You could use UI to upload forms one by one or 
   * Use a batch upload via a wrapper script.  
