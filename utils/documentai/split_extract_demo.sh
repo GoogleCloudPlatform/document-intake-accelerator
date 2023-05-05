@@ -3,6 +3,9 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$DIR"/../../SET
 export DEBUG=true
 BUCKET=${PROJECT_ID}-pa-forms
+FILE_PATH=${1:-"${DIR}/../../sample_data/splitter-test/Package-combined.pdf"}
+echo "Using $FILE_PATH to ingest into the Pipeline.... "
+
 FILE_PATH="${DIR}/../../sample_data/splitter-test/Package-combined.pdf"
 
 # set GOOGLE_APPLICATION_CREDENTIALS
@@ -30,3 +33,4 @@ pip install -r "${DIR}"/../pdf-splitter/requirements.txt
 python "${DIR}"/../pdf-splitter/main.py -f "${FILE_PATH}" --project-id "${DOCAI_PROJECT_ID}"  --processor-id $SPLITTER_ID -o "${DIR_OUT}"
 
 "${DIR}"/../../start_pipeline.sh -d "${DIR_OUT}" -l split_extract -p
+

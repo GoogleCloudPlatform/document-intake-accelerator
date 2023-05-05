@@ -44,8 +44,10 @@ STATUS_REJECTED = "Rejected"
 STATUS_PENDING = "Pending"
 STATUS_IN_PROGRESS = "Processing"
 
+STATUS_PROCESSED = "Processed"
 STATUS_SUCCESS = "Complete"
 STATUS_ERROR = "Error"
+STATUS_SPLIT = "Split"
 STATUS_TIMEOUT = "Timeout"
 
 # ========= Document upload ======================
@@ -67,6 +69,9 @@ CONFIG_BUCKET = os.environ.get("CONFIG_BUCKET")
 CONFIG_FILE_NAME = "config.json"
 CLASSIFICATION_UNDETECTABLE = "unclassified"
 
+# ===== Start Pipeline ===========================
+START_PIPELINE_FILENAME = os.environ.get("START_PIPELINE_NAME",
+                                         "START_PIPELINE")
 
 def load_config(bucketname, filename):
   # Todo add optimization and check for the latest timestamp changed
@@ -123,6 +128,7 @@ def get_document_types_config():
 
 
 def get_parser_by_doc_class(doc_class):
+  Logger.info(f"get_parser_by_doc_class {doc_class}")
   doc = get_document_types_config().get(doc_class)
   if not doc:
     Logger.error(f"doc_class {doc_class} not present in document_types_config")
@@ -184,6 +190,7 @@ SUPPORTED_DOC_TYPES = {
 
 
 def get_document_type(doc_name):
+  Logger.info(f"get_document_type {doc_name}")
   doc = get_document_types_config().get(doc_name)
   if doc:
     return doc.get("doc_type")
@@ -192,6 +199,7 @@ def get_document_type(doc_name):
 
 
 def get_display_name_by_doc_class(doc_class):
+  Logger.info(f"get_display_name_by_doc_class {doc_class}")
   doc = get_document_types_config().get(doc_class)
   if not doc:
     Logger.error(f"doc_class {doc_class} not present in document_types_config")
@@ -203,6 +211,7 @@ def get_display_name_by_doc_class(doc_class):
 
 
 def get_document_class_by_classifier_label(label_name):
+  Logger.info(f"get_document_class_by_classifier_label {label_name}")
   for k, v in get_document_types_config().items():
     if v.get("classifier_label") == label_name:
       return k

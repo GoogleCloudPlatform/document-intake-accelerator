@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "${DIR}"/SET
+source "${DIR}"/../SET
 
 gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
 

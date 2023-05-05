@@ -15,12 +15,16 @@ limitations under the License.
 """
 
 """ Process task api endpoint """
-from fastapi import APIRouter, BackgroundTasks, status
+from fastapi import APIRouter
+from fastapi import BackgroundTasks
+from fastapi import status
 from models.process_task import ProcessTask
 from utils.process_task_helpers import run_pipeline
+
+from common.config import STATUS_ERROR
+from common.config import STATUS_SUCCESS
 # pylint: disable = ungrouped-imports
 from common.utils.logging_handler import Logger
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}

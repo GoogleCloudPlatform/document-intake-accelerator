@@ -136,7 +136,7 @@ sed 's|PROJECT_ID|'"$PROJECT_ID"'|g; s|API_DOMAIN|'"$API_DOMAIN"'|g; ' microserv
 - On the left panel of Firebase Console UI, go to Build > Authentication, and click Get Started.
 - Select Email/Password as a Sign in method and click Enable => Save. Note them down, you will need it to sign in.
 - Go to users and add email/password for a valid Sign in method
-  [//]: # (- Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.)
+  - Enable Google auth provider, and select Project support email to your admin’s email. Leave the Project public-facing name as-is. Then click Save.
 - Go to Settings > Authorized domain, add the following to the Authorized domains:
   - Web App Domain (e.g. adp-dev.cloudpssolutions.com) - the one registered previously as `API_DOMAIN`
 - Go to Project Overview > Project settings, copy  `Web API Key` you will use this info in the next step.
@@ -148,9 +148,15 @@ Build/deploy microservices (using skaffold + kustomize):
 ```shell
 ./deploy.sh
 ```
-This command will take **~10 minutes** to complete, and it will take another **10-15 minutes** for ingress to get ready.  
+This command will take **~10 minutes** to complete, and it will take another **10-15 minutes** for ingress to get ready and for the cert to be provisioned.  
+
 You could check status of ingress by either navigating using Cloud Shell to
 [GKE Ingress](https://console.cloud.google.com/kubernetes/ingress/us-central1/main-cluster/default/external-ingress/details) and waiting till it appears as solid green.
+
+When ingress is Green and ready, make sure the cert is in the `Active` status. If it shows as `Provisioning`, give it another 5-10 minutes and re-check:
+```shell
+kubectl describe managedcertificate
+```
 
 ## Out of the box UI demo flow
 This relies on the available out-of-the box Form parser.
@@ -216,7 +222,7 @@ This relies on the available out-of-the box Form parser.
 ## Connecting to the existing DocAI processors
 
 ### Granting Cross-Org permissions 
-In this section, you will enable access to the trained DocAI processors available inside joonix environment (different from from Argolis). 
+In this section, you will enable access to the trained DocAI processors available inside joonix environment (different from Argolis). 
 
 * Modify  policy constraint inside the Argolis to allow cross org access:
   *  Go to GCP Cloud Shell of youur Argolis environment/Project and run following command to change `constraints/iam.allowedPolicyMemberDomain` constraint to `Allowed All`:

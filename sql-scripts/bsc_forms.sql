@@ -10,4 +10,5 @@ SELECT __beneficiaryName as Name,
        __issurerName as issurerName,
        __rpSpecialty as rpSpecialty,
        __rpJustification as rpJustification
-       FROM `.validation.pa_forms_bsc_flat`
+       FROM `validation.pa_forms_bsc_flat`
+-- where timestamp > cast('2023-05-02T19:00:00' as datetime)

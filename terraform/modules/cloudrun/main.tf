@@ -152,8 +152,8 @@ resource "google_cloud_run_service" "cloudrun-service" {
           container_port = 8000
         }
         env {
-          name  = "MAX_UPLOADED_DOCS" #thresold value for comparison with the number of uploaded docs in firesotre collection
-          value = "1000"
+          name  = "BATCH_PROCESS_QUOTA" # Concurrent Batch Process QUOTA
+          value = "5"
         }
         env {
           name  = "PROJECT_ID"

@@ -19,7 +19,7 @@ echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
   echo "Cleaning Up then..."
-  do_query
+  do_query  2>/dev/null
 fi
 
 

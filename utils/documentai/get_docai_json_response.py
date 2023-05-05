@@ -38,21 +38,18 @@ assert processor_id, "Env var PROCESSOR_ID is not set."
 
 mime_type = 'application/pdf'  # Refer to https://cloud.google.com/document-ai/docs/file-types for supported file types
 field_mask = "text,entities,pages.pageNumber"  # Optional. The fields to return in the Document object.
-# file_path = os.path.join(os.path.dirname(__file__), '../sample_data/test/pa-form-42.pdf')
-
-
-# TODO supporting mote than single Level of Label Nesting. for Now just one level nesting is supported
 
 
 def process_document_sample(
     project_id: str,
     location: str,
     processor_id: str,
-    file_path: str,
+    in_file_path: str,
+    out_file_path: str,
     mime_type: str
 ):
 
-  print(f"Using project_id={project_id}, processor_id={processor_id} to extract data from file_path={file_path} ")
+  print(f"Using project_id={project_id}, processor_id={processor_id} to extract data from file_path={in_file_path} ")
   # You must set the api_endpoint if you use a location other than 'us', e.g.:
   opts = ClientOptions(api_endpoint=f"{location}-documentai.googleapis.com")
 
@@ -70,8 +67,7 @@ def process_document_sample(
   print(f"Processor Type: {processor.type_}")
 
   # Read the file into memory
-  with open(file_path, "rb") as image:
-    print("loading")
+  with open(in_file_path, "rb") as image:
     image_content = image.read()
 
   # Load Binary Data into Document AI RawDocument Object
@@ -90,7 +86,10 @@ def process_document_sample(
   parser_doc_data = result.document
   # convert to json
   json_string = proto.Message.to_json(parser_doc_data)
-  print(json.dumps(json_string, indent=4))
+  json_object = json.dumps(json_string, indent=4)
+  with open(out_file_path, "w") as outfile:
+    outfile.write(json_object)
+  print(f"Saved json file into {out_file_path}")
 
 def get_parser():
   # Read command line arguments
@@ -106,9 +105,12 @@ def get_parser():
       """)
   parser.add_argument(
       "-f",
-      dest="file_path",
+      dest="in_file_path",
       help="Path to PDF form file")
-
+  parser.add_argument(
+      "-o",
+      dest="out_file_path",
+      help="Path to JSON file")
   return parser
 
 
@@ -116,13 +118,18 @@ if __name__ == "__main__":
   parser = get_parser()
   args = parser.parse_args()
 
-  if not args.file_path:
+  if not args.in_file_path:
     parser.print_help()
     exit()
+
+  if not args.out_file_path:
+    args.out_file_path = "output.json"
+
   process_document_sample(project_id,
                           location,
                           processor_id,
-                          args.file_path,
+                          args.in_file_path,
+                          args.out_file_path,
                           mime_type)
 
 # [END documentai_process_document]

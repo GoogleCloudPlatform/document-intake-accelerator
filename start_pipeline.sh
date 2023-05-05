@@ -1,7 +1,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PWD=$(pwd)
 is_package='false'
-
+date_str=$(date +%s )
 
 # get parameters
 while getopts d:l:p flag
@@ -33,19 +33,22 @@ send_gcs_batch_processing(){
 if [ -z "$gs_dir" ]; then
   gs_dir="$(basename "$FROM_DIR")"
 fi
-GS_URL="gs://$PROJECT_ID-pa-forms/$gs_dir"
+GS_URL_ROOT="gs://$PROJECT_ID-pa-forms/$date_str"
+GS_URL="$GS_URL_ROOT/$gs_dir"
+echo echo $GS_URL
+
 
 if [[ "$FROM_DIR" = /* ]]; then
   INPUT="${FROM_DIR}"
-  echo "absolute path"
+#  echo "absolute path"
 else
   INPUT="${PWD}/${FROM_DIR}"
-  echo "relative path"
+#  echo "relative path"
 fi
 
 i=0
 
-echo ">>> Source=[$FROM_DIR], Destination=[$GS_URL], packaged=$is_package"
+echo ">>> Source=[$FROM_DIR], Destination=[$GS_URL_ROOT], packaged=$is_package"
 
 if [ -d "$INPUT"/ ]; then
   echo "Using all PDF files inside directory $INPUT"
@@ -54,32 +57,35 @@ if [ -d "$INPUT"/ ]; then
     cd "$INPUT" || exit;
     for FILE in *.pdf; do
       i=$((i+1))
-      URL="gs://$PROJECT_ID-pa-forms/${gs_dir}_${i}/"
+      URL="${GS_URL}_${i}/"
+#      if ! (($i % 5)); then
+#          echo "Waiting for previous batch job to be done due to Quota Limits"
+#          sleep 60
+#      fi
       echo " $i --- Copying data from ${INPUT}/${FILE} to ${URL}"
       gsutil cp "${INPUT}/${FILE}" "${URL}"
-      echo "Triggering pipeline for ${URL}"
-      gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${URL}"
+
     done
+    echo "Triggering pipeline for ${GS_URL_ROOT}"
+    gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${GS_URL_ROOT}/"
     cd ..
   else
-    URL="gs://$PROJECT_ID-pa-forms/$gs_dir/"
-    echo "Copying data from ${INPUT} to ${URL}"
-    gsutil -m cp "${INPUT}/*.pdf" "${URL}/"
-    echo "Triggering pipeline for ${URL}"
-    gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${URL}"
+    echo "Copying data from ${INPUT} to ${GS_URL}"
+    gsutil -m cp "${INPUT}/*.pdf" "${GS_URL}/"
+    echo "Triggering pipeline for ${GS_URL}"
+    gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${GS_URL}"
   fi
 
 #  gsutil -m cp "${INPUT}/*.pdf" "$GS_URL"
 elif [ -f "$FROM_DIR" ]; then
   # create a new case for each file for the demo purposes
   echo "Using single file $FROM_DIR"
-  echo "Copying data from ${INPUT} to ${GS_URL}"
-  gsutil cp "${INPUT}" "$GS_URL"
+  echo "Copying data from ${INPUT} to ${GS_URL}/"
+  gsutil cp "${INPUT}" "${GS_URL}/"
   echo "Triggering pipeline for ${GS_URL}"
-  gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${GS_URL}"
+  gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${GS_URL}/"
 
 ## Cloud Storage
-
 elif [[ $FROM_DIR = gs://* ]]; then
   echo "Using Cloud Storage Location ${FROM_DIR}"
   if [ "$is_package" = "true" ]; then
@@ -110,10 +116,14 @@ elif [[ $FROM_DIR = gs://* ]]; then
     for FILE in $(gsutil list "${FROM_DIR}"/*.pdf); do
       i=$((i+1))
       URL="${GS_URL}_${i}/"
+#      if ! (($i % 5)); then
+#          echo "Waiting for previous batch job to be done due to Quota Limits"
+#          sleep 60
+#      fi
       echo " $i --- Copying data from ${FILE} to ${URL}"
       gsutil cp "${FILE}" "${URL}"
-      echo "Triggering pipeline for ${URL}"
-      gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${URL}"
+      echo "Triggering pipeline for ${GS_URL_ROOT}"
+      gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${GS_URL_ROOT}"
     done
   fi
 fi
@@ -124,7 +134,7 @@ fi
 #./start_pipeline.sh -d gs://cda-001-engine-sample-forms/Batch1  -p
 
 # What comes after -l - will also be used as a directory name inside pa-forms bucket
-#./start_pipeline.sh -d gs://sample_data/bsc_demo -l demo-package
+#./start_pipeline.sh -d gs://sample_data/bsc_demo -l demo-batch
 #./start_pipeline.sh -d sample_data/bsc_demo -l demo-package -p
 # ./start_pipeline.sh -d sample_data/forms-10  -l demo-batch
 # ./start_pipeline.sh -d sample_data/bsc_demo/bsc-dme-pa-form-1.pdf  -l demo-batch
