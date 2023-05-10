@@ -137,17 +137,17 @@ async def classification(payload: ProcessTask):
       uid = config.get("uid")
       gcs_url = config.get("gcs_url")
 
-      prediction = [res for res in doc_prediction_results if
-                           res["gcs_url"] == gcs_url]
-      Logger.info(f"classification_api handling config for case_id={case_id} "
-                  f"uid={uid} gcs_url={gcs_url} "
-                  f"prediction={prediction}")
-
-      if len(prediction) == 0:
+      if gcs_url not in doc_prediction_results.keys():
         Logger.error(f"Classification did not return results for gcs_url={gcs_url}, "
                      f"case_id={case_id}, uid={uid}")
         update_classification_status(case_id, uid, STATUS_ERROR)
         continue
+
+      prediction = doc_prediction_results[gcs_url]
+
+      Logger.info(f"classification_api handling config for case_id={case_id} "
+                  f"uid={uid} gcs_url={gcs_url} "
+                  f"prediction={prediction}")
 
       if len(prediction) > 1:
         Logger.info(f"classification_api document has been split for "

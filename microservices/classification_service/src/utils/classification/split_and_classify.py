@@ -376,7 +376,8 @@ def classify(configs: List[DocumentConfig]):
     gcs_input_uris = [config.gcs_url for config in configs]
     prediction_results = get_classification_predictions(gcs_input_uris)
 
-    result = []
+    Logger.info(f"prediction_results = {prediction_results}")
+    result = {}
     for gcs_url in prediction_results.keys():
       prediction_result = prediction_results[gcs_url]
       config = next((x for x in configs if x.gcs_url == gcs_url), None)
@@ -386,7 +387,7 @@ def classify(configs: List[DocumentConfig]):
 
       Logger.info(f"Classification prediction for {gcs_url}: "
                   f"case_id={config.case_id}, "
-                  f"uid={config.uid}.")
+                  f"uid={config.uid}  - {prediction_result}")
 
       # [{'predicted_class': predicted_class, 'model_conf': predicted_score, 'pages': pages}]
       # # Sample raw prediction_result
@@ -414,10 +415,13 @@ def classify(configs: List[DocumentConfig]):
             'predicted_class': predicted_class,
             'model_conf': predicted_score
         }
-
-        Logger.info(f"Classification prediction results: "
+        Logger.info(f"Classification prediction results for {gcs_url}: "
                     f"{output}")
-        result.append(output)
+
+        if gcs_url not in result.keys():
+          result[gcs_url] = []
+
+        result[gcs_url].append(output)
 
     Logger.info(f"classify - Classification prediction completed with {json.dumps(result)}")
     return json.dumps(result)
@@ -441,8 +445,8 @@ def create_document(case_id, filename, context, user=None):
     Logger.info(f"create_document: posting request to {url}")
     response = send_iap_request(url, method="POST")
     response = response.json()
-    Logger.info(f"create_document: Response received ={response}, uid={uid}")
     uid = response.get("uid")
+    Logger.info(f"create_document: Response received ={response}, uid={uid}")
   except requests.exceptions.RequestException as err:
     Logger.error(err)
 

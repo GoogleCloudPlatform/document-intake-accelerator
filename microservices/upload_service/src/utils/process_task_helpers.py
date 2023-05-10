@@ -161,16 +161,20 @@ def filter_documents(configs: List[Dict]):
   application_form = []
 
   cl_result = get_classification(configs)
+  Logger.info(
+      f"filter_documents: status_code={cl_result.status_code}, "
+      f"json={cl_result.json()}")
+
   for config in configs:
     case_id = config.get("case_id")
-
     uid = config.get("uid")
     gcs_url = config.get("gcs_url")
 
     Logger.info(
-      f"filter_documents:  Processing  document with uid={uid}, gcs_url={gcs_url}, case_id={case_id}")
-    Logger.info(
-      f"filter_documents: status_code={cl_result.status_code}, json={cl_result.json()}")
+      f"filter_documents:  Processing  document with uid={uid}, "
+      f"gcs_url={gcs_url}, "
+      f"case_id={case_id}")
+
     if cl_result.status_code == 200:
       results = cl_result.json().get("results")
       Logger.info(f"filter_documents: results={results}")
