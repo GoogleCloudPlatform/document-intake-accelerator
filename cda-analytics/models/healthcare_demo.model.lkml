@@ -1,4 +1,4 @@
-connection: "healthcare-demo"
+connection: "cda_engine_bigquery"
 
 #Include views
 include: "/cda-analytics/views/**/*.view"
