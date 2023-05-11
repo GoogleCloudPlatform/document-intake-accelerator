@@ -1,0 +1,4 @@
+google-cloud-bigquery==2.20.0
+google-cloud-logging
+google-cloud-documentai==2.10.0
+google-cloud-storage

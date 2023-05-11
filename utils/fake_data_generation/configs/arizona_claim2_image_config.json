@@ -1,0 +1,13 @@
+{
+    "image_file": "fake_data_generation/claim_form_arizona-2.png",
+    "image_name_prefix": "arizona-claim-form2-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Oswald",
+        "font_family": "Oswald",
+        "font_size": 12
+      }
+    ]
+}

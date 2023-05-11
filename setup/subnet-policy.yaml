@@ -1,0 +1,6 @@
+bindings:
+- members:
+  - serviceAccount:SERVICE_PROJECT_NUM@cloudservices.gserviceaccount.com
+  - serviceAccount:service-SERVICE_PROJECT_NUM@container-engine-robot.iam.gserviceaccount.com
+  role: roles/compute.networkUser
+etag: ETAG

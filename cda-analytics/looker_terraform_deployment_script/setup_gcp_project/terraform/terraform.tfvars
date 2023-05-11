@@ -1,0 +1,6 @@
+project_id="<project-id>"
+project_number="<project-number>"
+location="<region>"
+sa_name="hde-accelerator-looker"
+email_address="<your-email-address>"
+dns_domain="<domain-name>."

@@ -1,0 +1,152 @@
+{
+    "image_file": "fake_data_generation/arizona_1.png",
+    "image_name_prefix": "arizona-test-form-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+        "font_family": "Indie Flower",
+        "font_size": 13
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "name",
+        "position_x": 326,
+        "position_y": 364,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      },
+      {
+          "name": "MI",
+          "position_x": 580,
+          "position_y": 364
+      },
+      {
+        "name": "name",
+        "position_x": 71,
+        "position_y": 364,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+      "name": "phone_number",
+      "position_x": 152,
+      "position_y": 175
+      },
+      {
+        "name": "full_address",
+        "position_x": 59,
+        "position_y": 408
+      },
+      {
+        "name": "driver_license",
+        "position_x": 491,
+        "position_y": 520
+      },
+      {
+        "name": "gender",
+        "position_x": 86,
+        "position_y": 560
+      },
+      {
+        "name": "race",
+        "position_x": 200,
+        "position_y": 560
+      },
+      {
+        "name": "ethnicity",
+        "position_x": 342,
+        "position_y": 560
+      },
+      {
+        "name": "language",
+        "position_x": 488,
+        "position_y": 560
+      },
+      {
+        "name": "date_of_birth",
+        "position_x": 227,
+        "position_y": 618,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 1
+      },
+      {
+        "name": "date_of_birth",
+        "position_x": 72,
+        "position_y": 618,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 2
+      },
+      {
+        "name": "date_of_birth",
+        "position_x": 177,
+        "position_y": 618,
+        "regex": "(\\d{4})-(\\d{2})-(\\d{2})",
+        "regex_match_group": 3
+      },
+      {
+        "name": "job_title",
+        "position_x": 295,
+        "position_y": 618
+      },
+      {
+        "name": "today_date",
+        "position_x": 552,
+        "position_y": 150
+      },
+      {
+        "name": "email",
+        "position_x": 73,
+        "position_y": 507
+      },
+      {
+        "name": "city",
+        "position_x": 381,
+        "position_y": 408
+      },
+      {
+        "name": "state",
+        "position_x": 487,
+        "position_y": 408
+      },
+      {
+        "name": "zip_code",
+        "position_x": 552,
+        "position_y": 408
+      },
+      {
+        "name": "mail_city",
+        "position_x": 381,
+        "position_y": 447
+      },
+      {
+        "name": "mail_state",
+        "position_x": 487,
+        "position_y": 447
+      },
+      {
+        "name": "mail_zip",
+        "position_x": 552,
+        "position_y": 447
+      },
+      {
+        "name": "resident_address",
+        "position_x": 59,
+        "position_y": 447
+      }, 
+      {
+        "name": "ssn",
+        "position_x": 201,
+        "position_y": 150
+      },
+      {
+        "function": "text",
+        "text": "✔",
+        "position_x": 344,
+        "position_y": 511
+      }
+    ]
+  }

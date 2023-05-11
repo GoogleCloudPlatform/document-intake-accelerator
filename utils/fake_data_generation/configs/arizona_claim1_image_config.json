@@ -1,0 +1,260 @@
+{
+    "image_file": "fake_data_generation/claim_form_arizona-1.png",
+    "image_name_prefix": "arizona-claim-form-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Indie+Flower",
+        "font_family": "Seris",
+        "font_size": 10
+      }
+    
+  ],
+  "row_limit": 1,
+  "fields": [
+  {
+    "name": "name",
+    "position_x": 111,
+    "position_y": 85,
+    "regex": "(\\w+) (\\w+)",
+    "regex_match_group": 1
+      
+  },
+  {
+    "name": "middle_name",
+    "position_x": 201,
+    "position_y": 85
+  },
+  {
+    "name": "name",
+    "position_x": 344,
+    "position_y": 85,
+    "regex": "(\\w+) (\\w+)",
+    "regex_match_group": 2
+  },
+
+  {
+    "name": "ssn",
+    "position_x": 230,
+    "position_y": 110
+    
+  },
+  {
+    "name": "sat_date",
+    "position_x": 588,
+    "position_y": 110
+    
+  },
+  {
+    "name": "date1",
+    "position_x": 60,
+    "position_y": 397
+  },
+  {
+    "name": "date2",
+    "position_x": 60,
+    "position_y": 430
+  },
+  {
+    "name": "date3",
+    "position_x": 60,
+    "position_y": 460
+  },
+  {
+    "name": "date4",
+    "position_x": 60,
+    "position_y": 490
+  },
+  {
+    "name": "employer1",
+    "position_x": 128,
+    "position_y": 385
+  },
+  {
+    "name": "emp1_address",
+    "position_x": 180,
+    "position_y": 395
+  },
+  {
+    "name": "city",
+    "position_x": 128,
+    "position_y": 405
+  },
+  {
+    "name": "zip_code",
+    "position_x": 225,
+    "position_y": 405
+  },
+  {
+    "name": "name1",
+    "position_x": 345,
+    "position_y": 400
+  },
+  {
+    "name": "contact1",
+    "position_x": 466,
+    "position_y": 400
+  },
+  {
+    "name": "job_title",
+    "position_x": 550,
+    "position_y": 385
+  },
+  {
+    "name": "action1",
+    "position_x": 630,
+    "position_y": 400
+  },
+  {
+    "name": "employer2",
+    "position_x": 128,
+    "position_y": 415
+  },
+  {
+    "name": "emp2_address",
+    "position_x": 180,
+    "position_y": 425
+  },
+  {
+    "name": "city",
+    "position_x": 128,
+    "position_y": 435
+  },
+  {
+    "name": "zip_code",
+    "position_x": 225,
+    "position_y": 435
+  },
+  {
+    "name": "name2",
+    "position_x": 345,
+    "position_y": 430
+  },
+  {
+    "name": "contact2",
+    "position_x": 466,
+    "position_y": 430
+  },
+  {
+    "name": "job_title",
+    "position_x": 550,
+    "position_y": 415
+  },
+  {
+    "name": "action2",
+    "position_x": 630,
+    "position_y": 430
+  },
+  {
+    "name": "employer3",
+    "position_x": 128,
+    "position_y": 445
+  },
+  {
+    "name": "emp3_address",
+    "position_x": 180,
+    "position_y": 457
+  },
+  {
+    "name": "city",
+    "position_x": 128,
+    "position_y": 470
+  },
+  {
+    "name": "zip_code",
+    "position_x": 225,
+    "position_y": 470
+  },
+  {
+    "name": "name3",
+    "position_x": 345,
+    "position_y": 465
+  },
+  {
+    "name": "contact3",
+    "position_x": 466,
+    "position_y": 465
+  },
+  {
+    "name": "job_title",
+    "position_x": 550,
+    "position_y": 445
+  },
+  {
+    "name": "action3",
+    "position_x": 630,
+    "position_y": 465
+  },
+  {
+    "name": "employer4",
+    "position_x": 128,
+    "position_y": 480
+  },
+  {
+    "name": "emp4_address",
+    "position_x": 180,
+    "position_y": 490
+  },
+  {
+    "name": "city",
+    "position_x": 128,
+    "position_y": 500
+  },
+  {
+    "name": "zip_code",
+    "position_x": 225,
+    "position_y": 500
+  },
+  {
+    "name": "name4",
+    "position_x": 345,
+    "position_y": 490
+  },
+  {
+    "name": "contact4",
+    "position_x": 466,
+    "position_y": 495
+  },
+  {
+    "name": "job_title",
+    "position_x": 550,
+    "position_y": 480
+  },
+  {
+    "name": "action4",
+    "position_x": 630,
+    "position_y": 498
+  },
+  {
+    "name": "work_end_date",
+    "position_x": 354,
+    "position_y": 682
+  },
+  {
+    "name": "employer",
+    "position_x": 381,
+    "position_y": 665
+  },
+  {
+    "name": "ytd_net",
+    "position_x": 667,
+    "position_y": 605
+  },
+  
+  {
+    "name": "today_date",
+    "position_x": 624,
+    "position_y": 872
+  },
+  {
+    "name": "name",
+    "position_x": 212,
+    "position_y": 872,
+    "regex": "(\\w+) (\\w+)",
+    "regex_match_group": 1
+  }
+
+  ]
+
+}

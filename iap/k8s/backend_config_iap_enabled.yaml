@@ -1,0 +1,37 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: adp-backend-config
+spec:
+  healthCheck:
+    type: HTTP
+    requestPath: /index
+    port: 80
+  iap:
+    enabled: true
+    oauthclientCredentials:
+      secretName: cda-iap
+  customRequestHeaders:
+    headers:
+    - "Access-Control-Allow-Origin:*"
+    - "Access-Control-Allow-Methods: PUT,GET,POST,DELETE,OPTIONS"
+    - "Access-Control-Allow-Headers: Content-Type"
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: iap-backend-config
+spec:
+  healthCheck:
+    type: HTTP
+    requestPath: /ping
+    port: 80
+  iap:
+    enabled: true
+    oauthclientCredentials:
+      secretName: cda-iap
+  customRequestHeaders:
+    headers:
+    - "Access-Control-Allow-Origin:*"
+    - "Access-Control-Allow-Methods: PUT,GET,POST,DELETE,OPTIONS"
+    - "Access-Control-Allow-Headers: Content-Type"

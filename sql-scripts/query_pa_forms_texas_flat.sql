@@ -1,0 +1,42 @@
+SELECT * FROM `.validation.entities`
+                  PIVOT
+                  (STRING_AGG(value, ",") as _,
+                   STRING_AGG(corrected_value, ",") as corrected,
+                   AVG(confidence) as conf
+ FOR name IN (
+    'clinicalReasonForUrgency',
+    'genderFemale',
+    'genderMale',
+    'genderOther',
+    'genderUnknown',
+    'groupNumber',
+    'issuerDate',
+    'issuerFax',
+    'issuerPhone',
+    'memberID',
+    'patientDoB',
+    'patientName',
+    'patientPhone',
+    'pcpFax',
+    'pcpName',
+    'pcpPhone',
+    'prevAuthNumber',
+    'requestTypeExtension',
+    'requestTypeInitial',
+    'reviewTypeNonUrgent',
+    'reviewTypeUrgent',
+    'rpContactName',
+    'rpContactPhone',
+    'rpDate',
+    'rpFax',
+    'rpNPI',
+    'rpName',
+    'rpPhone',
+    'rpSpecialty',
+    'spFax',
+    'spNPI',
+    'spPhone',
+    'spSpecialty',
+    'subscriberName'
+)) AS fields
+Where document_class="pa_form_texas"

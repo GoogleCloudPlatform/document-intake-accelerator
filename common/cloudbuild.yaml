@@ -1,0 +1,20 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - '--build-arg'
+      - 'BASE_IMG=gcr.io/${_PROJECT_ID}/common'
+      - '-t'
+      - 'gcr.io/${_PROJECT_ID}/${_IMAGE}:latest'
+      - '--cache-from'
+      - 'gcr.io/${_PROJECT_ID}/${_IMAGE}:latest'
+      - '-f'
+      - Dockerfile
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - 'gcr.io/${_PROJECT_ID}/${_IMAGE}'
+images:
+- 'gcr.io/$PROJECT_ID/${_IMAGE}:latest'

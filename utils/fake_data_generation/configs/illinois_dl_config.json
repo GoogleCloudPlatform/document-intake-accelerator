@@ -1,0 +1,119 @@
+{
+    "image_file": "fake_data_generation/illinois_dl_converted.png",
+    "image_name_prefix": "illinois-driver-form-",
+    "viewport_width": 800,
+    "viewport_height": 1200,
+    "font_options": [
+      {
+        "font_link": "https://fonts.googleapis.com/css2?family=Oswald",
+        "font_family": "Oswald",
+        "font_size": 12
+      }
+    ],
+    "row_limit": 1,
+    "fields": [
+      {
+        "name": "driver_license",
+        "position_x": 385,
+        "position_y": 172
+      },
+      {
+        "name": "name",
+        "position_x": 310,
+        "position_y": 267,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      },
+      {
+        "name": "middle_name",
+        "position_x": 370,
+        "position_y": 267
+      },
+      {
+        "name": "name",
+        "position_x": 440,
+        "position_y": 267,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+        "name": "name",
+        "position_x": 120,
+        "position_y": 463,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 1
+      },
+      {
+        "name": "MI",
+        "position_x": 180,
+        "position_y": 463
+      },
+      {
+        "name": "name",
+        "position_x": 210,
+        "position_y": 463,
+        "regex": "(\\w+) (\\w+)",
+        "regex_match_group": 2
+      },
+      {
+        "name": "date_of_birth",
+        "position_x": 366,
+        "position_y": 202
+      },
+      {
+        "name": "license_end_date",
+        "position_x": 365,
+        "position_y": 233
+      },
+      {
+        "name": "license_iss_date",
+        "position_x": 630,
+        "position_y": 231
+      },
+      {
+        "name": "resident_address",
+        "position_x": 308,
+        "position_y": 294
+      },
+      {
+        "name": "class",
+        "position_x": 382,
+        "position_y": 360
+      },
+      {
+        "name": "rest",
+        "position_x": 372,
+        "position_y": 384
+      },
+      {
+        "name": "gender",
+        "position_x": 362,
+        "position_y": 429
+      },
+      {
+        "name": "ht",
+        "position_x": 512,
+        "position_y": 430
+      },
+      {
+        "name": "wt",
+        "position_x": 369,
+        "position_y": 450
+      },
+      {
+        "name": "dd",
+        "position_x": 342,
+        "position_y": 475
+      },
+      {
+        "name": "eyes",
+        "position_x": 511,
+        "position_y": 450
+      },
+      {
+        "name": "end",
+        "position_x": 514,
+        "position_y": 360
+      }
+    ]
+  }
