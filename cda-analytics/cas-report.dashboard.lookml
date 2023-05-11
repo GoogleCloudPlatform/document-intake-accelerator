@@ -1,5 +1,5 @@
 - dashboard: healthcare_demo_dashboard
-  title: Healthcare Demo Dashboard
+  title: Prior Authorization Dashboard - Demo
   layout: newspaper
   preferred_viewer: dashboards-next
   description: ''
