@@ -1,5 +1,5 @@
 view: prior_auth_forms {
-  sql_table_name: `validation.PRIOR_AUTH_FORMS`
+  sql_table_name: `validation.TEXAS_PA_FORMS`
     ;;
 
   dimension: __clinical_reason_for_urgency {
