@@ -1,5 +1,5 @@
 - dashboard: healthcare_demo_dashboard
-  title: Prior Authorization Dashboard - Demo
+  title: Prior Authorization Dashboard - BSC Forms
   layout: newspaper
   preferred_viewer: dashboards-next
   description: ''
