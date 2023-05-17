@@ -4,7 +4,7 @@ connection: "cda_engine_bigquery"
 include: "/cda-analytics/views/**/*.view"
 
 #include all dashboards
-include: "/cda-analytics/cas-report.dashboard.lookml"
+include: "/cda-analytics/*.dashboard.lookml"
 
 datagroup: healthcare_demo_default_datagroup {
   # sql_trigger: SELECT MAX(id) FROM etl_log;;
