@@ -1,7 +1,7 @@
 connection: "cda_engine_bigquery"
 
 # include all the views
-include: "/cda-analytics/views/**/*.view"
+include: "/cda-analytics/views/*.view.lkml"
 
 # include all views in the views/ folder in this project
 
@@ -32,3 +32,4 @@ persist_with: healthcare_demo_prior_auth_forms_default_datagroup
 # Each joined view also needs to define a primary key.
 
 explore: prior_auth_forms {}
+explore: all_forms {}
