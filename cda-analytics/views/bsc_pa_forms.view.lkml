@@ -576,7 +576,11 @@ view: bsc_pa_forms {
 
   dimension: gcs_doc_path {
     type: string
-    sql: ${TABLE}.gcs_doc_path ;;
+    sql: substring(${TABLE}.gcs_doc_path,6,length(${TABLE}.gcs_doc_path))  ;;
+    link: {
+      label: "{{ bsc_pa_forms.document_class }}"
+      url: "https://storage.cloud.google.com/{{value | url_encode }}"
+    }
   }
 
   dimension_group: timestamp {
