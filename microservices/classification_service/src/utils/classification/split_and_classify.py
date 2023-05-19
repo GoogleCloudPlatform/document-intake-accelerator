@@ -42,9 +42,8 @@ from common.utils.iap import send_iap_request
 from common.config import DOCUMENT_STATUS_API_PATH
 from common.models import Document
 import datetime
-from common.config import STATUS_SUCCESS, STATUS_ERROR
+from common.config import STATUS_SUCCESS, PDF_MIME_TYPE
 
-PDF_MIME_TYPE = "application/pdf"
 PDF_EXTENSION = ".pdf"
 
 storage_client = storage.Client()
@@ -52,7 +51,8 @@ CLASSIFICATION_UNDETECTABLE = "unclassified"
 
 
 class DocumentConfig:
-  def __init__(self, case_id, uid, gcs_url, out_folder, context="california") -> None:
+  def __init__(self, case_id, uid, gcs_url, out_folder,
+      context="california") -> None:
     if not gcs_url.endswith('pdf'):
       Logger.error('Invalid input file. Require PDF file')
       sys.exit()
@@ -74,9 +74,17 @@ def get_classification_predictions(gcs_input_uris, timeout: int = 400):
   # read parser details from configuration json file
   parsers_info = get_parser_config()
   parser_details = parsers_info.get(CLASSIFIER, None)
+  result = {}  # Contains per processed document
   if not parser_details:
-    Logger.error(f"No classification parser defined, exiting classification")
-    return None
+    default_class = get_classification_default_class()
+    Logger.error(f"No classification parser defined, exiting classification, "
+                 f"using {default_class}")
+    for uri in gcs_input_uris:
+      result[uri] = [{'predicted_class': default_class,
+                      'predicted_score': 100,
+                      'pages': None}]
+    return result
+
   processor_path = parser_details["processor_id"]
   location = parser_details.get("location",
                                 get_processor_location(processor_path))
@@ -153,7 +161,6 @@ def get_classification_predictions(gcs_input_uris, timeout: int = 400):
   if metadata.state != documentai.BatchProcessMetadata.State.SUCCEEDED:
     raise ValueError(f"Batch Process Failed: {metadata.state_message}")
 
-  result = {}  # Contains per processed document
   # One process per Input Document
   for process in metadata.individual_process_statuses:
     # output_gcs_destination format: gs://BUCKET/PREFIX/OPERATION_NUMBER/INPUT_FILE_NUMBER/
@@ -292,7 +299,7 @@ def split_upload(documents: List[Dict], config: DocumentConfig):
       # Update the document upload as success in DB
       document = Document.find_by_uid(uid)
       if document is not None:
-        document.url = file_uri
+        document.url = gsc_uri
         system_status = {
             "stage": "uploaded",
             "status": STATUS_SUCCESS,
@@ -376,17 +383,23 @@ def classify(configs: List[DocumentConfig]):
     gcs_input_uris = [config.gcs_url for config in configs]
     prediction_results = get_classification_predictions(gcs_input_uris)
 
-    result = []
+    Logger.info(f"prediction_results = {prediction_results}")
+
+    if prediction_results is None:
+      return None
+
+    result = {}
     for gcs_url in prediction_results.keys():
       prediction_result = prediction_results[gcs_url]
       config = next((x for x in configs if x.gcs_url == gcs_url), None)
       if config is None:
-        print(f"Error, cannot find document config with {gcs_url} in the list of configs {configs}")
+        print(
+          f"Error, cannot find document config with {gcs_url} in the list of configs {configs}")
         continue
 
       Logger.info(f"Classification prediction for {gcs_url}: "
                   f"case_id={config.case_id}, "
-                  f"uid={config.uid}.")
+                  f"uid={config.uid}  - {prediction_result}")
 
       # [{'predicted_class': predicted_class, 'model_conf': predicted_score, 'pages': pages}]
       # # Sample raw prediction_result
@@ -414,12 +427,16 @@ def classify(configs: List[DocumentConfig]):
             'predicted_class': predicted_class,
             'model_conf': predicted_score
         }
-
-        Logger.info(f"Classification prediction results: "
+        Logger.info(f"Classification prediction results for {gcs_url}: "
                     f"{output}")
-        result.append(output)
 
-    Logger.info(f"classify - Classification prediction completed with {json.dumps(result)}")
+        if gcs_url not in result.keys():
+          result[gcs_url] = []
+
+        result[gcs_url].append(output)
+
+    Logger.info(
+      f"classify - Classification prediction completed with {json.dumps(result)}")
     return json.dumps(result)
 
   except Exception as e:
@@ -441,8 +458,8 @@ def create_document(case_id, filename, context, user=None):
     Logger.info(f"create_document: posting request to {url}")
     response = send_iap_request(url, method="POST")
     response = response.json()
-    Logger.info(f"create_document: Response received ={response}, uid={uid}")
     uid = response.get("uid")
+    Logger.info(f"create_document: Response received ={response}, uid={uid}")
   except requests.exceptions.RequestException as err:
     Logger.error(err)
 

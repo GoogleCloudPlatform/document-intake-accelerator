@@ -17,7 +17,7 @@ if [ -z "$SCRIPT" ]; then
 fi
 
 #echo "Running $SCRIPT"
-bq query --project_id="$PROJECT_ID" --dataset_id=$BIGQUERY_DATASET --nouse_legacy_sql  --flagfile="${DIR}/${SCRIPT}.sql"
+bq query --project_id="$PROJECT_ID" --dataset_id=$BIGQUERY_DATASET --nouse_legacy_sql  --flagfile="${DIR}/${SCRIPT}.sql" 2> /dev/null
 
 #./run_query.sh query_extraction_confidence.sql
 #./run_query.sh diagnose.sql

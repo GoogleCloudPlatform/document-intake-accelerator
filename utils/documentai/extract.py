@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import uuid
 
 sys.path.append(os.path.join(os.path.dirname(__file__),
                              '../../microservices/extraction_service/src'))
@@ -9,6 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../common/src'))
 from utils import extract_entities
 from common.utils import helper
 from common.utils.format_data_for_bq import format_data_for_bq
+from common.config import DocumentWrapper
 
 # python utils/extract.py -f gs://
 # Make sure to SET GOOGLE_APPLICATION_CREDENTIALS
@@ -28,8 +30,8 @@ from common.utils.format_data_for_bq import format_data_for_bq
 # gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:local-dev@$PROJECT_ID.iam.gserviceaccount.com" \
 #         --role="roles/documentai.admin"
 
-#gcloud auth login
-#gcloud auth application-default login
+# gcloud auth login
+# gcloud auth application-default login
 
 # gcloud iam service-accounts keys create ~/local_dev.json \
 #     --iam-account=local-dev@$PROJECT_ID.iam.gserviceaccount.com
@@ -54,15 +56,18 @@ def get_args():
       python generate_images.py -f=gs-path-to-form.pdf -d=gs-path-to-dir [-c=doc_class]]
       """)
 
-  args_parser.add_argument('-d', dest="dir_uri", help="Path to gs directory uri")
+  args_parser.add_argument('-d', dest="dir_uri",
+                           help="Path to gs directory uri")
   args_parser.add_argument('-f', dest="file_uri", help="Path to gs uri")
-  args_parser.add_argument('-c', dest="doc_class", help="name of the document class",
-                      default="generic_form")
+  args_parser.add_argument('-c', dest="doc_class",
+                           help="name of the document class",
+                           default="generic_form")
 
   return args_parser
 
 
 from google.cloud import storage
+
 storage_client = storage.Client()
 
 
@@ -73,12 +78,11 @@ storage_client = storage.Client()
 # python utils/extract.py -d gs://$PROJECT_ID/sample_data/pa-forms -c prior_auth_form
 
 
-def process_dir(dir_uri, doc_class):
+def process_dir(dir_uri):
   bucket_name, prefix = helper.split_uri_2_bucket_prefix(dir_uri)
   blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
-  for blob in blobs:
-    print(f"Processing {blob.name}")
-    process_file(f"gs://{bucket_name}/{blob.nane}", doc_class)
+  file_uris = [f"gs://{bucket_name}/{blob.name}" for blob in blobs]
+  process(file_uris)
 
 
 def process_file(file_uri, doc_class):
@@ -90,16 +94,37 @@ def process_file(file_uri, doc_class):
   if not stats:
     print(f"ERROR: File URI {file_uri} does not exist on GCP CLoud Storage")
   else:
-    context = "california"
-    # extract_enitities.extract(file_uri, args.doc_class, context)
-    extraction_output = extract_entities.extract_entities(file_uri, doc_class,
-                                                          context)
-    is_tuple = isinstance(extraction_output, tuple)
+    process([file_uri])
 
-    if is_tuple and isinstance(extraction_output[0], list):
-      # call the format_data_bq function to format data to be
-      # inserted in Bigquery
-      entities_for_bq = format_data_for_bq(extraction_output[0])
+
+def process(file_uris):
+  context = "california"
+  # extract_enitities.extract(file_uri, args.doc_class, context)
+
+  configs = []
+  for uri in file_uris:
+    case_id = str(uuid.uuid1())
+    uid = str(uuid.uuid1())
+    gcs_url = uri
+    document_type = "supporting_documents"
+    configs.append(DocumentWrapper(case_id=case_id,
+                                   uid=uid,
+                                   gcs_url=gcs_url,
+                                   document_type=document_type,
+                                   context=context,
+                                   ))
+  extraction_output = extract_entities.extract_entities(configs, doc_class)
+  for conf in extraction_output:
+    entities_fo_bq = extraction_output[conf][0]
+    formated_data = format_data_for_bq(entities_fo_bq)
+    print(formated_data)
+  # is_tuple = isinstance(extraction_output, tuple)
+  #
+  # if is_tuple and isinstance(extraction_output[0], list):
+  #   # call the format_data_bq function to format data to be
+  #   # inserted in Bigquery
+  #   for uri
+  #   entities_for_bq = format_data_for_bq(extraction_output[0])
 
 
 if __name__ == "__main__":

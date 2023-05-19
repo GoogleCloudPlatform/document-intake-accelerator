@@ -50,6 +50,8 @@ STATUS_ERROR = "Error"
 STATUS_SPLIT = "Split"
 STATUS_TIMEOUT = "Timeout"
 
+PDF_MIME_TYPE = "application/pdf"
+
 # ========= Document upload ======================
 BUCKET_NAME = f"{PROJECT_ID}-document-upload"
 TOPIC_ID = "queue-topic"
@@ -72,6 +74,15 @@ CLASSIFICATION_UNDETECTABLE = "unclassified"
 # ===== Start Pipeline ===========================
 START_PIPELINE_FILENAME = os.environ.get("START_PIPELINE_NAME",
                                          "START_PIPELINE")
+
+class DocumentWrapper:
+  def __init__(self, case_id, uid, gcs_url, document_type,
+      context="california") -> None:
+    self.gcs_url = gcs_url
+    self.case_id = case_id
+    self.uid = uid
+    self.context = context
+    self.document_type = document_type
 
 def load_config(bucketname, filename):
   # Todo add optimization and check for the latest timestamp changed
