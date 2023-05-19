@@ -38,7 +38,7 @@ create_bucket () {
   printf "TF_BUCKET_NAME=${TF_BUCKET_NAME}\n"
   printf "TF_BUCKET_LOCATION=${TF_BUCKET_LOCATION}\n"
 
-  gsutil -q stat "gs://${TF_BUCKET_NAME}" 2> /dev/null
+  gsutil ls "gs://${TF_BUCKET_NAME}" 2> /dev/null
   RETURN=$?
   if [[ $RETURN -gt 0 ]]; then
       echo "Bucket does not exist, creating gs://${TF_BUCKET_NAME}"
