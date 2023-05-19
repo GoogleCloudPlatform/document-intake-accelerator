@@ -76,12 +76,6 @@ def process_file(file_uri):
     print(f"ERROR: File URI {file_uri} does not exist on GCP CLoud Storage")
   else:
 
-    config = [
-        {"case_id": str(uuid.uuid1()),
-         "uid": str(uuid.uuid1()),
-         "gcs_url": file_uri,
-         }
-    ]
 
     classification_output = get_classification_predictions([file_uri])
     print("Classification output (sub-documents split per pages):")

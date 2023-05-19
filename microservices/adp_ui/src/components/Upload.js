@@ -47,7 +47,7 @@ function Upload() {
 	//Set the states
 	const [tableComponent, setTableComponent] = useState(false);
 	const [selectedCaseId, setSelectedCaseId] = useState();
-	const [stateValue, setStateValue] = useState({ state: '' });
+	const [stateValue, setStateValue] = useState({ state: 'california' });
 	const [comments, setComment] = useState('');
 	const [fileUploadSpinner, setFileUploadSpinner] = useState(false);
 	const [searchFlag, setSearchFlag] = useState(false);
@@ -265,23 +265,23 @@ function Upload() {
 
 				<br />
 
-				<Container style={{ padding: '0', marginBottom: '20px', marginTop: '20px' }}>
-					<Card className="raSearchCard">
-						<Card.Body>
-							{/** TO show a pop and select the caseid to reassign */}
+				{/*<Container style={{ padding: '0', marginBottom: '20px', marginTop: '20px' }}>*/}
+				{/*	<Card className="raSearchCard">*/}
+				{/*		<Card.Body>*/}
+				{/*			/!** TO show a pop and select the caseid to reassign *!/*/}
 
-							<label className="raSubTitle">
-								(Optional) Assign to existing applications:
-							</label>
+				{/*			<label className="raSubTitle">*/}
+				{/*				(Optional) Assign to existing applications:*/}
+				{/*			</label>*/}
 
-							{tableComponent &&
-								<SearchForApplicantTable onSelectTableData={handleTableData} page={'uploadpage'} selectedRow={selectedCaseId} />
-							}
+				{/*			{tableComponent &&*/}
+				{/*				<SearchForApplicantTable onSelectTableData={handleTableData} page={'uploadpage'} selectedRow={selectedCaseId} />*/}
+				{/*			}*/}
 
-							<br />
-						</Card.Body>
-					</Card>
-				</Container>
+				{/*			<br />*/}
+				{/*		</Card.Body>*/}
+				{/*	</Card>*/}
+				{/*</Container>*/}
 			</Container>
 		</div>
 

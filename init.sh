@@ -94,3 +94,9 @@ fi
 gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
 echo "$timestamp Completed! Saved Log into $LOG" | tee -a "$LOG"
+
+#TODO
+# (terraform output -json cda_external_ui | python -m json.tool)
+# If Private:
+#kubectl apply -f "$DIR"/iap/k8s/backend-config_internal.yaml
+kubectl apply -f "$DIR"/iap/k8s/backend-config.yaml

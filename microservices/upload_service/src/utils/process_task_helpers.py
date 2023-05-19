@@ -26,6 +26,17 @@ from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR, \
   CLASSIFICATION_UNDETECTABLE
 
 
+def sort_per_doc_class(docs):
+  document_class_list = set([doc["document_class"] for doc in docs])
+  doc_sorted_dic = {}
+  for doc_class in document_class_list:
+    doc_sorted_dic[doc_class] = [doc for doc in docs if doc["document_class"]
+                                 == doc_class]
+
+  Logger.info(f"sort_per_doc_class doc_sorted_dic={doc_sorted_dic} ")
+  return doc_sorted_dic
+
+
 def run_pipeline(payload: List[Dict], is_hitl: bool, is_reassign: bool):
   """Runs the entire pipeline
     Args:
@@ -33,7 +44,6 @@ def run_pipeline(payload: List[Dict], is_hitl: bool, is_reassign: bool):
     is_hitl : It is used to run the pipeline for unclassified documents
     is_reassign : It is used to run the pipeline for reassigned document
   """
-  extraction_score = None
   applications = []
   supporting_docs = []
 
@@ -44,58 +54,61 @@ def run_pipeline(payload: List[Dict], is_hitl: bool, is_reassign: bool):
     supporting_docs = result[1]
   # for other cases like normal flow classify the documents
   elif not is_reassign:
-    result = filter_documents(payload.get("configs"))
+    result = classify_documents(payload.get("configs"))
     applications = result[0]
     supporting_docs = result[1]
 
-  Logger.info(f"run_pipeline with applications = {applications}")
-  Logger.info(f"run_pipeline with supporting_docs = {supporting_docs}")
+  Logger.info(f"run_pipeline with applications = {applications}, "
+              f"supporting_docs = {supporting_docs}")
+
   # for normal flow and for hitl run the extraction of documents
   if is_hitl or applications or supporting_docs:
-    # extract the application first
-    if applications:
-      for doc in applications:
-        try:
-          extraction_score = extract_documents(
-              doc, document_type="application_form")
-        except Exception as e:
-          Logger.error(e)
-          err = traceback.format_exc().replace("\n", " ")
-          Logger.error(err)
+      # extract the application first
+      if applications:
+        applications_dict = sort_per_doc_class(applications)
+        for document_class in applications_dict:
+          # get a list of uid to send
+          docs_list = applications_dict[document_class]
+          try:
+            Logger.info(f"run_pipeline for document_class={document_class}, "
+                        f"applications_dict={applications_dict}")
+            extract_documents(docs=docs_list,
+                              document_class=document_class,
+                              document_type="application_form")
+          except Exception as e:
+            Logger.error(e)
+            err = traceback.format_exc().replace("\n", " ")
+            Logger.error(err)
 
-    # extract,validate and match supporting documents
-    if supporting_docs:
-      # Todo Extract in Batches
-      for doc in supporting_docs:
-        # In case of reassign extraction is not required
-        try:
-          if not is_reassign:
-            extraction_output = extract_documents(
-                doc, document_type="supporting_documents")
-            extraction_score = extraction_output[0]
-            extraction_field_min_score = extraction_output[1]
-            extraction_entities = extraction_output[2]
-            Logger.info(f" Executing pipeline for normal scenario {doc}")
-            if extraction_score is not None:
-              Logger.info(f"extraction score is {extraction_score}, {doc}")
-              validate_match_approve(doc, extraction_score,
-                                     extraction_field_min_score,
-                                     extraction_entities)
-          else:
-            Logger.info(f" Executing pipeline for reassign scenario "
+      # extract,validate and match supporting documents
+      if supporting_docs:
+        if not is_reassign:
+          supporting_docs_dict = sort_per_doc_class(supporting_docs)
+          Logger.info(f"run_pipeline with  {len(supporting_docs_dict)} documents")
+          for document_class in supporting_docs_dict:
+            # get a list of uid to send
+            docs_list = supporting_docs_dict[document_class]
+            try:
+              Logger.info(f"run_pipeline for document_class={document_class}, "
+                          f"supporting_docs_dict={supporting_docs_dict}")
+              extract_documents(docs=docs_list,
+                                document_class=document_class,
+                                document_type="supporting_documents")
+            except Exception as e:
+              Logger.error(f"Error while handling {document_class}: {e}")
+              err = traceback.format_exc().replace("\n", " ")
+              Logger.error(err)
+
+        else:             # In case of reassign extraction is not required
+          for doc in supporting_docs:
+            Logger.info(f"Executing pipeline for reassign scenario "
                         f"{doc}")
             extraction_score = doc["extraction_score"]
             extraction_entities = doc["extraction_entities"]
             extraction_field_min_score = None  # Todo calculate the field value
-            validate_match_approve(doc, extraction_score,
+            validate_match_approve(doc["case_id"], doc["uid"], extraction_score,
                                    extraction_field_min_score,
-                                   extraction_entities)
-        except Exception as e:
-          Logger.error(e)
-          err = traceback.format_exc().replace("\n", " ")
-          Logger.error(err)
-          # Not raising exception, because other documents in the batch might still succeed
-          # raise HTTPException(status_code=500, detail=e) from e
+                                   extraction_entities, doc["document_class"])
 
 
 def get_classification(configs: List[Dict]):
@@ -106,17 +119,27 @@ def get_classification(configs: List[Dict]):
   payload = {"configs": configs}
   Logger.info(f"get_classification sending to {base_url} with payload={payload}")
   response = requests.post(base_url, json=payload)
+  Logger.info(f"get_classification response {response}")
   return response
 
 
-def get_extraction_score(case_id: str, uid: str, document_class: str,
-    document_type: str, context: str, gcs_url: str):
+def get_extraction_score(configs: List[Dict], doc_class):
   """Call the Extraction API and get the extraction score"""
   base_url = "http://extraction-service/extraction_service/v1/extraction_api"
-  req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
-            f"&doc_class={document_class}&document_type={document_type}" \
-            f"&context={context}&gcs_url={gcs_url}"
-  response = requests.post(req_url)
+  uids = []
+  Logger.info(f"get_extraction_score - Received  {len(configs)} configs.")
+  for config in configs:
+    uids.append(config["uid"])
+  uids = sorted(set(uids))
+  configs_new = []
+  Logger.info(f"get_extraction_score with uids = {uids}, doc_class = {doc_class}")
+  for uid in uids:
+    config = {"uid": uid}
+    configs_new.append(config)
+  payload = {"configs": configs_new, "doc_class": doc_class}
+  Logger.info(f"get_extraction_score sending to base_url={base_url}, payload={payload}")
+  response = requests.post(base_url, json=payload)
+  Logger.info(f"get_extraction_score response {response}")
   return response
 
 
@@ -152,114 +175,120 @@ def update_autoapproval_status(case_id: str, uid: str, a_status: str,
   return response
 
 
-def filter_documents(configs: List[Dict]):
+def classify_documents(configs: List[Dict]):
   """Filter the supporting documents and application form"""
-  print("filter_documents")
-  print(configs)
+  print(f"classify_documents with configs = {configs}")
 
   supporting_docs = []
   application_form = []
 
   cl_result = get_classification(configs)
   Logger.info(
-      f"filter_documents: status_code={cl_result.status_code}, "
+      f"classify_documents - status_code={cl_result.status_code}, "
       f"json={cl_result.json()}")
 
-  for config in configs:
-    case_id = config.get("case_id")
-    uid = config.get("uid")
-    gcs_url = config.get("gcs_url")
+  # for config in configs:
+  #   case_id = config.get("case_id")
+  #   uid = config.get("uid")
+  #   gcs_url = config.get("gcs_url")
+  #
+  #   Logger.info(
+  #     f"classify_documents - Processing classification results for document with uid={uid}, "
+  #     f"gcs_url={gcs_url}, "
+  #     f"case_id={case_id}")
 
-    Logger.info(
-      f"filter_documents:  Processing  document with uid={uid}, "
-      f"gcs_url={gcs_url}, "
-      f"case_id={case_id}")
+  if cl_result.status_code == 200:
+    results = cl_result.json().get("results")
+    Logger.info(f"classify_documents - results={results}")
+    for result in results:
+      case_id = result.get("case_id")
+      document_type = result.get("doc_type")
+      document_class = result.get("doc_class")
+      document_uid = result.get("uid")
+      document_url = result.get("gcs_url")
+      doc = {"case_id": case_id,
+             "uid": document_uid,
+             "document_class": document_class,
+             "context": "california", #TODO
+             "gcs_url": document_url,
+             }
+      Logger.info(
+          f"classify_documents: Classification returned {doc}.")
 
-    if cl_result.status_code == 200:
-      results = cl_result.json().get("results")
-      Logger.info(f"filter_documents: results={results}")
-      for result in results:
-        document_type = result.get("doc_type")
-        document_class = result.get("doc_class")
-        document_uid = result.get("uid")
-        document_url = result.get("gcs_url")
-        doc = {"case_id": case_id,
-               "uid": document_uid,
-               "document_class": document_class,
-               "context": config.get("context"),
-               "gcs_url": document_url,
-               }
-        Logger.info(
-            f"filter_documents: Classification returned {doc}.")
+      if document_class == CLASSIFICATION_UNDETECTABLE:
+        Logger.warning(
+          f"classify_documents: Skipping extraction for unclassified document  {document_uid} ")
+        continue
 
-        if document_class == CLASSIFICATION_UNDETECTABLE:
-          Logger.warning(
-            f"filter_documents: Skipping extraction for unclassified document  {document_uid} ")
-          continue
-
-        if document_type == "application_form":
-          application_form.append(doc)
-        elif document_type == "supporting_documents":
-          supporting_docs.append(doc)
-    else:
-      Logger.error(
-        f"filter_documents: Classification FAILED for document with uid={uid} gcs_url={gcs_url} case_id={case_id}")
+      if document_type == "application_form":
+        application_form.append(doc)
+      elif document_type == "supporting_documents":
+        supporting_docs.append(doc)
+  else:
+    Logger.error(
+      f"classify_documents: Classification FAILED")
   Logger.info(
-      f"filter_documents:  Application form={application_form} and "
+      f"classify_documents:  Application form={application_form} and "
       f"supporting_docs={supporting_docs}")
   return application_form, supporting_docs
 
 
-def extract_documents(doc: Dict, document_type):
+def extract_documents(docs: List[Dict], document_class, document_type):
   """Perform extraction for application or supporting documents"""
   extraction_score = None
   extraction_entities = None
   extraction_field_min_score = None
-  case_id = doc.get("case_id")
-  uid = doc.get("uid")
-  document_class = doc.get("document_class")
-  context = doc.get("context")
-  gcs_url = doc.get("gcs_url")
-  Logger.info(f"extract_documents with case_id={case_id}, uid={uid}, "
-              f"document_class={document_class}, document_type={document_type}, "
-              f"context={context}, gcs_url={gcs_url}")
-  extract_res = get_extraction_score(case_id, uid, document_class,
-                                     document_type, context, gcs_url)
+  Logger.info(f"extract_documents with {len(docs)}  documents docs={docs}, "
+              f"document_class={document_class}, document_type={document_type}")
+  extr_result = get_extraction_score(docs, document_class)
 
-  if extract_res.status_code == 200:
-    Logger.info(f"Extraction successful for {document_type}\
-       case_id: {case_id} uid:{uid}")
-    extraction_score = extract_res.json().get("score")
-    extraction_field_min_score = extract_res.json().get(
-      "extraction_field_min_score")
-    extraction_entities = extract_res.json().get("entities")
+  if extr_result.status_code == 200:
+    results = extr_result.json().get("results")
+    for result in results:
+      Logger.info(f"extract_documents: Handling result={result}")
+      document_type = result.get("doc_type")
+      document_class = result.get("doc_class")
+      uid = result.get("uid")
+      extraction_score = result.get("score")
+      case_id = result.get("case_id")
+      extraction_field_min_score = result.get(
+          "extraction_field_min_score")
+      extraction_entities = result.get("entities")
+      doc = {
 
-    # if document is application form then update autoapproval status
-    if document_type == "application_form":
-      autoapproval_status = get_autoapproval_status(None, extraction_score,
-                                                    extraction_field_min_score,
-                                                    None, document_class,
-                                                    document_type)
-      Logger.info(f"autoapproval_status for application:{autoapproval_status}")
-      if autoapproval_status is not None:
-        update_autoapproval_status(case_id, uid, STATUS_SUCCESS,
-                                   autoapproval_status[0], "yes")
+      }
+      # if document is application form then update autoapproval status
+      if document_type == "application_form":
+        autoapproval_status = get_autoapproval_status(None, extraction_score,
+                                                      extraction_field_min_score,
+                                                      None, document_class,
+                                                      document_type)
+        Logger.info(f"autoapproval_status for application:{autoapproval_status}")
+        if autoapproval_status is not None:
+          update_autoapproval_status(case_id, uid, STATUS_SUCCESS,
+                                     autoapproval_status[0], "yes")
+      elif document_type == "supporting_documents":
+        Logger.info(f" Executing pipeline for normal scenario {doc}")
+        if extraction_score is not None:
+          Logger.info(f"extraction score is {extraction_score}, {doc}")
+          validate_match_approve(case_id, uid, extraction_score,
+                                 extraction_field_min_score,
+                                 extraction_entities, document_class)
+
   else:
     Logger.error(
-      f"extraction failed for document with gcs_url={gcs_url} uid={uid} document_type={document_type} document_class={document_class} case_id={case_id}")
+      f"extraction failed for"
+      f"document_type={document_type} document_class={document_class}")
   # extraction_score = None
   return extraction_score, extraction_field_min_score, extraction_entities
 
 
-def validate_match_approve(sup_doc: Dict, extraction_score,
+def validate_match_approve(case_id, uid, extraction_score,
     min_extraction_score_per_field,
-    extraction_entities):
+    extraction_entities, document_class):
   """Perform validation, matching and autoapproval for supporting documents"""
   validation_score = None
   matching_score = None
-  case_id = sup_doc.get("case_id")
-  uid = sup_doc.get("uid")
-  document_class = sup_doc.get("document_class")
   document_type = "supporting_documents"
   validation_res = get_validation_score(case_id, uid, document_class,
                                         extraction_entities)

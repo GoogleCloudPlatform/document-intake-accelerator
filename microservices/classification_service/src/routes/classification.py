@@ -76,9 +76,9 @@ def predict_doc_type(configs: List[Dict]):
                                       gcs_url=gcs_url,
                                       out_folder=out_folder))
 
-  doc_type = json.loads(classify(doc_configs))
+  doc_types = json.loads(classify(doc_configs))
   shutil.rmtree(out_folder)
-  return doc_type
+  return doc_types
 
 
 def update_classification_status(case_id: str,
@@ -129,6 +129,7 @@ async def classification(payload: ProcessTask):
     configs = payload.get("configs")
     Logger.info(f"classification_api starting classification for configs={configs}")
     # Making prediction
+
     doc_prediction_results = predict_doc_type(configs)
 
     Logger.info(f"classification_api  doc_prediction_results = {doc_prediction_results}")
@@ -162,10 +163,12 @@ async def classification(payload: ProcessTask):
       for doc_prediction_result in prediction:
         if doc_prediction_result["predicted_class"] is not None:
           classification_score = doc_prediction_result["model_conf"]
-          Logger.info(f"classification_api Classification confidence for gcs_url={gcs_url} is " \
+          predicated_class = doc_prediction_result["predicted_class"]
+          Logger.info(f"classification_api Classification confidence for "
+                      f"gcs_url={gcs_url} is {predicated_class} with "
                       f"{classification_score}")
 
-          if doc_prediction_result["predicted_class"].lower(
+          if predicated_class.lower(
           ) == CLASSIFICATION_UNDETECTABLE.lower():
             # DocumentStatus api call
             response = update_classification_status(case_id, uid,
@@ -180,15 +183,14 @@ async def classification(payload: ProcessTask):
                   status_code=500, detail="Failed to update document status")
             raise HTTPException(status_code=422, detail="Invalid Document")
 
-          doc_class = doc_prediction_result["predicted_class"]
           gcs_url = doc_prediction_result["gcs_url"]
-          doc_type = get_document_type(doc_class)
+          doc_type = get_document_type(predicated_class)
 
           uid = doc_prediction_result["uid"]
           document = {"case_id": doc_prediction_result["case_id"],
                       "uid": uid,
                       "doc_type": doc_type,
-                      "doc_class": doc_class,
+                      "doc_class": predicated_class,
                       "gcs_url": gcs_url,
                       }
           if "results" not in SUCCESS_RESPONSE.keys():
@@ -200,7 +202,7 @@ async def classification(payload: ProcessTask):
               case_id,
               uid,
               STATUS_SUCCESS,
-              document_class=doc_class,
+              document_class=predicated_class,
               document_type=doc_type)
           Logger.info(response)
           if response.status_code != 200:

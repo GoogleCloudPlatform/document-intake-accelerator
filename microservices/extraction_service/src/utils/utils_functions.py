@@ -24,7 +24,6 @@ import pandas as pd
 import numpy as np
 from functools import reduce
 from google.cloud import storage
-from .table_extractor import TableExtractor
 from common.utils.logging_handler import Logger
 
 
@@ -80,6 +79,93 @@ def check_duplicate_keys(dictme, without_noise):
   return True
 
 
+def entities_extraction_new(parser_data):
+  """
+   This function extracted default entities
+   Parameters
+   ----------
+   parser_entities: Specialized parser entities
+   default_entities: Default entities that need to extract from parser entities
+   Returns : Default entites dict
+   -------
+  """
+  parser_entities_dict = {}
+  parser_entities = parser_data["entities"]
+  pages_dimensions = []
+  page_no = 0
+
+  for page in parser_data["pages"]:
+    dimension = page["dimension"]
+    pages_dimensions.append(dimension)
+
+  # retrieve parser given entities
+  for each_entity in parser_entities:
+    # print(each_entity)
+    key, val, normalizedVal, confidence = each_entity.get("type", ""), \
+                                          each_entity.get("mentionText", ""), \
+                                          each_entity.get("normalizedValue", ""), \
+                                          round(each_entity.get("confidence", 0), 2)
+    if isinstance(normalizedVal, dict):
+      if "booleanValue" in normalizedVal.keys():
+        val = normalizedVal.get("booleanValue")
+      # else:
+      #   Logger.info("Debugging ")
+    else:
+      val = strip_value(val)
+    parser_entities_dict[key] = [val, confidence]
+
+    #TODO Fully refactor this
+    if len(each_entity.get("properties", [])) == 0:
+      #Flat labels
+      pa = each_entity.get("pageAnchor")
+      if pa and len(pa.get("pageRefs", [])) > 0:
+        page_no = int(pa.get("pageRefs")[0].get("page"))
+        value_coordinates = []
+        value_coordinates_dic = pa.get("pageRefs")[0].get("boundingPoly").get(
+            "normalizedVertices")
+        for coordinate in value_coordinates_dic:
+          value_coordinates.append(float(coordinate["x"]))
+          value_coordinates.append(float(coordinate["y"]))
+      else:
+        value_coordinates = []
+
+      parser_entities_dict[key] = [val, confidence, value_coordinates]
+    else:
+      # For Nested Labels
+      for prop in each_entity.get("properties", []):
+        key, val, normalizedVal, confidence = prop.get("type", ""), \
+                                              prop.get("mentionText", ""), \
+                                              prop.get("normalizedValue", ""), \
+                                              round(prop.get("confidence", 0), 2)
+        #TODO Refactor throw all away and replace with generic logic
+        if isinstance(normalizedVal, dict):
+          if "booleanValue" in normalizedVal.keys():
+            val = normalizedVal.get("booleanValue")
+          else:
+            Logger.info("Debugging ")
+        else:
+          val = strip_value(val)
+
+        pa = prop.get("pageAnchor")
+        if pa and len(pa.get("pageRefs", [])) > 0:
+          page_no = int(pa.get("pageRefs")[0].get("page"))
+          value_coordinates = []
+          for i in range(0, len(pa.get("pageRefs"))):
+            if "boundingPoly" in pa.get("pageRefs")[i]:
+              value_coordinates_dic = pa.get("pageRefs")[i].get("boundingPoly").get(
+                  "normalizedVertices")
+              for coordinate in value_coordinates_dic:
+                value_coordinates.append(float(coordinate["x"]))
+                value_coordinates.append(float(coordinate["y"]))
+        else:
+          value_coordinates = []
+
+        parser_entities_dict[key] = [val, confidence, value_coordinates]
+
+  entity_dict = {}
+
+  return parser_entities_dict
+
 def default_entities_extraction(parser_data, default_entities, doc_type):
   """
    This function extracted default entities
@@ -95,7 +181,6 @@ def default_entities_extraction(parser_data, default_entities, doc_type):
   pages_dimensions = []
   page_no = 0
 
-  # Todo add recognizing of the page number and taking proper dimensions. now assume one page only
   for page in parser_data["pages"]:
     dimension = page["dimension"]
     pages_dimensions.append(dimension)
@@ -462,7 +547,7 @@ def standard_entity_mapping(desired_entities_list):
 
 
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
-    form_parser_text, json_folder):
+    form_parser_text):
   """
     Form parser entity mapping function
 
@@ -483,8 +568,8 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   flag = check_duplicate_keys(default_entities, form_parser_entity_list)
 
   df = pd.DataFrame(form_parser_entity_list)
-  print("....pandas.....")
-  print(df)
+  # print("....pandas.....")
+  # print(df)
   required_entities_list = []
   # loop through one by one default entities mentioned in the config file
   for each_ocr_key, each_ocr_val in default_entities.items():
@@ -558,18 +643,18 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
     required_entities_list.extend(list(derived_entities_op_dict.values()))
     Logger.info("Derived entities created from Form parser response")
 
-  if table_entities:
-    table_response = None
-    files = os.listdir(json_folder)
-    for json_file in files:
-      json_path = os.path.join(json_folder, json_file)
-      table_extract_obj = TableExtractor(json_path)
-      table_response = table_extract_obj.get_entities(table_entities)
-      if table_response and isinstance(table_response, list):
-        required_entities_list.extend(table_response)
-        break
-    if table_response is None:
-      Logger.error("No table data found")
+  # if table_entities:
+  #   table_response = None
+  #   files = os.listdir(json_folder)
+  #   for json_file in files:
+  #     json_path = os.path.join(json_folder, json_file)
+  #     table_extract_obj = TableExtractor(json_path)
+  #     table_response = table_extract_obj.get_entities(table_entities)
+  #     if table_response and isinstance(table_response, list):
+  #       required_entities_list.extend(table_response)
+  #       break
+  #   if table_response is None:
+  #     Logger.error("No table data found")
 
   # print("Extracted list required_entities_list")
   # print(required_entities_list)
@@ -577,7 +662,7 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
 
 
 def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None,
-    output_filename=None) -> str:
+    output_filename=None) -> storage.blob.Blob:
   """
     Function takes a path of an object/file stored in GCS bucket and
             downloads the file in the current working directory

@@ -89,8 +89,6 @@ async def start_pipeline(request: Request, response: Response):
   context = "california"  # TODO is a temp workaround
 
   try:
-    Logger.info(
-        f"run_pipeline - Starting pipeline to process documents inside {bucket_name} ")
     event_id = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
     dirs, filename = split_uri_2_path_filename(file_uri)
 
@@ -120,10 +118,14 @@ async def start_pipeline(request: Request, response: Response):
     case_ids = {}
     try:
       # Browse through output Forms and identify matching Processor for each Form
+      count = 0
+
       for blob in blob_list:
+        Logger.info(f"Handling {blob.name}")
         if blob.name and not blob.name.endswith('/') and blob.name != START_PIPELINE_FILENAME:
           mime_type = blob.content_type
           if mime_type not in MIME_TYPES:
+            Logger.info(f"Skipping {blob.name} - not supported mime type: {mime_type} ")
             continue
           d, blob_filename = split_uri_2_path_filename(blob.name)
           dir_name = os.path.split(d)[-1]
@@ -132,9 +134,9 @@ async def start_pipeline(request: Request, response: Response):
             case_ids[dir_name] = case_id
           else:
             case_id = case_ids[dir_name]
-
+          count = count + 1
           Logger.info(
-              f"Handling case_id={case_id}, file_path={blob.name}, "
+              f"Handling {count} document - case_id={case_id}, file_path={blob.name}, "
               f"file_name={blob_filename}, event_id={event_id}")
 
           # create a record in database for uploaded document
@@ -197,6 +199,8 @@ async def start_pipeline(request: Request, response: Response):
           else:
             Logger.error(f"Could not retrieve document by id {uid}")
 
+      Logger.info(f"Handled {count} files and"
+                  f" sending {len(message_list)} items in message_list")
       # Pushing Message To Pubsub
       pubsub_msg = f"batch moved to bucket"
       message_dict = {"message": pubsub_msg, "message_list": message_list}

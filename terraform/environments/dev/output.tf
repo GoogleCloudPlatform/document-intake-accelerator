@@ -27,6 +27,10 @@ output "ingress-ip" {
   value = module.ingress.ingress_ip_address
 }
 
+output "cda_external_ui" {
+  value = module.ingress.cda_external_ui
+}
+
 //output "vertex_ai" {
 //  value = module.vertex_ai.output
 //}
