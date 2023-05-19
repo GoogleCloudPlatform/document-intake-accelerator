@@ -76,24 +76,6 @@ if [ -n "$DOCAI_PROJECT_ID"  ] && [ "$DOCAI_PROJECT_ID" != "$PROJECT_ID" ]; then
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-document-upload --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"  2>&1 | tee -a "$LOG"
 fi
 
-# TODO Add instructions on Cloud DNS Setup for API_DOMAIN
-# Cloud DNS
-# Enable Cloud DNS API
-# https://docs.google.com/document/d/1oHpOwUfeIMKfe7b1UN7Vd1OoZzn9Gndxvmi-ANcxB_Q/preview?resourcekey=0-pAmIVo-ap-zCzd_HD-W5IQ
-# gcloud dns --project=pa-document-ai managed-zones create pa-docai-demo --description="" --dns-name="evekhm.demo.altostrat.com." --visibility="public" --dnssec-state="off"
-
-# REGISTRAR SETUP
-#ns-cloud-e1.googledomains.com.
-#ns-cloud-e2.googledomains.com.
-#ns-cloud-e3.googledomains.com.
-#ns-cloud-e4.googledomains.com.
-
-# Submit a DNS delegation request
-
-gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
-timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
-echo "$timestamp Completed! Saved Log into $LOG" | tee -a "$LOG"
-
 cda_external_ui=$(terraform output -json cda_external_ui | python -m json.tool)
 if [ "$cda_external_ui" = "true" ]; then
   echo "Applying backend config for external ingress.."
@@ -102,4 +84,10 @@ else
   echo "Applying backend config for internal ingress.."
   kubectl apply -f "$DIR"/iap/k8s/backend-config_internal.yaml
 fi
+
+gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
+timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
+echo "$timestamp Completed! Saved Log into $LOG" | tee -a "$LOG"
+
+
 

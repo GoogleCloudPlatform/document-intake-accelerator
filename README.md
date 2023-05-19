@@ -73,7 +73,7 @@ While you will find end-to-end tools to help spin up a fully functional sandbox 
 
 # Quick Start
 
-For a Quick Start guide refer to the [Workshop Lab1](docs/Lab1.md), that explains how to install CDA engine into the GCP Argolis environment with a public external end point. 
+For a Quick Start and Demo Guide refer to the [Workshop Lab1](docs/Lab1.md), that explains how to install CDA engine into the GCP Argolis environment with a public external end point. 
 Use this README.md to explore in-depth customizations and installation options if needed.
 
 ## Prerequisites

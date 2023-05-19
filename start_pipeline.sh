@@ -61,7 +61,6 @@ if [ -z "$gs_dir" ]; then
 fi
 GS_URL_ROOT="gs://$PROJECT_ID-pa-forms/$date_str"
 GS_URL="$GS_URL_ROOT/$gs_dir"
-echo echo $GS_URL
 
 
 if [[ "$FROM_DIR" = /* ]]; then
@@ -178,6 +177,8 @@ elif [[ $FROM_DIR = gs://* ]]; then
 #    done
 #  fi
   fi
+else
+    echo "Error: $INPUT is not a valid directory"
 fi
 
 
