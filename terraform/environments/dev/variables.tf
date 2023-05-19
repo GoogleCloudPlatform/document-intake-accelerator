@@ -106,7 +106,7 @@ variable "network_config" {
 variable "cda_external_ip" {
   type        = string
   description = "External Reserved IP address for the UI"
-  default     = null
+  default     = "cda-ip"
 }
 
 variable "internal_ip_name" {

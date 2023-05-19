@@ -73,7 +73,7 @@ While you will find end-to-end tools to help spin up a fully functional sandbox 
 
 # Quick Start
 
-For a Quick Reference guide refer to the [Workshop Lab1](docs/Lab1.md), that explains how to install CDA engine into the GCP Argolis environment with a public external end point. 
+For a Quick Start and Demo Guide refer to the [Workshop Lab1](docs/Lab1.md), that explains how to install CDA engine into the GCP Argolis environment with a public external end point. 
 Use this README.md to explore in-depth customizations and installation options if needed.
 
 ## Prerequisites
@@ -748,10 +748,27 @@ In order to use this data to uptrain the model:
 
 # <a name="rebuild-redeploy-microservices"></a> Rebuild / Re-deploy Microservices
 
-Updated sources from the Git repo:
+Update sources from the Git repo:
 ```shell
 git pull
 ```
+
+Set environment variables:
+```shell
+export PROJECT_ID=<set your project id here>
+export API_DOMAIN=<set-api domain here>
+```
+
+## Upgrading Infrastructure
+In some cases new features/fixes will involve changes to the infrastructure.
+In that case you will need to re-run `./init.sh` command that does `terrafrom apply`.
+
+```shell
+./init.sh
+```
+ 
+## Deploy microservices
+
 The following wrapper script will use skaffold to rebuild/redeploy microservices:
 ```shell
 ./deploy.sh

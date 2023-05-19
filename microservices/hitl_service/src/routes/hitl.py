@@ -51,27 +51,6 @@ PROCESS_NEXT_STAGE = {
     "matching": "Auto-approval checking",
 }
 
-
-def strean_data_to_bq(doc):
-  client = bq_client()
-  if doc["entities"]:
-    for entity in doc["entities"]:
-      print(f"entity={entity}")
-  new_json = json.dumps(doc["entities"])
-  print(new_json)
-
-  new_json = json.dumps(doc)
-  print(new_json)
-  # inserted in Bigquery
-  # entities_for_bq = format_data_for_bq(extraction_output[0])
-  # Logger.info(f"Streaming data to BigQuery for case_id={case_id} document_type={document_type} doc_class={doc_class}")
-  # #stream_document_to_bigquery updates data to bigquery
-  # bq_update_status = stream_document_to_bigquery(client, case_id, uid,
-  #                                                doc_class, document_type,
-  #                                                entities_for_bq)
-  # Logger.info(f"returned status {bq_update_status}")
-
-
 def to_camel_case(input_str):
   input_str = input_str.replace("_", "")
   temp = input_str.split(' ')

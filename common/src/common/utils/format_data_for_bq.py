@@ -19,7 +19,7 @@ Function to format data to be inserted in Bigqury
 """
 
 import json
-from collections import ChainMap
+from common.utils.logging_handler import Logger
 
 
 def format_data_for_bq(entities):
@@ -30,6 +30,7 @@ def format_data_for_bq(entities):
     entity : list of dictionaries
     output : string format of entities and values
   """
+  Logger.info(f"format_data_for_bq - entities={entities}")
   if entities is not None:
     new_list = []
     for i in entities:

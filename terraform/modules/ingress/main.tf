@@ -39,6 +39,9 @@ locals {
   ? google_compute_global_address.ingress_ip_address[0].name
   : var.external_ip_name
   )
+
+  cda_external_ui = var.cda_external_ui
+
 }
 
 # External Ingress

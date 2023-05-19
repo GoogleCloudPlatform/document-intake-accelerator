@@ -37,12 +37,16 @@ create_bucket () {
   printf "PROJECT_ID=${PROJECT_ID}\n"
   printf "TF_BUCKET_NAME=${TF_BUCKET_NAME}\n"
   printf "TF_BUCKET_LOCATION=${TF_BUCKET_LOCATION}\n"
-  
-  print_highlight "Creating terraform state bucket: ${TF_BUCKET_NAME}\n"
-  gsutil mb -l $TF_BUCKET_LOCATION gs://$TF_BUCKET_NAME
-  gsutil versioning set on gs://$TF_BUCKET_NAME
-  export TF_BUCKET_NAME=$TF_BUCKET_NAME
-  echo
+
+  gsutil ls "gs://${TF_BUCKET_NAME}" 2> /dev/null
+  RETURN=$?
+  if [[ $RETURN -gt 0 ]]; then
+      echo "Bucket does not exist, creating gs://${TF_BUCKET_NAME}"
+      gsutil mb -l $TF_BUCKET_LOCATION gs://$TF_BUCKET_NAME
+      gsutil versioning set on gs://$TF_BUCKET_NAME
+      export TF_BUCKET_NAME=$TF_BUCKET_NAME
+      echo
+  fi
 }
 
 enable_apis () {
