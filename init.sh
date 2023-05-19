@@ -55,7 +55,6 @@ bash "${DIR}"/setup/setup_terraform.sh  2>&1 | tee -a "$LOG"
 
 cd "${DIR}/terraform/environments/dev" || exit
 
-# TODO skip if bucket already exists
 terraform init -backend-config=bucket="$TF_BUCKET_NAME" -upgrade  2>&1 | tee -a "$LOG"
 terraform apply -target=module.project_services -target=module.service_accounts -target=module.project_services_docai -auto-approve  2>&1 | tee -a "$LOG"
 terraform apply -auto-approve  2>&1 | tee -a "$LOG"
