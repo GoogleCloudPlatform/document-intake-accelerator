@@ -95,8 +95,12 @@ gcloud container clusters get-credentials main-cluster --region $REGION --projec
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
 echo "$timestamp Completed! Saved Log into $LOG" | tee -a "$LOG"
 
-#TODO
-# (terraform output -json cda_external_ui | python -m json.tool)
-# If Private:
-#kubectl apply -f "$DIR"/iap/k8s/backend-config_internal.yaml
-kubectl apply -f "$DIR"/iap/k8s/backend-config.yaml
+cda_external_ui=$(terraform output -json cda_external_ui | python -m json.tool)
+if [ "$cda_external_ui" = "true" ]; then
+  echo "Applying backend config for external ingress.."
+  kubectl apply -f "$DIR"/iap/k8s/backend-config.yaml
+else
+  echo "Applying backend config for internal ingress.."
+  kubectl apply -f "$DIR"/iap/k8s/backend-config_internal.yaml
+fi
+
