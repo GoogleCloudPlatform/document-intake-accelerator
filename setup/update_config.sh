@@ -24,7 +24,7 @@ PWD=$(pwd)
 GLOBAL_CONFIG_FILE="config.json"
 CONFIG_DIR="${DIR}/../common/src/common/config"
 PARSER_CONFIG="gs://${TF_VAR_config_bucket}/config.json"
-gsutil ls "gs://${PARSER_CONFIG}" 2> /dev/null
+gsutil ls "${PARSER_CONFIG}" 2> /dev/null
 RETURN=$?
 if [[ $RETURN -gt 0 ]]; then
     echo "Config does not exist yet, generating initial out-of-the box"
