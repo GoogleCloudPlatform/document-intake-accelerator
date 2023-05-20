@@ -255,7 +255,7 @@ gcloud identity groups memberships add --group-email="${GROUP_EMAIL}" --member-e
 * For the DocAI access, use the pre-configured file:  
 
   ```shell
-  gsutil cp common/src/common/config/config_joonix.json "gs://${PROJECT_ID}-config/config.json"
+  gsutil cp common/src/common/config/lab1.json "gs://${PROJECT_ID}-config/config.json"
   ```
   
 ### Testing New Configuration
@@ -266,12 +266,50 @@ Now you can use  DocAI Classifier and Specialized CDE trained for Prior-Auth For
 
   * You could use UI to upload forms one by one or 
   * Use a batch upload via a wrapper script.  
-    * Following command will take four forms inside `bsc_demo` directory and trigger the pipeline. Generated case_ids will have a prefix as specified under -l argument (_demo01_ in this case):
+    * Following command will take four forms inside `bsc_demo` directory and trigger the pipeline. 
+      * Generated case_ids will have a prefix as specified under -l argument (_demo01_ in this case).
+      * One of the forms (`Package-combined.pdf`) is a single PDF containing four different forms merged together. 
+        * The trained splitter will on the fly split the documents and use extractors for each of the corresponding document types to do data extraction
+        * All forms extracted and original PDF will have the same `case_id`.
      ```shell
-     ./start_pipeline.sh -d sample_data/bsc_demo -l demo01
+     ./start_pipeline.sh -d sample_data/demo -l demo01
      ```
+    * Following command will upload 10 PA Texas Forms and 10 BSC forms:
+   ```shell
+    ./start_pipeline.sh -d sample_data/forms-10 -l test
+   ```
 
+## Data Visualization 
 
+Sample views are available in `sql-scripts`
+
+```shell
+./sql-scripts/run_query.sh
+```
+
+Try out:
+```shell
+./sql-scripts/run_query.sh diagnose
+```
+
+Sample Output:
+```shell
++-------+----------+-------------------------------------+
+|  ZIP  | DiagCode |             Description             |
++-------+----------+-------------------------------------+
+| 83258 | C46      | Kaposi sarcoma                      |
+| 79450 | B17      | Other acute viral hepatitis         |
+| 54684 | T91.2    | Sequelae of other fracture of thora |
+| 52758 | M31      | Other necrotizing vasculopathies    |
+| 35204 | R20.2    | Paraesthesia of skin                |
+| 17969 | Z91.8    | Personal history of other specified |
+| 70998 | M90.5    | Osteonecrosis in other diseases cla |
+| 96315 | 036.2    | Maternal care for hydrops fetalis   |
+| 68282 | N89.2    | Severe vaginal dysplasia, not elsew |
+| 91000 | G57.5    | Tarsal tunnel syndrome              |
++-------+----------+-------------------------------------+
+
+```
 ## Troubleshooting
 
 ### ERROR: This site can’t provide a secure  

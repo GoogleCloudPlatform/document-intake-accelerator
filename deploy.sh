@@ -39,7 +39,6 @@ gsutil cp "${DIR}/microservices/adp_ui/.env" "gs://${TF_VAR_config_bucket}/.env"
 #  gsutil cp "$ENV_CONFIG" "${DIR}/microservices/adp_ui/.env" | tee -a "$LOG"
 #fi
 
-kubectl apply -f "$DIR"/iap/k8s/backend-config.yaml
 
 VERSION=$(kustomize version)
 if [[ "$VERSION" != *"v4.5.7"* ]]; then
@@ -56,8 +55,8 @@ skaffold run -p prod --default-repo=gcr.io/${PROJECT_ID} | tee -a "$LOG"
 
 # Deploy CloudRUn and skip building of common (done previous steps)
 #TODO terraform to re-deploy cloud-run instead
-bash "$DIR"/cloudrun/startpipeline/deploy.sh -s
-bash "$DIR"/cloudrun/queue/deploy.sh -s
+#bash "$DIR"/cloudrun/startpipeline/deploy.sh -s
+#bash "$DIR"/cloudrun/queue/deploy.sh -s
 
 #PYTHONPATH=$BASE_DIR/common/src python microservices/extraction_service/src/main.py
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
