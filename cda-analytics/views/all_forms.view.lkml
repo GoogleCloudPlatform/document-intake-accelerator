@@ -29,11 +29,16 @@ view: all_forms {
 
   dimension: gcs_doc_path {
     type: string
-    sql: substring(${TABLE}.gcs_doc_path,6,length(${TABLE}.gcs_doc_path))  ;;
-    link: {
-      label: "{{ all_forms.document_class }}"
-      url: "https://storage.cloud.google.com/{{value | url_encode }}"
-    }
+    sql: ${TABLE}.gcs_doc_path ;;
+  }
+
+  dimension: form {
+    type: string
+    sql: ${TABLE}.gcs_doc_path ;;
+    html:
+    <a style="color: blue; border-bottom: 1px solid blue" href="https://storage.cloud.google.com/{% assign len = value.size %}{{ value | slice: 5, len }}" target="_blank" rel="noopener noreferrer">
+        {{ all_forms.document_class }}
+    </a> ;;
   }
 
   dimension: name {
