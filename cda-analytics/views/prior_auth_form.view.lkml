@@ -1,5 +1,5 @@
 view: prior_auth_form {
-  sql_table_name: `validation.prior_auth_form`
+  sql_table_name: `validation.prior_auth_texas_form`
     ;;
 
   dimension: case_id {

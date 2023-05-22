@@ -1,5 +1,5 @@
 view: prior_auth_forms {
-  sql_table_name: `validation.PRIOR_AUTH_FORMS`
+  sql_table_name: `validation.TEXAS_PA_FORMS`
     ;;
 
   dimension: __clinical_reason_for_urgency {
@@ -530,6 +530,15 @@ view: prior_auth_forms {
   dimension: gcs_doc_path {
     type: string
     sql: ${TABLE}.gcs_doc_path ;;
+  }
+
+  dimension: form {
+    type: string
+    sql: ${TABLE}.gcs_doc_path ;;
+    html:
+    <a style="color: blue; border-bottom: 1px solid blue" href="https://storage.cloud.google.com/{% assign len = value.size %}{{ value | slice: 5, len }}" target="_blank" rel="noopener noreferrer">
+        Open Texas PA Form
+    </a> ;;
   }
 
   dimension_group: timestamp {

@@ -32,6 +32,15 @@ view: all_forms {
     sql: ${TABLE}.gcs_doc_path ;;
   }
 
+  dimension: form {
+    type: string
+    sql: ${TABLE}.gcs_doc_path ;;
+    html:
+    <a style="color: blue; border-bottom: 1px solid blue" href="https://storage.cloud.google.com/{% assign len = value.size %}{{ value | slice: 5, len }}" target="_blank" rel="noopener noreferrer">
+        {{ all_forms.document_class }}
+    </a> ;;
+  }
+
   dimension: name {
     type: string
     sql: ${TABLE}.name ;;

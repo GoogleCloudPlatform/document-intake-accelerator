@@ -579,6 +579,15 @@ view: bsc_pa_forms {
     sql: ${TABLE}.gcs_doc_path ;;
   }
 
+  dimension: form {
+    type: string
+    sql: ${TABLE}.gcs_doc_path ;;
+    html:
+    <a style="color: blue; border-bottom: 1px solid blue" href="https://storage.cloud.google.com/{% assign len = value.size %}{{ value | slice: 5, len }}" target="_blank" rel="noopener noreferrer">
+        Open BSC PA Form
+    </a> ;;
+  }
+
   dimension_group: timestamp {
     type: time
     timeframes: [
