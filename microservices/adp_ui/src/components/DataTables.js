@@ -607,7 +607,7 @@ function DataTables() {
           <label className="labels" style={{ fontSize: '14px', paddingLeft: '5px' }}>Search documents:</label>
           <br />
           <div>
-            <input type="text" onChange={onFilter} className="searchInput" onKeyPress={enterKeyPressed} id='searchterm' value={searchTerm} name="searchterm" placeholder="Search by Case ID, applicatns or other attributes..." />
+            <input type="text" onChange={onFilter} className="searchInput" onKeyPress={enterKeyPressed} id='searchterm' value={searchTerm} name="searchterm" placeholder="Search by Case ID, or other attributes..." />
             {'  '}
             <Button
               variant="secondary"
