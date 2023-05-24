@@ -68,11 +68,35 @@ view: all_forms {
 
   dimension: value {
     type: string
+    map_layer_name: us_states
     sql: ${TABLE}.value ;;
   }
 
   measure: count {
     type: count
-    drill_fields: [name]
+  }
+
+  measure:  count_of_medical_forms{
+    type: count_distinct
+    label: "Medical Forms"
+    sql: ${TABLE}.uid ;;
+    link: {
+      label: "Medical Forms"
+      url: "https://1983221b-52a8-4c01-be65-29f2cde0d012.looker.app/dashboards/8"
+      icon_url: "http://google.com/favicon.ico"
+    }
+    filters: [document_class: "'generic_form','health_intake_form'"]
+  }
+
+  measure:  count_of_fax_cover_page{
+    type: count_distinct
+    label: "FAX Cover Page"
+    sql: ${TABLE}.uid ;;
+    link: {
+      label: "FAX Cover Page"
+      url: "https://1983221b-52a8-4c01-be65-29f2cde0d012.looker.app/dashboards/9"
+      icon_url: "http://google.com/favicon.ico"
+    }
+    filters: [document_class: "fax_cover_page"]
   }
 }
