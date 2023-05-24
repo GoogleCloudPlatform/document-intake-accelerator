@@ -26,7 +26,7 @@ usage(){
 
     echo
     echo "Sample Usage:"
-    echo "./start_pipeline.sh -d gs://$PROJECT_ID-sample-forms/Batch1"
+    echo "./start_pipeline.sh -d gs://$PROJECT_ID-sample-forms/Batch1 -b 50"
     echo "./start_pipeline.sh -d gs://$PROJECT_ID-sample-forms/Batch1/form1.pdf"
     echo "./start_pipeline.sh -d sample_data/bsc_demo -l demo-batch"
     echo "./start_pipeline.sh -d sample_data/bsc_demo -l demo-batch -p"
@@ -161,7 +161,7 @@ elif [[ $FROM_DIR = gs://* ]]; then
         echo "Starting $BATCH_NUM Batch"
         for FILE in $(gsutil list "${FROM_DIR}"/*.pdf); do
           BASE_DIR=${GS_URL}/batch_${BATCH_NUM}
-          URL="${BASE_DIR}/${i}/"
+          URL="${BASE_DIR}/${gs_dir}_${i}/"
           echo " $i -- Copying data from ${FILE} to ${URL}"
             gsutil cp "${FILE}" "${URL}"
 #          echo $i, $(($i % $BATCH_SIZE))
@@ -183,26 +183,6 @@ elif [[ $FROM_DIR = gs://* ]]; then
 
       fi
     fi
-
-
-#      i=$((i+1))
-#      echo "Handling $i file...."
-#      URL="${GS_URL}_${i}/"
-#      if [ -n "$BATCH_SIZE" ]; then
-#        if ! (($i % $BATCH_SIZE)); then
-#            echo "Waiting for previous batch job to be done due to Quota Limits"
-#            sleep 60
-#        fi
-#      else
-#        echo " $i --- Copying data from ${FILE} to ${URL}"
-#        gsutil cp "${FILE}" "${URL}"
-#      fi
-#    echo "Triggering pipeline for ${GS_URL_ROOT}"
-#    gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${GS_URL_ROOT}"
-#      fi
-#
-#    done
-#  fi
   fi
 else
     echo "Error: $INPUT is not a valid directory"
