@@ -6,4 +6,4 @@ SELECT __patientName as Name,
        __rpSpecialty as rpSpecialty,
        __spSpecialty as spSpecialty
        FROM `validation.pa_forms_texas_flat`
-where timestamp > cast('2023-05-02T19:00:00' as datetime)
+-- where timestamp > cast('2023-05-02T19:00:00' as datetime)

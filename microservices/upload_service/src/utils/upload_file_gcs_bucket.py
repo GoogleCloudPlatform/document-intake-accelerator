@@ -31,11 +31,11 @@ def upload_file(case_id, uid, file):
   return STATUS_SUCCESS
 
 
-def upload_json_file(case_id, uid, input_data):
+def upload_json_file(case_id, uid, input_data, content_type='application/pdf'):
   destination_blob_name = f"{case_id}/{uid}/input_data_{case_id}_{uid}.json"
   storage_client = storage.Client()
   bucket = storage_client.bucket(BUCKET_NAME)
   blob = bucket.blob(destination_blob_name)
-  blob.upload_from_string(input_data)
+  blob.upload_from_string(input_data, content_type)
   print(case_id + uid + input_data)
   return STATUS_SUCCESS
