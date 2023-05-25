@@ -194,8 +194,6 @@ async def report_data():
     Logger.info(f"Fetched Active Data len={len(docs_list)}")
     docs_list = get_doc_list_data(docs_list)
     Logger.info(f"report_data docs_list len={len(docs_list)}")
-    for doc in docs_list:
-      Logger.info(f"{doc}")
     response = {"status": STATUS_SUCCESS, "len": len(docs_list),
                 "data": docs_list}
     return response
