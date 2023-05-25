@@ -13,4 +13,5 @@ Additionally, refer to the documentation [here](https://github.com/hcls-solution
 to configure your Looker instance.
 
 First, you need to connect your Looker instance to the BigQuery Dataset and then you can import the lookml files into your instance to explore the dashboards.
+
 The lookml files may need minor changes depending on the name of your BigQuery connection configuration.
