@@ -563,7 +563,11 @@ view: prior_auth_forms {
 
   measure: count {
     type: count
-    drill_fields: [detail*]
+    link: {
+      label: "Texas PA Forms"
+      url: "https://1983221b-52a8-4c01-be65-29f2cde0d012.looker.app/dashboards/7"
+      icon_url: "http://google.com/favicon.ico"
+    }
   }
 
   # ----- Sets of fields for drilling ------
