@@ -13,9 +13,12 @@ kustomize version
 commands
 ```
 sudo rm /usr/local/bin/kustomize
+
 curl -Lo install_kustomize "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" 
 && chmod +x install_kustomize
+
 sudo ./install_kustomize 4.5.7 /usr/local/bin
+
 kustomize version
 ```
 
@@ -24,14 +27,17 @@ variables. Change the value of Project ID and API Domain for your environment:
 ```
 export PROJECT_ID={Your GCP Project ID}
 # e.g. export PROJECT_ID=cda-001-engine
+
 export API_DOMAIN={Your API Domain}
 # e.g. export API_DOMAIN=cda-001.com
+
 source ../../SET
 ```
 
 4. Authenticate to GCP
 ```
 gcloud auth application-default login
+
 gcloud auth login
 ```
 
@@ -44,7 +50,8 @@ gcloud container clusters get-credentials main-cluster --region $REGION --projec
 ## Build and deploy microservice
 1. Change the directory to the microservice you want to build and deploy and use skaffold run to build and deploy the microservice code from the directory.
 ```
-# e.g. cd ./claims-data-activator/microservies/adp_ui
-cd ./claims-data-activator/microservies/{Directory}
+cd {Directory}
+# e.g. cd hitl_service
+
 skaffold run -p prod --default-repo=gcr.io/${PROJECT_ID}
 ```
