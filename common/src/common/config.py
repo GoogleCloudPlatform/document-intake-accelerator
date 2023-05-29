@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import datetime
 import time
 from google.cloud import storage
 from common.utils.logging_handler import Logger
@@ -84,30 +85,37 @@ class DocumentWrapper:
     self.context = context
     self.document_type = document_type
 
+last_modified_time_of_object = datetime.datetime.now()
+config_data = None
+
 def load_config(bucketname, filename):
-  # Todo add optimization and check for the latest timestamp changed
-  # Reload only if file changes detected
-  # Currently re-loading each time
-  Logger.info(f"load_config with bucket={bucketname}, filename={filename}")
   global gcs
   if not gcs:
     gcs = storage.Client()
+  
+  if bucketname and gcs.get_bucket(bucketname).exists():
+    bucket = gcs.get_bucket(bucketname)
+    blob = bucket.blob(filename)
+  else:
+    Logger.error(f"Error: bucket does not exist {bucketname}")
 
-  try:
-    if bucketname and gcs.get_bucket(bucketname).exists():
-      bucket = gcs.get_bucket(bucketname)
-      blob = bucket.blob(filename)
+  last_modified_time = blob.updated
+  global last_modified_time_of_object
+  global config_data
+  if last_modified_time == last_modified_time_of_object:
+    return config_data
+  else:
+    try:
       if blob.exists():
-        data = json.loads(blob.download_as_text(encoding="utf-8"))
-        return data
+        config_data = json.loads(blob.download_as_text(encoding="utf-8"))
+        last_modified_time_of_object = last_modified_time
+        return config_data
       else:
         Logger.error(f"Error: file does not exist gs://{bucketname}/{filename}")
-    else:
-      Logger.error(f"Error: bucket does not exist {bucketname}")
-  except Exception as e:
-    Logger.error(
+    except Exception as e:
+      Logger.error(
         f"Error: while obtaining file from GCS gs://{bucketname}/{filename} {e}")
-    return None
+      return None
 
   # Fall-back to local file
   Logger.warning(f"Warning: Using local {filename}")
@@ -117,17 +125,20 @@ def load_config(bucketname, filename):
 
 def get_config(config_name=None):
   start_time = time.time()
-  config = load_config(CONFIG_BUCKET, CONFIG_FILE_NAME)
-  assert config, f"Unable to locate '{config_name} or incorrect JSON file'"
+  global config_data
+  if not config_data:
+    config_data = load_config(CONFIG_BUCKET, CONFIG_FILE_NAME)
+  assert config_data, f"Unable to locate '{config_name} or incorrect JSON file'"
+  
   if config_name:
-    config = config.get(config_name, [])
-    Logger.info(f"{config_name}={config}")
+    config_item = config_data.get(config_name, [])
+    Logger.info(f"{config_name}={config_item}")
 
   process_time = time.time() - start_time
   time_elapsed = round(process_time * 1000)
   Logger.info(
       f"Retrieving config_name={config_name} took : {str(time_elapsed)} ms")
-  return config
+  return config_item
 
 
 def get_parser_config():
