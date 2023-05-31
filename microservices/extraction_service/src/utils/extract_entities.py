@@ -398,13 +398,14 @@ def form_parser_extraction(processor, dai_client,
                 f"{input_gcs_source} with config={config}")
     try:
       # json might be sharded
+      Logger.info(f"form_parser_extraction - Handling results for "
+                  f"{input_gcs_source} with config={config}")
       for document in processed_documents[input_gcs_source]:
         form_parser_text += document.text
         dirs, file_name = split_uri_2_path_filename(input_gcs_source)
-        print(
+        Logger.info(
             f"form_parser_extraction - handling results for {input_gcs_source}, "
-            f"file_name = {file_name}")
-
+            f"file_name = {file_name}, shard_count = {document.shard_info.shard_count}")
         text = document.text
         # Read the text recognition output from the processor
         for page in document.pages:
