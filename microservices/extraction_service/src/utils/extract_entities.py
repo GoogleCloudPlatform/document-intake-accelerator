@@ -14,37 +14,39 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import datetime
+import json
 import re
 import time
+import traceback
+import warnings
 from typing import Any
 from typing import Dict
 from typing import List
-import traceback
-import random
-import string
-import json
+
 import proto
-from common.config import STATUS_SUCCESS
+from google.api_core.exceptions import InternalServerError
+from google.api_core.exceptions import RetryError
+from google.cloud import documentai_v1 as documentai
+from google.cloud import storage
+
 import common.config
 from common.config import DocumentWrapper
 from common.config import PDF_MIME_TYPE
+from common.config import get_docai_entity_mapping
+from common.extraction_config import DOCAI_ATTRIBUTES_TO_IGNORE
+from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME
 from common.utils.helper import get_processor_location
 from common.utils.helper import split_uri_2_path_filename
-from google.cloud import documentai_v1 as documentai
-from .change_json_format import get_json_format_for_processing, \
-  correct_json_format_for_db
-from .correct_key_value import data_transformation
-from . import utils_functions
-from .utils_functions import extraction_accuracy_calc, \
-  clean_form_parser_keys, strip_value, form_parser_entities_mapping
-from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME, \
-  DOCAI_ATTRIBUTES_TO_IGNORE
-from common.config import get_docai_entity_mapping
 from common.utils.logging_handler import Logger
-import warnings
-from google.cloud import storage
-from google.api_core.exceptions import InternalServerError
-from google.api_core.exceptions import RetryError
+from . import utils_functions
+from .change_json_format import correct_json_format_for_db
+from .change_json_format import get_json_format_for_processing
+from .correct_key_value import data_transformation
+from .utils_functions import clean_form_parser_keys
+from .utils_functions import extraction_accuracy_calc
+from .utils_functions import form_parser_entities_mapping
+from .utils_functions import strip_value
 
 warnings.simplefilter(action="ignore")
 
@@ -181,8 +183,8 @@ def specialized_parser_extraction(processor, dai_client,
 
     Parameters
     ----------
-    parser_details: It has parser info like parser id, name, location, and etc
-    gcs_doc_path: Document gcs path
+    processor: It has parser info like parser id, name, location, and etc
+    configs:
     doc_class: Document class
 
     Returns: Specialized parser response - list of dicts having entity,
@@ -210,7 +212,7 @@ def specialized_parser_extraction(processor, dai_client,
         specialized_parser_entities_list = specialized_parser_extraction_from_json(
             data, doc_class, config.context)
         result[config] = post_processing(specialized_parser_entities_list,
-                          doc_class, input_gcs_source, True)
+                                         doc_class, input_gcs_source, True)
       except Exception as e:
         Logger.error(f"specialized_parser_extraction - Error for {input_gcs_source}:  {e}")
         err = traceback.format_exc().replace("\n", " ")
@@ -234,9 +236,9 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
   # call create gcs bucket function to create bucket,
   # folder will be created automatically not the bucket
   gcs_output_uri = f"gs://{DOCAI_OUTPUT_BUCKET_NAME}"
-  letters = string.ascii_lowercase
-  temp_folder = "".join(random.choice(letters) for i in range(10))
-  gcs_output_uri_prefix = "extractor_out_" + temp_folder
+
+  timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")
+  gcs_output_uri_prefix = "extractor_out_" + timestamp
   # temp folder location
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
   # delete temp folder
@@ -276,13 +278,13 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
     return [], False
 
   elapsed = "{:.0f}".format(time.time() - start)
-  Logger.info(f"Elapsed time for operation {elapsed} seconds")
+  Logger.info(f"batch_extraction - Elapsed time for operation {elapsed} seconds")
 
   # Once the operation is complete,
   # get output document information from operation metadata
   metadata = documentai.BatchProcessMetadata(operation.metadata)
   if metadata.state != documentai.BatchProcessMetadata.State.SUCCEEDED:
-    raise ValueError(f"Batch Process Failed: {metadata.state_message}")
+    raise ValueError(f"batch_extraction -  Batch Process Failed: {metadata.state_message}")
 
   documents = {}  # Contains per processed document, keys are path to original document
 
@@ -293,7 +295,7 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
     matches = re.match(r"gs://(.*?)/(.*)", process.output_gcs_destination)
     if not matches:
       print(
-          f"Could not parse output GCS destination:[{process.output_gcs_destination}]")
+          f"batch_extraction - Could not parse output GCS destination:[{process.output_gcs_destination}]")
       continue
 
     output_bucket, output_prefix = matches.groups()
