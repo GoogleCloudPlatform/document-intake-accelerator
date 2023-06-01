@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import json
+import os
 import datetime
 import time
 from google.cloud import storage
@@ -22,15 +24,11 @@ from common.utils.logging_handler import Logger
 Config module to setup common environment
 """
 
-import os, json
-
-# API clients
-gcs = None
 
 # ========= Overall =============================
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
 if PROJECT_ID != "":
-  os.environ["GOOGLE_CLOUD_PROJECT"] = PROJECT_ID
+    os.environ["GOOGLE_CLOUD_PROJECT"] = PROJECT_ID
 assert PROJECT_ID, "Env var PROJECT_ID is not set."
 
 REGION = "us-central1"
@@ -76,129 +74,145 @@ CLASSIFICATION_UNDETECTABLE = "unclassified"
 START_PIPELINE_FILENAME = os.environ.get("START_PIPELINE_NAME",
                                          "START_PIPELINE")
 
-class DocumentWrapper:
-  def __init__(self, case_id, uid, gcs_url, document_type,
-      context="california") -> None:
-    self.gcs_url = gcs_url
-    self.case_id = case_id
-    self.uid = uid
-    self.context = context
-    self.document_type = document_type
 
+class DocumentWrapper:
+    def __init__(self, case_id, uid, gcs_url, document_type,
+                 context="california") -> None:
+        self.gcs_url = gcs_url
+        self.case_id = case_id
+        self.uid = uid
+        self.context = context
+        self.document_type = document_type
+
+# Global variables
+gcs = None
+bucket = None
 last_modified_time_of_object = datetime.datetime.now()
 config_data = None
 
-def load_config(bucketname, filename):
+def init_bucket(bucketname, filename):
+
   global gcs
-  if not gcs:
+  if not gcs: 
     gcs = storage.Client()
   
-  if bucketname and gcs.get_bucket(bucketname).exists():
-    bucket = gcs.get_bucket(bucketname)
-    blob = bucket.blob(filename)
-  else:
-    Logger.error(f"Error: bucket does not exist {bucketname}")
-
-  last_modified_time = blob.updated
-  global last_modified_time_of_object
-  global config_data
-  if last_modified_time == last_modified_time_of_object:
-    return config_data
-  else:
-    try:
-      if blob.exists():
-        config_data = json.loads(blob.download_as_text(encoding="utf-8"))
-        last_modified_time_of_object = last_modified_time
-        return config_data
-      else:
-        Logger.error(f"Error: file does not exist gs://{bucketname}/{filename}")
-    except Exception as e:
+  global bucket
+  if not bucket:
+    if bucketname and gcs.get_bucket(bucketname).exists():
+      bucket = gcs.get_bucket(bucketname)
+    else:
       Logger.error(
-        f"Error: while obtaining file from GCS gs://{bucketname}/{filename} {e}")
-      return None
+              f"Error: file does not exist gs://{bucketname}/{filename}")   
 
-  # Fall-back to local file
-  Logger.warning(f"Warning: Using local {filename}")
-  json_file = open(os.path.join(os.path.dirname(__file__), "config", filename))
-  return json.load(json_file)
-
+def load_config(bucketname, filename):
+    global bucket
+    if not bucket:
+        init_bucket(bucketname, filename)
+    
+    blob = bucket.get_blob(filename)
+    last_modified_time = blob.updated
+    global last_modified_time_of_object
+    global config_data
+    Logger.info(
+        f"last_modified_time_of_object = {last_modified_time_of_object} & last_modified_time = {last_modified_time}")
+    if last_modified_time == last_modified_time_of_object:
+        return config_data
+    else:
+      Logger.info(f"It seems config file has changed....Reloading config from: {filename}")
+      try:
+        if blob.exists():
+          config_data = json.loads(blob.download_as_text(encoding="utf-8"))
+          last_modified_time_of_object = last_modified_time
+          return config_data
+        else:
+          Logger.error(f"Error: file does not exist gs://{bucketname}/{filename}")
+      except Exception as e:
+        Logger.error(
+          f"Error: while obtaining file from GCS gs://{bucketname}/{filename} {e}")
+        # Fall-back to local file
+        Logger.warning(f"Warning: Using local {filename}")
+        json_file = open(os.path.join(os.path.dirname(__file__), "config", filename))
+        config_data = json.load(json_file)
+        return config_data
 
 def get_config(config_name=None):
-  start_time = time.time()
-  global config_data
-  if not config_data:
-    config_data = load_config(CONFIG_BUCKET, CONFIG_FILE_NAME)
-  assert config_data, f"Unable to locate '{config_name} or incorrect JSON file'"
-  
-  if config_name:
-    config_item = config_data.get(config_name, [])
-    Logger.info(f"{config_name}={config_item}")
+    start_time = time.time()
 
-  process_time = time.time() - start_time
-  time_elapsed = round(process_time * 1000)
-  Logger.info(
-      f"Retrieving config_name={config_name} took : {str(time_elapsed)} ms")
-  return config_item
+    config_data=load_config(CONFIG_BUCKET, CONFIG_FILE_NAME)
 
+    assert config_data, f"Unable to locate '{config_name} or incorrect JSON file'"
+
+    if config_name:
+        config_item = config_data.get(config_name, [])
+        Logger.info(f"{config_name}={config_item}")
+    else:
+       config_item = config_data    
+
+    process_time = time.time() - start_time
+    time_elapsed = round(process_time * 1000000)
+    Logger.info(
+        f"Retrieving config_name={config_name} took : {str(time_elapsed)} microseconds")
+    return config_item
 
 def get_parser_config():
-  return get_config("parser_config")
+    return get_config("parser_config")
 
 
 def get_document_types_config():
-  return get_config("document_types_config")
+    return get_config("document_types_config")
 
 
 def get_parser_by_doc_class(doc_class):
-  Logger.info(f"get_parser_by_doc_class {doc_class}")
-  doc = get_document_types_config().get(doc_class)
-  if not doc:
-    Logger.error(f"doc_class {doc_class} not present in document_types_config")
-    return None
+    Logger.info(f"get_parser_by_doc_class {doc_class}")
+    doc = get_document_types_config().get(doc_class)
+    if not doc:
+        Logger.warning(
+            f"doc_class {doc_class} not present in document_types_config")
+        return None
 
-  parser_name = doc.get("parser")
-  Logger.info(f"Using doc_class={doc_class}, parser_name={parser_name}")
-  return get_parser_config().get(parser_name)
+    parser_name = doc.get("parser")
+    Logger.info(f"Using doc_class={doc_class}, parser_name={parser_name}")
+    return get_parser_config().get(parser_name)
 
 
 def get_docai_entity_mapping():
-  return get_config("docai_entity_mapping")
+    return get_config("docai_entity_mapping")
 
 
 def get_docai_settings():
-  return get_config("settings_config")
+    return get_config("settings_config")
 
 
 # Fall back value (when auto-approval config is not available for the form) - to trigger Need Review State
 def get_extraction_confidence_threshold():
-  settings = get_docai_settings()
-  return float(settings.get("extraction_confidence_threshold", 0.85))
+    settings = get_docai_settings()
+    return float(settings.get("extraction_confidence_threshold", 0.85))
 
 
 # Fall back value (when auto-approval config is not available for the form) - to trigger Need Review State
 def get_extraction_confidence_threshold_per_field():
-  settings = get_docai_settings()
-  return float(settings.get("field_extraction_confidence_threshold", 0))
+    settings = get_docai_settings()
+    return float(settings.get("field_extraction_confidence_threshold", 0))
 
 
 # Prediction Confidence threshold for the classifier to reject any prediction
 # less than the threshold value.
 def get_classification_confidence_threshold():
-  settings = get_docai_settings()
-  return float(settings.get("classification_confidence_threshold", 0.85))
+    settings = get_docai_settings()
+    return float(settings.get("classification_confidence_threshold", 0.85))
 
 
 def get_classification_default_class():
-  settings = get_docai_settings()
-  classification_default_class = settings.get("classification_default_class",
-                                              CLASSIFICATION_UNDETECTABLE)
-  parser = get_parser_by_doc_class(classification_default_class)
-  if parser:
-    return classification_default_class
+    settings = get_docai_settings()
+    classification_default_class = settings.get("classification_default_class",
+                                                CLASSIFICATION_UNDETECTABLE)
+    parser = get_parser_by_doc_class(classification_default_class)
+    if parser:
+        return classification_default_class
 
-  Logger.warning(
-      f"Classification default label {classification_default_class} is not a valid Label or missing a corresponding parser in parser_config")
-  return CLASSIFICATION_UNDETECTABLE
+    Logger.warning(
+        f"Classification default label {classification_default_class} is not a valid Label or missing a corresponding parser in parser_config")
+    return CLASSIFICATION_UNDETECTABLE
 
 
 APPLICATION_FORM_DISPLAY_NAME = "Application Form"
@@ -212,34 +226,35 @@ SUPPORTED_DOC_TYPES = {
 
 
 def get_document_type(doc_name):
-  Logger.info(f"get_document_type {doc_name}")
-  doc = get_document_types_config().get(doc_name)
-  if doc:
-    return doc.get("doc_type")
-  Logger.error(f"doc_type property is not set for {doc_name}")
-  return None
+    Logger.info(f"get_document_type {doc_name}")
+    doc = get_document_types_config().get(doc_name)
+    if doc:
+        return doc.get("doc_type")
+    Logger.error(f"doc_type property is not set for {doc_name}")
+    return None
 
 
 def get_display_name_by_doc_class(doc_class):
-  Logger.info(f"get_display_name_by_doc_class {doc_class}")
-  doc = get_document_types_config().get(doc_class)
-  if not doc:
-    Logger.error(f"doc_class {doc_class} not present in document_types_config")
-    return None
+    Logger.info(f"get_display_name_by_doc_class {doc_class}")
+    doc = get_document_types_config().get(doc_class)
+    if not doc:
+        Logger.error(
+            f"doc_class {doc_class} not present in document_types_config")
+        return None
 
-  display_name = doc.get("display_name")
-  Logger.info(f"Using doc_class={doc_class}, display_name={display_name}")
-  return display_name
+    display_name = doc.get("display_name")
+    Logger.info(f"Using doc_class={doc_class}, display_name={display_name}")
+    return display_name
 
 
 def get_document_class_by_classifier_label(label_name):
-  Logger.info(f"get_document_class_by_classifier_label {label_name}")
-  for k, v in get_document_types_config().items():
-    if v.get("classifier_label") == label_name:
-      return k
-  Logger.error(
-    f"classifier_label={label_name} is not assigned to any document in the config")
-  return None
+    Logger.info(f"get_document_class_by_classifier_label {label_name}")
+    for k, v in get_document_types_config().items():
+        if v.get("classifier_label") == label_name:
+            return k
+    Logger.error(
+        f"classifier_label={label_name} is not assigned to any document in the config")
+    return None
 
 
 # ========= HITL and Frontend UI =======================
@@ -268,7 +283,7 @@ ENTITY_KEYS = [
     "phone_no",
 ]
 
-### Misc
+# Misc
 
 # Used by E2E testing. Leave as blank by default.
 DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
