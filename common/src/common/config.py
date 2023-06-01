@@ -13,6 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import json
+import os
+import datetime
 import time
 from google.cloud import storage
 from common.utils.logging_handler import Logger
@@ -21,10 +24,6 @@ from common.utils.logging_handler import Logger
 Config module to setup common environment
 """
 
-import os, json
-
-# API clients
-gcs = None
 
 # ========= Overall =============================
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
@@ -75,6 +74,7 @@ CLASSIFICATION_UNDETECTABLE = "unclassified"
 START_PIPELINE_FILENAME = os.environ.get("START_PIPELINE_NAME",
                                          "START_PIPELINE")
 
+
 class DocumentWrapper:
   def __init__(self, case_id, uid, gcs_url, document_type,
       context="california") -> None:
@@ -84,50 +84,82 @@ class DocumentWrapper:
     self.context = context
     self.document_type = document_type
 
-def load_config(bucketname, filename):
-  # Todo add optimization and check for the latest timestamp changed
-  # Reload only if file changes detected
-  # Currently re-loading each time
-  Logger.info(f"load_config with bucket={bucketname}, filename={filename}")
+
+# Global variables
+gcs = None
+bucket = None
+last_modified_time_of_object = datetime.datetime.now()
+config_data = None
+
+
+def init_bucket(bucketname, filename):
+  print(f"init_bucket with bucketname={bucketname}")
   global gcs
   if not gcs:
     gcs = storage.Client()
 
-  try:
+  global bucket
+  if not bucket:
     if bucketname and gcs.get_bucket(bucketname).exists():
       bucket = gcs.get_bucket(bucketname)
-      blob = bucket.blob(filename)
-      if blob.exists():
-        data = json.loads(blob.download_as_text(encoding="utf-8"))
-        return data
-      else:
-        Logger.error(f"Error: file does not exist gs://{bucketname}/{filename}")
     else:
-      Logger.error(f"Error: bucket does not exist {bucketname}")
-  except Exception as e:
-    Logger.error(
-        f"Error: while obtaining file from GCS gs://{bucketname}/{filename} {e}")
-    return None
+      Logger.error(
+          f"Error: file does not exist gs://{bucketname}/{filename}")
 
-  # Fall-back to local file
-  Logger.warning(f"Warning: Using local {filename}")
-  json_file = open(os.path.join(os.path.dirname(__file__), "config", filename))
-  return json.load(json_file)
+
+def load_config(bucketname, filename):
+  print(f"load_config with bucketname={bucketname}")
+  global bucket
+  if not bucket:
+    init_bucket(bucketname, filename)
+
+  blob = bucket.get_blob(filename)
+  last_modified_time = blob.updated
+  global last_modified_time_of_object
+  global config_data
+  Logger.debug(
+      f"load_config - last_modified_time_of_object = {last_modified_time_of_object} & last_modified_time = {last_modified_time}")
+  if last_modified_time == last_modified_time_of_object:
+    return config_data
+  else:
+    Logger.info(
+      f"load_config - It seems config file has changed....Reloading config from: {filename}")
+    try:
+      if blob.exists():
+        config_data = json.loads(blob.download_as_text(encoding="utf-8"))
+        last_modified_time_of_object = last_modified_time
+        return config_data
+      else:
+        Logger.error(f"load_config - Error: file does not exist gs://{bucketname}/{filename}")
+    except Exception as e:
+      Logger.error(
+          f"load_config - Error: while obtaining file from GCS gs://{bucketname}/{filename} {e}")
+      # Fall-back to local file
+      Logger.warning(f"load_config - Warning: Using local {filename}")
+      json_file = open(
+        os.path.join(os.path.dirname(__file__), "config", filename))
+      config_data = json.load(json_file)
+      return config_data
 
 
 def get_config(config_name=None):
   start_time = time.time()
-  config = load_config(CONFIG_BUCKET, CONFIG_FILE_NAME)
-  assert config, f"Unable to locate '{config_name} or incorrect JSON file'"
+
+  config_data = load_config(CONFIG_BUCKET, CONFIG_FILE_NAME)
+
+  assert config_data, f"get_config - Unable to locate '{config_name} or incorrect JSON file'"
+
   if config_name:
-    config = config.get(config_name, [])
-    Logger.info(f"{config_name}={config}")
+    config_item = config_data.get(config_name, [])
+    Logger.debug(f"{config_name}={config_item}")
+  else:
+    config_item = config_data
 
   process_time = time.time() - start_time
   time_elapsed = round(process_time * 1000)
-  Logger.info(
-      f"Retrieving config_name={config_name} took : {str(time_elapsed)} ms")
-  return config
+  Logger.debug(
+      f"get_config - Retrieving config_name={config_name} took : {str(time_elapsed)} ms")
+  return config_item
 
 
 def get_parser_config():
@@ -142,11 +174,12 @@ def get_parser_by_doc_class(doc_class):
   Logger.info(f"get_parser_by_doc_class {doc_class}")
   doc = get_document_types_config().get(doc_class)
   if not doc:
-    Logger.error(f"doc_class {doc_class} not present in document_types_config")
+    Logger.error(
+        f"doc_class {doc_class} not present in document_types_config")
     return None
 
   parser_name = doc.get("parser")
-  Logger.info(f"Using doc_class={doc_class}, parser_name={parser_name}")
+  Logger.debug(f"Using doc_class={doc_class}, parser_name={parser_name}")
   return get_parser_config().get(parser_name)
 
 
@@ -201,7 +234,7 @@ SUPPORTED_DOC_TYPES = {
 
 
 def get_document_type(doc_name):
-  Logger.info(f"get_document_type {doc_name}")
+  Logger.debug(f"get_document_type {doc_name}")
   doc = get_document_types_config().get(doc_name)
   if doc:
     return doc.get("doc_type")
@@ -210,24 +243,25 @@ def get_document_type(doc_name):
 
 
 def get_display_name_by_doc_class(doc_class):
-  Logger.info(f"get_display_name_by_doc_class {doc_class}")
+  Logger.debug(f"get_display_name_by_doc_class {doc_class}")
   doc = get_document_types_config().get(doc_class)
   if not doc:
-    Logger.error(f"doc_class {doc_class} not present in document_types_config")
+    Logger.error(
+        f"doc_class {doc_class} not present in document_types_config")
     return None
 
   display_name = doc.get("display_name")
-  Logger.info(f"Using doc_class={doc_class}, display_name={display_name}")
+  Logger.debug(f"Using doc_class={doc_class}, display_name={display_name}")
   return display_name
 
 
 def get_document_class_by_classifier_label(label_name):
-  Logger.info(f"get_document_class_by_classifier_label {label_name}")
+  Logger.debug(f"get_document_class_by_classifier_label {label_name}")
   for k, v in get_document_types_config().items():
     if v.get("classifier_label") == label_name:
       return k
   Logger.error(
-    f"classifier_label={label_name} is not assigned to any document in the config")
+      f"classifier_label={label_name} is not assigned to any document in the config")
   return None
 
 
@@ -244,6 +278,7 @@ DB_KEYS = [
     "url",
     "context",
     "document_class",
+    "document_display_name",
     "document_type",
     "upload_timestamp",
     "extraction_score",
@@ -257,7 +292,7 @@ ENTITY_KEYS = [
     "phone_no",
 ]
 
-### Misc
+# Misc
 
 # Used by E2E testing. Leave as blank by default.
 DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")

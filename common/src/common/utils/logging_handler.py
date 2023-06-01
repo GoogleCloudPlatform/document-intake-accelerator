@@ -25,6 +25,7 @@ logging_client.get_default_handler()
 logging_client.setup_logging()
 
 logging.basicConfig(level=logging.INFO)
+# utility to get stdout when running locally utility testing scripts
 debug = os.environ.get("DEBUG", None)
 
 class Logger():
@@ -48,5 +49,12 @@ class Logger():
   def error(message):
     """Display error logs."""
     logging.error(message)
+    if debug:
+      print(message)
+
+  @staticmethod
+  def debug(message):
+    """Display debug logs."""
+    logging.debug(message)
     if debug:
       print(message)

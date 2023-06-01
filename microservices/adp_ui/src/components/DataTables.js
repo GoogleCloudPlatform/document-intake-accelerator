@@ -607,7 +607,7 @@ function DataTables() {
           <label className="labels" style={{ fontSize: '14px', paddingLeft: '5px' }}>Search documents:</label>
           <br />
           <div>
-            <input type="text" onChange={onFilter} className="searchInput" onKeyPress={enterKeyPressed} id='searchterm' value={searchTerm} name="searchterm" placeholder="Search by Case ID, or other attributes..." />
+            <input type="text" onChange={onFilter} className="searchInput" onKeyPress={enterKeyPressed} id='searchterm' value={searchTerm} name="searchterm" placeholder="Search by Document Class, Case ID, etc." />
             {'  '}
             <Button
               variant="secondary"
@@ -721,7 +721,7 @@ function DataTables() {
               >
                 {/* <Column field="uid" header="Document ID" body={documentIdBodyTemplate} sortable></Column> */}
                 <Column field="actions" header="Actions"></Column>
-                <Column field="applicantname" header="Applicant Name" sortable></Column>
+                {/*<Column field="applicantname" header="Applicant Name" sortable></Column>*/}
                 <Column field="documenttype" header="Document Class" body={doctypeBodyTemplate} sortable></Column>
                 <Column field="current_status" header="Status" body={statusBodyTemplate} sortable></Column>
                 <Column field="process_status" header="Process Detail" sortable></Column>

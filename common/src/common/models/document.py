@@ -32,6 +32,7 @@ class Document(BaseModel):
   url = TextField()
   document_type = TextField()
   document_class = TextField()
+  document_display_name = TextField()
   context = TextField()
   system_status = ListField()
   hitl_status = ListField()

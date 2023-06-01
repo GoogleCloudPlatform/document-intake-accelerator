@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import json
 
 """ hitl endpoints """
 from fastapi import APIRouter, HTTPException, Response
@@ -33,6 +32,7 @@ import datetime
 import requests
 import fireo
 import traceback
+import time
 from models.search_payload import SearchPayload
 from common.db_client import bq_client
 # disabling for linting to pass
@@ -57,32 +57,53 @@ def to_camel_case(input_str):
   res = ' '.join([*map(str.title, temp)])
   return res
 
-def get_doc_list_data(docs_list: list):
-  for doc in docs_list:
-    print(f"get_doc_list_data for {doc['uid']} {doc}")
-    name = "N/A"
-    if doc["entities"]:
-      for entity in doc["entities"]:
-        if entity["entity"] == "name":
-          if entity["corrected_value"]:
-            name = entity["corrected_value"]
-          elif entity["value"] is not None:
-            name = entity["value"]
 
-    doc["applicant_name"] = name
+def get_doc_list_data(docs_list: list):
+  start_time = time.time()
+
+  for doc in docs_list:
+    start_time_int = time.time()
+    Logger.debug(f"get_doc_list_data for {doc['uid']} {doc}")
+    # name = "N/A"
+    # if doc["entities"]:
+    #   for entity in doc["entities"]:
+    #     if entity["entity"] == "name":
+    #       if entity["corrected_value"]:
+    #         name = entity["corrected_value"]
+    #       elif entity["value"] is not None:
+    #         name = entity["value"]
+    # doc["applicant_name"] = name
+    # Logger.debug(
+    #   f"get_doc_list_data - 1. Time elapsed: {str(round((time.time() - start_time_int) * 1000))} ms")
+    start_time_int = time.time()
+
 
     document_class = doc["document_class"]
     document_display_name = None
-    if document_class is not None:
-      document_display_name = get_display_name_by_doc_class(document_class)
+    if doc["document_display_name"] is None:
+      try:
+        Logger.debug(
+          f"One time action to repair existing documents and set document_display_name for {doc}")
+        if document_class is not None:
+          document_display_name = get_display_name_by_doc_class(document_class)
 
-    # Keep the Old Logic in case
-    if document_display_name is None:
-      doc_type = to_camel_case(doc['document_type']) if doc['document_type'] is not None else 'no type'
-      doc_class = to_camel_case(doc['document_class']) if doc['document_class'] is not None else 'unclassified'
-      document_display_name = f"{doc_type} > {doc_class}"
+        # Keep the Old Logic in case
+        if document_display_name is None:
+          doc_type = to_camel_case(doc['document_type']) if doc[
+                                                              'document_type'] is not None else 'no type'
+          doc_class = to_camel_case(doc['document_class']) if doc[
+                                                                'document_class'] is not None else 'unclassified'
+          document_display_name = f"{doc_type} > {doc_class}"
+        document = Document.find_by_uid(doc["uid"])
+        document.document_display_name = document_display_name
+        document.update()
+        doc["document_display_name"] = document_display_name
+        Logger.debug(
+            f"get_doc_list_data - 2. Time elapsed:  {str(round((time.time() - start_time_int) * 1000))} ms")
+        start_time_int = time.time()
+      except Exception as e:
+        Logger.error(f"Error while setting document_display_name for {doc} - {e}")
 
-    doc["document_display_name"] = document_display_name
     process_stage = "-"
     current_status = "-"
     status_last_updated_by = "-"
@@ -106,6 +127,9 @@ def get_doc_list_data(docs_list: list):
     hitl_status = doc.get("hitl_status", None)
     last_hitl_status = hitl_status[-1] if hitl_status else None
 
+    Logger.debug(
+      f"get_doc_list_data - 3. Time elapsed: {str(round((time.time() - start_time_int) * 1000))} ms")
+    start_time_int = time.time()
     if doc["system_status"]:
       system_status = doc["system_status"]
       last_system_status = system_status[-1]
@@ -137,8 +161,8 @@ def get_doc_list_data(docs_list: list):
       else:
         # Hack for Split Documents
         if last_system_status["stage"] == "classification" and \
-          last_system_status["status"] == STATUS_SPLIT:
-            current_status = STATUS_PROCESSED.title()
+            last_system_status["status"] == STATUS_SPLIT:
+          current_status = STATUS_PROCESSED.title()
         elif last_system_status["stage"] == "auto_approval":
           if last_system_status["status"] == STATUS_SUCCESS:
             current_status = doc["auto_approval"].title()
@@ -150,6 +174,9 @@ def get_doc_list_data(docs_list: list):
         else:
           current_status = STATUS_ERROR
 
+    Logger.debug(
+      f"get_doc_list_data - 5. Time elapsed: {str(round((time.time() - start_time_int) * 1000))} ms")
+    start_time_int = time.time()
     # Show next stage process status.
     if current_status == STATUS_IN_PROGRESS and process_stage in PROCESS_NEXT_STAGE:
       process_stage = PROCESS_NEXT_STAGE[process_stage.lower()] + "..."
@@ -170,7 +197,10 @@ def get_doc_list_data(docs_list: list):
     doc["status_last_updated_by"] = status_last_updated_by
     doc["last_update_timestamp"] = last_update_timestamp
     doc["audit_trail"] = audit_trail
-    print(f"get_doc_list_data after magic for {doc['uid']} {doc}")
+    # print(f"get_doc_list_data after magic for {doc['uid']} {doc}")
+
+  Logger.debug(
+      f"get_doc_list_data - Total Time elapsed: {str(round((time.time() - start_time) * 1000))} ms")
   return docs_list
 
 
@@ -185,17 +215,21 @@ async def report_data():
   docs_list = []
   try:
     # Fetching only active documents
-
+    start_time = time.time()
     docs_list = list(
         map(lambda x: x.to_dict(),
             Document.collection.filter(active="active").fetch()))
     docs_list = sorted(
         docs_list, key=lambda i: i["upload_timestamp"], reverse=True)
-    Logger.info(f"Fetched Active Data len={len(docs_list)}")
+    Logger.debug(f"Fetched Active Data len={len(docs_list)} in  {str(round((time.time() - start_time) * 1000))} ms")
     docs_list = get_doc_list_data(docs_list)
-    Logger.info(f"report_data docs_list len={len(docs_list)}")
+    Logger.debug(
+        f"report_data - Time elapsed: {str(round((time.time() - start_time) * 1000))} ms")
+    Logger.debug(f"report_data docs_list len={len(docs_list)}")
     response = {"status": STATUS_SUCCESS, "len": len(docs_list),
                 "data": docs_list}
+    Logger.info(
+        f"report_data - Time elapsed: {str(round((time.time() - start_time) * 1000))} ms")
     return response
 
   except Exception as e:
@@ -266,11 +300,12 @@ async def get_queue(hitl_status: str):
 
     # Adding keys like process_status, current_status filtering on current_status
     # And sorting by upload_timestamp in descending order
+
     result_queue = get_doc_list_data(docs)
     result_queue = filter(filter_status, result_queue)
     result_queue = sorted(
         result_queue, key=lambda i: i["upload_timestamp"], reverse=True)
-    Logger.info(f"get_queue result_queue={result_queue}")
+    Logger.debug(f"get_queue result_queue={result_queue}")
 
     response = {"status": STATUS_SUCCESS, "len": len(result_queue),
                 "data": result_queue}
@@ -318,7 +353,7 @@ async def update_entity(uid: str, updated_doc: dict):
       Logger.info(f"returned status {bq_update_status}")
     else:
       Logger.error(
-        f"Failed streaming to BQ,  returned status {bq_update_status}")
+          f"Failed streaming to BQ,  returned status {bq_update_status}")
       return {"status": FAILED_RESPONSE}
 
     return {"status": STATUS_SUCCESS}
@@ -474,7 +509,6 @@ async def get_unclassified():
     Logger.info(f"get_unclassified result_queue={result_queue}")
     return response
   except Exception as e:
-    print(e)
     Logger.error(e)
     err = traceback.format_exc().replace("\n", " ")
     Logger.error(err)
@@ -550,7 +584,7 @@ async def update_hitl_classification(case_id: str, uid: str,
   try:
     Logger.info(f"update_hitl_classification with case_id={case_id}, uid={uid}, document_class={document_class}")
     doc = Document.find_by_uid(uid)
-    print(doc.to_dict()["active"].lower())
+    Logger.debug(doc.to_dict()["active"].lower())
     if not doc or not doc.to_dict()["active"].lower() == "active":
       Logger.error("Document for hitl classification not found")
       raise HTTPException(status_code=404, detail="Document not found")
@@ -579,12 +613,12 @@ async def update_hitl_classification(case_id: str, uid: str,
         STATUS_SUCCESS,
         document_class=document_class,
         document_type=document_type
-        )
-    print(response)
+    )
+    Logger.debug(response)
     if response.status_code != 200:
       Logger.error(f"Document status update failed for {case_id} and {uid}")
       raise HTTPException(
-          status_code=500, detail="Document status updation failed")
+          status_code=500, detail="Document status update failed")
 
     # Call Process task
     Logger.info("Starting Process task from hitl classification")
