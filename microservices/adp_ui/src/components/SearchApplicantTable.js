@@ -330,7 +330,7 @@ function SearchForApplicantTable(props) {
 					<DataTable value={dataTableBody} sortMode="multiple" header={tableLength} size="small" responsiveLayout="scroll" paginator paginatorTemplate={template1} first={first1} rows={rows1} onPage={onCustomPage1} selectionMode="single" selection={selectedProduct1} onSelectionChange={e => handleTableData(e)} onRowSelect={onRowSelect} onRowUnselect={onRowUnselect} paginatorPosition="both" paginatorClassName="justify-content-end">
 						{/* <DataTable value={dataTableBody} selection={selectedproducts} onSelectionChange={e => setSelectedProducts(e.value)} dataKey="id" responsiveLayout="scroll"> */}
 						<Column selectionMode="single" headerStyle={{ width: '3em' }}></Column>
-						<Column field="applicantname" header="Applicant Name" sortable></Column>
+						{/*<Column field="applicantname" header="Applicant Name" sortable></Column>*/}
 						<Column field="caseid" header="App Reg ID" sortable></Column>
 						<Column field="current_status" header="Approval Status" body={statusBodyTemplate} sortable></Column>
 						<Column field="process_status" header="Doc Processing Status" sortable></Column>

@@ -15,15 +15,23 @@ limitations under the License.
 """
 
 """ Document status endpoints """
-from common.config import BUCKET_NAME
-from common.models import Document
-from common.utils.logging_handler import Logger
-from common.config import STATUS_SUCCESS, STATUS_ERROR, STATUS_SPLIT
-import fireo
-from fastapi import APIRouter, HTTPException
-from typing import Optional, List, Dict
 import datetime
 import traceback
+from typing import Dict
+from typing import List
+from typing import Optional
+
+import fireo
+from fastapi import APIRouter
+from fastapi import HTTPException
+
+from common.config import BUCKET_NAME
+from common.config import STATUS_ERROR
+from common.config import STATUS_SPLIT
+from common.config import STATUS_SUCCESS
+from common.config import get_display_name_by_doc_class
+from common.models import Document
+from common.utils.logging_handler import Logger
 
 # disabling for linting to pass
 # pylint: disable = broad-except
@@ -107,6 +115,7 @@ async def update_classification_status(
       #update  the document type and document class
       document.document_class = document_class
       document.document_type = document_type
+      document.document_display_name = get_display_name_by_doc_class(document_class)
       document.is_hitl_classified = is_hitl
       system_status = {
           "is_hitl": is_hitl,

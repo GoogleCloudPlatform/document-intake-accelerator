@@ -721,7 +721,7 @@ function DataTables() {
               >
                 {/* <Column field="uid" header="Document ID" body={documentIdBodyTemplate} sortable></Column> */}
                 <Column field="actions" header="Actions"></Column>
-                <Column field="applicantname" header="Applicant Name" sortable></Column>
+                {/*<Column field="applicantname" header="Applicant Name" sortable></Column>*/}
                 <Column field="documenttype" header="Document Class" body={doctypeBodyTemplate} sortable></Column>
                 <Column field="current_status" header="Status" body={statusBodyTemplate} sortable></Column>
                 <Column field="process_status" header="Process Detail" sortable></Column>
