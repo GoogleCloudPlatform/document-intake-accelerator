@@ -251,9 +251,9 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
   Logger.info(f"batch_extraction - input_config = {input_config}")
   Logger.info(f"batch_extraction - output_config = {output_config}")
   Logger.info(
-      f"batch_extraction - Calling Parser extraction api "
-      f"for processor with name={processor.name} "
-      f"type={processor.type_}, path={processor.display_name}")
+      f"batch_extraction - Calling Processor API for {len(input_uris)} documents "
+      f" using {processor.display_name} processor"
+      f"type={processor.type_}, path={processor.name}")
   start = time.time()
 
   # request for Doc AI
@@ -284,7 +284,7 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
   # get output document information from operation metadata
   metadata = documentai.BatchProcessMetadata(operation.metadata)
   if metadata.state != documentai.BatchProcessMetadata.State.SUCCEEDED:
-    raise ValueError(f"batch_extraction -  Batch Process Failed: {metadata.state_message}")
+    raise ValueError(f"batch_extraction - Batch Process Failed: {metadata.state_message}")
 
   documents = {}  # Contains per processed document, keys are path to original document
 
@@ -302,9 +302,8 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
     output_gcs_destination = process.output_gcs_destination
     input_gcs_source = process.input_gcs_source
     print(
-        f"batch_extraction output_bucket = {output_bucket}, "
-        f"output_prefix={output_prefix}, input_gcs_source = {input_gcs_source}, "
-        f"output_gcs_destination = {output_gcs_destination}")
+        f"batch_extraction - Handling DocAI results for {input_gcs_source} using "
+        f"process output {output_gcs_destination}")
     # Get List of Document Objects from the Output Bucket
     output_blobs = storage_client.list_blobs(output_bucket,
                                              prefix=output_prefix + "/")
@@ -321,7 +320,7 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
         )
         continue
       # Download JSON File as bytes object and convert to Document Object
-      print(f"batch_extraction - Adding gs://{output_bucket}/{blob.name}")
+      print(f"batch_extraction - Adding blob gs://{output_bucket}/{blob.name}")
       document = documentai.Document.from_json(
           blob.download_as_bytes(), ignore_unknown_fields=True
       )
