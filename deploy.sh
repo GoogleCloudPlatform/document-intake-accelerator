@@ -24,7 +24,18 @@ gcloud container clusters get-credentials main-cluster --region $REGION --projec
 
 
 #Copy .env file to GCS for tracking changes
-gsutil cp "${DIR}/microservices/adp_ui/.env" "gs://${TF_VAR_config_bucket}/.env" | tee -a "$LOG"
+if [ -f "${DIR}/microservices/adp_ui/.env" ]; then
+  gsutil cp "${DIR}/microservices/adp_ui/.env" "gs://${TF_VAR_config_bucket}/.env" | tee -a "$LOG"
+else
+    gsutil ls "gs://${TF_VAR_config_bucket}/.env" 2> /dev/null
+    RETURN=$?
+    if [[ $RETURN -gt 0 ]]; then
+        echo "Error: .env file for adp_ui does not exist neither locally ${DIR}/microservices/adp_ui/.env nor in GCS gs://${TF_VAR_config_bucket}/.env"
+        exit
+    fi
+  echo "Downloading gs://${TF_VAR_config_bucket}/.env file to  ${DIR}/microservices/adp_ui/.env (required locally for build)..."
+  gsutil cp "gs://${TF_VAR_config_bucket}/.env" "${DIR}/microservices/adp_ui/.env"  | tee -a "$LOG"
+fi
 
 ## Only first time copy to GCS .env, next when re-deploying, retrieve back those variables.
 #ENV_CONFIG="gs://${TF_VAR_config_bucket}/.env"
