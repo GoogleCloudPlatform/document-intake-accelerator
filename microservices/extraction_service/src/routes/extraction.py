@@ -84,6 +84,7 @@ async def extraction(payload: ProcessTask):
       raise HTTPException(status_code=404)
 
     #Update status for all documents that were requested for extraction
+    count = 0
     Logger.info(f"extraction_api - Handling results for {len(configs)} input documents")
     for config in configs:
       uid = config.get("uid")
@@ -106,8 +107,8 @@ async def extraction(payload: ProcessTask):
       conf = extraction_result_keys[0]
 
       entities_for_bq = format_data_for_bq(extraction_output[conf][0])
-
-      Logger.info(f"extraction_api - Streaming data to BigQuery for {gcs_url}, "
+      count += 1
+      Logger.info(f"extraction_api - Streaming {count} data to BigQuery for {gcs_url} "
                   f"case_id={case_id}, uid={uid}, "
                   f"document_type={document_type}, "
                   f"doc_class={doc_class}")
@@ -116,6 +117,8 @@ async def extraction(payload: ProcessTask):
                                                      doc_class, document_type,
                                                      entities_for_bq, gcs_url)
       if bq_update_status:
+        Logger.info(f"extraction_api - Successfully streamed {count} data to BQ ")
+      else:
         Logger.error(f"extraction_api - Failed streaming to BQ, returned status {bq_update_status}")
 
       #update_extraction_status updates data to document collection
@@ -146,7 +149,7 @@ async def extraction(payload: ProcessTask):
         err = traceback.format_exc().replace("\n", " ")
         Logger.error(err)
         update_extraction_status(case_id, uid, STATUS_ERROR, None, None, None)
-    Logger.info(f"extraction_api - Successfully Completed!")
+    Logger.info(f"extraction_api - Successfully Completed for {count} documents!")
 
     return SUCCESS_RESPONSE
 

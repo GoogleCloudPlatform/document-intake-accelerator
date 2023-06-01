@@ -14,39 +14,38 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import datetime
-import json
 import re
 import time
-import traceback
-import warnings
+import datetime
 from typing import Any
 from typing import Dict
 from typing import List
-
+import traceback
+import random
+import string
+import json
 import proto
-from google.api_core.exceptions import InternalServerError
-from google.api_core.exceptions import RetryError
-from google.cloud import documentai_v1 as documentai
-from google.cloud import storage
-
+from common.config import STATUS_SUCCESS
 import common.config
 from common.config import DocumentWrapper
 from common.config import PDF_MIME_TYPE
-from common.config import get_docai_entity_mapping
-from common.extraction_config import DOCAI_ATTRIBUTES_TO_IGNORE
-from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME
 from common.utils.helper import get_processor_location
 from common.utils.helper import split_uri_2_path_filename
-from common.utils.logging_handler import Logger
-from . import utils_functions
-from .change_json_format import correct_json_format_for_db
-from .change_json_format import get_json_format_for_processing
+from google.cloud import documentai_v1 as documentai
+from .change_json_format import get_json_format_for_processing, \
+  correct_json_format_for_db
 from .correct_key_value import data_transformation
-from .utils_functions import clean_form_parser_keys
-from .utils_functions import extraction_accuracy_calc
-from .utils_functions import form_parser_entities_mapping
-from .utils_functions import strip_value
+from . import utils_functions
+from .utils_functions import extraction_accuracy_calc, \
+  clean_form_parser_keys, strip_value, form_parser_entities_mapping
+from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME, \
+  DOCAI_ATTRIBUTES_TO_IGNORE
+from common.config import get_docai_entity_mapping
+from common.utils.logging_handler import Logger
+import warnings
+from google.cloud import storage
+from google.api_core.exceptions import InternalServerError
+from google.api_core.exceptions import RetryError
 
 warnings.simplefilter(action="ignore")
 
@@ -251,7 +250,7 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
   Logger.info(f"batch_extraction - input_config = {input_config}")
   Logger.info(f"batch_extraction - output_config = {output_config}")
   Logger.info(
-      f"batch_extraction - Calling Processor API for {len(input_uris)} documents "
+      f"batch_extraction - Calling DocAI API for {len(input_uris)} documents "
       f" using {processor.display_name} processor"
       f"type={processor.type_}, path={processor.name}")
   start = time.time()
@@ -289,6 +288,7 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
   documents = {}  # Contains per processed document, keys are path to original document
 
   # One process per Input Document
+  blob_count = 0
   for process in metadata.individual_process_statuses:
     # output_gcs_destination format: gs://BUCKET/PREFIX/OPERATION_NUMBER/INPUT_FILE_NUMBER/
     # The Cloud Storage API requires the bucket name and URI prefix separately
@@ -315,12 +315,13 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
     for blob in output_blobs:
       # Document AI should only output JSON files to GCS
       if ".json" not in blob.name:
-        print(
+        Logger.warning(
             f"batch_extraction - Skipping non-supported file: {blob.name} - Mimetype: {blob.content_type}"
         )
         continue
+      blob_count = blob_count + 1
       # Download JSON File as bytes object and convert to Document Object
-      print(f"batch_extraction - Adding blob gs://{output_bucket}/{blob.name}")
+      Logger.info(f"batch_extraction - Adding {blob_count} gs://{output_bucket}/{blob.name}")
       document = documentai.Document.from_json(
           blob.download_as_bytes(), ignore_unknown_fields=True
       )
@@ -328,6 +329,7 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
         documents[input_gcs_source] = []
       documents[input_gcs_source].append(document)
 
+  Logger.info(f"batch_extraction - Loaded {sum([len(documents[x]) for x in documents if isinstance(documents[x], list)])} DocAI document objects retrieved from json. ")
   return documents
 
 
