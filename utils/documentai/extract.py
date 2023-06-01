@@ -143,4 +143,4 @@ if __name__ == "__main__":
     process_file(file_uri, doc_class)
 
   if dir_uri:
-    process_dir(dir_uri, doc_class)
+    process_dir(dir_uri)
