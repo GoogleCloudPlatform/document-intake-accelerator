@@ -116,7 +116,7 @@ async def extraction(payload: ProcessTask):
       bq_update_status = stream_document_to_bigquery(client, case_id, uid,
                                                      doc_class, document_type,
                                                      entities_for_bq, gcs_url)
-      if bq_update_status:
+      if not bq_update_status:
         Logger.info(f"extraction_api - Successfully streamed {count} data to BQ ")
       else:
         Logger.error(f"extraction_api - Failed streaming to BQ, returned status {bq_update_status}")
