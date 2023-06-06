@@ -4,6 +4,9 @@ is_package='false'
 date_str=$(date +%s )
 set -e
 
+# Setting Default BATCH_SIZE limit
+BATCH_SIZE=50
+
 # get parameters
 while getopts d:l:p:b: flag
 do
@@ -144,13 +147,13 @@ elif [[ $FROM_DIR = gs://* ]]; then
         echo ">> Copying data from ${FROM_DIR} to ${URL}"
         gsutil cp "${FROM_DIR}" "${URL}/"
         echo ">> Triggering pipeline for ${GS_URL_ROOT}"
-        gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${GS_URL_ROOT}/"
+        gsutil -m cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${GS_URL_ROOT}/"
     else
       if [ -z "$BATCH_SIZE" ]; then
         for FILE in $(gsutil list "${FROM_DIR}"/*.pdf); do
           URL="${GS_URL}_${i}/"
           echo " $i -- Copying data from ${FILE} to ${URL}"
-          gsutil cp "${FILE}" "${URL}"
+          gsutil -m cp "${FILE}" "${URL}"
           i=$((i+1))
         done
         echo ">> Triggering pipeline for ${GS_URL_ROOT}"
@@ -167,7 +170,7 @@ elif [[ $FROM_DIR = gs://* ]]; then
 #          echo $i, $(($i % $BATCH_SIZE))
           if ! (($i % $BATCH_SIZE)); then
             echo ">> Triggering pipeline for ${BASE_DIR}/"
-            gsutil cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${BASE_DIR}/"
+            gsutil -m cp "${DIR}"/cloudrun/startpipeline/START_PIPELINE "${BASE_DIR}/"
             BATCH_NUM=$((BATCH_NUM+1))
             echo "Starting $BATCH_NUM Batch"
             TRIGGERED='true'

@@ -32,7 +32,7 @@ firebase_admin.initialize_app(credentials.ApplicationDefault(), {
 db = firestore.client()
 
 def delete_firestore_collection(collection_id):
-  delete_collection(db.collection(collection_id), 150)
+  delete_collection(db.collection(collection_id), 300)
 
 
 def delete_collection(coll_ref, batch_size):

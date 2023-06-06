@@ -21,6 +21,7 @@ import sys
 import json
 from os.path import basename
 from typing import Dict
+import time
 
 from pikepdf import Pdf
 from .download_pdf_gcs import download_pdf_gcs
@@ -91,7 +92,7 @@ def get_classification_predictions(gcs_input_uris, timeout: int = 400):
 
   if not location:
     Logger.error(f"Unidentified location for parser {processor_path}")
-    return
+    return {}
 
   opts = {"api_endpoint": f"{location}-documentai.googleapis.com"}
 
@@ -112,11 +113,15 @@ def get_classification_predictions(gcs_input_uris, timeout: int = 400):
   # Cloud Storage URI for the Output Directory
   # This must end with a trailing forward slash `/`
   gcs_output_uri = f"gs://{DOCAI_OUTPUT_BUCKET_NAME}"
+
+  timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")
+  gcs_output_uri_prefix = "extractor_out_" + timestamp
   letters = string.ascii_lowercase
   temp_folder = "".join(random.choice(letters) for i in range(10))
   gcs_output_uri_prefix = "classifier_out_" + temp_folder
   # temp folder location
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
+
   gcs_output_config = documentai.DocumentOutputConfig.GcsOutputConfig(
       gcs_uri=os.path.join(destination_uri, "json")
   )
@@ -124,9 +129,13 @@ def get_classification_predictions(gcs_input_uris, timeout: int = 400):
       gcs_output_config=gcs_output_config)
   processor = client.get_processor(name=processor_path)
   processor_type = processor.type_
-  Logger.info(f"input_config = {input_config}")
-  Logger.info(f"output_config = {output_config}")
-  Logger.info(f"processor_type = {processor_type}")
+  Logger.info(f"get_classification_predictions - input_config = {input_config}")
+  Logger.info(f"get_classification_predictions - output_config = {output_config}")
+  Logger.info(
+      f"get_classification_predictions - Calling DocAI API for {len(input_documents)} documents "
+      f" using {processor.display_name} processor"
+      f"type={processor.type_}, path={processor.name}")
+  start = time.time()
 
   request = documentai.BatchProcessRequest(
       name=processor_path,
@@ -141,11 +150,16 @@ def get_classification_predictions(gcs_input_uris, timeout: int = 400):
   # This could take some time for larger files
   # Format: projects/PROJECT_NUMBER/locations/LOCATION/operations/OPERATION_ID
   try:
-    print(f"Waiting for operation {operation.operation.name} to complete...")
+    Logger.info(f"get_classification_predictions - Waiting for operation {operation.operation.name} to complete...")
     operation.result(timeout=timeout)
   # Catch exception when operation doesn't finish before timeout
   except (RetryError, InternalServerError) as e:
-    print(f"Error: {e.message}")
+    Logger.error(e.message)
+    Logger.error("Classification Failed to process documents")
+    return {}
+
+  elapsed = "{:.0f}".format(time.time() - start)
+  Logger.info(f"get_classification_predictions - Elapsed time for operation {elapsed} seconds")
 
   # NOTE: Can also use callbacks for asynchronous processing
   #
@@ -167,14 +181,14 @@ def get_classification_predictions(gcs_input_uris, timeout: int = 400):
     # The Cloud Storage API requires the bucket name and URI prefix separately
     matches = re.match(r"gs://(.*?)/(.*)", process.output_gcs_destination)
     if not matches:
-      print(
+      Logger.warning(
           f"Could not parse output GCS destination:[{process.output_gcs_destination}]")
       continue
 
     output_bucket, output_prefix = matches.groups()
     output_gcs_destination = process.output_gcs_destination
     input_gcs_source = process.input_gcs_source
-    print(
+    Logger.info(
         f"output_bucket = {output_bucket}, output_prefix={output_prefix}, input_gcs_source = {input_gcs_source}, output_gcs_destination = {output_gcs_destination}")
     # Get List of Document Objects from the Output Bucket
     output_blobs = storage_client.list_blobs(output_bucket,
@@ -186,19 +200,19 @@ def get_classification_predictions(gcs_input_uris, timeout: int = 400):
     for blob in output_blobs:
       # Document AI should only output JSON files to GCS
       if ".json" not in blob.name:
-        print(
+        Logger.info(
             f"Skipping non-supported file: {blob.name} - Mimetype: {blob.content_type}"
         )
         continue
 
       # Download JSON File as bytes object and convert to Document Object
-      print(f"Fetching gs://{output_bucket}/{blob.name}")
+      Logger.info(f"Fetching gs://{output_bucket}/{blob.name}")
       document = documentai.Document.from_json(
           blob.download_as_bytes(), ignore_unknown_fields=True
       )
       dirs, file_name = helper.split_uri_2_path_filename(input_gcs_source)
-      print(f"batch_process_document dirs = {dirs}, file_name = {file_name}")
-      print(
+      Logger.info(f"batch_process_document dirs = {dirs}, file_name = {file_name}")
+      Logger.info(
           f"batch_process_document in_bucket = {dirs}, blob_name = {file_name}")
 
       entities = document.entities
@@ -228,7 +242,7 @@ def get_classification_predictions(gcs_input_uris, timeout: int = 400):
         labels.append(label)
         pages.append((start, end))
 
-        print(
+        Logger.info(
             f"Classification result for {input_gcs_source}: document_class={label}, confidence={score}, start={start}, end={end}")
 
       documents[input_gcs_source] = {'scores': scores, 'labels': labels,
@@ -250,7 +264,7 @@ def get_classification_predictions(gcs_input_uris, timeout: int = 400):
                                      'predicted_score': predicted_score,
                                      'pages': pages}]
       elif processor_type == 'CUSTOM_SPLITTING_PROCESSOR':
-        print(f"Total subdocuments: {len(entities)}")
+        Logger.info(f"Total subdocuments: {len(entities)}")
         for index, label in enumerate(prediction_result["labels"]):
           predicted_score = prediction_result["scores"][index]
           pages = prediction_result["pages"][index]

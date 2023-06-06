@@ -84,7 +84,7 @@ def run_pipeline(payload: List[Dict], is_hitl: bool, is_reassign: bool):
       if supporting_docs:
         if not is_reassign:
           supporting_docs_dict = sort_per_doc_class(supporting_docs)
-          Logger.info(f"run_pipeline with  {len(supporting_docs_dict)} documents")
+          Logger.info(f"run_pipeline with  {len(supporting_docs)} documents")
           for document_class in supporting_docs_dict:
             # get a list of uid to send
             docs_list = supporting_docs_dict[document_class]
@@ -177,7 +177,7 @@ def update_autoapproval_status(case_id: str, uid: str, a_status: str,
 
 def classify_documents(configs: List[Dict]):
   """Filter the supporting documents and application form"""
-  print(f"classify_documents with configs = {configs}")
+  Logger.info(f"classify_documents with configs = {configs}")
 
   supporting_docs = []
   application_form = []

@@ -75,8 +75,8 @@ def stream_document_to_bigquery(client, case_id, uid,
       if fails : returns error
   """
   table_id = f"{PROJECT_ID}.{DATABASE_PREFIX}{BIGQUERY_DB}"
-  Logger.info(f"stream_document_to_bigquery case_id={case_id} ,uid={uid}, "
-              f"document_class={document_class}, document_type={document_type}"
+  Logger.info(f"stream_document_to_bigquery case_id={case_id}, uid={uid}, "
+              f"document_class={document_class}, document_type={document_type}, "
               f"table_id={table_id}, gcs_doc_path={gcs_doc_path}")
 
   now = datetime.datetime.now(datetime.timezone.utc)

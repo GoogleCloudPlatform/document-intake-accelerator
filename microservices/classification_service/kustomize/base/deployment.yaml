@@ -41,7 +41,7 @@ spec:
         ports:
         - containerPort: 80
         livenessProbe:
-          failureThreshold: 5
+          failureThreshold: 10
           httpGet:
             path: /ping
             port: 80
@@ -50,7 +50,7 @@ spec:
           successThreshold: 1
           timeoutSeconds: 10
         readinessProbe:
-          failureThreshold: 5
+          failureThreshold: 10
           httpGet:
             path: /ping
             port: 80

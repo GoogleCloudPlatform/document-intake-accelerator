@@ -108,7 +108,7 @@ def init_bucket(bucketname, filename):
 
 
 def load_config(bucketname, filename):
-  print(f"load_config with bucketname={bucketname}")
+  Logger.debug(f"load_config with bucketname={bucketname}")
   global bucket
   if not bucket:
     init_bucket(bucketname, filename)

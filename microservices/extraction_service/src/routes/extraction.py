@@ -32,7 +32,7 @@ import traceback
 # disabling for linting to pass
 # pylint: disable = broad-except
 router = APIRouter()
-SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
+
 FAILED_RESPONSE = {"status": STATUS_ERROR}
 
 @router.post("/extraction_api")
@@ -48,6 +48,7 @@ async def extraction(payload: ProcessTask):
             404 : Parser not available for given document
       """
   try:
+    success_response = {"status": STATUS_SUCCESS}
     payload = payload.dict()
     Logger.info(f"extraction_api - payload received {payload}")
     configs = payload.get("configs")
@@ -140,9 +141,9 @@ async def extraction(payload: ProcessTask):
                     "message": f"document with case_id {case_id} ,uid_id {uid} "
                                f"successfully extracted"
                     }
-        if "results" not in SUCCESS_RESPONSE.keys():
-          SUCCESS_RESPONSE["results"] = []
-        SUCCESS_RESPONSE["results"].append(document)
+        if "results" not in success_response.keys():
+          success_response["results"] = []
+        success_response["results"].append(document)
       else:
         Logger.error(f"extraction_api - Extraction database update failed for {gcs_url},"
                      f" uid={uid}")
@@ -151,7 +152,7 @@ async def extraction(payload: ProcessTask):
         update_extraction_status(case_id, uid, STATUS_ERROR, None, None, None)
     Logger.info(f"extraction_api - Successfully Completed for {count} documents!")
 
-    return SUCCESS_RESPONSE
+    return success_response
 
   except Exception as e:
     err = traceback.format_exc().replace("\n", " ")

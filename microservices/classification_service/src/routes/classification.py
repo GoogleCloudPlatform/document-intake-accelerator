@@ -30,7 +30,7 @@ from common.config import STATUS_SUCCESS, STATUS_ERROR, STATUS_SPLIT
 from utils.classification.split_and_classify import classify, DocumentConfig
 
 router = APIRouter(prefix="/classification")
-SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
+
 FAILED_RESPONSE = {"status": STATUS_ERROR}
 CLASSIFICATION_UNDETECTABLE = "unclassified"
 
@@ -124,6 +124,7 @@ async def classification(payload: ProcessTask):
           500 : Internal Server Error if something fails
     """
   try:
+    success_response = {"status": STATUS_SUCCESS}
 
     payload = payload.dict()
     configs = payload.get("configs")
@@ -132,7 +133,7 @@ async def classification(payload: ProcessTask):
 
     doc_prediction_results = predict_doc_type(configs)
 
-    Logger.info(f"classification_api  doc_prediction_results = {doc_prediction_results}")
+    Logger.info(f"classification_api - doc_prediction_results = {doc_prediction_results}")
     for config in configs:
       case_id = config.get("case_id")
       uid = config.get("uid")
@@ -146,12 +147,12 @@ async def classification(payload: ProcessTask):
 
       prediction = doc_prediction_results[gcs_url]
 
-      Logger.info(f"classification_api handling config for case_id={case_id} "
-                  f"uid={uid} gcs_url={gcs_url} "
+      Logger.info(f"classification_api - handling config for case_id={case_id} "
+                  f"uid={uid}, gcs_url={gcs_url}, "
                   f"prediction={prediction}")
 
       if len(prediction) > 1:
-        Logger.info(f"classification_api document has been split for "
+        Logger.info(f"classification_api - document has been split for "
                     f"case_id={case_id} "
                     f"uid={uid} gcs_url={gcs_url} ")
         # Document was split, need to update status of the original document,
@@ -161,10 +162,11 @@ async def classification(payload: ProcessTask):
                                      document_type="Package")
 
       for doc_prediction_result in prediction:
+
         if doc_prediction_result["predicted_class"] is not None:
           classification_score = doc_prediction_result["model_conf"]
           predicated_class = doc_prediction_result["predicted_class"]
-          Logger.info(f"classification_api Classification confidence for "
+          Logger.info(f"classification_api - Classification confidence for "
                       f"gcs_url={gcs_url} is {predicated_class} with "
                       f"{classification_score}")
 
@@ -193,10 +195,10 @@ async def classification(payload: ProcessTask):
                       "doc_class": predicated_class,
                       "gcs_url": gcs_url,
                       }
-          if "results" not in SUCCESS_RESPONSE.keys():
-            SUCCESS_RESPONSE["results"] = []
-          SUCCESS_RESPONSE["results"].append(document)
-
+          if "results" not in success_response.keys():
+            success_response["results"] = []
+          success_response["results"].append(document)
+          Logger.info(f"classification_api - Appending document {uid} {document} ")
           # DocumentStatus api call
           response = update_classification_status(
               case_id,
@@ -204,7 +206,7 @@ async def classification(payload: ProcessTask):
               STATUS_SUCCESS,
               document_class=predicated_class,
               document_type=doc_type)
-          Logger.info(response)
+          Logger.debug(response)
           if response.status_code != 200:
             Logger.error(
               f"Document status update failed for {case_id} and {uid}")
@@ -212,9 +214,12 @@ async def classification(payload: ProcessTask):
             update_classification_status(case_id, uid, STATUS_ERROR)
             # raise HTTPException(
             #     status_code=500, detail="Document status update failed")
+        else:
+          Logger.error(f"classification_api - Prediction result cannot be parsed for "
+                      f"gcs_url={gcs_url}:  {doc_prediction_result}")
 
-    Logger.info(f"classification_api  response: {SUCCESS_RESPONSE}")
-    return SUCCESS_RESPONSE
+    Logger.info(f"classification_api  response: {success_response}")
+    return success_response
 
   # except HTTPException as e:
   #   Logger.error(f"{e} while classification {case_id} and {uid}")
@@ -229,4 +234,4 @@ async def classification(payload: ProcessTask):
     Logger.error(err)
     # DocumentStatus api call
     # update_classification_status(case_id, uid, STATUS_ERROR)
-    raise HTTPException(status_code=500, detail="Classification Failed") from e
+    raise HTTPException(status_code=500, detail=FAILED_RESPONSE) from e

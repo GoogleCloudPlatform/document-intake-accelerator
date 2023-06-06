@@ -932,3 +932,8 @@ Search for `Classification prediction` to get summary of the prediction results:
 # Development Guide
 
 For development guide, refer [here](docs/Development.md).
+
+```shell
+$npm install -g firebase-tools
+firebase --project $PROJECT_ID firestore:delete "/document/*" --recursive --force 
+```

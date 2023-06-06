@@ -15,7 +15,7 @@
  *
  */
 
-# Enabling a firbase project
+# Enabling a firebase project
 
 resource "google_app_engine_application" "firebase_init" {
   provider      = google-beta

@@ -17,7 +17,7 @@ kind: Deployment
 metadata:
   name: extraction-service
 spec:
-  replicas: 3
+  replicas: 5
   template:
     spec:
       containers:
