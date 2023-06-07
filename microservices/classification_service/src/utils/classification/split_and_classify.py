@@ -63,10 +63,6 @@ class DocumentConfig:
     self.context = context
 
     self.pdf_path = f'{out_folder}/{case_id}_{uid}_' + basename(gcs_url)
-    Logger.info(f'Downloading from {gcs_url} to {self.pdf_path}')
-
-    self.blob = download_pdf_gcs(gcs_uri=gcs_url, output_filename=self.pdf_path)
-    self.doc_path = self.pdf_path
     self.gcs_url = gcs_url
 
 
@@ -78,7 +74,7 @@ def get_classification_predictions(gcs_input_uris, timeout: int = 400):
   result = {}  # Contains per processed document
   if not parser_details:
     default_class = get_classification_default_class()
-    Logger.error(f"No classification parser defined, exiting classification, "
+    Logger.warning(f"No classification parser defined, exiting classification, "
                  f"using {default_class}")
     for uri in gcs_input_uris:
       result[uri] = [{'predicted_class': default_class,
@@ -115,10 +111,7 @@ def get_classification_predictions(gcs_input_uris, timeout: int = 400):
   gcs_output_uri = f"gs://{DOCAI_OUTPUT_BUCKET_NAME}"
 
   timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")
-  gcs_output_uri_prefix = "extractor_out_" + timestamp
-  letters = string.ascii_lowercase
-  temp_folder = "".join(random.choice(letters) for i in range(10))
-  gcs_output_uri_prefix = "classifier_out_" + temp_folder
+  gcs_output_uri_prefix = "classifier_out_" + timestamp
   # temp folder location
   destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
 
@@ -355,6 +348,8 @@ def split(doc_prediction: Dict, config: DocumentConfig):
               f" output_filename={output_filename}")
 
   try:
+    Logger.info(f'Downloading from {config.gcs_url} to {config.pdf_path}')
+    blob = download_pdf_gcs(gcs_uri=config.gcs_url, output_filename=config.pdf_path)
     with Pdf.open(config.pdf_path) as original_pdf:
       Logger.info(f"Creating: {output_filename} (confidence: {confidence})")
       Logger.info(f"original_pdf.pages={original_pdf.pages}")

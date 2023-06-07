@@ -51,6 +51,9 @@ STATUS_TIMEOUT = "Timeout"
 
 PDF_MIME_TYPE = "application/pdf"
 
+DOC_CLASS_SPLIT_DISPLAY_NAME = "Sub-documents"
+DOC_TYPE_SPLIT_DISPLAY_NAME = "Package"
+
 # ========= Document upload ======================
 BUCKET_NAME = f"{PROJECT_ID}-document-upload"
 TOPIC_ID = "queue-topic"
@@ -93,7 +96,7 @@ config_data = None
 
 
 def init_bucket(bucketname, filename):
-  print(f"init_bucket with bucketname={bucketname}")
+  Logger.debug(f"init_bucket with bucketname={bucketname}")
   global gcs
   if not gcs:
     gcs = storage.Client()
@@ -123,7 +126,7 @@ def load_config(bucketname, filename):
     return config_data
   else:
     Logger.info(
-      f"load_config - It seems config file has changed....Reloading config from: {filename}")
+        f"load_config - It seems config file has changed....Reloading config from: {filename}")
     try:
       if blob.exists():
         config_data = json.loads(blob.download_as_text(encoding="utf-8"))
@@ -137,7 +140,7 @@ def load_config(bucketname, filename):
       # Fall-back to local file
       Logger.warning(f"load_config - Warning: Using local {filename}")
       json_file = open(
-        os.path.join(os.path.dirname(__file__), "config", filename))
+          os.path.join(os.path.dirname(__file__), "config", filename))
       config_data = json.load(json_file)
       return config_data
 
@@ -244,11 +247,15 @@ def get_document_type(doc_name):
 
 def get_display_name_by_doc_class(doc_class):
   Logger.debug(f"get_display_name_by_doc_class {doc_class}")
+  if doc_class is None:
+    return None
+
   doc = get_document_types_config().get(doc_class)
   if not doc:
-    Logger.error(
-        f"doc_class {doc_class} not present in document_types_config")
-    return None
+    if doc_class != DOC_CLASS_SPLIT_DISPLAY_NAME:
+      Logger.warning(
+          f"doc_class {doc_class} not present in document_types_config")
+    return doc_class
 
   display_name = doc.get("display_name")
   Logger.debug(f"Using doc_class={doc_class}, display_name={display_name}")

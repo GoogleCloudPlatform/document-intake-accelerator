@@ -26,7 +26,8 @@ from fastapi import APIRouter, HTTPException
 
 from common.utils.logging_handler import Logger
 from common.config import get_document_type
-from common.config import STATUS_SUCCESS, STATUS_ERROR, STATUS_SPLIT
+from common.config import STATUS_SUCCESS, STATUS_ERROR, STATUS_SPLIT,\
+  DOC_CLASS_SPLIT_DISPLAY_NAME, DOC_TYPE_SPLIT_DISPLAY_NAME
 from utils.classification.split_and_classify import classify, DocumentConfig
 
 router = APIRouter(prefix="/classification")
@@ -158,8 +159,8 @@ async def classification(payload: ProcessTask):
         # Document was split, need to update status of the original document,
         # since it will not be sent for extraction
         update_classification_status(case_id, uid, STATUS_SPLIT,
-                                     document_class="Sub-documents",
-                                     document_type="Package")
+                                     document_class=DOC_CLASS_SPLIT_DISPLAY_NAME,
+                                     document_type=DOC_TYPE_SPLIT_DISPLAY_NAME)
 
       for doc_prediction_result in prediction:
 

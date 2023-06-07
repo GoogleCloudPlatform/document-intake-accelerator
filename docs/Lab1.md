@@ -100,6 +100,24 @@ export API_DOMAIN=<YOUR_DOMAIN>
 ``` 
 
 ### Terraform
+
+Copy terraform sample variable file as `terraform.tfvars`:
+ ```shell
+cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
+vi terraform/environments/dev/terraform.tfvars
+```
+
+Verify `cda_external_ip` points to the reserved External IP name inside `terraform/environments/dev/terraform.tfvars`:
+ ```
+ cda_external_ip = "cda-ip"   #IP-ADDRESS-NAME-HERE
+ ```
+
+For quickstart simple demo, you want to change and make end point public (change from `false` to `true`):
+```shell
+cda_external_ui = true       # Expose UI to the Internet: true or false
+```
+
+
 > If you are missing `~/.kube/config` file on your system (never run `gcloud cluster get-credentials`), you will need to modify terraform file.
 >
 > If following command does not locate a file:
