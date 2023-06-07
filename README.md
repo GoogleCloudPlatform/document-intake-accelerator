@@ -140,12 +140,14 @@ When exposed, the end point (via domain name) will be accessible via Internet an
 on all the end points.
 When protected, you will need machine in the same internal network in order to access the UI (for testing, you could create Windows VM in the same network and access it via RDP using IAP tunnel).
 
+By default, the end-point is private (so then when upgrading customer accidentally end point does not become open unintentionally).
 The preference can be set in `terraform/environments/dev/terraform.tfvars` file via `cda_external_ui` parameter:
 
 ```shell
-cda_external_ui = true       # Expose UI to the Internet: true or false
+cda_external_ui = false       # Expose UI to the Internet: true or false
 ```
 
+For simple demo purposes you probably want to expose the end point (`cda_external_ui = true`).
 
 ### When deploying using Shared VPC
 As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc)

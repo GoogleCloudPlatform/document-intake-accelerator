@@ -14,27 +14,11 @@
  * limitations under the License.
  *
  */
-
-output "parser_config" {
-  value = module.docai.parser_config
+//
+output "queue-subscription" {
+  value = google_eventarc_trigger.queue-topic-trigger.transport[0].pubsub[0].subscription
 }
 
-output "eventarc_subscription" {
-  value = module.cloudrun-startspipeline-eventarc.event-subscription
-}
-
-output "queue_subscription" {
-  value = module.cloudrun-queue-pubsub.queue-subscription
-}
-
-output "ingress-ip" {
-  value = module.ingress.ingress_ip_address
-}
-
-output "cda_external_ui" {
-  value = module.ingress.cda_external_ui
-}
-
-//output "vertex_ai" {
-//  value = module.vertex_ai.output
+//output "event-topic" {
+//  value = google_eventarc_trigger.startpipeline-topic-trigger.transport[0].pubsub[0].topic
 //}

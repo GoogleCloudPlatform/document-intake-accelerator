@@ -52,7 +52,7 @@ async def publish_msg(request: Request, response: Response):
 
   try:
     envelope = await request.json()
-    Logger.error(f"Pub/Sub envelope: {envelope}")
+    Logger.info(f"Pub/Sub envelope: {envelope}")
 
   except json.JSONDecodeError:
     response.status_code = status.HTTP_400_BAD_REQUEST

@@ -43,13 +43,13 @@ export ORGANIZATION_ID=$(gcloud organizations list --format="value(name)")
 export ADMIN_EMAIL=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
 export TF_VAR_admin_email=${ADMIN_EMAIL}
 
-FILE="${DIR}/terraform/environments/dev/terraform.tfvars"
-if test -f "$FILE"; then
-    :
-else
-  echo "Creating default terraform.tfvars ..."
-  cp "${DIR}/terraform/environments/dev/terraform.sample.tfvars" "${DIR}/terraform/environments/dev/terraform.tfvars"
-fi
+#FILE="${DIR}/terraform/environments/dev/terraform.tfvars"
+#if test -f "$FILE"; then
+#    :
+#else
+#  echo "Creating default terraform.tfvars ..."
+#  cp "${DIR}/terraform/environments/dev/terraform.sample.tfvars" "${DIR}/terraform/environments/dev/terraform.tfvars"
+#fi
 
 bash "${DIR}"/setup/setup_terraform.sh  2>&1 | tee -a "$LOG"
 
@@ -65,6 +65,9 @@ bash ../../../setup/update_config.sh  2>&1 | tee -a "$LOG"
 
 # Modify ACK deadline for the eventarc subscription (this could not be done via terraform API)
 subscription=$(terraform output -json eventarc_subscription)
+subscription_name=$(echo "$subscription" | tr -d '"' | sed 's:.*/::')
+gcloud alpha pubsub subscriptions update "$subscription_name" --ack-deadline=120 --project $PROJECT_ID
+subscription=$(terraform output -json queue_subscription)
 subscription_name=$(echo "$subscription" | tr -d '"' | sed 's:.*/::')
 gcloud alpha pubsub subscriptions update "$subscription_name" --ack-deadline=120 --project $PROJECT_ID
 
