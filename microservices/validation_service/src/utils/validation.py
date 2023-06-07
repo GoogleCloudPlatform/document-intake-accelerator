@@ -126,6 +126,10 @@ def get_scoring(data, merge_query, documentlabel, entity):
   l2 = []
   validation_score = 0
   validation_rule = data.get(documentlabel)
+  if not validation_rule:
+    Logger.warning(f"Unable to find validation rule for document type: {documentlabel}")
+    validation_score = 0 # Nothing To Validate
+    return validation_score, entity
 
   assert validation_rule, f"Unable to find validation rule for document type: {documentlabel}"
 

@@ -19,7 +19,7 @@ bases:
 patchesStrategicMerge:
 - deployment-dev.yaml
 configMapGenerator:
-- name: env-vars
+- name: document-status-env-vars
   behavior: merge
   envs:
   - env.properties

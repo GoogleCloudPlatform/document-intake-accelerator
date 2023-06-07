@@ -33,3 +33,6 @@ spec:
         name: adp-ui
         ports:
         - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: ui-env-vars

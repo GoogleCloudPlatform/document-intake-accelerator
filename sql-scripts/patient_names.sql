@@ -1,0 +1,1 @@
+SELECT value as Name, document_class as Form FROM `validation.entities` where name="patientName" or name="beneficiaryName"  and timestamp > cast('2023-05-02T19:00:00' as datetime)

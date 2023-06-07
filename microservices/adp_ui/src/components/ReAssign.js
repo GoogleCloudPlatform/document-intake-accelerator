@@ -288,14 +288,14 @@ function ReAssign() {
 
               </Row>
 
-              <Row>
-                <Col className="col-5">
-                  <label className="ralabelBold">Applicant Name</label>
-                </Col>
-                <Col className="col-7">
-                  <label>{previousCaseIDData.applicant_name}</label>
-                </Col>
-              </Row>
+              {/*<Row>*/}
+              {/*  <Col className="col-5">*/}
+              {/*    <label className="ralabelBold">Applicant Name</label>*/}
+              {/*  </Col>*/}
+              {/*  <Col className="col-7">*/}
+              {/*    <label>{previousCaseIDData.applicant_name}</label>*/}
+              {/*  </Col>*/}
+              {/*</Row>*/}
 
               <Row>
                 <Col className="col-5">

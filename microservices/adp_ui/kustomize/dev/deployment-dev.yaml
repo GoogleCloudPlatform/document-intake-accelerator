@@ -28,5 +28,5 @@ spec:
         - name: PROJECT_ID
           valueFrom:
             configMapKeyRef:
-              name: env-vars
+              name: ui-env-vars
               key: PROJECT_ID

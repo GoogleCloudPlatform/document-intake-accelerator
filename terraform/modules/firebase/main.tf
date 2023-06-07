@@ -15,7 +15,7 @@
  *
  */
 
-# Enabling a firbase project
+# Enabling a firebase project
 
 resource "google_app_engine_application" "firebase_init" {
   provider      = google-beta
@@ -28,7 +28,9 @@ resource "google_storage_bucket" "firestore-backup-bucket" {
   name          = "${var.project_id}-firestore-backup"
   location      = var.storage_multiregion
   storage_class = "NEARLINE"
-
+  labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
   uniform_bucket_level_access = true
 
   lifecycle_rule {

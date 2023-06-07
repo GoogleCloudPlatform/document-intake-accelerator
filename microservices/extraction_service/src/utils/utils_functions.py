@@ -24,8 +24,8 @@ import pandas as pd
 import numpy as np
 from functools import reduce
 from google.cloud import storage
-from .table_extractor import TableExtractor
 from common.utils.logging_handler import Logger
+
 
 def pattern_based_entities(parser_data, pattern):
   """
@@ -48,56 +48,204 @@ def pattern_based_entities(parser_data, pattern):
     op = None
   return op
 
-def update_confidence(dupp,without_noise):
+
+def update_confidence(dupp, without_noise):
   for key in dupp.keys():
     for i in without_noise:
       if i["key"] == key:
-        i["value_confidence"] =0.0
+        i["value_confidence"] = 0.0
   return without_noise
 
-def check_duplicate_keys(dictme,without_noise):
-  #dictme is the mapping dictionary
-  #without_noise is the raw dictionary which comes from Form parser
-  dupp={}
-  for j,k in dictme.items():
+
+def check_duplicate_keys(dictme, without_noise):
+  # dictme is the mapping dictionary
+  # without_noise is the raw dictionary which comes from Form parser
+  dupp = {}
+  for j, k in dictme.items():
     # print(j,k)
     if len(k) > 1:
       dupp[j] = len(k)
-  for j,k in dupp.items():
-    count=0
+  for j, k in dupp.items():
+    count = 0
     for i in without_noise:
       if i["key"] == j:
         count = count + 1
-    #remove this later
-    count=0
-    if count!=k:
-      without_noise=update_confidence(dupp,without_noise)
+    # remove this later
+    count = 0
+    if count != k:
+      without_noise = update_confidence(dupp, without_noise)
       return False
-
 
   return True
 
 
-
-def default_entities_extraction(parser_entities, default_entities,doc_type):
+def entities_extraction_new(parser_data):
   """
    This function extracted default entities
    Parameters
    ----------
    parser_entities: Specialized parser entities
-   default_entities: Default entites that need to extract from parser entities
+   default_entities: Default entities that need to extract from parser entities
    Returns : Default entites dict
    -------
   """
   parser_entities_dict = {}
+  parser_entities = parser_data["entities"]
+  pages_dimensions = []
+  page_no = 0
+
+  for page in parser_data["pages"]:
+    dimension = page["dimension"]
+    pages_dimensions.append(dimension)
 
   # retrieve parser given entities
   for each_entity in parser_entities:
-    key, val, confidence = each_entity.get("type", ""), \
-                           each_entity.get("mentionText", ""), round(
-      each_entity.get("confidence", 0), 2)
-    val = strip_value(val)
+    # print(each_entity)
+    key, val, normalizedVal, confidence = each_entity.get("type", ""), \
+                                          each_entity.get("mentionText", ""), \
+                                          each_entity.get("normalizedValue", ""), \
+                                          round(each_entity.get("confidence", 0), 2)
+    if isinstance(normalizedVal, dict):
+      if "booleanValue" in normalizedVal.keys():
+        val = normalizedVal.get("booleanValue")
+      # else:
+      #   Logger.info("Debugging ")
+    else:
+      val = strip_value(val)
     parser_entities_dict[key] = [val, confidence]
+
+    #TODO Fully refactor this
+    if len(each_entity.get("properties", [])) == 0:
+      #Flat labels
+      pa = each_entity.get("pageAnchor")
+      if pa and len(pa.get("pageRefs", [])) > 0:
+        page_no = int(pa.get("pageRefs")[0].get("page"))
+        value_coordinates = []
+        value_coordinates_dic = pa.get("pageRefs")[0].get("boundingPoly").get(
+            "normalizedVertices")
+        for coordinate in value_coordinates_dic:
+          value_coordinates.append(float(coordinate["x"]))
+          value_coordinates.append(float(coordinate["y"]))
+      else:
+        value_coordinates = []
+
+      parser_entities_dict[key] = [val, confidence, value_coordinates]
+    else:
+      # For Nested Labels
+      for prop in each_entity.get("properties", []):
+        key, val, normalizedVal, confidence = prop.get("type", ""), \
+                                              prop.get("mentionText", ""), \
+                                              prop.get("normalizedValue", ""), \
+                                              round(prop.get("confidence", 0), 2)
+        #TODO Refactor throw all away and replace with generic logic
+        if isinstance(normalizedVal, dict):
+          if "booleanValue" in normalizedVal.keys():
+            val = normalizedVal.get("booleanValue")
+          else:
+            Logger.info("Debugging ")
+        else:
+          val = strip_value(val)
+
+        pa = prop.get("pageAnchor")
+        if pa and len(pa.get("pageRefs", [])) > 0:
+          page_no = int(pa.get("pageRefs")[0].get("page"))
+          value_coordinates = []
+          for i in range(0, len(pa.get("pageRefs"))):
+            if "boundingPoly" in pa.get("pageRefs")[i]:
+              value_coordinates_dic = pa.get("pageRefs")[i].get("boundingPoly").get(
+                  "normalizedVertices")
+              for coordinate in value_coordinates_dic:
+                value_coordinates.append(float(coordinate["x"]))
+                value_coordinates.append(float(coordinate["y"]))
+        else:
+          value_coordinates = []
+
+        parser_entities_dict[key] = [val, confidence, value_coordinates]
+
+  entity_dict = {}
+
+  return parser_entities_dict
+
+def default_entities_extraction(parser_data, default_entities, doc_type):
+  """
+   This function extracted default entities
+   Parameters
+   ----------
+   parser_entities: Specialized parser entities
+   default_entities: Default entities that need to extract from parser entities
+   Returns : Default entites dict
+   -------
+  """
+  parser_entities_dict = {}
+  parser_entities = parser_data["entities"]
+  pages_dimensions = []
+  page_no = 0
+
+  for page in parser_data["pages"]:
+    dimension = page["dimension"]
+    pages_dimensions.append(dimension)
+
+  # retrieve parser given entities
+  for each_entity in parser_entities:
+    # print(each_entity)
+    key, val, normalizedVal, confidence = each_entity.get("type", ""), \
+                           each_entity.get("mentionText", ""), \
+                           each_entity.get("normalizedValue", ""), \
+                           round(each_entity.get("confidence", 0), 2)
+    if isinstance(normalizedVal, dict):
+      if "booleanValue" in normalizedVal.keys():
+        val = normalizedVal.get("booleanValue")
+      # else:
+      #   Logger.info("Debugging ")
+    else:
+      val = strip_value(val)
+    parser_entities_dict[key] = [val, confidence]
+
+    #TODO Fully refactor this
+    if len(each_entity.get("properties", [])) == 0:
+       #Flat labels
+       pa = each_entity.get("pageAnchor")
+       if pa and len(pa.get("pageRefs", [])) > 0:
+         page_no = int(pa.get("pageRefs")[0].get("page"))
+         value_coordinates = []
+         value_coordinates_dic = pa.get("pageRefs")[0].get("boundingPoly").get(
+             "normalizedVertices")
+         for coordinate in value_coordinates_dic:
+           value_coordinates.append(float(coordinate["x"]))
+           value_coordinates.append(float(coordinate["y"]))
+       else:
+         value_coordinates = []
+
+       parser_entities_dict[key] = [val, confidence, value_coordinates]
+    else:
+      # For Nested Labels
+      for prop in each_entity.get("properties", []):
+        key, val, normalizedVal, confidence = prop.get("type", ""), \
+                               prop.get("mentionText", ""), \
+                               prop.get("normalizedValue", ""), \
+                               round(prop.get("confidence", 0), 2)
+        #TODO Refactor throw all away and replace with generic logic
+        if isinstance(normalizedVal, dict):
+          if "booleanValue" in normalizedVal.keys():
+            val = normalizedVal.get("booleanValue")
+          else:
+            Logger.info("Debugging ")
+        else:
+          val = strip_value(val)
+
+        pa = prop.get("pageAnchor")
+        if pa and len(pa.get("pageRefs", [])) > 0:
+          page_no = int(pa.get("pageRefs")[0].get("page"))
+          value_coordinates = []
+          value_coordinates_dic = pa.get("pageRefs")[0].get("boundingPoly").get(
+              "normalizedVertices")
+          for coordinate in value_coordinates_dic:
+            value_coordinates.append(float(coordinate["x"]))
+            value_coordinates.append(float(coordinate["y"]))
+        else:
+          value_coordinates = []
+
+        parser_entities_dict[key] = [val, confidence, value_coordinates]
 
   entity_dict = {}
 
@@ -105,28 +253,43 @@ def default_entities_extraction(parser_entities, default_entities,doc_type):
   for key in default_entities:
     if key in parser_entities_dict:
       entity_dict[default_entities[key][0]] = {
-                 "entity": default_entities[key][0],
-                 "value": parser_entities_dict[key][0],
-                 "extraction_confidence": parser_entities_dict[key][1],
-                 "manual_extraction": False,
-                 "corrected_value": None}
+          "entity": default_entities[key][0],
+          "value": parser_entities_dict[key][0],
+          "extraction_confidence": parser_entities_dict[key][1],
+          "value_coordinates": parser_entities_dict[key][2],
+          "manual_extraction": False,
+          "key_coordinates": parser_entities_dict[key][2],
+          "corrected_value": None,
+          "page_no": int(page_no + 1),
+          "page_width": int(pages_dimensions[page_no]["width"]),
+          "page_height": int(pages_dimensions[page_no]["height"])
+      }
     else:
+      # Entity not present
       entity_dict[default_entities[key][0]] = {
-                 "entity": default_entities[key][0], "value": None,
-                 "extraction_confidence": None,
-                 "manual_extraction": False,
-                 "corrected_value": None}
+          "entity": default_entities[key][0], "value": None,
+          "extraction_confidence": None,
+          "value_coordinates": [],
+          "key_coordinates": [],
+          "manual_extraction": False,
+          "corrected_value": None,
+          "page_no": None,
+          "page_width": None,
+          "page_height": None
+
+      }
+
   if doc_type == "utility_bill":
     if "supplier_address" in parser_entities_dict:
       if parser_entities_dict["supplier_address"][0] == "":
         if "receiver_address" in parser_entities_dict \
-        and parser_entities_dict["receiver_address"][0]!="":
+            and parser_entities_dict["receiver_address"][0] != "":
           entity_dict["reciever address"]["value"] = \
-          parser_entities_dict["receiver_address"][0]
+            parser_entities_dict["receiver_address"][0]
         else:
           if "service_address" in parser_entities_dict:
             entity_dict["reciever address"]["value"] = \
-            parser_entities_dict["service_address"][0]
+              parser_entities_dict["service_address"][0]
   return entity_dict
 
 
@@ -160,9 +323,9 @@ def name_entity_creation(entity_dict, name_list):
 
   name_dict = {
       "entity": "Name", "value": name,
-       "extraction_confidence": confidence,
-       "manual_extraction": False,
-        "corrected_value": None}
+      "extraction_confidence": confidence,
+      "manual_extraction": False,
+      "corrected_value": None}
 
   return name_dict
 
@@ -187,16 +350,16 @@ def derived_entities_extraction(parser_data, derived_entities):
     pattern_op = pattern_based_entities(parser_data, pattern)
     pattern_op = strip_value(pattern_op)
     derived_entities_extracted_dict[key] = \
-        {"entity": key, "value": pattern_op,
-            "extraction_confidence": None,
-            "manual_extraction": True,
-            "corrected_value": None,
-            "value_coordinates": None,
-            "key_coordinates": None,
-            "page_no": None,
-            "page_width": None,
-            "page_height": None
-            }
+      {"entity": key, "value": pattern_op,
+       "extraction_confidence": None,
+       "manual_extraction": True,
+       "corrected_value": None,
+       "value_coordinates": None,
+       "key_coordinates": None,
+       "page_no": None,
+       "page_width": None,
+       "page_height": None
+       }
 
   return derived_entities_extracted_dict
 
@@ -206,7 +369,7 @@ def entities_extraction(parser_data, required_entities, doc_type):
     This function reads information of default and derived entities
     Parameters
     ----------
-    parser_data: specialzed parser result
+    parser_data: specialized parser result
     required_entities: required extracted entities
     doc_type: Document type
     Returns: Required entities dict
@@ -215,18 +378,21 @@ def entities_extraction(parser_data, required_entities, doc_type):
 
   # Read the entities from the processor
   parser_entities = parser_data["entities"]
+  print(f"parser_entities = {parser_entities}")
   default_entities = required_entities["default_entities"]
+  print(f"default_entities={default_entities}")
   derived_entities = required_entities.get("derived_entities")
+  print(f"derived_entities={derived_entities}")
   # Extract default entities
-  entity_dict = default_entities_extraction(parser_entities,
-                                            default_entities,doc_type)
+  entity_dict = default_entities_extraction(parser_data,
+                                            default_entities, doc_type)
   Logger.info("Default entities created from Specialized parser response")
   # if any derived entities then extract them
   if derived_entities:
     # this function can be used for all docs, if derived entities
     # are extracted by using regex pattern
-    derived_entities_extracted_dict = derived_entities_extraction\
-        (parser_data, derived_entities)
+    derived_entities_extracted_dict = derived_entities_extraction \
+      (parser_data, derived_entities)
     entity_dict.update(derived_entities_extracted_dict)
     Logger.info("Derived entities created from Specialized parser response")
   return entity_dict
@@ -264,19 +430,19 @@ def consolidate_coordinates(d):
   """
   entities_cooridnates = []
 
-  if len(d)>1:
+  if len(d) > 1:
     for i in d:
       if i:
         entities_cooridnates.append(i)
     if entities_cooridnates:
       entity_coordinates = [entities_cooridnates[0][0],
-                           entities_cooridnates[0][1],
-                           entities_cooridnates[-1][6],
-                             entities_cooridnates[0][1],
-                           entities_cooridnates[0][0],
-                           entities_cooridnates[-1][7],
-                             entities_cooridnates[-1][6],
-                           entities_cooridnates[-1][7]]
+                            entities_cooridnates[0][1],
+                            entities_cooridnates[-1][6],
+                            entities_cooridnates[0][1],
+                            entities_cooridnates[0][0],
+                            entities_cooridnates[-1][7],
+                            entities_cooridnates[-1][6],
+                            entities_cooridnates[-1][7]]
       final_coordinates = [float(i) for i in entity_coordinates]
     else:
       final_coordinates = None
@@ -288,23 +454,26 @@ def consolidate_coordinates(d):
     else:
       return None
 
-def standard_entity_mapping(desired_entities_list, parser_name):
+
+def standard_entity_mapping(desired_entities_list):
   """
     This function changes entity name to standard names and also
                 create consolidated entities like name and date
     Parameters
     ----------
     desired_entities_list: List of default and derived entities
-    parser_name: name of the parser
 
     Returns: Standard entities list
     -------
   """
+  Logger.info(
+      f"standard_entity_mapping called for desired_entities_list={desired_entities_list}")
+  # Logger.info(f"desired_entities_list={desired_entities_list}")
   # convert extracted json to pandas dataframe
   df_json = pd.DataFrame.from_dict(desired_entities_list)
   # read entity standardization csv
   entity_standardization = os.path.join(
-        os.path.dirname(__file__), ".", "entity-standardization.csv")
+      os.path.dirname(__file__), ".", "entity-standardization.csv")
   entities_standardization_csv = pd.read_csv(entity_standardization)
   entities_standardization_csv.dropna(how="all", inplace=True)
 
@@ -316,53 +485,58 @@ def standard_entity_mapping(desired_entities_list, parser_name):
   # Create a dictionary from the look up dataframe/excel which has
   # the key col and the value col
   dict_lookup = dict(
-        zip(entities_standardization_csv["entity"],
-            entities_standardization_csv["standard_entity_name"]))
+      zip(entities_standardization_csv["entity"],
+          entities_standardization_csv["standard_entity_name"]))
   # Get( all the entity (key column) from the json as a list
   key_list = list(df_json["entity"])
   # Replace the value by creating a list by looking up the value and assign
   # to json entity
-  for index,item in enumerate(key_list):
+
+  # Logger.info(f"df_json={df_json}, dict_lookup={dict_lookup}")
+  for index, item in enumerate(key_list):
+    # print(f"item={item}")
     if item in dict_lookup:
-      df_json["entity"][index]=dict_lookup[item]
-    else:
-      df_json = df_json.drop(index)
-      df_json.reset_index(inplace=True, drop=True)
+      # print(f"index={index}, item={dict_lookup[item]}")
+      df_json["entity"][index] = dict_lookup[item]
+    # TODO no dropping, keys are not normalized yet
+    # else:
+    #   df_json = df_json.drop(index)
+    #   df_json.reset_index(inplace=True, drop=True)
   # convert datatype from object to int for column "extraction_confidence"
-  df_json["extraction_confidence"] = pd.to_numeric\
-      (df_json["extraction_confidence"],errors="coerce")
+  df_json["extraction_confidence"] = pd.to_numeric \
+    (df_json["extraction_confidence"], errors="coerce")
   group_by_columns = ["value", "extraction_confidence", "manual_extraction",
                       "corrected_value", "page_no",
-                        "page_width", "page_height", "key_coordinates",
+                      "page_width", "page_height", "key_coordinates",
                       "value_coordinates"]
   df_conc = df_json.groupby("entity")[group_by_columns[0]].apply(
-        lambda x: "/".join([v.strip() for v in x if v]) if check_int(x)
-        else " ".join([v.strip() for v in x if v])).reset_index()
+      lambda x: "/".join([v.strip() for v in x if v]) if check_int(x)
+      else " ".join([v.strip() for v in x if v])).reset_index()
 
-  df_av = df_json.groupby(["entity"])[group_by_columns[1]].mean().\
-      reset_index().round(2)
+  df_av = df_json.groupby(["entity"])[group_by_columns[1]].mean(). \
+    reset_index().round(2)
   # taking mode for categorical variables
-  df_manual_extraction = df_json.groupby(["entity"])[group_by_columns[2]]\
-      .agg(pd.Series.mode).reset_index()
-  df_corrected_value = df_json.groupby(["entity"])[group_by_columns[3]]\
-      .mean().reset_index().round(2)
-  if parser_name == "FormParser":
-    df_page_no = df_json.groupby(["entity"])[group_by_columns[4]].mean()\
-        .reset_index().round(2)
-    df_page_width = df_json.groupby(["entity"])[group_by_columns[5]].mean()\
-        .reset_index().round(2)
-    df_page_height = df_json.groupby(["entity"])[group_by_columns[6]].mean()\
-        .reset_index().round(2)
-    # co-ordinate consolidation
-    df_key_coordinates = df_json.groupby("entity")[group_by_columns[7]].apply(
+  df_manual_extraction = df_json.groupby(["entity"])[group_by_columns[2]] \
+    .agg(pd.Series.mode).reset_index()
+  df_corrected_value = df_json.groupby(["entity"])[group_by_columns[3]] \
+    .mean().reset_index().round(2)
+  # if parser_name == "FormParser":
+  df_page_no = df_json.groupby(["entity"])[group_by_columns[4]].mean() \
+    .reset_index().round(1)
+  df_page_width = df_json.groupby(["entity"])[group_by_columns[5]].mean() \
+    .reset_index().round(2)
+  df_page_height = df_json.groupby(["entity"])[group_by_columns[6]].mean() \
+    .reset_index().round(2)
+  # co-ordinate consolidation
+  df_key_coordinates = df_json.groupby("entity")[group_by_columns[7]].apply(
       consolidate_coordinates).reset_index()
-    df_value_coordinates = df_json.groupby("entity")[group_by_columns[8]].apply(
+  df_value_coordinates = df_json.groupby("entity")[group_by_columns[8]].apply(
       consolidate_coordinates).reset_index()
-    dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value,
-           df_page_no, df_page_width, df_page_height,
-       df_key_coordinates, df_value_coordinates]
-  else:
-    dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value]
+  dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value,
+         df_page_no, df_page_width, df_page_height,
+         df_key_coordinates, df_value_coordinates]
+  # else:
+  #   dfs = [df_conc, df_av, df_manual_extraction, df_corrected_value]
 
   df_final = reduce(lambda left, right: pd.merge(left, right, on="entity"), dfs)
   df_final = df_final.replace(r"^\s*$", np.nan, regex=True)
@@ -373,7 +547,7 @@ def standard_entity_mapping(desired_entities_list, parser_name):
 
 
 def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
-                                 form_parser_text, json_folder):
+    form_parser_text):
   """
     Form parser entity mapping function
 
@@ -391,16 +565,22 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
   default_entities = mapping_dict.get("default_entities")
   derived_entities = mapping_dict.get("derived_entities")
   table_entities = mapping_dict.get("table_entities")
-  flag = check_duplicate_keys(default_entities,form_parser_entity_list)
+  flag = check_duplicate_keys(default_entities, form_parser_entity_list)
 
   df = pd.DataFrame(form_parser_entity_list)
+  # print("....pandas.....")
+  # print(df)
   required_entities_list = []
-  # loop through one by one deafult entities mentioned in the config file
+  # loop through one by one default entities mentioned in the config file
   for each_ocr_key, each_ocr_val in default_entities.items():
+    # print(f"each_ocr_key={each_ocr_key}, each_ocr_val={each_ocr_val}")
     try:
+      # print(f'checking {df["key"]} == {each_ocr_key}')
       idx_list = df.index[df["key"] == each_ocr_key].tolist()
-    except: # pylint: disable=bare-except
+      # print(f"idx_list={idx_list}")
+    except:  # pylint: disable=bare-except
       idx_list = []
+      # print("idx_list is Empty")
     # loop for matched records of mapping dictionary
     for idx, each_val in enumerate(each_ocr_val):
       if idx_list:
@@ -412,16 +592,18 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
                                             [idx_list[idx]]),
              "manual_extraction": False,
              "corrected_value": None,
-             "value_coordinates": [float(i) for i in df["value_coordinates"]
-                                             [idx_list[idx]]],
-             "key_coordinates": [float(i) for i in df["key_coordinates"]
-                                           [idx_list[idx]]],
+             "value_coordinates": [float(i) for i in
+                                   df["value_coordinates"][idx_list[idx]]],
+             "key_coordinates": [float(i) for i in
+                                 df["key_coordinates"][idx_list[idx]]],
              "page_no": int(df["page_no"][idx_list[idx]]),
              "page_width": int(df["page_width"][idx_list[idx]]),
              "page_height": int(df["page_height"][idx_list[idx]])
              }
 
-        except: # pylint: disable=bare-except
+          print(f" ==> entity: {each_val}, value: {df['value'][idx_list[idx]]}")
+
+        except:  # pylint: disable=bare-except
           Logger.info("Key not found in parser output,"
                       " so filling null value")
 
@@ -440,15 +622,15 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
       else:
         # filling null value if parser didn't extract
         temp_dict = {"entity": each_val, "value": None,
-                         "extraction_confidence": None,
-                         "manual_extraction": False,
-                         "corrected_value": None,
-                         "value_coordinates": None,
-                         "key_coordinates": None,
-                         "page_no": None,
-                         "page_width": None,
-                         "page_height": None
-                         }
+                     "extraction_confidence": None,
+                     "manual_extraction": False,
+                     "corrected_value": None,
+                     "value_coordinates": None,
+                     "key_coordinates": None,
+                     "page_no": None,
+                     "page_width": None,
+                     "page_height": None
+                     }
         required_entities_list.append(temp_dict)
   Logger.info("Default entities created from Form parser response")
   if derived_entities:
@@ -461,24 +643,26 @@ def form_parser_entities_mapping(form_parser_entity_list, mapping_dict,
     required_entities_list.extend(list(derived_entities_op_dict.values()))
     Logger.info("Derived entities created from Form parser response")
 
-  if table_entities:
-    table_response = None
-    files = os.listdir(json_folder)
-    for json_file in files:
-      json_path = os.path.join(json_folder, json_file)
-      table_extract_obj = TableExtractor(json_path)
-      table_response = table_extract_obj.get_entities(table_entities)
-      if table_response and isinstance(table_response, list):
-        required_entities_list.extend(table_response)
-        break
-    if table_response is None:
-      Logger.error("No table data found")
+  # if table_entities:
+  #   table_response = None
+  #   files = os.listdir(json_folder)
+  #   for json_file in files:
+  #     json_path = os.path.join(json_folder, json_file)
+  #     table_extract_obj = TableExtractor(json_path)
+  #     table_response = table_extract_obj.get_entities(table_entities)
+  #     if table_response and isinstance(table_response, list):
+  #       required_entities_list.extend(table_response)
+  #       break
+  #   if table_response is None:
+  #     Logger.error("No table data found")
 
+  # print("Extracted list required_entities_list")
+  # print(required_entities_list)
   return required_entities_list, flag
 
 
 def download_pdf_gcs(bucket_name=None, gcs_uri=None, file_to_download=None,
-                     output_filename=None) -> str:
+    output_filename=None) -> storage.blob.Blob:
   """
     Function takes a path of an object/file stored in GCS bucket and
             downloads the file in the current working directory
@@ -530,13 +714,13 @@ def clean_form_parser_keys(text):
     if last_word in [")", "]"]:
       text += last_word
 
-  except: # pylint: disable=bare-except
+  except:  # pylint: disable=bare-except
     Logger.error("Exception occurred while cleaning keys")
 
   return text
 
-def del_gcs_folder(bucket, folder):
 
+def del_gcs_folder(bucket, folder):
   """
   This function is to delete folder from gcs bucket, this is used to
    delete temp folder from bucket
@@ -555,6 +739,7 @@ def del_gcs_folder(bucket, folder):
     blob.delete()
 
   # print("Delete successful")
+
 
 def strip_value(value):
   '''Function for default cleaning of values to remove space at end and begining
@@ -589,9 +774,9 @@ def extract_form_fields(doc_element: dict, document: dict):
   # be stored in different text segments.
   for segment in doc_element.text_anchor.text_segments:
     start_index = (
-      int(segment.start_index)
-      if segment in doc_element.text_anchor.text_segments
-      else 0
+        int(segment.start_index)
+        if segment in doc_element.text_anchor.text_segments
+        else 0
     )
     end_index = int(segment.end_index)
     response += document.text[start_index:end_index]
@@ -611,7 +796,7 @@ def extract_form_fields(doc_element: dict, document: dict):
   return response, confidence, list_of_coordidnates
 
 
-def extraction_accuracy_calc(total_entities_list,flag=True):
+def extraction_accuracy_calc(total_entities_list, flag=True):
   """
     This function is to calculate document extraction accuracy
     Parameters
@@ -621,18 +806,25 @@ def extraction_accuracy_calc(total_entities_list,flag=True):
     -------
   """
   # get fields extraction accuracy
-  extraction_status="single entities present"
+  extraction_status = "single entities present"
   if flag is False:
     extraction_accuracy = 0.0
-    extraction_status="duplicate entities present"
-    return extraction_accuracy,extraction_status
+    extraction_field_min_score = 0
+    extraction_status = "duplicate entities present"
+    return extraction_accuracy, extraction_status, extraction_field_min_score
   entity_accuracy_list = [each_entity.get("extraction_confidence") if
                           each_entity.get("extraction_confidence") else 0
-                        for each_entity in
-                        total_entities_list if not each_entity.
-          get("manual_extraction")]
+                          for each_entity in
+                          total_entities_list if not each_entity.
+                          get("manual_extraction")]
 
-  extraction_accuracy = round(sum(entity_accuracy_list) /
-                              len(entity_accuracy_list), 3)
+  if len(entity_accuracy_list) == 0:
+    Logger.warning(f"No entity present with extraction_confidence field")
+    extraction_accuracy = 0
+    extraction_field_min_score = 0
+  else:
+    extraction_field_min_score = min(entity_accuracy_list, default=0)
+    extraction_accuracy = round(sum(entity_accuracy_list) /
+                                len(entity_accuracy_list), 3)
 
-  return extraction_accuracy,extraction_status
+  return extraction_accuracy, extraction_status, extraction_field_min_score

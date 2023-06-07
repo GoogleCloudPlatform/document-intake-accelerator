@@ -13,17 +13,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import time
 
 from fastapi import APIRouter, Request
 import base64
 import firebase_admin
 import os
-from firebase_admin import credentials, firestore, initialize_app
-import requests
+from firebase_admin import credentials, firestore
+import time
 import json
 from fastapi import status, Response
 from config import PROCESS_TASK_URL, API_DOMAIN
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+from common.config import STATUS_SUCCESS
+from common.utils.iap import send_iap_request
 from common.utils.logging_handler import Logger
 
 PROJECT_ID = os.environ.get("PROJECT_ID")
@@ -39,20 +41,18 @@ router = APIRouter(prefix="/queue", tags=["Queue"])
 
 @router.post("/publish")
 async def publish_msg(request: Request, response: Response):
-  Logger.info(f"PROCESS_TASK_URL = {PROCESS_TASK_URL}")
-  print("PROCESS_TASK_URL = {PROCESS_TASK_URL}")
+  Logger.info(f"queue - start")
 
   body = await request.body()
   if not body or body == "":
     response.status_code = status.HTTP_400_BAD_REQUEST
     response.body = "Request has no body"
-    print(response.body)
+    Logger.error(response.body)
     return response
 
   try:
     envelope = await request.json()
-    print("Pub/Sub envelope:")
-    print(envelope)
+    Logger.info(f"Pub/Sub envelope: {envelope}")
 
   except json.JSONDecodeError:
     response.status_code = status.HTTP_400_BAD_REQUEST
@@ -62,23 +62,20 @@ async def publish_msg(request: Request, response: Response):
   if not envelope:
     response.status_code = status.HTTP_400_BAD_REQUEST
     response.body = "No Pub/Sub message received"
-    print(f"error: {response.body}")
+    Logger.error(f"error: {response.body}")
     return response
 
   if not isinstance(envelope, dict) or "message" not in envelope:
     response.status_code = status.HTTP_400_BAD_REQUEST
     response.body = "invalid Pub/Sub message format"
-    print(f"error: {response.body}")
+    Logger.error(f"error: {response.body}")
     return response
 
-  doc_count = get_count()
-  print(f"doc_count = {doc_count}")
-
-  pubsub_message = envelope["message"]
-
-  if doc_count < int(os.environ["MAX_UPLOADED_DOCS"]):
-    print("Pub/Sub message:")
-    print(pubsub_message)
+  # if batch_quota_ready(): # TODO this is not working
+  if True:
+    pubsub_message = envelope["message"]
+    # if doc_count < int(os.environ["BATCH_PROCESS_QUOTA"]):
+    Logger.info(f"queue - Pub/Sub message: {pubsub_message}")
 
     if isinstance(pubsub_message, dict) and "data" in pubsub_message:
       msg_data = base64.b64decode(
@@ -86,7 +83,7 @@ async def publish_msg(request: Request, response: Response):
       name = json.loads(msg_data)
       payload = name.get("message_list")
       request_body = {"configs": payload}
-
+      Logger.info(f"queue - Pub/Sub message configs: {request_body}")
       # Sample request body
       # {
       #   "configs": [
@@ -98,24 +95,54 @@ async def publish_msg(request: Request, response: Response):
       #     }
       #   ]
       # }
-      print(f"Sending data to {PROCESS_TASK_URL}:")
+
+      start_time = time.time()
+      print(f"queue - Sending {len(name.get('message_list'))} data to {PROCESS_TASK_URL}:")
       print(request_body)
 
-      process_task_response = requests.post(PROCESS_TASK_URL, json=request_body)
-      print(f"Response from {PROCESS_TASK_URL}")
-      print(process_task_response.json())
+      process_task_response = send_iap_request(PROCESS_TASK_URL, method="POST", json=request_body)
+
+      process_time = time.time() - start_time
+      time_elapsed = round(process_time * 1000)
+      print(f"queue - Response from {PROCESS_TASK_URL}, Time elapsed: {str(time_elapsed)} ms")
+
+      print(f"queue - response={process_task_response.text} with status code={process_task_response.status_code}")
 
       response.status_code = process_task_response.status_code
       return response
-
-  if doc_count > int(os.environ["MAX_UPLOADED_DOCS"]):
-    print(f"unacknowledge: {response.body}")
+  else:
+    print(f"Timeout while waiting for batch Quota to become available: {response.body}")
     response.body = "Message not acknowledged"
     response.status_code = status.HTTP_400_BAD_REQUEST
     return response
 
   # No Content
-  return ("", status.HTTP_204_NO_CONTENT)
+  return "", status.HTTP_204_NO_CONTENT
+
+
+# BATCH_PROCESS_QUOTA = int(os.environ.get("BATCH_PROCESS_QUOTA", 5))
+# print(f"BATCH_PROCESS_QUOTA={BATCH_PROCESS_QUOTA}")
+
+
+# def check_batch_quota():
+#   doc_count = get_count()
+#   print(f"check_batch_quota doc_count={doc_count}")
+#
+#   if doc_count > BATCH_PROCESS_QUOTA:
+#     print(f"check_batch_quota UNAVAILABLE")
+#     return False
+#   print(f"check_batch_quota AVAILABLE")
+#   return True
+
+
+# def batch_quota_ready(timeout=4000, period=10):
+#   time_end = time.time() + timeout
+#   while time.time() < time_end:
+#     if check_batch_quota():
+#       return True
+#     print(f"Waiting for quota to become available for {period} seconds before re-checking")
+#     time.sleep(period)
+#   return False
 
 
 def get_count():

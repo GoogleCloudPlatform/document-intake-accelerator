@@ -26,7 +26,7 @@ spec:
       labels:
         app: classification-service
     spec:
-      serviceAccountName: ksa
+      serviceAccountName: gke-sa
       containers:
       - name: classification-service
         image: classification-service
@@ -41,7 +41,7 @@ spec:
         ports:
         - containerPort: 80
         livenessProbe:
-          failureThreshold: 5
+          failureThreshold: 10
           httpGet:
             path: /ping
             port: 80
@@ -50,7 +50,7 @@ spec:
           successThreshold: 1
           timeoutSeconds: 10
         readinessProbe:
-          failureThreshold: 5
+          failureThreshold: 10
           httpGet:
             path: /ping
             port: 80
@@ -58,3 +58,6 @@ spec:
           periodSeconds: 30
           successThreshold: 1
           timeoutSeconds: 10
+        envFrom:
+        - configMapRef:
+            name: classification-env-vars

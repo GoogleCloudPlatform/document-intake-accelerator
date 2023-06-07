@@ -26,7 +26,7 @@ spec:
       labels:
         app: document-status-service
     spec:
-      serviceAccountName: ksa
+      serviceAccountName: gke-sa
       containers:
       - name: document-status-service
         image: document-status-service
@@ -58,3 +58,6 @@ spec:
           periodSeconds: 30
           successThreshold: 1
           timeoutSeconds: 10
+        envFrom:
+        - configMapRef:
+            name: document-status-env-vars

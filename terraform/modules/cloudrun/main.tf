@@ -17,20 +17,23 @@
 
 #Creating a cloud run service
 
-resource "google_storage_bucket" "queue-log-bucket" {
-  name                        = "${var.project_id}-queue-log"
+resource "google_storage_bucket" "log-bucket" {
+  name                        = "${var.project_id}-${var.name}-log"
   location                    = var.region
   storage_class               = "NEARLINE"
   uniform_bucket_level_access = true
   force_destroy               = true
+  labels = {
+    goog-packaged-solution = "prior-authorization"
+  }
 }
 
 # Creating a custom service account for cloud run
 module "cloud-run-service-account" {
   source       = "github.com/terraform-google-modules/cloud-foundation-fabric/modules/iam-service-account/"
   project_id   = var.project_id
-  name         = "cloudrun-sa"
-  display_name = "This is service account for cloud run"
+  name         = "cloudrun-${var.name}-sa"
+  display_name = "This is service account for cloud run ${var.name}"
 
   iam = {
     "roles/iam.serviceAccountUser" = []
@@ -39,12 +42,14 @@ module "cloud-run-service-account" {
   iam_project_roles = {
     (var.project_id) = [
       "roles/eventarc.eventReceiver",
+      "roles/pubsub.publisher",
       "roles/firebase.admin",
       "roles/firestore.serviceAgent",
       "roles/iam.serviceAccountUser",
       "roles/iam.serviceAccountTokenCreator",
       "roles/run.invoker",
       "roles/pubsub.serviceAgent",
+      "roles/secretmanager.secretAccessor"
     ]
   }
 }
@@ -57,7 +62,7 @@ data "archive_file" "common-zip" {
 }
 resource "null_resource" "build-common-image" {
   triggers = {
-    src_hash = "${data.archive_file.common-zip.output_sha}"
+    src_hash = data.archive_file.common-zip.output_sha
   }
 
   provisioner "local-exec" {
@@ -65,7 +70,7 @@ resource "null_resource" "build-common-image" {
     command = join(" ", [
       "gcloud builds submit",
       "--config=cloudbuild.yaml",
-      "--gcs-log-dir=gs://${var.project_id}-queue-log",
+      "--gcs-log-dir=gs://${var.project_id}-${var.name}-log",
       join("", [
         "--substitutions=",
         "_PROJECT_ID='${var.project_id}',",
@@ -78,9 +83,10 @@ resource "null_resource" "build-common-image" {
 # Build Cloudrun image
 data "archive_file" "cloudrun-queue-zip" {
   type        = "zip"
-  source_dir  = "../../../cloudrun/queue"
-  output_path = ".terraform/cloudrun-queue.zip"
+  source_dir  = "../../../cloudrun/${var.name}"
+  output_path = ".terraform/cloudrun-${var.name}.zip"
 }
+
 resource "null_resource" "build-cloudrun-image" {
   depends_on = [
     null_resource.build-common-image,
@@ -91,15 +97,15 @@ resource "null_resource" "build-cloudrun-image" {
   }
 
   provisioner "local-exec" {
-    working_dir = "../../../cloudrun/queue"
+    working_dir = "../../../cloudrun/${var.name}"
     command = join(" ", [
       "gcloud builds submit",
       "--config=cloudbuild.yaml",
-      "--gcs-log-dir=gs://${var.project_id}-queue-log",
+      "--gcs-log-dir=gs://${var.project_id}-${var.name}-log",
       join("", [
         "--substitutions=",
         "_PROJECT_ID='${var.project_id}',",
-        "_IMAGE='queue-image'",
+        "_IMAGE='${var.name}-image'",
       ])
     ])
   }
@@ -115,19 +121,43 @@ resource "google_cloud_run_service" "cloudrun-service" {
     null_resource.build-cloudrun-image,
   ]
 
-  name     = var.name
+  name     = "${var.name}-cloudrun"
   location = var.region
 
+  metadata {
+    annotations = {
+      # internal traffic only
+      "run.googleapis.com/ingress" = "internal"
+    }
+  }
+
   template {
+    metadata {
+      annotations = {
+        # Limit scale up to prevent any cost blow outs!
+        "autoscaling.knative.dev/maxScale" = "10"
+        # Prevent Cold Start
+        "autoscaling.knative.dev/minScale" = "1"
+        # Use the VPC Connector
+        "run.googleapis.com/vpc-access-connector" = var.vpc_connector_name
+        # all egress from the service should go through the VPC Connector
+        "run.googleapis.com/vpc-access-egress" = "all-traffic"
+      }
+      labels = {
+        goog-packaged-solution = "prior-authorization"
+      }
+    }
     spec {
+      timeout_seconds = 600
       containers {
-        image = "gcr.io/${var.project_id}/queue-image:latest" #Image to connect pubsub to cloud run to processtask API and fetch data from firestore
+        image = "gcr.io/${var.project_id}/${var.name}-image:latest" #Image to connect pubsub to cloud run to processtask API and fetch data from firestore
         ports {
           container_port = 8000
         }
+
         env {
-          name  = "MAX_UPLOADED_DOCS" #thresold value for comparison with the number of uploaded docs in firesotre collection
-          value = "10"
+          name  = "BATCH_PROCESS_QUOTA" # Concurrent Batch Process QUOTA
+          value = "5"
         }
         env {
           name  = "PROJECT_ID"
@@ -138,6 +168,15 @@ resource "google_cloud_run_service" "cloudrun-service" {
           name  = "API_DOMAIN"
           value = var.api_domain
         }
+        env {
+          # PROTOCOL
+          name  = "PROTOCOL"
+          value = var.protocol
+        }
+        env {
+          name  = "IAP_SECRET_NAME"
+          value = var.iap_secret_name
+        }
       }
       service_account_name = module.cloud-run-service-account.email
     }
@@ -145,5 +184,21 @@ resource "google_cloud_run_service" "cloudrun-service" {
   traffic {
     percent         = 100
     latest_revision = true
+  }
+    lifecycle {
+    ignore_changes = [
+      # Some common annotations which we don't care about.
+      template[0].metadata[0].annotations["client.knative.dev/user-image"],
+      template[0].metadata[0].annotations["run.googleapis.com/client-name"],
+      template[0].metadata[0].annotations["run.googleapis.com/client-version"],
+      metadata[0].annotations["run.googleapis.com/operation-id"],
+
+      # These are only changed when "run.googleapis.com/launch-stage" is "BETA".
+      # It's non-trivial to make ignore_changes dependent on input variables so
+      # we always ignore these annotations even if, strictly speaking, we only
+      # need to do so is var.enable_beta_launch_stage is true.
+      metadata[0].annotations["serving.knative.dev/creator"],
+      metadata[0].annotations["serving.knative.dev/lastModifier"],
+    ]
   }
 }

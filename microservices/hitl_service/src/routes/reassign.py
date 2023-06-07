@@ -46,18 +46,18 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     Args:
     old_case_id (str): Case id of the supporting
     document which need to be reassigned ,
-    uid (str) : unique Id of the supportingdocument
+    uid (str) : unique Id of the supporting document
     new_case_id :existing application form case_id
     user : username of person who is reassigning the document
     comment : comment put by user
     Returns:
       200 : Successfully reassigned the document
-      404 :document to be reassigne is not found
+      404 :document to be reassign is not found
       404 : new_case_id application not found
       400 : If old case_id and new_case_id is same
       406 : if given document with old case_id is
       application and cannot be reassigned
-      500 :  Some unexpected error occured
+      500 :  Some unexpected error occurred
     """
   try:
     reassign_dict = reassign.dict()
@@ -166,7 +166,7 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     entities_for_bq = format_data_for_bq(entities)
     update_bq = stream_document_to_bigquery(client, new_case_id, uid,
                                             document_class, document_type,
-                                            entities_for_bq)
+                                            entities_for_bq, updated_url)
     print("--------firestore db ----------------")
     # status_process_task =
     response_process_task = call_process_task(new_case_id, uid, document_class,

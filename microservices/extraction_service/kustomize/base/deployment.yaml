@@ -26,7 +26,7 @@ spec:
       labels:
         app: extraction-service
     spec:
-      serviceAccountName: ksa
+      serviceAccountName: gke-sa
       containers:
       - name: extraction-service
         image: extraction-service
@@ -58,3 +58,6 @@ spec:
           periodSeconds: 30
           successThreshold: 1
           timeoutSeconds: 10
+        envFrom:
+        - configMapRef:
+            name: extraction-env-vars

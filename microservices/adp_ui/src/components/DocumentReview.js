@@ -438,11 +438,6 @@ function DocumentReview() {
 
 
         {/** TO display the PDF and the extracted values of the PDF*/}
-        <Row style={{ marginRight: '0px' }}>
-          {inputData.document_type === 'supporting_documents' && inputData.document_class !== "claims_form" ?
-            <label className="labelNote"><span style={{ marginLeft: '30px' }}>Field highlights are not available for supporting documents</span></label>
-            : (inputData.document_type === null ? '' : <label className="labelNote"> <span style={{ marginLeft: '30px' }}>Cannot extract Matching and Validation scores for Application forms</span></label>)}
-        </Row>
 
         <Row style={{ marginRight: '0px' }}>
           <Col className="col-7" style={{ paddingTop: '0px', overflow: 'scroll', height: 'calc(100vh - ' + headerHeight + ')' }}>
@@ -459,19 +454,19 @@ function DocumentReview() {
                     <label style={{ color: inputData['extraction_score'] > 0.90 ? ' #93c47d' : (inputData['extraction_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.extraction_score === null ? '-' : (inputData.extraction_score * 100).toFixed(1) + '%'}</label>
                   </Col>
 
-                  {inputData.document_type === 'application_form' ? '' :
-                    <Col className={["col-3", "verticalLines"].join(" ")}>
-                      <label className="labelBold">Matching Score</label><br />
-                      <label style={{ color: inputData['matching_score'] > 0.90 ? ' #93c47d' : (inputData['matching_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.matching_score === null ? '-' : (inputData.matching_score * 100).toFixed(1) + '%'}</label>
-                    </Col>
-                  }
+                  {/*{inputData.document_type === 'application_form' ? '' :*/}
+                  {/*  <Col className={["col-3", "verticalLines"].join(" ")}>*/}
+                  {/*    <label className="labelBold">Matching Score</label><br />*/}
+                  {/*    <label style={{ color: inputData['matching_score'] > 0.90 ? ' #93c47d' : (inputData['matching_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.matching_score === null ? '-' : (inputData.matching_score * 100).toFixed(1) + '%'}</label>*/}
+                  {/*  </Col>*/}
+                  {/*}*/}
 
-                  {inputData.document_type === 'application_form' ? '' :
-                    <Col className="col-3">
-                      <label className="labelBold">Validation Score</label> <br />
-                      <label style={{ color: inputData['validation_score'] > 0.90 ? ' #93c47d' : (inputData['validation_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.validation_score === null ? '-' : (inputData.validation_score * 100).toFixed(1) + '%'} </label>
-                    </Col>
-                  }
+                  {/*{inputData.document_type === 'application_form' ? '' :*/}
+                  {/*  <Col className="col-3">*/}
+                  {/*    <label className="labelBold">Validation Score</label> <br />*/}
+                  {/*    <label style={{ color: inputData['validation_score'] > 0.90 ? ' #93c47d' : (inputData['validation_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.validation_score === null ? '-' : (inputData.validation_score * 100).toFixed(1) + '%'} </label>*/}
+                  {/*  </Col>*/}
+                  {/*}*/}
                 </Row>
                 {inputData.entities === null ? '' :
                   <Row className="labelVerticalLine">
@@ -479,19 +474,20 @@ function DocumentReview() {
                       <label className="">Fields</label>
                     </Col>
 
-                    {inputData.document_type === 'application_form' ? '' :
-                      <Col className={["col-3", "verticalLines"].join(" ")}>
-                        <label className="">Matching Detail</label>
-                      </Col>
-                    }
-                    {inputData.document_type === 'application_form' ? '' :
-                      <Col className="col-3">
-                        <label className="">Validation Detail</label>
-                      </Col>
-                    }
+                    {/*{inputData.document_type === 'application_form' ? '' :*/}
+                    {/*  <Col className={["col-3", "verticalLines"].join(" ")}>*/}
+                    {/*    <label className="">Matching Detail</label>*/}
+                    {/*  </Col>*/}
+                    {/*}*/}
+                    {/*{inputData.document_type === 'application_form' ? '' :*/}
+                    {/*  <Col className="col-3">*/}
+                    {/*    <label className="">Validation Detail</label>*/}
+                    {/*  </Col>*/}
+                    {/*}*/}
                   </Row>
                 }
                 {inputList && inputList.map((x, i) => {
+                  console.log("Value for key", x['entity'], "=",  x['value'] )
                   return (
                     <Row>
                       <Col className={["col", "verticalLines"].join(" ")}>
@@ -505,7 +501,7 @@ function DocumentReview() {
                             >
                               <Form.Control type="text" name="value" className="extractedInputBox"
                                 placeholder="Enter extracted value"
-                                defaultValue={x['value'] || " "}
+                                defaultValue={x['value']}
                                 style={{ borderColor: x['extraction_confidence'] < 0.70 ? '#E93535' : '' }}
                                 onChange={e => handleInputChange(e, i, inputList[i])}
                                 onFocus={() => inputClicked(inputList[i])} />
@@ -518,7 +514,7 @@ function DocumentReview() {
                             >
                               <Form.Control type="text" name="corrected_value" className="extractedInputBox"
                                 placeholder="Enter Corrected value"
-                                defaultValue={x.corrected_value || " "}
+                                defaultValue={x.corrected_value }
                                 onChange={e => handleInputChange(e, i)}
                                 onFocus={() => inputClicked(inputList[i])} />
                             </FloatingLabel>
@@ -527,33 +523,33 @@ function DocumentReview() {
                           <label style={{ fontSize: '10px', color: x['extraction_confidence'] > 0.90 ? ' #93c47d' : (x['extraction_confidence'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)') }}>Extraction Score: {(x['extraction_confidence'] * 100).toFixed(1)}{'%'}</label>
                         </div>
                       </Col>
-                      {inputData.document_type === 'application_form' ? '' :
-                        <Col className={["col-3", "verticalLines"].join(" ")}>
-                          <Row >
-                            <Col className={["col-8", "score1"].join(" ")} style={{ textAlign: 'center' }}>
-                              {x['matching_score'] === null ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '42px' }} > - </span> :
-                                (x['matching_score'] < 0.70 ? <ProgressBar variant="danger" now={x['matching_score'] * 100} /> : x['matching_score'] > 0.90 ? <ProgressBar variant="success" now={x['matching_score'] * 100} /> : <ProgressBar now={x['matching_score'] * 100} variant="warning" />)}
+                      {/*{inputData.document_type === 'application_form' ? '' :*/}
+                      {/*  <Col className={["col-3", "verticalLines"].join(" ")}>*/}
+                      {/*    <Row >*/}
+                      {/*      <Col className={["col-8", "score1"].join(" ")} style={{ textAlign: 'center' }}>*/}
+                      {/*        {x['matching_score'] === null ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '42px' }} > - </span> :*/}
+                      {/*          (x['matching_score'] < 0.70 ? <ProgressBar variant="danger" now={x['matching_score'] * 100} /> : x['matching_score'] > 0.90 ? <ProgressBar variant="success" now={x['matching_score'] * 100} /> : <ProgressBar now={x['matching_score'] * 100} variant="warning" />)}*/}
 
-                            </Col>
-                            <Col className="col-4 score" >
+                      {/*      </Col>*/}
+                      {/*      <Col className="col-4 score" >*/}
 
-                              {x['matching_score'] === null ? '' : <label>{(x['matching_score'] * 100).toFixed(0)} % </label>}
+                      {/*        {x['matching_score'] === null ? '' : <label>{(x['matching_score'] * 100).toFixed(0)} % </label>}*/}
 
-                            </Col>
-                          </Row>
-                        </Col>
-                      }
-                      {inputData.document_type === 'application_form' ? '' :
-                        <Col className="col-3">
-                          <Row>
-                            <Col style={{ textAlign: 'center' }}>
-                              {x['validation_score'] === null ? <span> - </span> : (x['validation_score'] === 1 ? <Check fill="#93c47d" /> : <Cross fill="#DB4437" />)}
-                            </Col>
-                          </Row>
-                          <Row>
-                          </Row>
-                        </Col>
-                      }
+                      {/*      </Col>*/}
+                      {/*    </Row>*/}
+                      {/*  </Col>*/}
+                      {/*}*/}
+                      {/*{inputData.document_type === 'application_form' ? '' :*/}
+                      {/*  <Col className="col-3">*/}
+                      {/*    <Row>*/}
+                      {/*      <Col style={{ textAlign: 'center' }}>*/}
+                      {/*        {x['validation_score'] === null ? <span> - </span> : (x['validation_score'] === 1 ? <Check fill="#93c47d" /> : <Cross fill="#DB4437" />)}*/}
+                      {/*      </Col>*/}
+                      {/*    </Row>*/}
+                      {/*    <Row>*/}
+                      {/*    </Row>*/}
+                      {/*  </Col>*/}
+                      {/*}*/}
                     </Row>
                   );
                 })}

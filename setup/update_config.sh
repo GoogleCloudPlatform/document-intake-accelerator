@@ -12,6 +12,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PWD=$(pwd)
+#(terraform output -json parser_config | python -m json.tool) > "${CONFIG_DIR}"/parser_config.json
+#(terraform output -json vertex_ai | python -m json.tool) > ../../../common/src/common/vertex_ai_config.json
 
-(terraform output -json parser_config | python -m json.tool) > ../../../common/src/common/parser_config.json
-(terraform output -json vertex_ai | python -m json.tool) > ../../../common/src/common/vertex_ai_config.json
+
+# This step should be executed only initially,
+# otherwise it will over-write the customized config.json file
+# if that already exists (when updating infrastructure)
+GLOBAL_CONFIG_FILE="config.json"
+CONFIG_DIR="${DIR}/../common/src/common/config"
+PARSER_CONFIG="gs://${TF_VAR_config_bucket}/config.json"
+gsutil ls "${PARSER_CONFIG}" 2> /dev/null
+RETURN=$?
+if [[ $RETURN -gt 0 ]]; then
+    echo "Config does not exist yet, generating initial out-of-the box"
+    (terraform output -json parser_config | python -m json.tool) > "${CONFIG_DIR}/parser_config.json"
+
+    cd "${CONFIG_DIR}" || exit
+    jq -n 'reduce inputs as $s (.; (.[input_filename|rtrimstr(".json")]) += $s)'  parser_config.json  settings_config.json document_types_config.json docai_entity_mapping.json > "${GLOBAL_CONFIG_FILE}"
+    gsutil cp "${GLOBAL_CONFIG_FILE}" "${PARSER_CONFIG}"
+
+    cd "$PWD" || exit
+fi
+

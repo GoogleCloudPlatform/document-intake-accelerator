@@ -28,9 +28,9 @@ requires:
   - name: dev
     activatedBy: [dev]
 
-- path: ./microservices/sample_service
-  configs: [sample-service]
-  activeProfiles:  *all_profiles
+#- path: ./microservices/sample_service
+#  configs: [sample-service]
+#  activeProfiles:  *all_profiles
 
 - path: ./microservices/upload_service
   configs: [upload-service]
@@ -50,6 +50,10 @@ requires:
 
 - path: ./microservices/hitl_service
   configs: [hitl-service]
+  activeProfiles:  *all_profiles
+
+- path: ./microservices/config_service
+  configs: [config-service]
   activeProfiles:  *all_profiles
 
 - path: ./microservices/document_status_service

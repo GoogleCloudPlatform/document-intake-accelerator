@@ -15,6 +15,9 @@
 kind: Service
 apiVersion: v1
 metadata:
+  annotations:
+    cloud.google.com/backend-config: '{"default": "adp-backend-config"}'
+    cloud.google.com/neg: '{"ingress": true}'
   name: adp-ui
 spec:
   selector:

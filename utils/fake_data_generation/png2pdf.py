@@ -16,40 +16,81 @@ limitations under the License.
 
 # script to convert png to pdf
 import os
-from os import listdir
+import argparse
 from PIL import Image
-import img2pdf
+
 import re
 
-# get the path/directory.Here as an example utility bills has been taken
-folder_dir = "fake_data_generator/UtilityBills-arizona"
-pdf_path = "fake_data_generator/utility-bill-arizona"
-ct=1
-image_list=[]
-file_name='arizona-utility-bill-'
+
+def get_parser():
+  # Read command line arguments
+  parser = argparse.ArgumentParser(
+      formatter_class=argparse.RawTextHelpFormatter,
+      description="""
+      script to convert png to pdf.
+      """,
+      epilog="""
+      Examples:
+
+      python generate_images.py --f=path-to-form.pdf
+      """)
+  parser.add_argument(
+      "-d",
+      dest="folder_dir",
+      help="Path to input  directory with png files")
+  parser.add_argument(
+      "-o",
+      dest="pdf_path",
+      default="out_pdf",
+      help="Path to out directory with PDF files")
+  return parser
+
+
+parser = get_parser()
+args = parser.parse_args()
+
+if not args.folder_dir:
+  parser.print_help()
+  exit()
+
+folder_dir = args.folder_dir
+pdf_path = args.pdf_path
+ct = 1
+image_list = []
+
 for images in os.listdir(folder_dir):
-    image_list.append(images)
+  image_list.append(images)
+
 
 def atoi(text):
-    return int(text) if text.isdigit() else text
+  return int(text) if text.isdigit() else text
+
 
 def natural_keys(text):
-    '''
+  '''
     alist.sort(key=natural_keys) sorts in human order
     http://nedbatchelder.com/blog/200712/human_sorting.html
     (See Toothy's implementation in the comments)
     '''
-    return [ atoi(c) for c in re.split(r'(\d+)', text) ]
+  return [atoi(c) for c in re.split(r'(\d+)', text)]
+
 
 image_list.sort(key=natural_keys)
 print(image_list)
 print(len(image_list))
 
+if not os.path.exists(pdf_path):
+    os.mkdir(pdf_path)
+
 for images in image_list:
-    # check if the image ends with png
-    if (images.endswith(".png")):
-        print(ct)
-        image_1 = Image.open(folder_dir+"/"+images)
-        im_1 = image_1.convert('RGB')
-        im_1.save(pdf_path+"/"+file_name+str(ct)+'.pdf')
-        ct=ct+1
+  # check if the image ends with png
+  if (images.endswith(".png")):
+    name = folder_dir + "/" + images
+    image_1 = Image.open(name)
+    im_1 = image_1.convert('RGB')
+    name_out = pdf_path + "/" + os.path.splitext(os.path.basename(images))[0] + '.pdf'
+    print(f"{ct} Saving {name} as {name_out}")
+    im_1.save(name_out)
+    ct = ct + 1
+
+print(f"Export pdf files to {pdf_path}")

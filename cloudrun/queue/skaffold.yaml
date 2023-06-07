@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+ # Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,57 +33,7 @@ build:
       infer:
         - '**/*.py'
         - '**/*.json'
-portForward:
-- resourceType: service
-  resourceName: queue
-  port: 80
-  localPort: 8000
-deploy:
-  kubectl: { }
-manifests:
-  kustomize:
-    paths:
-    - ./kustomize/minikube
 profiles:
-- name: custom
-  build:
-    googleCloudBuild: {}
-    artifacts:
-    - image: queue
-      requires:
-      - image: common
-        alias: BASE_IMG
-  deploy:
-    kubectl: { }
-  manifests:
-    kustomize:
-      paths:
-      - ./kustomize/custom
-- name: prod_non_cloudbuild
-  deploy:
-    kubectl: { }
-  manifests:
-    kustomize:
-      paths:
-      - ./kustomize/prod
-- name: prod
-  deploy:
-    kubectl: { }
-  manifests:
-    kustomize:
-      paths:
-      - ./kustomize/prod
-  build:
-    googleCloudBuild: {}
-    artifacts:
-    - image: queue
-      docker:
-        cacheFrom:
-          - queue
-          - queue:latest
-      requires:
-      - image: common
-        alias: BASE_IMG
 - name: dev
   build:
     googleCloudBuild: {}
@@ -101,8 +51,4 @@ profiles:
           - '**/*.py'
           - '**/*.json'
   deploy:
-    kubectl: { }
-  manifests:
-    kustomize:
-      paths:
-      - ./kustomize/dev
+    cloudrun: { }

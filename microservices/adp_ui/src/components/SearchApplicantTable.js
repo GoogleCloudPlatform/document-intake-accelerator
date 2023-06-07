@@ -233,11 +233,14 @@ function SearchForApplicantTable(props) {
 	};
 	const statusBodyTemplate = (rowData) => {
 		const stockClassName = classNames({
-			'approved': rowData.current_status === 'Approved' || rowData.current_status === 'approved',
+			'approved': rowData.current_status === 'Approved' || rowData.current_status === 'approved' || rowData.current_status === 'Processed' || rowData.current_status === 'processed',
+			'processed':  rowData.current_status === 'Processed' || rowData.current_status === 'processed',
 			'rejected': rowData.current_status === 'Rejected' || rowData.current_status === 'rejected' || rowData.current_status === 'Failed',
 			'pending': rowData.current_status === 'Pending' || rowData.current_status === 'pending' || rowData.current_status === 'In Progress' || rowData.current_status === 'Review' || rowData.current_status === 'review',
 		});
 
+		console.log("current_status", rowData.current_status)
+		console.log("stockClassName", stockClassName)
 		return (
 			<div className={stockClassName}>
 				{rowData.current_status}
@@ -327,7 +330,7 @@ function SearchForApplicantTable(props) {
 					<DataTable value={dataTableBody} sortMode="multiple" header={tableLength} size="small" responsiveLayout="scroll" paginator paginatorTemplate={template1} first={first1} rows={rows1} onPage={onCustomPage1} selectionMode="single" selection={selectedProduct1} onSelectionChange={e => handleTableData(e)} onRowSelect={onRowSelect} onRowUnselect={onRowUnselect} paginatorPosition="both" paginatorClassName="justify-content-end">
 						{/* <DataTable value={dataTableBody} selection={selectedproducts} onSelectionChange={e => setSelectedProducts(e.value)} dataKey="id" responsiveLayout="scroll"> */}
 						<Column selectionMode="single" headerStyle={{ width: '3em' }}></Column>
-						<Column field="applicantname" header="Applicant Name" sortable></Column>
+						{/*<Column field="applicantname" header="Applicant Name" sortable></Column>*/}
 						<Column field="caseid" header="App Reg ID" sortable></Column>
 						<Column field="current_status" header="Approval Status" body={statusBodyTemplate} sortable></Column>
 						<Column field="process_status" header="Doc Processing Status" sortable></Column>

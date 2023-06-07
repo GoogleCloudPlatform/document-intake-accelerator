@@ -18,6 +18,6 @@ resources:
 - ./deployment.yaml
 - ./service.yaml
 configMapGenerator:
-- name: env-vars
+- name: ui-env-vars
   envs:
   - env.properties

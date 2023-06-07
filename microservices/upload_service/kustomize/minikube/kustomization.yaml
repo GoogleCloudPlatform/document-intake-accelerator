@@ -17,7 +17,7 @@ kind: Kustomization
 bases:
 - ../base
 configMapGenerator:
-- name: env-vars
+- name: upload-env-vars
   behavior: merge
   envs:
   - env.properties

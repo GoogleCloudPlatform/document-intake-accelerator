@@ -16,5 +16,9 @@
  */
 
 output "ingress_ip_address" {
-  value = google_compute_address.ingress_ip_address.address
+  value = local.external_ip_name
+}
+
+output "cda_external_ui" {
+  value = local.cda_external_ui
 }

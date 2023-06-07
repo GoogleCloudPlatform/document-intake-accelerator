@@ -25,7 +25,45 @@ variable "vpc_network" {
   description = "specify the vpc name"
 }
 
+variable "subnetwork" {
+  type = string
+}
+
+variable "serverless_subnet" {
+  type = string
+}
+
 variable "region" {
   type        = string
   description = "GCP region"
+}
+
+variable "secondary_ranges_pods" {
+  type = object({
+    range_name    = string
+    ip_cidr_range = string
+  })
+}
+
+variable "secondary_ranges_services" {
+  type = object({
+    range_name    = string
+    ip_cidr_range = string
+  })
+}
+
+variable "source_subnetwork_ip_ranges_to_nat" {
+  type        = string
+  description = "Defaults to ALL_SUBNETWORKS_ALL_IP_RANGES. How NAT should be configured per Subnetwork. Valid values include: ALL_SUBNETWORKS_ALL_IP_RANGES, ALL_SUBNETWORKS_ALL_PRIMARY_IP_RANGES, LIST_OF_SUBNETWORKS. Changing this forces a new NAT to be created."
+  default     = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+}
+
+variable "master_cidr_ranges" {
+  type        = list(any)
+  description = "Master/Control Plan CIDR range to allow communication with GKE Node"
+}
+
+variable "node_pools_tags" {
+  type        = list(any)
+  description = "GKE Nodes tags to allow communication with Master/Control Plan"
 }

@@ -15,16 +15,23 @@ limitations under the License.
 """
 
 """ Document status endpoints """
-from common.config import BUCKET_NAME
-from common.models import Document
-from common.utils.logging_handler import Logger
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
-
-import fireo
-from fastapi import APIRouter, HTTPException
-from typing import Optional, List, Dict
 import datetime
 import traceback
+from typing import Dict
+from typing import List
+from typing import Optional
+
+import fireo
+from fastapi import APIRouter
+from fastapi import HTTPException
+
+from common.config import BUCKET_NAME
+from common.config import STATUS_ERROR
+from common.config import STATUS_SPLIT
+from common.config import STATUS_SUCCESS
+from common.config import get_display_name_by_doc_class
+from common.models import Document
+from common.utils.logging_handler import Logger
 
 # disabling for linting to pass
 # pylint: disable = broad-except
@@ -46,6 +53,7 @@ async def create_document(case_id: str, filename: str, context: str, user=None):
        500 : If something fails
      """
   try:
+    Logger.info(f"create_document with case_id={case_id}, filename={filename}, context={context}")
     document = Document()
     document.case_id = case_id
     document.upload_timestamp = datetime.datetime.utcnow()
@@ -103,15 +111,16 @@ async def update_classification_status(
        """
   try:
     document = Document.find_by_uid(uid)
-    if status == STATUS_SUCCESS:
+    if status in [STATUS_SUCCESS, STATUS_SPLIT]:
       #update  the document type and document class
       document.document_class = document_class
       document.document_type = document_type
+      document.document_display_name = get_display_name_by_doc_class(document_class)
       document.is_hitl_classified = is_hitl
       system_status = {
           "is_hitl": is_hitl,
           "stage": "classification",
-          "status": STATUS_SUCCESS,
+          "status": status,
           "timestamp": datetime.datetime.utcnow()
       }
       document.system_status = fireo.ListUnion([system_status])

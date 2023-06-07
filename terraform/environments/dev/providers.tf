@@ -24,7 +24,7 @@ terraform {
       version = "~>4.0"
     }
     kubectl = {
-      source = "gavinbunney/kubectl"
+      source  = "gavinbunney/kubectl"
       version = ">= 1.14.0"
     }
     helm = {
@@ -40,38 +40,25 @@ provider "google" {
 
 data "google_client_config" "default" {}
 
-# Defer reading the cluster data until the GKE cluster exists.
-data "google_container_cluster" "default" {
-  # as-is this will probably need to be run a few times
-  name     = "main-cluster"
-  location = var.region
-  project  = var.project_id
-}
-
 # Used by module.gke.
 provider "kubernetes" {
-  host  = data.google_container_cluster.default.endpoint
-  token = data.google_client_config.default.access_token
-  cluster_ca_certificate = base64decode(
-    try(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate, ""),
-  )
+  host                   = "https://${module.gke.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(module.gke.ca_certificate)
 }
 
 # Used by module.ingress.
 provider "kubectl" {
-  host             = data.google_container_cluster.default.endpoint
-  token            = data.google_client_config.default.access_token
-  cluster_ca_certificate = base64decode(
-    try(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate, ""),
-  )
+  host                   = "https://${module.gke.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(module.gke.ca_certificate)
+//  load_config_file       = false  # Uncomment this line if you do not have .kube/config file
 }
 
 provider "helm" {
   kubernetes {
-    host  = data.google_container_cluster.default.endpoint
-    token = data.google_client_config.default.access_token
-    cluster_ca_certificate = base64decode(
-      try(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate, ""),
-    )
+    host                   = "https://${module.gke.endpoint}"
+    token                  = data.google_client_config.default.access_token
+    cluster_ca_certificate = base64decode(module.gke.ca_certificate)
   }
 }

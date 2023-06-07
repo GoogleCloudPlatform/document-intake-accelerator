@@ -15,39 +15,50 @@
  *
  */
 
-const docclasstype=[
+import "isomorphic-fetch";
 
-{
-    'value':'utility_bill',
-    'doc_type':'Supporting Documents',
-    'doc_class': 'Utility Bill'
-},
-{
-    'value':'unemployment_form',
-    'doc_type':'Application Form',
-    'doc_class': 'Unemployment Form'
-},
-{
-    'value':'claims_form',
-    'doc_type':'Supporting Documents',
-    'doc_class': 'Claims Form'
-},
-{
-    'value':'pay_stub',
-    'doc_type':'Supporting Documents',
-    'doc_class': 'Pay Stub'
-},
-{
-    'value':'driver_license',
-    'doc_type':'Supporting Documents',
-    'doc_class': 'Driver License'
+let baseUrl = process.env.REACT_APP_BASE_URL;
+function fetchConfig(configServer) {
+    return new Promise(function(resolve, reject) {
+        console.log("fetchConfig from " + configServer);
+
+        function handleFetchErrors(response) {
+            if (!response.ok) {
+                let msg = "Failure when fetching Configurations";
+                let details = `${msg}: ${response.url}: the server responded with a status of ${response.status} (${response.statusText})`;
+                console.log(msg + ": errorClass: " + details);
+                reject(msg);
+            }
+            return response;
+        }
+
+        resolve (fetch(configServer + "/config_service/v1/get_config?name=document_types_config").then(handleFetchErrors).then(r => r.json())
+            .then(documentConfig => {
+                console.log("documentConfig", documentConfig);
+                let data = documentConfig['data']
+                var docs = []
+                console.log("data", data);
+                for(var key in data) {
+                    var docObj = {}
+                    docObj['value'] = key
+                    docObj['display_name'] = data[key]['display_name']
+                    docs[ key ] = docObj
+                    docs.push(docObj)
+
+                console.log("docs", docs)
+                }
+
+                return docs;
+
+            })
+            .catch(err => {
+                console.log("error doing fetch():" + err);
+                reject(err);
+            }));
+    });
 }
-]
 
-const sorting=docclasstype.sort(function (a, b) {
-    return a.doc_type.localeCompare(b.doc_type) || a.doc_class.localeCompare(b.doc_class);
-});
+const sorting = fetchConfig(baseUrl);
 
-console.log(sorting);
 
-export default sorting;
+export default sorting

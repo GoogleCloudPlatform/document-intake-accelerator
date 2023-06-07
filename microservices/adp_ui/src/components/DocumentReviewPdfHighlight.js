@@ -415,11 +415,6 @@ function DocumentReview() {
 
         {/** TO display the PDF and the extracted values of the PDF*/}
         <Row>
-          {inputData.document_type === 'supporting_documents' && inputData.document_class !== "claims_form" ?
-            <label className="labelNote"><span style={{ marginLeft: '30px' }}>Field highlights are not available for supporting documents</span></label>
-            : (inputData.document_type === null ? '' : <label className="labelNote"> <span style={{ marginLeft: '30px' }}>Cannot extract Matching and Validation scores for Application forms</span></label>)}
-        </Row>
-        <Row>
 
           <Col className="col-7" style={{ overflow: 'scroll', height: 'calc(100vh - 220px)', paddingTop: '0px' }}>
             <div ref={myRef} id='pdf-viewer' style={{ width: '100%', minWidth: '800px', maxWidth: '1200px', backgroundColor: '#ccc', paddingTop: '0px' }}></div>
@@ -438,15 +433,15 @@ function DocumentReview() {
                     <label style={{ color: inputData['extraction_score'] > 0.90 ? ' #93c47d' : (inputData['extraction_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.extraction_score === null ? '-' : (inputData.extraction_score * 100).toFixed(1) + '%'}</label>
                   </Col>
 
-                  <Col className={["col-3", "mr-3", "verticalLines"].join(" ")}>
-                    <label className="labelBold">Matching Score</label><br />
-                    <label style={{ color: inputData['matching_score'] > 0.90 ? ' #93c47d' : (inputData['matching_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.matching_score === null ? '-' : (inputData.matching_score * 100).toFixed(1) + '%'}</label>
-                  </Col>
+                  {/*<Col className={["col-3", "mr-3", "verticalLines"].join(" ")}>*/}
+                  {/*  <label className="labelBold">Matching Score</label><br />*/}
+                  {/*  <label style={{ color: inputData['matching_score'] > 0.90 ? ' #93c47d' : (inputData['matching_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.matching_score === null ? '-' : (inputData.matching_score * 100).toFixed(1) + '%'}</label>*/}
+                  {/*</Col>*/}
 
-                  <Col className="col-3">
-                    <label className="labelBold">Validation Score</label> <br />
-                    <label style={{ color: inputData['validation_score'] > 0.90 ? ' #93c47d' : (inputData['validation_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.validation_score === null ? '-' : (inputData.validation_score * 100).toFixed(1) + '%'} </label>
-                  </Col>
+                  {/*<Col className="col-3">*/}
+                  {/*  <label className="labelBold">Validation Score</label> <br />*/}
+                  {/*  <label style={{ color: inputData['validation_score'] > 0.90 ? ' #93c47d' : (inputData['validation_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.validation_score === null ? '-' : (inputData.validation_score * 100).toFixed(1) + '%'} </label>*/}
+                  {/*</Col>*/}
                 </Row>
 
                 {inputData.entities === null ? '' :
@@ -455,13 +450,13 @@ function DocumentReview() {
                       <label className="largeScore">Fields</label>
                     </Col>
 
-                    <Col className={["col-3", "verticalLines"].join(" ")}>
-                      <label className="largeScore">Matching</label>
-                    </Col>
+                    {/*<Col className={["col-3", "verticalLines"].join(" ")}>*/}
+                    {/*  <label className="largeScore">Matching</label>*/}
+                    {/*</Col>*/}
 
-                    <Col className="col-3">
-                      <label className="largeScore">Validation</label>
-                    </Col>
+                    {/*<Col className="col-3">*/}
+                    {/*  <label className="largeScore">Validation</label>*/}
+                    {/*</Col>*/}
 
                   </Row>
                 }
@@ -503,31 +498,31 @@ function DocumentReview() {
 
                         </div>
                       </Col>
-                      <><Col className={["col-3", "verticalLines"].join(" ")}>
-                        <Row >
-                          <Col className={["col-8", "score1"].join(" ")} style={{ textAlign: 'center' }}>
-                            {x['matching_score'] === null ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '42px' }} > - </span> :
-                              (x['matching_score'] < 0.70 ? <ProgressBar variant="danger" now={x['matching_score'] * 100} /> : x['matching_score'] > 0.90 ? <ProgressBar variant="success" now={x['matching_score'] * 100} /> : <ProgressBar now={x['matching_score'] * 100} variant="warning" />)}
+                      {/*<><Col className={["col-3", "verticalLines"].join(" ")}>*/}
+                      {/*  <Row >*/}
+                      {/*    <Col className={["col-8", "score1"].join(" ")} style={{ textAlign: 'center' }}>*/}
+                      {/*      {x['matching_score'] === null ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '42px' }} > - </span> :*/}
+                      {/*        (x['matching_score'] < 0.70 ? <ProgressBar variant="danger" now={x['matching_score'] * 100} /> : x['matching_score'] > 0.90 ? <ProgressBar variant="success" now={x['matching_score'] * 100} /> : <ProgressBar now={x['matching_score'] * 100} variant="warning" />)}*/}
 
-                          </Col>
-                          <Col className="col-4 score" >
+                      {/*    </Col>*/}
+                      {/*    <Col className="col-4 score" >*/}
 
-                            {x['matching_score'] === null ? '' : <label>{(x['matching_score'] * 100).toFixed(0)} % </label>}
+                      {/*      {x['matching_score'] === null ? '' : <label>{(x['matching_score'] * 100).toFixed(0)} % </label>}*/}
 
 
-                          </Col>
-                        </Row>
-                      </Col>
-                        <Col>
+                      {/*    </Col>*/}
+                      {/*  </Row>*/}
+                      {/*</Col>*/}
+                      {/*  <Col>*/}
 
-                          <Row>
-                            <Col style={{ textAlign: 'center' }}>
-                              {x['validation_score'] === null ? <span> - </span> : (x['validation_score'] === 1 ? <Check fill="#93c47d" /> : <Cross fill="#DB4437" />)}
-                            </Col>
-                          </Row>
-                          <Row>
-                          </Row>
-                        </Col></>
+                      {/*    <Row>*/}
+                      {/*      <Col style={{ textAlign: 'center' }}>*/}
+                      {/*        {x['validation_score'] === null ? <span> - </span> : (x['validation_score'] === 1 ? <Check fill="#93c47d" /> : <Cross fill="#DB4437" />)}*/}
+                      {/*      </Col>*/}
+                      {/*    </Row>*/}
+                      {/*    <Row>*/}
+                      {/*    </Row>*/}
+                      {/*  </Col></>*/}
                     </Row>
                   );
                 })}

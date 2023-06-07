@@ -28,6 +28,7 @@ def publish_document(message_dict):
   # print("inside publisher")
   message_json = json.dumps(message_dict)
   message_json = message_json.encode("utf-8")
+  print(f"Publishing {topic_path} topic message: {message_json}")
   future = publisher.publish(topic_path, message_json)
   return future.result()
 

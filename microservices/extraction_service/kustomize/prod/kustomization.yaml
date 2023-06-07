@@ -21,7 +21,7 @@ resources:
 patchesStrategicMerge:
 - deployment-prod.yaml
 configMapGenerator:
-- name: env-vars
+- name: extraction-env-vars
   behavior: replace
   envs:
   - env.properties

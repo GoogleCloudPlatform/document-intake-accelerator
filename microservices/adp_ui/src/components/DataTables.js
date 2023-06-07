@@ -333,8 +333,7 @@ function DataTables() {
               "current_status": `${element.current_status}`,
               'process_status': `${element.process_status}`,
               "statuslastupdate": `${element.status_last_updated_by}`,
-              "documenttype": `${element.document_type === null ? 'no type' : (element.document_type).split('_').join(" ")}`,
-              "documentclass": `${element.document_class === null ? 'unclassified' : (element.document_class).split('_').join(" ")}`,
+              "document_display_name": `${element.document_display_name}`,
               "extractionscore": `${element.extraction_score === null ? '-' : parseFloat(element.extraction_score * 100).toFixed(1) + '%'}`,
               "extractionstatus": `${element.extraction_status === null ? '-' : element.extraction_status}`,
               "matchscore": `${element.matching_score === null ? '-' : parseFloat(element.matching_score * 100).toFixed(1) + '%'}`,
@@ -500,8 +499,7 @@ function DataTables() {
           "current_status": `${element.current_status}`,
           'process_status': `${element.process_status}`,
           "statuslastupdate": `${element.status_last_updated_by}`,
-          "documenttype": `${element.document_type === null ? 'no type' : (element.document_type).split('_').join(" ")}`,
-          "documentclass": `${element.document_class === null ? 'unclassified' : (element.document_class).split('_').join(" ")}`,
+          "document_display_name": `${element.document_display_name}`,
           "extractionscore": `${element.extraction_score === null ? '-' : parseFloat(element.extraction_score * 100).toFixed(1) + '%'}`,
           "extractionstatus": `${element.extraction_status === null ? '-' : element.extraction_status}`,
           "matchscore": `${element.matching_score === null ? '-' : parseFloat(element.matching_score * 100).toFixed(1) + '%'}`,
@@ -555,7 +553,8 @@ function DataTables() {
 
   const statusBodyTemplate = (rowData) => {
     const stockClassName = classNames({
-      'approved': ['approved'].includes(rowData.current_status.toLowerCase()),
+      'approved': ['approved'].includes(rowData.current_status.toLowerCase()) ||  ['processed'].includes(rowData.current_status.toLowerCase()),
+      'processed': ['processed'].includes(rowData.current_status.toLowerCase()),
       'inprogress': ['in progress', 'inprogress', 'progress', 'processing'].includes(rowData.current_status.toLowerCase()),
       'pending': ['pending', 'review', 'need review'].includes(rowData.current_status.toLowerCase()),
       'rejected': ['rejected'].includes(rowData.current_status.toLowerCase()),
@@ -577,20 +576,8 @@ function DataTables() {
     return <span>{rowData.last_update_timestamp ? moment.utc(rowData.last_update_timestamp).local().format('YYYY-MM-DD HH:mm:ss') : '-'}</span>
   }
 
-  const documentIdBodyTemplate = (rowData) => {
-    return <span className={`docCaptalize`}>
-      <Link to={{
-        pathname: `/documentreview/${rowData.uid}/${rowData.caseid}`,
-      }} style={{ ...actionButtonStyles }}>📄 {rowData.uid}</Link>
-    </span>;
-  }
-
   const doctypeBodyTemplate = (rowData) => {
-    return <span className={`docCaptalize`}>{rowData.documenttype} > {rowData.documentclass}</span>;
-  }
-
-  const docclassBodyTemplate = (rowData) => {
-    return <span className={`docCaptalize`}>{rowData.documentclass}</span>;
+    return <span>{rowData.document_display_name}</span>;
   }
 
   const manualClassifyBodyTemplate = (rowData) => {
@@ -620,7 +607,7 @@ function DataTables() {
           <label className="labels" style={{ fontSize: '14px', paddingLeft: '5px' }}>Search documents:</label>
           <br />
           <div>
-            <input type="text" onChange={onFilter} className="searchInput" onKeyPress={enterKeyPressed} id='searchterm' value={searchTerm} name="searchterm" placeholder="Search by Case ID, applicatns or other attributes..." />
+            <input type="text" onChange={onFilter} className="searchInput" onKeyPress={enterKeyPressed} id='searchterm' value={searchTerm} name="searchterm" placeholder="Search by Document Class, Case ID, etc." />
             {'  '}
             <Button
               variant="secondary"
@@ -734,8 +721,8 @@ function DataTables() {
               >
                 {/* <Column field="uid" header="Document ID" body={documentIdBodyTemplate} sortable></Column> */}
                 <Column field="actions" header="Actions"></Column>
-                <Column field="applicantname" header="Applicant Name" sortable></Column>
-                <Column field="documenttype" header="Document Type / Class" body={doctypeBodyTemplate} sortable></Column>
+                {/*<Column field="applicantname" header="Applicant Name" sortable></Column>*/}
+                <Column field="documenttype" header="Document Class" body={doctypeBodyTemplate} sortable></Column>
                 <Column field="current_status" header="Status" body={statusBodyTemplate} sortable></Column>
                 <Column field="process_status" header="Process Detail" sortable></Column>
                 <Column field="caseid" header="Case ID" sortable></Column>

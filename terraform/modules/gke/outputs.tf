@@ -16,5 +16,17 @@
  */
 
 output "gke_cluster" {
-  value = module.gke
+  value = try(module.gke_cluster.cluster_id, null)
+}
+
+output "endpoint" {
+  value = try(module.gke_cluster.endpoint, null)
+}
+
+output "ca_certificate" {
+  value = try(module.gke_cluster.ca_certificate, null)
+}
+
+output "service_account_email" {
+ value = try(module.gke_cluster.service_account, null)
 }

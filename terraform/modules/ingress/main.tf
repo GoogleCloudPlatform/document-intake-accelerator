@@ -17,7 +17,6 @@
 
 # Terraform Block
 terraform {
-  required_version = ">= 0.13"
   required_providers {
     kubectl = {
       source  = "gavinbunney/kubectl"
@@ -25,58 +24,80 @@ terraform {
     }
     helm = {
       source  = "hashicorp/helm"
-      version = ">= 2.5.1"
+      version = ">= 2.7.0"
+    }
+    google = {
+      source  = "hashicorp/google"
+      version = "~>4.0"
     }
   }
 }
 
-module "cert_manager" {
-  source = "terraform-iaac/cert-manager/kubernetes"
+locals {
+  external_ip_name = (
+  var.external_ip_name == null && var.cda_external_ui == true
+  ? google_compute_global_address.ingress_ip_address[0].name
+  : var.external_ip_name
+  )
 
-  cluster_issuer_email                   = var.cert_issuer_email
-  cluster_issuer_name                    = "letsencrypt"
-  cluster_issuer_private_key_secret_name = "cert-manager-private-key"
+  cda_external_ui = var.cda_external_ui
+
 }
 
-resource "kubernetes_namespace" "ingress_nginx" {
+# External Ingress
+
+# TODO: switch to hashicorp k8s provider, use side by side
+# k2tf
+resource "kubectl_manifest" "managed_certificate" {
+  count     = var.cda_external_ui == true ? 1 : 0
+  yaml_body = <<YAML
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: gclb-managed-cert
+spec:
+  domains:
+    - ${var.domain}
+YAML
+}
+
+resource "google_compute_global_address" "ingress_ip_address" {
+  count        = var.external_ip_name == null && var.cda_external_ui == true ? 1 : 0
+  project      = var.project_id # Service Project ID
+  name         = "ingress-ip"
+  address_type = "EXTERNAL"
+}
+
+resource "kubectl_manifest" "frontend_config" {
+  count     = var.cda_external_ui == true ? 1 : 0
+  yaml_body = <<YAML
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: ingress-security-config
+spec:
+  sslPolicy: ${google_compute_ssl_policy.gke-ingress-ssl-policy[0].name}
+  redirectToHttps:
+    enabled: true
+YAML
+}
+
+resource "google_compute_ssl_policy" "gke-ingress-ssl-policy" {
+  count           = var.cda_external_ui == true ? 1 : 0
+  name            = "gke-ingress-ssl-policy"
+  profile         = "MODERN"
+  min_tls_version = "TLS_1_2"
+}
+
+resource "kubernetes_ingress_v1" "external_ingress" {
+  count = var.cda_external_ui == true ? 1 : 0
   metadata {
-    name = "ingress-nginx"
-  }
-}
-
-resource "google_compute_address" "ingress_ip_address" {
-  name   = "nginx-controller"
-  region = var.region
-}
-
-module "nginx-controller" {
-  source    = "terraform-iaac/nginx-controller/helm"
-  version   = "2.0.2"
-  namespace = "ingress-nginx"
-
-  ip_address = google_compute_address.ingress_ip_address.address
-
-  # TODO: does this require cert_manager up and running or can they be completed in parallel
-  depends_on = [
-    module.cert_manager, resource.kubernetes_namespace.ingress_nginx
-  ]
-}
-
-resource "kubernetes_ingress_v1" "default_ingress" {
-  depends_on = [
-    module.nginx-controller
-  ]
-
-  metadata {
-    name = "default-ingress"
+    name = "external-ingress"
     annotations = {
-      "kubernetes.io/ingress.class"                        = "nginx"
-      "cert-manager.io/cluster-issuer"                     = module.cert_manager.cluster_issuer_name
-      "nginx.ingress.kubernetes.io/enable-cors"            = "true"
-      "nginx.ingress.kubernetes.io/cors-allow-methods"     = "PUT,GET,POST,DELETE,OPTIONS"
-      "nginx.ingress.kubernetes.io/cors-allow-origin"      = var.cors_allow_origin
-      "nginx.ingress.kubernetes.io/cors-allow-credentials" = "true"
-      "nginx.ingress.kubernetes.io/proxy-read-timeout"     = "3600"
+      "kubernetes.io/ingress.class"                 = "gce"
+      "kubernetes.io/ingress.global-static-ip-name" = local.external_ip_name
+      "networking.gke.io/managed-certificates"      = kubectl_manifest.managed_certificate[0].name
+      "networking.gke.io/v1beta1.FrontendConfig"    = kubectl_manifest.frontend_config[0].name
     }
   }
 
@@ -92,6 +113,7 @@ resource "kubernetes_ingress_v1" "default_ingress" {
     }
 
     rule {
+      host = var.domain
       http {
         # Upload Service
         path {
@@ -190,25 +212,163 @@ resource "kubernetes_ingress_v1" "default_ingress" {
           path = "/matching_service"
         }
 
-        # Sample Service
+        # Config Service
         path {
           backend {
             service {
-              name = "sample-service"
+              name = "config-service"
               port {
                 number = 80
               }
             }
           }
           path_type = "Prefix"
-          path      = "/sample_service"
+          path      = "/config_service"
         }
       }
     }
 
-    tls {
-      hosts       = ["${var.domain}"]
-      secret_name = "tls-secret"
+  }
+}
+
+# Internal Ingress
+
+resource "kubernetes_ingress_v1" "internal_ingress" {
+  count = var.cda_external_ui == false ? 1 : 0
+  metadata {
+    name = "internal-ingress"
+    annotations = {
+      "kubernetes.io/ingress.class"                   = "gce-internal"
+      "kubernetes.io/ingress.regional-static-ip-name" = var.internal_ip_name
     }
+  }
+
+  spec {
+    # Default backend to UI app.
+    default_backend {
+      service {
+        name = "adp-ui"
+        port {
+          number = 80
+        }
+      }
+    }
+
+    rule {
+      host = var.domain
+      http {
+        # Upload Service
+        path {
+          backend {
+            service {
+              name = "upload-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/upload_service"
+        }
+
+        # classification Service
+        path {
+          backend {
+            service {
+              name = "classification-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/classification_service"
+        }
+
+        # validation Service
+        path {
+          backend {
+            service {
+              name = "validation-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/validation_service"
+        }
+
+        # extraction Service
+        path {
+          backend {
+            service {
+              name = "extraction-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/extraction_service"
+        }
+
+        # hitl Service
+        path {
+          backend {
+            service {
+              name = "hitl-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/hitl_service"
+        }
+
+        # document-status Service
+        path {
+          backend {
+            service {
+              name = "document-status-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/document_status_service"
+        }
+
+        # matching Service
+        path {
+          backend {
+            service {
+              name = "matching-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path = "/matching_service"
+        }
+
+        # Config Service
+        path {
+          backend {
+            service {
+              name = "config-service"
+              port {
+                number = 80
+              }
+            }
+          }
+          path_type = "Prefix"
+          path      = "/config_service"
+        }
+      }
+    }
+
   }
 }

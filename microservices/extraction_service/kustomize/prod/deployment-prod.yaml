@@ -17,21 +17,13 @@ kind: Deployment
 metadata:
   name: extraction-service
 spec:
-  replicas: 3
+  replicas: 5
   template:
     spec:
       containers:
       - name: extraction-service
         image: extraction-service
         imagePullPolicy: Always
-        env:
-        - name: PROJECT_ID
-          valueFrom:
-            configMapKeyRef:
-              name: env-vars
-              key: PROJECT_ID
-        - name: EXTERNAL_DATA_PROJECT_ID
-          valueFrom:
-            configMapKeyRef:
-              name: env-vars
-              key: EXTERNAL_DATA_PROJECT_ID
+        envFrom:
+        - configMapRef:
+            name: extraction-env-vars

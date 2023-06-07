@@ -30,6 +30,26 @@ variable "vpc_network" {
   description = "specify the vpc name"
 }
 
+variable "network_project_id" {
+  type        = string
+  description = "The project ID of the shared VPC's host (for shared vpc support)"
+}
+
+variable "vpc_subnetwork" {
+  type        = string
+  description = "subnetwork"
+}
+
+variable "secondary_ranges_pods" {
+  type        = string
+  description = "gke IP ranges for pods"
+}
+
+variable "secondary_ranges_services" {
+  type        = string
+  description = "gke IP ranges for svc"
+}
+
 variable "region" {
   type        = string
   description = "cluster region"
@@ -65,6 +85,26 @@ variable "node_locations" {
 }
 
 variable "kubernetes_version" {
-  type    = string
-  default = "1.22.12-gke.2300"
+  type = string
+}
+
+variable "namespace" {
+  type        = string
+  description = "Kubernetes namespace"
+}
+
+variable "service_account_name" {
+  type        = string
+  description = "Google Service Account name"
+}
+
+variable "enable_private_nodes" {
+  type        = bool
+  description = "Whether nodes have internal IP addresses only"
+  default     = true
+}
+
+variable "master_ipv4_cidr_block" {
+  type        = string
+  description = "The IP range in CIDR notation to use for the hosted master network"
 }
