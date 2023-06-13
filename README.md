@@ -296,6 +296,11 @@ Edit `microservices/adp_ui/.env` and chose between `http` and `https` protocol d
   - (Optional) REACT_APP_MESSAGING_SENDER_ID - Google Analytics ID, only available when you enabled the GA with Firebase.
     - You can find this ID in the Project settings > Cloud Messaging
 
+### Enable Identity Platform
+- Enable Identity Platform via [Cloud Shell](https://console.cloud.google.com/marketplace/details/google-cloud-platform/customer-identity)
+  - It will ask your confirmation to perform Firebase Upgrade and will import all Firebase settings.
+
+ 
 ### Deploy microservices
 
 [//]: # (With kustomize 5.0 there are breaking changes on passing the environment variables.)
