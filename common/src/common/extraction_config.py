@@ -16,6 +16,7 @@ limitations under the License.
 
 ### DocAI parser and extraction configuration
 import os
+from typing import List
 
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
 assert PROJECT_ID, "Env var PROJECT_ID is not set."
@@ -27,6 +28,16 @@ DOCAI_OUTPUT_BUCKET_NAME = f"{PROJECT_ID}-docai-output"
 DOCAI_ATTRIBUTES_TO_IGNORE = [
     "textStyles", "textChanges", "revisions", "pages.image"
 ]
+
+# There can be
+class ExtractionOutput:
+  def __init__(self, uid: str, extracted_entities: List, extraction_status: str,
+      extraction_field_min_score: float, extraction_score: float) -> None:
+    self.uid = uid
+    self.extracted_entities = extracted_entities
+    self.extraction_status = extraction_status
+    self.extraction_field_min_score = extraction_field_min_score
+    self.extraction_score = extraction_score
 
 # This is depricated, using docai_entity_mapping.json and DOCAI_ENTITY_MAPPING_FILE instead
 # Full mapping of entity's and column names, grouped by document class.

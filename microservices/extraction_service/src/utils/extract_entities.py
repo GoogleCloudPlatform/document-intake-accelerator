@@ -13,43 +13,154 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-import re
-import time
 import datetime
+import json
+import re
+import traceback
+import warnings
 from typing import Any
 from typing import Dict
 from typing import List
-import traceback
-import random
-import string
-import json
+from common.models import Document
 import proto
-from common.config import STATUS_SUCCESS
+from google.cloud import documentai_v1 as documentai
+from google.cloud import storage
+from common.db_client import bq_client
+from common.utils.stream_to_bq import stream_document_to_bigquery
+from common.utils.format_data_for_bq import format_data_for_bq
 import common.config
+from common.utils import process_extraction_result_helper
+from common.config import STATUS_SUCCESS, STATUS_ERROR
 from common.config import DocumentWrapper
 from common.config import PDF_MIME_TYPE
+from common.config import get_docai_entity_mapping
+from common.extraction_config import DOCAI_ATTRIBUTES_TO_IGNORE
+from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME
+from common.extraction_config import ExtractionOutput
 from common.utils.helper import get_processor_location
 from common.utils.helper import split_uri_2_path_filename
-from google.cloud import documentai_v1 as documentai
-from .change_json_format import get_json_format_for_processing, \
-  correct_json_format_for_db
-from .correct_key_value import data_transformation
-from . import utils_functions
-from .utils_functions import extraction_accuracy_calc, \
-  clean_form_parser_keys, strip_value, form_parser_entities_mapping
-from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME, \
-  DOCAI_ATTRIBUTES_TO_IGNORE
-from common.config import get_docai_entity_mapping
 from common.utils.logging_handler import Logger
-import warnings
-from google.cloud import storage
-from google.api_core.exceptions import InternalServerError
-from google.api_core.exceptions import RetryError
+from . import utils_functions
+from .change_json_format import correct_json_format_for_db
+from .change_json_format import get_json_format_for_processing
+from .correct_key_value import data_transformation
+from .utils_functions import clean_form_parser_keys
+from .utils_functions import extraction_accuracy_calc
+from .utils_functions import form_parser_entities_mapping
+from .utils_functions import strip_value
 
 warnings.simplefilter(action="ignore")
 
 storage_client = storage.Client()
+bq = bq_client()
+
+
+def handle_extraction_results(extraction_output: List[ExtractionOutput]):
+  # Update status for all documents that were requested for extraction
+  count = 0
+  Logger.info(
+      f"handle_extraction_results - Handling results for extraction_output={extraction_output}")
+
+  # extraction_output
+
+  for extraction_item in iter(extraction_output):
+    Logger.info(f"handle_extraction_results - {extraction_item}")
+    uid = extraction_item.uid
+    document = Document.find_by_uid(uid)
+    if not document:
+      Logger.error(
+          f"handle_extraction_results - Could not retrieve document by uid {uid}")
+      continue
+    case_id = document.case_id
+    gcs_url = document.url
+    document_type = document.document_type
+    doc_class = document.document_class
+    # find corresponding result in extraction_output
+    extraction_result_keys = [key for key in extraction_output if
+                              uid == key.uid]
+    if len(extraction_result_keys) == 0:
+      Logger.error(
+          f"extraction_api - No extraction result returned for {gcs_url} and"
+          f" uid={uid}")
+      process_extraction_result_helper.update_extraction_status(case_id, uid,
+                                                                STATUS_ERROR,
+                                                                None, None,
+                                                                None)
+      continue
+
+    entities_for_bq = format_data_for_bq(extraction_item.extracted_entities)
+    count += 1
+    Logger.info(
+        f"extraction_api - Streaming {count} data to BigQuery for {gcs_url} "
+        f"case_id={case_id}, uid={uid}, "
+        f"document_type={document_type}, "
+        f"doc_class={doc_class}")
+    # stream_document_to_bigquery updates data to bigquery
+    bq_update_status = stream_document_to_bigquery(bq, case_id, uid,
+                                                   doc_class, document_type,
+                                                   entities_for_bq, gcs_url)
+    if not bq_update_status:
+      Logger.info(f"extraction_api - Successfully streamed {count} data to BQ ")
+    else:
+      Logger.error(
+          f"extraction_api - Failed streaming to BQ, returned status {bq_update_status}")
+
+    # update_extraction_status updates data to document collection
+    db_update_status = process_extraction_result_helper.update_extraction_status(
+        case_id, uid, STATUS_SUCCESS,
+        extraction_item.extracted_entities,
+        extraction_item.extraction_score,
+        extraction_item.extraction_status)
+
+    # checking if both databases are updated successfully
+    #   if db_update_status.status_code == 200 and bq_update_status == []:
+    #     document = {"case_id": case_id,
+    #                 "uid": uid,
+    #                 "doc_type": document_type,
+    #                 "doc_class": doc_class,
+    #                 "gcs_url": gcs_url,
+    #                 "entities": extraction_output[conf][0],
+    #                 "score": extraction_output[conf][1],
+    #                 "extraction_status": extraction_output[conf][2],
+    #                 "extraction_field_min_score": extraction_output[conf][3],
+    #                 "message": f"document with case_id {case_id} ,uid_id {uid} "
+    #                            f"successfully extracted"
+    #                 }
+    #     if "results" not in success_response.keys():
+    #       success_response["results"] = []
+    #     success_response["results"].append(document)
+    #   else:
+    #     Logger.error(
+    #       f"extraction_api - Extraction database update failed for {gcs_url},"
+    #       f" uid={uid}")
+    #     err = traceback.format_exc().replace("\n", " ")
+    #     Logger.error(err)
+    #     update_extraction_status(case_id, uid, STATUS_ERROR, None, None, None)
+    # Logger.info(f"extraction_api - Successfully Completed for {count} documents!")
+
+    # if document is application form then update autoapproval status
+    if document_type == "application_form":
+      autoapproval_status = process_extraction_result_helper.get_autoapproval_status(
+          None, extraction_item.extraction_score,
+          extraction_item.extraction_field_min_score,
+          None, doc_class,
+          document_type)
+      Logger.info(f"autoapproval_status for application:{autoapproval_status}")
+      if autoapproval_status is not None:
+        process_extraction_result_helper.update_autoapproval_status(case_id,
+                                                                    uid,
+                                                                    STATUS_SUCCESS,
+                                                                    autoapproval_status[
+                                                                      0], "yes")
+    elif document_type == "supporting_documents":
+      if extraction_item.extraction_score is not None:
+        Logger.info(
+            f"extraction score is {extraction_item.extraction_score} for {uid}")
+        process_extraction_result_helper.validate_match_approve(case_id, uid,
+                                                                extraction_item.extraction_score,
+                                                                extraction_item.extraction_field_min_score,
+                                                                extraction_item.extracted_entities,
+                                                                doc_class)
 
 
 # Handling Nested labels for CDE processor
@@ -57,7 +168,6 @@ def get_key_values_dic(entity: documentai.Document.Entity,
     document_entities: Dict[str, Any],
     parent_key: str = None
 ) -> None:
-
   # Fields detected. For a full list of fields for each processor see
   # the processor documentation:
   # https://cloud.google.com/document-ai/docs/processors-list
@@ -67,7 +177,8 @@ def get_key_values_dic(entity: documentai.Document.Entity,
   normalized_value = entity.get("normalizedValue")
 
   if normalized_value:
-    if isinstance(normalized_value, dict) and "booleanValue" in normalized_value.keys():
+    if isinstance(normalized_value,
+                  dict) and "booleanValue" in normalized_value.keys():
       normalized_value = normalized_value.get("booleanValue")
     else:
       normalized_value = normalized_value.get("text")
@@ -76,13 +187,15 @@ def get_key_values_dic(entity: documentai.Document.Entity,
     key = parent_key
     new_entity_value = (
         entity_key,
-        normalized_value if normalized_value is not None else entity.get("mentionText"),
+        normalized_value if normalized_value is not None else entity.get(
+            "mentionText"),
         confidence,
     )
   else:
     key = entity_key
     new_entity_value = (
-        normalized_value if normalized_value is not None else entity.get("mentionText"),
+        normalized_value if normalized_value is not None else entity.get(
+            "mentionText"),
         confidence,
     )
 
@@ -171,10 +284,9 @@ def specialized_parser_extraction_from_json(data, doc_class: str, context: str):
   Logger.info("Required entities created from Specialized parser response")
   return specialized_parser_entity_list
 
-
-def specialized_parser_extraction(processor, dai_client,
+def specialized_parser_extraction(
     configs: List[DocumentWrapper],
-    doc_class: str):
+    doc_class: str, processed_documents, entities: List[ExtractionOutput]):
   """
     This is specialized parser extraction main function.
     It will send request to parser and retrieve response and call
@@ -191,37 +303,108 @@ def specialized_parser_extraction(processor, dai_client,
     -------
   """
 
-  processed_documents = batch_extraction(processor, dai_client, configs)
-  result = {}
-
-  for input_gcs_source in processed_documents.keys():
+  for input_gcs_source in processed_documents:
     config = get_config_by_uri(input_gcs_source, configs)
     if config is None:
       Logger.error(
-          f"form_parser_extraction - Could not retrieve back config for {input_gcs_source}")
+          f"specialized_parser_extraction - Could not retrieve back config for {input_gcs_source}")
       continue
-    Logger.info(f"form_parser_extraction - Handling results for "
+    Logger.info(f"specialized_parser_extraction - Handling results for "
                 f"{input_gcs_source} with config={config}")
 
-    # json might be sharded
     for document in processed_documents[input_gcs_source]:
       try:
+        # TODO handle sharding
         json_string = proto.Message.to_json(document)
         data = json.loads(json_string)
         specialized_parser_entities_list = specialized_parser_extraction_from_json(
             data, doc_class, config.context)
-        result[config] = post_processing(specialized_parser_entities_list,
-                                         doc_class, input_gcs_source, True)
+        entities.append(post_processing(config.uid,
+                                      specialized_parser_entities_list, True))
       except Exception as e:
-        Logger.error(f"specialized_parser_extraction - Error for {input_gcs_source}:  {e}")
+        Logger.error(
+            f"specialized_parser_extraction - Error for {input_gcs_source}:  {e}")
         err = traceback.format_exc().replace("\n", " ")
         Logger.error(err)
 
-  return result
 
 
-def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
-    timeout: int = 600):
+def get_callback_fn(operation, processor_type: str, doc_class: str, configs):
+  def post_process_extract(future):
+    print(f"post_process_extract - Extraction Complete!")
+    # print(f"operation.metadata={operation.metadata}")
+
+    # Once the operation is complete,
+    # get output document information from operation metadata
+    metadata = documentai.BatchProcessMetadata(operation.metadata)
+    if metadata.state != documentai.BatchProcessMetadata.State.SUCCEEDED:
+      raise ValueError(
+          f"post_process_extract - Batch Process Failed: {metadata.state_message}")
+
+    documents = {}  # Contains per processed document, keys are path to original document
+
+    # One process per Input Document
+    blob_count = 0
+    for process in metadata.individual_process_statuses:
+      # output_gcs_destination format: gs://BUCKET/PREFIX/OPERATION_NUMBER/INPUT_FILE_NUMBER/
+      # The Cloud Storage API requires the bucket name and URI prefix separately
+      matches = re.match(r"gs://(.*?)/(.*)", process.output_gcs_destination)
+      if not matches:
+        print(
+            f"post_process_extract - Could not parse output GCS destination:[{process.output_gcs_destination}]")
+        continue
+
+      output_bucket, output_prefix = matches.groups()
+      output_gcs_destination = process.output_gcs_destination
+      input_gcs_source = process.input_gcs_source
+      print(
+          f"post_process_extract - Handling DocAI results for {input_gcs_source} using "
+          f"process output {output_gcs_destination}")
+      # Get List of Document Objects from the Output Bucket
+      output_blobs = storage_client.list_blobs(output_bucket,
+                                               prefix=output_prefix + "/")
+
+      # Document AI may output multiple JSON files per source file
+      # Sharding happens when the output JSON File gets over a size threshold
+      # (> 10MB, around 40 or 50 pages).
+      for blob in output_blobs:
+        # Document AI should only output JSON files to GCS
+        if ".json" not in blob.name:
+          Logger.warning(
+              f"post_process_extract - Skipping non-supported file: {blob.name} - Mimetype: {blob.content_type}"
+          )
+          continue
+        blob_count = blob_count + 1
+        # Download JSON File as bytes object and convert to Document Object
+        Logger.info(
+            f"post_process_extract - Adding {blob_count} gs://{output_bucket}/{blob.name}")
+        document = documentai.Document.from_json(
+            blob.download_as_bytes(), ignore_unknown_fields=True
+        )
+        if input_gcs_source not in documents.keys():
+          documents[input_gcs_source] = []
+        documents[input_gcs_source].append(document)
+
+    Logger.info(
+        f"post_process_extract - Loaded {sum([len(documents[x]) for x in documents if isinstance(documents[x], list)])} DocAI document objects retrieved from json. ")
+
+    desired_entities_list = []
+    if processor_type == "CUSTOM_EXTRACTION_PROCESSOR":
+      Logger.info(f"post_process_extract - Specialized parser results handling"
+                  f" document doc_class={doc_class} and {len(documents)} document(s).")
+      specialized_parser_extraction(configs, doc_class, documents, desired_entities_list)
+    elif processor_type == "FORM_PARSER_PROCESSOR":
+      Logger.info(f"post_process_extract - Form parser results handling for"
+                  f" document doc_class={doc_class} and {len(documents)} document(s).")
+      form_parser_extraction(configs, doc_class, documents, desired_entities_list)
+
+    handle_extraction_results(desired_entities_list)
+
+  return post_process_extract
+
+
+async def batch_extraction(processor, dai_client,
+    configs: List[DocumentWrapper], doc_class: str):
   input_uris = sorted(set([config.gcs_url for config in configs]))
   Logger.info(f"batch_extraction - input_uris = {input_uris}")
   input_docs = [documentai.GcsDocument(gcs_uri=doc_uri,
@@ -253,7 +436,6 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
       f"batch_extraction - Calling DocAI API for {len(input_uris)} documents "
       f" using {processor.display_name} processor"
       f"type={processor.type_}, path={processor.name}")
-  start = time.time()
 
   # request for Doc AI
   request = documentai.types.document_processor_service.BatchProcessRequest(
@@ -262,75 +444,14 @@ def batch_extraction(processor, dai_client, configs: List[DocumentWrapper],
       document_output_config=output_config,
   )
   operation = dai_client.batch_process_documents(request)
-
   # Continually polls the operation until it is complete.
   # This could take some time for larger files
   # Format: projects/PROJECT_NUMBER/locations/LOCATION/operations/OPERATION_ID
-  try:
-    Logger.info(
-        f"batch_extraction - Waiting for operation {operation.operation.name} to complete...")
-    operation.result(timeout=timeout)
-  # Catch exception when operation doesn't finish before timeout
-  except (RetryError, InternalServerError) as e:
-    Logger.error(e.message)
-    Logger.error("batch_extraction - Failed to process documents")
-    return [], False
-
-  elapsed = "{:.0f}".format(time.time() - start)
-  Logger.info(f"batch_extraction - Elapsed time for operation {elapsed} seconds")
-
-  # Once the operation is complete,
-  # get output document information from operation metadata
-  metadata = documentai.BatchProcessMetadata(operation.metadata)
-  if metadata.state != documentai.BatchProcessMetadata.State.SUCCEEDED:
-    raise ValueError(f"batch_extraction - Batch Process Failed: {metadata.state_message}")
-
-  documents = {}  # Contains per processed document, keys are path to original document
-
-  # One process per Input Document
-  blob_count = 0
-  for process in metadata.individual_process_statuses:
-    # output_gcs_destination format: gs://BUCKET/PREFIX/OPERATION_NUMBER/INPUT_FILE_NUMBER/
-    # The Cloud Storage API requires the bucket name and URI prefix separately
-    matches = re.match(r"gs://(.*?)/(.*)", process.output_gcs_destination)
-    if not matches:
-      print(
-          f"batch_extraction - Could not parse output GCS destination:[{process.output_gcs_destination}]")
-      continue
-
-    output_bucket, output_prefix = matches.groups()
-    output_gcs_destination = process.output_gcs_destination
-    input_gcs_source = process.input_gcs_source
-    print(
-        f"batch_extraction - Handling DocAI results for {input_gcs_source} using "
-        f"process output {output_gcs_destination}")
-    # Get List of Document Objects from the Output Bucket
-    output_blobs = storage_client.list_blobs(output_bucket,
-                                             prefix=output_prefix + "/")
-
-    # Document AI may output multiple JSON files per source file
-    # Sharding happens when the output JSON File gets over a size threshold,
-    # like 10MB or something. I have seen it happen around 30 pages, but more
-    # often around 40 or 50 pages.
-    for blob in output_blobs:
-      # Document AI should only output JSON files to GCS
-      if ".json" not in blob.name:
-        Logger.warning(
-            f"batch_extraction - Skipping non-supported file: {blob.name} - Mimetype: {blob.content_type}"
-        )
-        continue
-      blob_count = blob_count + 1
-      # Download JSON File as bytes object and convert to Document Object
-      Logger.info(f"batch_extraction - Adding {blob_count} gs://{output_bucket}/{blob.name}")
-      document = documentai.Document.from_json(
-          blob.download_as_bytes(), ignore_unknown_fields=True
-      )
-      if input_gcs_source not in documents.keys():
-        documents[input_gcs_source] = []
-      documents[input_gcs_source].append(document)
-
-  Logger.info(f"batch_extraction - Loaded {sum([len(documents[x]) for x in documents if isinstance(documents[x], list)])} DocAI document objects retrieved from json. ")
-  return documents
+  operation.add_done_callback(
+      get_callback_fn(operation=operation, processor_type=processor.type_,
+                      configs=configs, doc_class=doc_class))
+  Logger.info(
+      f"batch_extraction - DocAI operation started in the background as LRO")
 
 
 def get_config_by_uri(uri: str, configs: List[DocumentWrapper]):
@@ -340,9 +461,9 @@ def get_config_by_uri(uri: str, configs: List[DocumentWrapper]):
   return None
 
 
-def form_parser_extraction(processor, dai_client,
+def form_parser_extraction(
     configs: List[DocumentWrapper],
-    doc_class: str, timeout: int = 600):
+    doc_class: str, processed_documents, entities: List[ExtractionOutput]):
   """
   This is form parser extraction main function. It will send
   request to parser and retrieve response and call
@@ -385,11 +506,7 @@ def form_parser_extraction(processor, dai_client,
       response += text[start_index:end_index]
     return response
 
-  processed_documents = batch_extraction(processor, dai_client, configs,
-                                         timeout)
-  result = {}
-
-  for input_gcs_source in processed_documents.keys():
+  for input_gcs_source in processed_documents:
     extracted_entity_list = []
     form_parser_text = ""
     config = get_config_by_uri(input_gcs_source, configs)
@@ -484,8 +601,8 @@ def form_parser_extraction(processor, dai_client,
                   f"form_parser_entities_list={form_parser_entities_list}, "
                   f"flag={flag}")
 
-      result[config] = post_processing(form_parser_entities_list,
-                                       doc_class, input_gcs_source, flag)
+      entities.append(
+          post_processing(config.uid, form_parser_entities_list, flag))
 
     except Exception as e:
       Logger.error(f"form_parser_extraction - Extraction failed for "
@@ -496,10 +613,9 @@ def form_parser_extraction(processor, dai_client,
   Logger.info(
       "form_parser_extraction - Required entities created from Form parser response - Complete!")
 
-  return result
 
-
-def extract_entities(configs: List[DocumentWrapper], doc_class: str):
+async def extract_entities(configs: List[DocumentWrapper], doc_class: str) -> \
+    List[ExtractionOutput]:
   """
   This function calls specialized parser or form parser depends on document type
 
@@ -514,7 +630,6 @@ def extract_entities(configs: List[DocumentWrapper], doc_class: str):
            manual_extraction information.
     Extraction accuracy
   """
-  desired_entities_list = []
   Logger.info(f"extract_entities for {len(configs)} files, "
               f"doc_class={doc_class}")
   # read parser details from configuration json file
@@ -527,7 +642,7 @@ def extract_entities(configs: List[DocumentWrapper], doc_class: str):
                                   get_processor_location(processor_path))
     if not location:
       Logger.error(f"Unidentified location for parser {processor_path}")
-      return
+      return []
 
     opts = {"api_endpoint": f"{location}-documentai.googleapis.com"}
 
@@ -538,27 +653,15 @@ def extract_entities(configs: List[DocumentWrapper], doc_class: str):
     print(
         f"parser_type={processor.type_}, parser_name={processor.display_name}")
 
-    if processor.type_ == "CUSTOM_EXTRACTION_PROCESSOR":
-      Logger.info(f"Specialized parser extraction "
-                  f"started for this document doc_class={doc_class}")
-      # TODO
-      desired_entities_list = specialized_parser_extraction(
-          processor, dai_client, configs, doc_class)
-    elif processor.type_ == "FORM_PARSER_PROCESSOR":
-      Logger.info(f"Form parser extraction started for"
-                  f" document doc_class={doc_class} and {len(configs)} document(s).")
-      desired_entities_list = form_parser_extraction(
-          processor, dai_client, configs, doc_class)
+    await batch_extraction(processor, dai_client, configs, doc_class)
 
-    return desired_entities_list
   else:
     # Parser not available
     Logger.error(f"Parser not available for this document: {doc_class}")
     # print("parser not available for this document")
-    return None
 
 
-def post_processing(desired_entities_list, doc_class, gcs_doc_path, flag):
+def post_processing(uid, desired_entities_list, flag):
   # TODO remove all these magic legacy ADP conversions which break
   # calling standard entity mapping function to standardize the entities
   final_extracted_entities = desired_entities_list
@@ -575,14 +678,17 @@ def post_processing(desired_entities_list, doc_class, gcs_doc_path, flag):
   #     json.dump(final_extracted_entities, outfile, indent=4)
 
   # extraction accuracy calculation
-  document_extraction_confidence, extraction_status, extraction_field_min_score = \
+  extraction_score, extraction_status, extraction_field_min_score = \
     extraction_accuracy_calc(final_extracted_entities, flag)
   # print(final_extracted_entities)
   # print(document_extraction_confidence)
-  Logger.info(f"Extraction completed for {doc_class} {gcs_doc_path}:  "
-              f"document_extraction_confidence={document_extraction_confidence},"
+  Logger.info(f"Extraction completed for {uid}:  "
+              f"extraction_score={extraction_score},"
               f" extraction_status={extraction_status}, "
               f"extraction_field_min_score={extraction_field_min_score}")
 
-  return final_extracted_entities, \
-         document_extraction_confidence, extraction_status, extraction_field_min_score
+  return ExtractionOutput(uid=uid,
+                          extracted_entities=final_extracted_entities,
+                          extraction_status=extraction_status,
+                          extraction_field_min_score=extraction_field_min_score,
+                          extraction_score=extraction_score)

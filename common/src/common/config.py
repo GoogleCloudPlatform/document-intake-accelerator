@@ -126,7 +126,7 @@ def load_config(bucketname, filename):
     return config_data
   else:
     Logger.info(
-        f"load_config - It seems config file has changed....Reloading config from: {filename}")
+        f"load_config - Reloading config from: {filename}")
     try:
       if blob.exists():
         config_data = json.loads(blob.download_as_text(encoding="utf-8"))

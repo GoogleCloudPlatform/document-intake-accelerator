@@ -3,3 +3,4 @@ uvicorn==0.14.0
 python-multipart==0.0.5
 fireo==1.4.1
 google-cloud-storage==1.42.2
+google-cloud-documentai==2.9.0

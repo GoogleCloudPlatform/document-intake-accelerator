@@ -13,37 +13,39 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import os.path
-import random
-import re
-import string
-import sys
+import datetime
 import json
+import os.path
+import re
+import sys
+import time
 from os.path import basename
 from typing import Dict
-import time
-
-from pikepdf import Pdf
-from .download_pdf_gcs import download_pdf_gcs
-from google.cloud import documentai_v1 as documentai
-from google.api_core.exceptions import InternalServerError
-from google.api_core.exceptions import RetryError
-from google.cloud import storage
 from typing import List
 
-from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME
-from common.config import get_parser_config, BUCKET_NAME
-from common.config import CLASSIFIER, get_classification_confidence_threshold, \
-  get_document_class_by_classifier_label, get_classification_default_class
-from common.utils.logging_handler import Logger
-from common.utils.helper import get_processor_location
-from common.utils import helper
 import requests
-from common.utils.iap import send_iap_request
+from google.api_core.exceptions import InternalServerError
+from google.api_core.exceptions import RetryError
+from google.cloud import documentai_v1 as documentai
+from google.cloud import storage
+from pikepdf import Pdf
+
+from common.config import BUCKET_NAME
+from common.config import CLASSIFIER
 from common.config import DOCUMENT_STATUS_API_PATH
+from common.config import PDF_MIME_TYPE
+from common.config import STATUS_SUCCESS
+from common.config import get_classification_confidence_threshold
+from common.config import get_classification_default_class
+from common.config import get_document_class_by_classifier_label
+from common.config import get_parser_config
+from common.extraction_config import DOCAI_OUTPUT_BUCKET_NAME
 from common.models import Document
-import datetime
-from common.config import STATUS_SUCCESS, PDF_MIME_TYPE
+from common.utils import helper
+from common.utils.helper import get_processor_location
+from common.utils.iap import send_iap_request
+from common.utils.logging_handler import Logger
+from .download_pdf_gcs import download_pdf_gcs
 
 PDF_EXTENSION = ".pdf"
 

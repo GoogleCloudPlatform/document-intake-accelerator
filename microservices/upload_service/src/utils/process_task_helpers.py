@@ -17,13 +17,11 @@ limitations under the License.
 """Helper functions to execute the pipeline"""
 import requests
 import traceback
-from fastapi import HTTPException
+from common.utils import process_extraction_result_helper
 from common.utils.logging_handler import Logger
 
-from utils.autoapproval import get_autoapproval_status
 from typing import List, Dict
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR, \
-  CLASSIFICATION_UNDETECTABLE
+from common.config import CLASSIFICATION_UNDETECTABLE
 
 
 def sort_per_doc_class(docs):
@@ -106,7 +104,7 @@ def run_pipeline(payload: List[Dict], is_hitl: bool, is_reassign: bool):
             extraction_score = doc["extraction_score"]
             extraction_entities = doc["extraction_entities"]
             extraction_field_min_score = None  # Todo calculate the field value
-            validate_match_approve(doc["case_id"], doc["uid"], extraction_score,
+            process_extraction_result_helper.validate_match_approve(doc["case_id"], doc["uid"], extraction_score,
                                    extraction_field_min_score,
                                    extraction_entities, doc["document_class"])
 
@@ -139,39 +137,7 @@ def get_extraction_score(configs: List[Dict], doc_class):
   payload = {"configs": configs_new, "doc_class": doc_class}
   Logger.info(f"get_extraction_score sending to base_url={base_url}, payload={payload}")
   response = requests.post(base_url, json=payload)
-  Logger.info(f"get_extraction_score response {response}")
-  return response
-
-
-def get_validation_score(case_id: str, uid: str, document_class: str,
-    extraction_entities: List[Dict]):
-  """Call the validation API and get the validation score"""
-  base_url = "http://validation-service/validation_service/v1/validation/" \
-             "validation_api"
-  req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
-            f"&doc_class={document_class}"
-  response = requests.post(req_url, json=extraction_entities)
-  return response
-
-
-def get_matching_score(case_id: str, uid: str):
-  """Call the matching API and get the matching score"""
-  base_url = "http://matching-service/matching_service/v1/" \
-             "match_document"
-  req_url = f"{base_url}?case_id={case_id}&uid={uid}"
-  response = requests.post(req_url)
-  return response
-
-
-def update_autoapproval_status(case_id: str, uid: str, a_status: str,
-    autoapproved_status: str, is_autoapproved: str):
-  """Update auto approval status"""
-  base_url = "http://document-status-service/document_status_service" \
-             "/v1/update_autoapproved_status"
-  req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
-            f"&status={a_status}&autoapproved_status={autoapproved_status}" \
-            f"&is_autoapproved={is_autoapproved}"
-  response = requests.post(req_url)
+  Logger.info(f"get_extraction_score response {response} for {payload}")
   return response
 
 
@@ -235,100 +201,16 @@ def classify_documents(configs: List[Dict]):
 
 def extract_documents(docs: List[Dict], document_class, document_type):
   """Perform extraction for application or supporting documents"""
-  extraction_score = None
-  extraction_entities = None
-  extraction_field_min_score = None
   Logger.info(f"extract_documents with {len(docs)}  documents docs={docs}, "
               f"document_class={document_class}, document_type={document_type}")
   extr_result = get_extraction_score(docs, document_class)
 
   if extr_result.status_code == 200:
-    results = extr_result.json().get("results")
-    for result in results:
-      Logger.info(f"extract_documents: Handling result={result}")
-      document_type = result.get("doc_type")
-      document_class = result.get("doc_class")
-      uid = result.get("uid")
-      extraction_score = result.get("score")
-      case_id = result.get("case_id")
-      extraction_field_min_score = result.get(
-          "extraction_field_min_score")
-      extraction_entities = result.get("entities")
-      doc = {
-
-      }
-      # if document is application form then update autoapproval status
-      if document_type == "application_form":
-        autoapproval_status = get_autoapproval_status(None, extraction_score,
-                                                      extraction_field_min_score,
-                                                      None, document_class,
-                                                      document_type)
-        Logger.info(f"autoapproval_status for application:{autoapproval_status}")
-        if autoapproval_status is not None:
-          update_autoapproval_status(case_id, uid, STATUS_SUCCESS,
-                                     autoapproval_status[0], "yes")
-      elif document_type == "supporting_documents":
-        Logger.info(f" Executing pipeline for normal scenario {doc}")
-        if extraction_score is not None:
-          Logger.info(f"extraction score is {extraction_score}, {doc}")
-          validate_match_approve(case_id, uid, extraction_score,
-                                 extraction_field_min_score,
-                                 extraction_entities, document_class)
-
+    Logger.info(f"extract_documents - response received {extr_result}")
   else:
     Logger.error(
       f"extraction failed for"
       f"document_type={document_type} document_class={document_class}")
-  # extraction_score = None
-  return extraction_score, extraction_field_min_score, extraction_entities
-
-
-def validate_match_approve(case_id, uid, extraction_score,
-    min_extraction_score_per_field,
-    extraction_entities, document_class):
-  """Perform validation, matching and autoapproval for supporting documents"""
-  validation_score = None
-  matching_score = None
-  document_type = "supporting_documents"
-  validation_res = get_validation_score(case_id, uid, document_class,
-                                        extraction_entities)
-  if validation_res.status_code == 200:
-    print("====Validation successful==========")
-    Logger.info(f"Validation successful for case_id: {case_id} uid:{uid}.")
-    validation_score = validation_res.json().get("score")
-    matching_res = get_matching_score(case_id, uid)
-    if matching_res.status_code == 200:
-      print("====Matching successful==========")
-      Logger.info(f"Matching successful for case_id: {case_id} uid:{uid}.")
-      matching_score = matching_res.json().get("score")
-      update_autoapproval(document_class, document_type, case_id, uid,
-                          validation_score, extraction_score,
-                          min_extraction_score_per_field, matching_score)
-    else:
-      Logger.error(f"Matching FAILED for case_id: {case_id} uid:{uid}")
-  else:
-    Logger.error(f"Validation FAILED for case_id: {case_id} uid:{uid}")
-  return validation_score, matching_score
-
-
-def update_autoapproval(document_class,
-    document_type,
-    case_id,
-    uid,
-    validation_score=None,
-    extraction_score=None,
-    min_extraction_score_per_field=None,
-    matching_score=None):
-  """Get the autoapproval status and update."""
-  autoapproval_status = get_autoapproval_status(validation_score,
-                                                extraction_score,
-                                                min_extraction_score_per_field,
-                                                matching_score, document_class,
-                                                document_type)
-  Logger.info(f"autoapproval_status for application:{autoapproval_status}\
-      for case_id: {case_id} uid:{uid}")
-  update_autoapproval_status(case_id, uid, STATUS_SUCCESS,
-                             autoapproval_status[0], "yes")
 
 
 def get_documents(payload: List[Dict]):

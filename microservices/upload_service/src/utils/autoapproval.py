@@ -13,17 +13,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import os
 
 """
 This code is Used to check the approval status of a document
 depending on the 3 different scores
 """
-from common.config import STATUS_APPROVED, STATUS_REVIEW, \
-  STATUS_REJECTED, STATUS_PENDING, STATUS_ERROR, \
-  get_extraction_confidence_threshold, \
-  get_extraction_confidence_threshold_per_field
 from common.autoapproval_config import AUTO_APPROVAL_MAPPING
+from common.config import STATUS_APPROVED
+from common.config import STATUS_REJECTED
+from common.config import STATUS_REVIEW
+from common.config import get_extraction_confidence_threshold
+from common.config import get_extraction_confidence_threshold_per_field
 from common.utils.logging_handler import Logger
 
 
