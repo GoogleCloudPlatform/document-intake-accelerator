@@ -158,9 +158,14 @@ sed 's|PROJECT_ID|'"$PROJECT_ID"'|g; s|API_DOMAIN|'"$API_DOMAIN"'|g; ' microserv
 - Go to Settings > Authorized domain, add the following to the Authorized domains:
   - Web App Domain (e.g. adp-dev.cloudpssolutions.com) - the one registered previously as `API_DOMAIN`
 - Go to Project Overview > Project settings, copy  `Web API Key` you will use this info in the next step.
-- In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. `vi`), and change the following values accordingly.
-  - REACT_APP_FIREBASE_API_KEY=`"Web API Key copied above"`
 
+```shell
+vi microservices/adp_ui/.env
+```
+- In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. `vi`), and change the following values accordingly.
+```shell
+REACT_APP_FIREBASE_API_KEY=`"Web API Key copied above"`
+```
 ### Deploy microservices
 Build/deploy microservices (using skaffold + kustomize):
 ```shell

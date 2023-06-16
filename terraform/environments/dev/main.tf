@@ -198,7 +198,7 @@ module "gke" {
   service_account_name = var.service_account_name_gke
 
   # See latest stable version at https://cloud.google.com/kubernetes-engine/docs/release-notes-stable
-  kubernetes_version = "1.24.9-gke.3200"
+  kubernetes_version = "1.24.13-gke.2500"
 
 }
 
@@ -527,7 +527,7 @@ resource "null_resource" "sample-data" {
     google_storage_bucket.document-load
   ]
   provisioner "local-exec" {
-    command = "gsutil -m  cp -r ../../../sample_data/bsc_demo gs://${google_storage_bucket.document-load.name}/bsc_demo"
+    command = "gsutil -m  cp -r ../../../sample_data/demo gs://${google_storage_bucket.document-load.name}/demo"
   }
 }
 
