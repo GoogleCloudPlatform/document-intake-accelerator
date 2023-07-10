@@ -33,10 +33,8 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { baseURL } from '../configs/firebase.config'
 import DragDropUpload from './DragDropUpload';
-import { ReactComponent as File } from '../images/file.svg';
 import Headers from './Headers';
 import options from '../configs/Program';
-import SearchForApplicantTable from './SearchApplicantTable';
 import { ReactComponent as Back } from '../images/arrow-back.svg';
 import '../App.css';
 import '../css/Upload.css';
@@ -265,23 +263,6 @@ function Upload() {
 
 				<br />
 
-				{/*<Container style={{ padding: '0', marginBottom: '20px', marginTop: '20px' }}>*/}
-				{/*	<Card className="raSearchCard">*/}
-				{/*		<Card.Body>*/}
-				{/*			/!** TO show a pop and select the caseid to reassign *!/*/}
-
-				{/*			<label className="raSubTitle">*/}
-				{/*				(Optional) Assign to existing applications:*/}
-				{/*			</label>*/}
-
-				{/*			{tableComponent &&*/}
-				{/*				<SearchForApplicantTable onSelectTableData={handleTableData} page={'uploadpage'} selectedRow={selectedCaseId} />*/}
-				{/*			}*/}
-
-				{/*			<br />*/}
-				{/*		</Card.Body>*/}
-				{/*	</Card>*/}
-				{/*</Container>*/}
 			</Container>
 		</div>
 

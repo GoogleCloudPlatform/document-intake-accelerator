@@ -34,20 +34,41 @@ function fetchConfig(configServer) {
 
         resolve (fetch(configServer + "/config_service/v1/get_config?name=document_types_config").then(handleFetchErrors).then(r => r.json())
             .then(documentConfig => {
-                console.log("documentConfig", documentConfig);
+                console.info("documentConfig", documentConfig);
                 let data = documentConfig['data']
                 var docs = []
-                console.log("data", data);
-                for(var key in data) {
-                    var docObj = {}
-                    docObj['value'] = key
+                console.info("data", data);
+
+                for(const key in data) {
+                  const docObj = {};
+                  docObj['value'] = key
                     docObj['display_name'] = data[key]['display_name']
+                    docObj['doc_type'] = []
+                  if (typeof data[key]['doc_type'] === "object" && data[key]['doc_type'] !== null) {
+                    if ('default' in data[key]['doc_type']) {
+                      let element = data[key]['doc_type']['default']
+                      docObj['doc_type'].push(element)
+                    }
+                    if ('rules' in data[key]['doc_type']) {
+                      for(const rule in data[key]['doc_type']['rules']) {
+                        let element = data[key]['doc_type']['rules'][rule]["name"]
+                        docObj['doc_type'].push(element)
+                      }
+                    }
+                  }
+                  else {
+                    docObj['doc_type'].push(data[key]['doc_type'])
+                  }
+                    // for backwards compatibility
+
+
                     docs[ key ] = docObj
                     docs.push(docObj)
 
-                console.log("docs", docs)
+
                 }
 
+                console.info("docs", docs)
                 return docs;
 
             })

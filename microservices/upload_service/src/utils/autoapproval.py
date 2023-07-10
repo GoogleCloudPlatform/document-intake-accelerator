@@ -29,7 +29,7 @@ from common.utils.logging_handler import Logger
 
 def get_autoapproval_status(validation_score, extraction_score,
     min_extraction_score_per_field, matching_score,
-    document_label, document_type):
+    document_label):
   """
   Used to calculate the approval status of a document depending on the
   validation, extraction and Matching Score
@@ -54,7 +54,7 @@ def get_autoapproval_status(validation_score, extraction_score,
     f"Extraction_score: {extraction_score}, "
     f"Extraction_score per field (min): {min_extraction_score_per_field}, "
     f"Matching_Score:{matching_score},"
-    f"DocumentLabel:{document_label}, DocumentType:{document_type}")
+    f"DocumentLabel:{document_label}")
   flag = "no"
 
   global_extraction_confidence_threshold = get_extraction_confidence_threshold()
@@ -80,73 +80,37 @@ def get_autoapproval_status(validation_score, extraction_score,
     Logger.info(f"Status: {status}")
     return status, flag
 
-  if document_type in ("supporting_documents", "claims_form"):
-    if document_type == "claims_form":
-      if extraction_score == 0.0:
-        flag = "no"
-        status = STATUS_REVIEW
+  print(f"data[document_label]={data[document_label]}")
+  for i in data[document_label]:
+    print(
+      f"get_autoapproval_status i={i}, data[document_label][i]={data[document_label][i]}")
+    v_limit = data[document_label][i].get("Validation_Score", 0)
+    e_limit = data[document_label][i].get("Extraction_Score",
+                                          global_extraction_confidence_threshold)
+    m_limit = data[document_label][i].get("Matching_Score", 0)
+    print(
+      f"Expected Limits are: v_limit={v_limit}, e_limit={e_limit}, m_limit={m_limit}")
+
+    if i != "Reject":
+      if check_scores():
+        flag = "yes"
+        status = STATUS_APPROVED
+        Logger.info(f"Status: {status}")
         return status, flag
 
-    print(f"data[document_label]={data[document_label]}")
-    for i in data[document_label]:
-      print(
-        f"get_autoapproval_status i={i}, data[document_label][i]={data[document_label][i]}")
-      v_limit = data[document_label][i].get("Validation_Score", 0)
-      e_limit = data[document_label][i].get("Extraction_Score",
-                                            global_extraction_confidence_threshold)
-      m_limit = data[document_label][i].get("Matching_Score", 0)
-      print(
-        f"Expected Limits are: v_limit={v_limit}, e_limit={e_limit}, m_limit={m_limit}")
+    else:
+      flag = "no"
 
-      if i != "Reject":
-        if check_scores():
-          flag = "yes"
-          status = STATUS_APPROVED
-          Logger.info(f"Status: {status}")
-          return status, flag
+      if check_scores():
+        status = STATUS_REVIEW
+        Logger.info(f"Status: {status}")
+        return status, flag
 
       else:
-        flag = "no"
-
-        if check_scores():
-          status = STATUS_REVIEW
-          Logger.info(f"Status: {status}")
-          return status, flag
-
-        else:
-          status = STATUS_REJECTED
-          Logger.info(f"Status: {status}")
-        return status, flag
-
-  elif document_type == "application_form":
-    if extraction_score == 0.0:
-      flag = "no"
-      status = STATUS_REVIEW
-      Logger.info(f"Status: {status}")
+        status = STATUS_REJECTED
+        Logger.info(f"Status: {status}")
       return status, flag
 
-    for i in data[document_label]:
-      if i != "Reject":
-        e_limit = data[document_label][i]["Extraction_Score"]
-        if extraction_score > e_limit:
-          flag = "yes"
-          status = STATUS_APPROVED
-          Logger.info(f"Status: {status}")
-          return status, flag
-
-      else:
-        e_limit = data[document_label][i]["Extraction_Score"]
-        flag = "no"
-        Logger.info(f"extraction_score={extraction_score}, e_limit= {e_limit}")
-        if extraction_score > e_limit:
-          status = STATUS_REVIEW
-          Logger.info(f"Status: {status}")
-          return status, flag
-
-        else:
-          status = STATUS_REJECTED
-          Logger.info(f"Status: {status}")
-          return status, flag
 
   else:
     status = STATUS_REVIEW

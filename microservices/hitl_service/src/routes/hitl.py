@@ -18,6 +18,7 @@ limitations under the License.
 from fastapi import APIRouter, HTTPException, Response
 from typing import Optional
 from common.models import Document
+from common.config import CLASSIFICATION_UNDETECTABLE, DOCUMENT_TYPE_UNKNOWN
 from common.utils.logging_handler import Logger
 from common.config import BUCKET_NAME, DB_KEYS, ENTITY_KEYS
 from common.config import STATUS_APPROVED, STATUS_REVIEW, STATUS_REJECTED, \
@@ -25,8 +26,8 @@ from common.config import STATUS_APPROVED, STATUS_REVIEW, STATUS_REJECTED, \
 from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, \
   STATUS_SPLIT, STATUS_ERROR, STATUS_TIMEOUT, STATUS_PROCESSED
 from common.config import PROCESS_TIMEOUT_SECONDS
-from common.config import get_document_types_config, get_display_name_by_doc_class
-from common.utils.stream_to_bq import stream_document_to_bigquery
+from common.config import get_document_types_config, \
+  get_display_name_by_doc_class
 from google.cloud import storage
 import datetime
 import requests
@@ -34,10 +35,13 @@ import fireo
 import traceback
 import time
 from models.search_payload import SearchPayload
+from common.utils.stream_to_bq import stream_document_to_bigquery
 from common.db_client import bq_client
 # disabling for linting to pass
 # pylint: disable = broad-except
 from common.utils.format_data_for_bq import format_data_for_bq
+
+bq = bq_client()
 
 router = APIRouter()
 SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
@@ -50,6 +54,7 @@ PROCESS_NEXT_STAGE = {
     "validation": "matching",
     "matching": "Auto-approval checking",
 }
+
 
 def to_camel_case(input_str):
   input_str = input_str.replace("_", "")
@@ -77,23 +82,24 @@ def get_doc_list_data(docs_list: list):
     #   f"get_doc_list_data - 1. Time elapsed: {str(round((time.time() - start_time_int) * 1000))} ms")
     start_time_int = time.time()
 
+    document_type = doc["document_type"]
+    if document_type is None:
+      doc["document_type"] = DOCUMENT_TYPE_UNKNOWN
 
     document_class = doc["document_class"]
     document_display_name = None
     if doc["document_display_name"] is None:
       try:
         Logger.debug(
-          f"One time action to repair existing documents and set document_display_name for {doc}")
+            f"One time action to repair existing documents and set document_display_name for {doc}")
         if document_class is not None:
           document_display_name = get_display_name_by_doc_class(document_class)
 
         # Keep the Old Logic in case
         if document_display_name is None:
-          doc_type = to_camel_case(doc['document_type']) if doc[
-                                                              'document_type'] is not None else 'no type'
           doc_class = to_camel_case(doc['document_class']) if doc[
-                                                                'document_class'] is not None else 'unclassified'
-          document_display_name = f"{doc_type} > {doc_class}"
+                                                                'document_class'] is not None else CLASSIFICATION_UNDETECTABLE
+          document_display_name = f"{doc_class}"
         document = Document.find_by_uid(doc["uid"])
         document.document_display_name = document_display_name
         document.update()
@@ -102,7 +108,8 @@ def get_doc_list_data(docs_list: list):
             f"get_doc_list_data - 2. Time elapsed:  {str(round((time.time() - start_time_int) * 1000))} ms")
         start_time_int = time.time()
       except Exception as e:
-        Logger.error(f"Error while setting document_display_name for {doc} - {e}")
+        Logger.error(
+          f"Error while setting document_display_name for {doc} - {e}")
 
     process_stage = "-"
     current_status = "-"
@@ -128,7 +135,7 @@ def get_doc_list_data(docs_list: list):
     last_hitl_status = hitl_status[-1] if hitl_status else None
 
     Logger.debug(
-      f"get_doc_list_data - 3. Time elapsed: {str(round((time.time() - start_time_int) * 1000))} ms")
+        f"get_doc_list_data - 3. Time elapsed: {str(round((time.time() - start_time_int) * 1000))} ms")
     start_time_int = time.time()
     if doc["system_status"]:
       system_status = doc["system_status"]
@@ -175,7 +182,7 @@ def get_doc_list_data(docs_list: list):
           current_status = STATUS_ERROR
 
     Logger.debug(
-      f"get_doc_list_data - 5. Time elapsed: {str(round((time.time() - start_time_int) * 1000))} ms")
+        f"get_doc_list_data - 5. Time elapsed: {str(round((time.time() - start_time_int) * 1000))} ms")
     start_time_int = time.time()
     # Show next stage process status.
     if current_status == STATUS_IN_PROGRESS and process_stage in PROCESS_NEXT_STAGE:
@@ -221,7 +228,8 @@ async def report_data():
             Document.collection.filter(active="active").fetch()))
     docs_list = sorted(
         docs_list, key=lambda i: i["upload_timestamp"], reverse=True)
-    Logger.debug(f"Fetched Active Data len={len(docs_list)} in  {str(round((time.time() - start_time) * 1000))} ms")
+    Logger.debug(
+      f"Fetched Active Data len={len(docs_list)} in  {str(round((time.time() - start_time) * 1000))} ms")
     docs_list = get_doc_list_data(docs_list)
     Logger.debug(
         f"report_data - Time elapsed: {str(round((time.time() - start_time) * 1000))} ms")
@@ -346,9 +354,14 @@ async def update_entity(uid: str, updated_doc: dict):
                                                    updated_doc["case_id"], uid,
                                                    updated_doc[
                                                      "document_class"],
-                                                   updated_doc["document_type"],
+                                                   updated_doc[
+                                                     "document_type"],
                                                    entities,
-                                                   updated_doc["url"])
+                                                   updated_doc["url"],
+                                                   updated_doc["ocr_text"],
+                                                   updated_doc[
+                                                     "classification_score"],
+                                                   updated_doc["is_hitl_classified"])
     if not bq_update_status:
       Logger.info(f"returned status {bq_update_status}")
     else:
@@ -520,8 +533,7 @@ async def get_unclassified():
 def update_classification_status(case_id: str,
     uid: str,
     status: str,
-    document_class: Optional[str] = None,
-    document_type: Optional[str] = None):
+    document_class: Optional[str] = None):
   """ Call status update api to update the classification output
     Args:
     case_id (str): Case id of the file ,
@@ -534,8 +546,7 @@ def update_classification_status(case_id: str,
 
   if status == STATUS_SUCCESS:
     req_url = f"{base_url}?case_id={case_id}&uid={uid}" \
-              f"&status={status}&is_hitl={True}&document_class={document_class}" \
-              f"&document_type={document_type}"
+              f"&status={status}&is_hitl={True}&document_class={document_class}"
     response = requests.post(req_url)
     return response
 
@@ -546,8 +557,8 @@ def update_classification_status(case_id: str,
     return response
 
 
-def call_process_task(case_id: str, uid: str, document_class: str,
-    document_type: str, gcs_uri: str, context: str):
+def call_process_task(case_id: str, uid: str, document_class: str, gcs_uri: str,
+    context: str):
   """
     Starts the process task API after hitl classification
   """
@@ -557,7 +568,6 @@ def call_process_task(case_id: str, uid: str, document_class: str,
       "uid": uid,
       "gcs_url": gcs_uri,
       "document_class": document_class,
-      "document_type": document_type,
       "context": context
   }
   payload = {"configs": [data]}
@@ -571,7 +581,7 @@ def call_process_task(case_id: str, uid: str, document_class: str,
 
 @router.post("/update_hitl_classification")
 async def update_hitl_classification(case_id: str, uid: str,
-    document_class: str):
+    document_class: str, document_type: str = None):
   """
   Updates the hitl classification status flag and doc type and doc class in DB
   and starts the process task
@@ -582,53 +592,67 @@ async def update_hitl_classification(case_id: str, uid: str,
   Returns 500: If something fails
   """
   try:
-    Logger.info(f"update_hitl_classification with case_id={case_id}, uid={uid}, document_class={document_class}")
+    Logger.info(
+      f"update_hitl_classification with case_id={case_id}, uid={uid}, document_class={document_class}")
     doc = Document.find_by_uid(uid)
-    Logger.debug(doc.to_dict()["active"].lower())
-    if not doc or not doc.to_dict()["active"].lower() == "active":
-      Logger.error("Document for hitl classification not found")
-      raise HTTPException(status_code=404, detail="Document not found")
 
-    document_types_config = get_document_types_config()
-    if document_class not in document_types_config.keys():
-      Logger.error(f"Invalid parameter document_class {document_class}")
-      raise HTTPException(
-          status_code=400, detail="Invalid Parameter. Document class")
+    if document_type and document_type != doc.document_type:
+      doc.document_type = document_type
+      doc.update()
+      entities_for_bq = format_data_for_bq(doc.entities)
+      bq_update_status = stream_document_to_bigquery(bq, case_id, uid,
+                                                     doc.document_class,
+                                                     document_type,
+                                                     entities_for_bq, doc.url,
+                                                     doc.ocr_text,
+                                                     doc.classification_score,
+                                                     doc.is_hitl_classified)
+      if not bq_update_status:
+        Logger.info(
+            f"extraction_api - Successfully streamed data to BQ ")
+      else:
+        Logger.error(
+            f"extraction_api - Failed streaming to BQ, returned status {bq_update_status}")
 
-    Logger.info(f"Starting manual classification for case_id" \
-                f" {case_id} and uid {uid}")
-    document_type = document_types_config[document_class].get("doc_type")
-    if not document_type:
-      Logger.error(f"Doc class {document_class} is not a valid doc class, because missing doc_type property")
-      update_classification_status(case_id, uid, STATUS_ERROR)
-      raise HTTPException(
-          status_code=422, detail="Unidentified document class found")
+    if doc.document_class != document_class:
+      Logger.debug(doc.to_dict()["active"].lower())
+      if not doc or not doc.to_dict()["active"].lower() == "active":
+        Logger.error("Document for hitl classification not found")
+        raise HTTPException(status_code=404, detail="Document not found")
 
-    # Update DSM
-    Logger.info("Updating Doc status from Hitl classification for case_id" \
-                f"{case_id} and uid {uid}")
-    response = update_classification_status(
-        case_id,
-        uid,
-        STATUS_SUCCESS,
-        document_class=document_class,
-        document_type=document_type
-    )
-    Logger.debug(response)
-    if response.status_code != 200:
-      Logger.error(f"Document status update failed for {case_id} and {uid}")
-      raise HTTPException(
-          status_code=500, detail="Document status update failed")
+      document_types_config = get_document_types_config()
+      if document_class not in document_types_config.keys():
+        Logger.error(f"Invalid parameter document_class {document_class}")
+        raise HTTPException(
+            status_code=400, detail="Invalid Parameter. Document class")
 
-    # Call Process task
-    Logger.info("Starting Process task from hitl classification")
-    res = call_process_task(case_id, uid, document_class, document_type,
-                            doc.url, doc.context)
-    if res.status_code == 202:
-      return {
-          "status": STATUS_SUCCESS,
-          "message": "Process task api has been started successfully"
-      }
+      Logger.info(f"Starting manual classification for case_id" \
+                  f" {case_id} and uid {uid}")
+
+      # Update DSM
+      Logger.info("Updating Doc status from Hitl classification for case_id" \
+                  f"{case_id} and uid {uid}")
+      response = update_classification_status(
+          case_id,
+          uid,
+          STATUS_SUCCESS,
+          document_class=document_class
+      )
+      Logger.debug(response)
+      if response.status_code != 200:
+        Logger.error(f"Document status update failed for {case_id} and {uid}")
+        raise HTTPException(
+            status_code=500, detail="Document status update failed")
+
+      # Call Process task
+      Logger.info("Starting Process task from hitl classification")
+      res = call_process_task(case_id, uid, document_class,
+                              doc.url, doc.context)
+      if res.status_code == 202:
+        return {
+            "status": STATUS_SUCCESS,
+            "message": "Process task api has been started successfully"
+        }
 
   except HTTPException as e:
     print(e)

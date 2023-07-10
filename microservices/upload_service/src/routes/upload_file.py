@@ -150,7 +150,6 @@ async def upload_data_json(input_data: InputData):
     input_data = dict(input_data)
     entity = []
     document_class = input_data.pop("document_class")
-    document_type = input_data.pop("document_type")
     context = input_data.pop("context")
     case_id = input_data.pop("case_id")
     #If case-id is none generate a new case_id
@@ -164,7 +163,7 @@ async def upload_data_json(input_data: InputData):
           "extraction_confidence": 1,
           "corrected_value": None
       })
-    uid = create_document_from_data(case_id, document_type, document_class,
+    uid = create_document_from_data(case_id, document_class,
                                     context, entity)
 
     status = ug.upload_json_file(case_id, uid, str(entity))
@@ -176,13 +175,13 @@ async def upload_data_json(input_data: InputData):
         "in uploading document") from e
 
 
-def create_document_from_data(case_id, document_type, document_class, context,
+def create_document_from_data(case_id, document_class, context,
                               entity):
   base_url = "http://document-status-service/document_status_service/v1/"
   req_url = f"{base_url}create_documet_json_input"
   response = requests.post(
       f"{req_url}?case_id={case_id}&document_class={document_class}"
-      f"&document_type={document_type}&context={context}",
+      f"&context={context}",
       json=entity)
   response = response.json()
   uid = response["uid"]

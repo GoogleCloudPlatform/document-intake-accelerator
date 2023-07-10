@@ -89,16 +89,8 @@ async def reassign_case_id(reassign: Reassign, response: Response):
 
     #if given document with old case_id is application and cannot be
     # reassigned send user response that this file is not acceptable
-    if document.document_type == "application_form":
-      Logger.error(
-          f"document to be reassigned with case_id {old_case_id}"
-          f" and uid {uid} is application form and cannot be reassigned")
-      response.status_code = status.HTTP_406_NOT_ACCEPTABLE
-      response.body =f"document to be reassigned with case_id {old_case_id}" \
-                  f" and uid {uid} is application form and cannot be reassigned"
-      return {"message": response.body}
-    new_case_id_document  = Document.collection.filter(case_id=new_case_id).\
-      filter(document_type ="application_form").get()
+
+    new_case_id_document  = Document.collection.filter(case_id=new_case_id).get()
     print("After new case_id check")
     print(f"new_case_id_document: {new_case_id_document}")
     #application with new case case_id does not exist in db
@@ -166,11 +158,13 @@ async def reassign_case_id(reassign: Reassign, response: Response):
     entities_for_bq = format_data_for_bq(entities)
     update_bq = stream_document_to_bigquery(client, new_case_id, uid,
                                             document_class, document_type,
-                                            entities_for_bq, updated_url)
+                                            entities_for_bq, updated_url,
+                                            document.ocr_text,
+                                            document.classification_score)
     print("--------firestore db ----------------")
     # status_process_task =
     response_process_task = call_process_task(new_case_id, uid, document_class,
-                                              document_type, updated_url,
+                                              updated_url,
                                               context, extraction_score,
                                               entities)
     if update_bq == [] and response_process_task.status_code == 202:
@@ -208,7 +202,7 @@ def copy_blob(bucket_name, source_blob_name, destination_blob_name):
 
 
 def call_process_task(case_id: str, uid: str, document_class: str,
-                      document_type: str, gcs_uri: str, context: str,
+                      gcs_uri: str, context: str,
                       extraction_score: float, entities: List[Dict]):
   """
     Starts the process task API after reassign
@@ -220,7 +214,6 @@ def call_process_task(case_id: str, uid: str, document_class: str,
       "context": context,
       "gcs_url": gcs_uri,
       "document_class": document_class,
-      "document_type": document_type,
       "extraction_score": extraction_score,
       "extraction_entities": entities
   }

@@ -95,12 +95,15 @@ async def match_document(case_id: str, uid: str):
                 500 : HTTPException: Internal Server Error if something fail
     """
   try:
-
+    # Disabling Matching for now
+    return {"status": STATUS_SUCCESS, "score": 0}
+    Logger.info(f"Matching document with case_id {case_id}"
+                f" and uid {uid}")
     # # Temp Disable Matching For Now
     # return {"status": STATUS_SUCCESS, "score": 0}
     #Get Application form data with the same caseid
     af_doc = Document.collection.filter(case_id=case_id).filter(
-        active="active").filter(document_type="application_form").get()
+        active="active").get()
 
     if af_doc and af_doc.entities is not None:
       Logger.info(f"Matching document with case_id {case_id}"

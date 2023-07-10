@@ -108,7 +108,7 @@ def get_individual_dict(query):
   dict1 = {}
   counter = query.count("$")
   for i in range(1, counter + 1):
-    key = query.split("$.")[i].split("'")[0]
+    key = query.split_documents("$.")[i].split("'")[0]
     dict1[key] = None
   return dict1
 

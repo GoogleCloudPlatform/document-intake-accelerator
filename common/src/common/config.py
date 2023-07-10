@@ -34,7 +34,10 @@ assert PROJECT_ID, "Env var PROJECT_ID is not set."
 REGION = "us-central1"
 PROCESS_TIMEOUT_SECONDS = 600
 
+API_DOMAIN = os.getenv("API_DOMAIN")
+
 IAP_SECRET_NAME = os.getenv("IAP_SECRET_NAME", "cda-iap-secret")
+USE_EXTERNAL_URL = os.getenv("EXTERNAL", False)
 
 # Doc approval status, will reflect on the Frontend app.
 STATUS_APPROVED = "Approved"
@@ -51,6 +54,9 @@ STATUS_TIMEOUT = "Timeout"
 
 PDF_MIME_TYPE = "application/pdf"
 
+#For inter-process requests
+BASE_URL = os.getenv("BASE_URL", "http:/")
+
 DOC_CLASS_SPLIT_DISPLAY_NAME = "Sub-documents"
 DOC_TYPE_SPLIT_DISPLAY_NAME = "Package"
 
@@ -59,7 +65,10 @@ BUCKET_NAME = f"{PROJECT_ID}-document-upload"
 TOPIC_ID = "queue-topic"
 UPLOAD_API_PATH = "/upload_service/v1"
 PROCESS_TASK_API_PATH = f"{UPLOAD_API_PATH}/process_task"
-DOCUMENT_STATUS_API_PATH = "/document_status_service/v1"
+DOCUMENT_STATUS_API_PATH = "document_status_service/v1"
+EXTRACTION_API_PATH = "extraction_service/v1"
+VALIDATION_API_PATH = "validation_service/v1"
+MATCHING_API_PATH = "matching_service/v1"
 
 # ========= Validation ===========================
 BUCKET_NAME_VALIDATION = PROJECT_ID
@@ -72,20 +81,10 @@ CLASSIFIER = "classifier"
 CONFIG_BUCKET = os.environ.get("CONFIG_BUCKET")
 CONFIG_FILE_NAME = "config.json"
 CLASSIFICATION_UNDETECTABLE = "unclassified"
-
+DOCUMENT_TYPE_UNKNOWN = "unknown"
 # ===== Start Pipeline ===========================
 START_PIPELINE_FILENAME = os.environ.get("START_PIPELINE_NAME",
                                          "START_PIPELINE")
-
-
-class DocumentWrapper:
-  def __init__(self, case_id, uid, gcs_url, document_type,
-      context="california") -> None:
-    self.gcs_url = gcs_url
-    self.case_id = case_id
-    self.uid = uid
-    self.context = context
-    self.document_type = document_type
 
 
 # Global variables
@@ -153,7 +152,7 @@ def get_config(config_name=None):
   assert config_data, f"get_config - Unable to locate '{config_name} or incorrect JSON file'"
 
   if config_name:
-    config_item = config_data.get(config_name, [])
+    config_item = config_data.get(config_name, {})
     Logger.debug(f"{config_name}={config_item}")
   else:
     config_item = config_data
@@ -174,7 +173,7 @@ def get_document_types_config():
 
 
 def get_parser_by_doc_class(doc_class):
-  Logger.info(f"get_parser_by_doc_class {doc_class}")
+  Logger.debug(f"get_parser_by_doc_class {doc_class}")
   doc = get_document_types_config().get(doc_class)
   if not doc:
     Logger.error(
@@ -183,6 +182,34 @@ def get_parser_by_doc_class(doc_class):
 
   parser_name = doc.get("parser")
   Logger.debug(f"Using doc_class={doc_class}, parser_name={parser_name}")
+  return get_parser_config().get(parser_name)
+
+
+def get_doc_type_by_doc_class(doc_class):
+  Logger.debug(f"get_doc_type_by_doc_class {doc_class}")
+  doc = get_document_types_config().get(doc_class)
+  if not doc:
+    Logger.error(
+        f"doc_class {doc_class} not present in document_types_config")
+    return None
+
+  return doc.get("doc_type")
+
+
+def get_parser_name_by_doc_class(doc_class):
+  Logger.debug(f"get_parser_by_doc_class {doc_class}")
+  doc = get_document_types_config().get(doc_class)
+  if not doc:
+    Logger.error(
+        f"doc_class {doc_class} not present in document_types_config")
+    return None
+
+  parser_name = doc.get("parser")
+  Logger.debug(f"Using doc_class={doc_class}, parser_name={parser_name}")
+  return parser_name
+
+
+def get_parser_by_name(parser_name):
   return get_parser_config().get(parser_name)
 
 
@@ -224,16 +251,6 @@ def get_classification_default_class():
   Logger.warning(
       f"Classification default label {classification_default_class} is not a valid Label or missing a corresponding parser in parser_config")
   return CLASSIFICATION_UNDETECTABLE
-
-
-APPLICATION_FORM_DISPLAY_NAME = "Application Form"
-APPLICATION_FORM = "application_form"
-SUPPORTING_DOC = "supporting_documents"
-SUPPORTING_DOC_DISPLAY_NAME = "Supporting Documents"
-SUPPORTED_DOC_TYPES = {
-    APPLICATION_FORM: APPLICATION_FORM_DISPLAY_NAME,
-    SUPPORTING_DOC: SUPPORTING_DOC_DISPLAY_NAME
-}
 
 
 def get_document_type(doc_name):
@@ -286,7 +303,6 @@ DB_KEYS = [
     "context",
     "document_class",
     "document_display_name",
-    "document_type",
     "upload_timestamp",
     "extraction_score",
     "is_hitl_classified",
@@ -303,3 +319,26 @@ ENTITY_KEYS = [
 
 # Used by E2E testing. Leave as blank by default.
 DATABASE_PREFIX = os.getenv("DATABASE_PREFIX", "")
+
+
+def get_url(service_name):
+  if USE_EXTERNAL_URL:
+    return f"{BASE_URL}/{API_DOMAIN}"
+  else:
+    return f"{BASE_URL}/{service_name}"
+
+
+def get_document_status_service_url():
+  return f"{get_url('document-status-service')}/{DOCUMENT_STATUS_API_PATH}"
+
+
+def get_extraction_service_url():
+  return f"{get_url('extraction-service')}/{EXTRACTION_API_PATH}"
+
+
+def get_validation_service_url():
+  return f"{get_url('validation-service')}/{VALIDATION_API_PATH}"
+
+
+def get_matching_service_url():
+  return f"{get_url('matching-service')}/{MATCHING_API_PATH}"

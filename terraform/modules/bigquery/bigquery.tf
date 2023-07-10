@@ -57,6 +57,24 @@ resource "google_bigquery_table" "table_id" {
         "description": "Indicates document_class and processor used for extracting the form."
     },
     {
+        "name": "ocr_text",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "OCR Plain text of the extracted form."
+    },
+    {
+        "name": "classification_score",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Score for the classification prediction."
+    },
+    {
+        "name": "is_hitl_classified",
+        "type": "BOOL",
+        "mode": "NULLABLE",
+        "description": "Indicates if classification was done manually."
+    },
+    {
         "name": "document_type",
         "type": "STRING",
         "mode": "NULLABLE",
