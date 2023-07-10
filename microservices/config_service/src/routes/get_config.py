@@ -34,6 +34,7 @@ FAILED_RESPONSE = {"status": STATUS_ERROR}
 from fastapi import BackgroundTasks
 import asyncio
 
+
 @router.get("/get_config")
 async def get_config_by_name(name=None):
   """ reports document_types_config
@@ -60,10 +61,18 @@ async def get_config_by_name(name=None):
         status_code=500, detail="Error in get_document_types_config") from e
 
 
-async def batch_processing():
+async def batch_classification():
+  parser_details = common.config.get_parser_by_name("classifier")
+  await batch_processing(parser_details)
+
+
+async def batch_extraction():
   doc_class = "generic_form"
   parser_details = common.config.get_parser_by_doc_class(doc_class)
+  await batch_processing(parser_details)
 
+
+async def batch_processing(parser_details):
   if parser_details:
     processor_path = parser_details["processor_id"]
 
@@ -108,6 +117,7 @@ async def batch_processing():
       input_documents=input_config,
       document_output_config=output_config,
   )
+  print(f"Starting LRO in the background...")
   operation = dai_client.batch_process_documents(request)
   operation.add_done_callback(get_callback_fn(operation))
 
@@ -132,25 +142,11 @@ async def test(background_task: BackgroundTasks):
   return {"message": "Processing your document"}
 
 
-async def extract(dai_client, request):
-  print(f"Extraction Started for {request}")
-
-  # t1 = asyncio.create_task(simple_coroutine())
-  # t1.add_done_callback(post_process_extract)
-  # await t1
-
-  operation = dai_client.batch_process_documents(request)
-  operation.add_done_callback(get_callback_fn(operation))
-  # await operation
-  print("Extraction - exiting")
-
-
 def form_parser(future, operation, result):
   # Once the operation is complete,
   # get output document information from operation metadata
   print(f"form_parser = {future.result()}")
-  result.append("Test")
-  return
+
   metadata = documentai.BatchProcessMetadata(operation.metadata)
   if metadata.state != documentai.BatchProcessMetadata.State.SUCCEEDED:
     raise ValueError(
@@ -196,6 +192,7 @@ def form_parser(future, operation, result):
       document = documentai.Document.from_json(
           blob.download_as_bytes(), ignore_unknown_fields=True
       )
+
       if input_gcs_source not in documents.keys():
         documents[input_gcs_source] = []
       documents[input_gcs_source].append(document)
@@ -224,6 +221,7 @@ async def simple_coroutine():
   await asyncio.sleep(10)
   return 1
 
+
 async def my_callback(result):
     print("my_callback got:", result)
     return "My return value is ignored"
@@ -240,14 +238,17 @@ async def add_success_callback(fut, callback):
   return result
 
 if __name__ == "__main__":
+  loop = asyncio.get_event_loop()
+  try:
+    # loop.run_until_complete(batch_processing())
+    asyncio.ensure_future(batch_extraction())
+    asyncio.ensure_future(batch_classification())
+    loop.run_forever()
+  except KeyboardInterrupt:
+    pass
+  finally:
+    print("Closing Loop")
+    loop.close()
   # el = asyncio.new_event_loop()
   # asyncio.set_event_loop(el)
   # asyncio.run(batch_processing())
-
-  loop = asyncio.get_event_loop()
-  task = asyncio.ensure_future(batch_processing())
-  task = add_success_callback(task, my_callback)
-  response = loop.run_until_complete(task)
-  print("response:", response)
-  loop.close()
-

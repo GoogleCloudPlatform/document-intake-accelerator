@@ -265,7 +265,6 @@ def test_update_hitl_classification_api(client_with_emulator):
   d.active = "active"
   d.system_status = [{"stage": "classification", "status": "unclassified"}]
   d.document_class = None
-  d.document_type = None
   d.save()
 
   case_id = "test_case"
@@ -296,7 +295,6 @@ def test_update_hitl_classification_api_invalid_doc_type(client_with_emulator):
   d.uid = "u123"
   d.system_status = [{"stage": "classification", "status": "unclassified"}]
   d.document_class = None
-  d.document_type = None
   d.active = "active"
   d.save()
 

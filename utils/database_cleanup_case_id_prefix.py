@@ -66,8 +66,10 @@ def get_args():
       """,
       epilog="""
       Examples:
-
-      python delete_firestore_documents_by_caseid_prefix.py -c=batch002_
+      Following command removes all documents that have case_id starting with 'batch02' and 'demo' but exclude those starting with 'batch02_10' and 'batch02_20') 
+      python utils/database_cleanup_case_id_prefix.py -i batch02  -e batch02_10 -e batch02_20 -i demo --dryrun
+      - Use --dryrun option - so it won't actually remove any documents, but will list those to be deleted, so you could test first
+      - You could combine which ones to include, which ones to exclude (all based on the prefix of case_id)
       """)
 
   args_parser.add_argument('-i', dest="include", help="case_id prefix of documents you want to cleanup", action="append", default=[])
@@ -75,6 +77,7 @@ def get_args():
   args_parser.add_argument('--dryrun', action='store_true',
                       help='Print the list of documents to be deleted instead of performing delete action '
                            'of running the commands.')
+
   return args_parser
 
 

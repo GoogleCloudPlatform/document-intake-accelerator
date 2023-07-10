@@ -14,27 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from common.models import Document
-
 """ extraction endpoints """
+import traceback
 
-from fastapi import APIRouter, HTTPException
-
-
-from common.utils.logging_handler import Logger
-from common.config import STATUS_SUCCESS, STATUS_ERROR, DocumentWrapper
+from fastapi import APIRouter
+from fastapi import BackgroundTasks
+from fastapi import HTTPException
 from models.process_task import ProcessTask
 from utils.extract_entities import extract_entities
 
-import traceback
-from fastapi import BackgroundTasks
+from common.config import STATUS_ERROR
+from common.config import STATUS_SUCCESS
+from common.utils.docai_helper import get_docai_input
+from common.utils.logging_handler import Logger
 
 # disabling for linting to pass
 # pylint: disable = broad-except
 router = APIRouter()
 
 FAILED_RESPONSE = {"status": STATUS_ERROR}
-
+SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 
 
 @router.post("/extraction_api")
@@ -43,7 +42,7 @@ async def extraction(payload: ProcessTask, background_task: BackgroundTasks):
         Args:
              payload (ProcessTask): Consist of configs required to run the pipeline
                     uid (str): unique id for  each document
-                    doc_class (str): class of document (processor is configured per document class)
+                    parser_name (str): name of the parser (as in config.json) to be used for the extraction
         Returns:
             200 : PDF files are successfully classified and database updated
             500  : HTTPException: 500 Internal Server Error if something fails
@@ -51,39 +50,26 @@ async def extraction(payload: ProcessTask, background_task: BackgroundTasks):
             :param background_task:
       """
   try:
-    success_response = {"status": STATUS_SUCCESS}
     payload = payload.dict()
     Logger.info(f"extraction_api - payload received {payload}")
     configs = payload.get("configs")
-    doc_class = payload.get("doc_class")
-    Logger.info(f"extraction_api - Starting extraction for configs={configs},"
-                f"doc_class={doc_class}")
+    parser_name = payload.get("parser_name")
+    Logger.info(f"extraction_api - Starting extraction for configs={configs}, parser_name={parser_name}")
 
-    doc_configs = []
-    for config in configs:
-      uid = config.get("uid")
-      document = Document.find_by_uid(uid)
-      if not document:
-        Logger.error(f"extraction_api - Could not retrieve document by uid {uid}")
-        continue
+    processor, dai_client, input_uris = get_docai_input(parser_name, configs)
+    if not processor or not dai_client:
+      Logger.error(f"extraction_api - Failed to get processor {parser_name} using config")
+      return FAILED_RESPONSE
 
-      case_id = document.case_id
-      gcs_url = document.url
-      context = document.context
-      document_type = document.document_type
-      doc_configs.append(DocumentWrapper(case_id=case_id,
-                                        uid=uid,
-                                        gcs_url=gcs_url,
-                                        document_type=document_type,
-                                        context=context,
-                                        ))
+    if not dai_client:
+      Logger.error(f"extraction_api - Unidentified location for parser {parser_name}")
+      return FAILED_RESPONSE
 
     background_task.add_task(extract_entities,
-                             doc_configs,
-                             doc_class)
+                             processor, dai_client, input_uris)
 
-    Logger.info(f"extraction - returning response")
-    return success_response
+    Logger.info(f"extraction_api - returning response")
+    return SUCCESS_RESPONSE
 
   except Exception as e:
     err = traceback.format_exc().replace("\n", " ")
@@ -91,5 +77,3 @@ async def extraction(payload: ProcessTask, background_task: BackgroundTasks):
     Logger.error(e)
     Logger.error(err)
     raise HTTPException(status_code=500)
-
-

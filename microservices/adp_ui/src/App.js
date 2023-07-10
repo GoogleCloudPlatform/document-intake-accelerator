@@ -58,7 +58,7 @@ GlobalDebug(false);
               <Route path="/documentreview/:uid/:caseid">
                 <DocumentReview />
               </Route>
-              <Route path="/classify/:uid/:caseid">
+              <Route path="/classify/:uid/:caseid/:document_class/:document_type">
                 <Classified />
               </Route>
               <Route path="/reassign">

@@ -44,7 +44,6 @@ def test_extraction_api_success(client_with_emulator):
   doc.case_id = "123A"
   doc.uid = "aSCh3o6BxjPEqjMAQhtC"
   doc.document_class = "driving_license"
-  doc.document_type = "supporting_documents"
   doc.save()
   entities = [{
       "entity": "name",
@@ -70,7 +69,7 @@ def test_extraction_api_success(client_with_emulator):
             response = client_with_emulator.post(
                 f"{api_url}extraction_api?case_id=123A&uid=aSCh3o"
                 f"6BxjPEqjMAQhtC&doc_class=driving_license&"
-                f"document_type=supporting_documents&context=arkansas&"
+                f"context=arkansas&"
                 f"gcs_url=gs://bucket_name/123A/aSCh3o6BxjPEqjMAQhtC/test.pdf")
             print(response)
   assert response.status_code == 200
@@ -94,7 +93,7 @@ def test_extraction_api_parser_not_available(client_with_emulator):
             response = client_with_emulator.post(
                 f"{api_url}extraction_api?case_id=123A&"
                 f"uid=aSCh3o6BxjPEqjMAQhtC&doc_class=driving_license&"
-                f"document_type=supporting_documents&context=arkansas&"
+                f"context=arkansas&"
                 f"gcs_url=gs://bucket_name/123A/aSCh3o6BxjPEqjMAQhtC/test.pdf")
             print(response)
             assert response.status_code == 404
@@ -117,6 +116,6 @@ def test_extraction_api_fail(client_with_emulator):
             response = client_with_emulator.post(
                 f"{api_url}extraction_api?case_id=123A"
                 f"&uid=aSCh3o6BxjPEqjMAQhtC&doc_class=driving_license&"
-                f"document_type=supporting_documents&context=arkansas"
+                f"context=arkansas"
                 f"&gcs_url=gs://bucket_name/123A/aSCh3o6BxjPEqjMAQhtC/test.pdf")
             assert response.status_code == 500

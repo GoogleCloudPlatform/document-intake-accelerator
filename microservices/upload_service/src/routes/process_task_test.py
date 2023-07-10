@@ -86,7 +86,6 @@ def test_process_task_api_is_hitl(client_with_emulator):
       "gcs_url": "gs://document-upload-test/case_arkansas_2001/"\
       "y13FLMQW4bYnHLa5t8dg/Copy of Arkansas-form-1.pdf",
       "context": "arkansas",
-      "document_type": "application_form",
       "document_class": "unemployment_form"
     }
       ]
