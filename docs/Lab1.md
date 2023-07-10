@@ -76,7 +76,7 @@ gcloud services enable domains.googleapis.com
   * If you want to use Argolis DNS (<ldap>.demo.altostrat.com), follow the guide [go/argolis-dns](go/argolis-dns). 
     * Navigate to [Cloud DNS](https://console.cloud.google.com/net-services/dns/zones) and create ZONE as described in the guide for <ldap>.demo.altostrat.com
     * Request DNS managed zone (as described in [go/argolis-dns](go/argolis-dns))
-  * Otherwise, purchase a [Cloud Domain](https://cloud.google.com/domains/docs/overview) 
+  * Otherwise, purchase a [Cloud Domain](https://cloud.google.com/domains/docs/overview)  -> Cloud DNS type
     * Navigate to [Cloud Domain](https://console.cloud.google.com/net-services/domains/registrations), pick desired name and fill in the forms:
 
 
@@ -273,7 +273,7 @@ gcloud identity groups memberships add --group-email="${GROUP_EMAIL}" --member-e
 
 ### Modifying config.json file
 * Configuration file is stored in the GCS bucket and dynamically used by the pipeline: `gs://${PROJECT_ID}-config/config.json`
-
+  
 
 * For the DocAI access, use the pre-configured file:  
 

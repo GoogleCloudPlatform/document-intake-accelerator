@@ -28,7 +28,6 @@ import { Card, Button, FloatingLabel, Form, Container, Row, Col } from 'react-bo
 import {
   Link, useHistory
 } from 'react-router-dom';
-import SearchForApplicantTable from './SearchApplicantTable';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
@@ -75,7 +74,7 @@ function ReAssign() {
       }).then(res => {
         console.log("previous caseIDData", res.data.data);
         let inputData = res.data.data
-        if (inputData && inputData.document_type !== null) {
+        if (inputData && inputData.document_class !== null) {
           inputDocClass = inputData.document_class.split('_').join(" ");
           inputDocType = inputData.document_type.split('_').join(" ")
         }
@@ -87,25 +86,10 @@ function ReAssign() {
     })
   }
 
-  const applicationFormAPICall = () => {
-    axios.post(`${baseURL}/hitl_service/v1/search`, { filter_key: "case_id", filter_value: caseid }).then((appForm) => {
-      console.log("searchFilterText", appForm.data.data)
-      let appForms = appForm.data.data;
-      appForms.forEach((ele) => {
-        if (ele.document_type === 'application_form') {
-          setApplicationForm(ele.uid);
-        }
-      })
-
-    }).catch((error) => {
-      console.log("error", error);
-    })
-  }
 
   useEffect(() => {
     let url = `${baseURL}/hitl_service/v1/fetch_file?case_id=${caseid}&uid=${uid}`
     console.log("DATA REASSIGN", uid);
-    applicationFormAPICall()
     setTableComponent(true);
 
     apiCall().then((data) => {
@@ -235,10 +219,6 @@ function ReAssign() {
               <label className="raSubTitle">
                 Search for existing applications:
               </label>
-
-              {tableComponent &&
-                <SearchForApplicantTable onSelectTableData={handleTableData} page={'reaasignpage'} selectedRow={selectedCaseId} />
-              }
 
               <br />
               <Row style={{ float: 'right' }}>

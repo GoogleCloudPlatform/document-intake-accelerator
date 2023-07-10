@@ -23,7 +23,7 @@ timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
 echo "$timestamp - Running $filename ... " | tee "$LOG"
 
 if [[ -z "${API_DOMAIN}" ]]; then
-  echo "API_DOMAIN env variable is not set. It should be set to either customized domain name or using a dummy name mydomain.com". | tee -a "$LOG"
+  echo "API_DOMAIN env variable is not set.". | tee -a "$LOG"
   exit
 fi
 

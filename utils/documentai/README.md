@@ -100,8 +100,11 @@ Will use PDF form on he GCS bucket as an input and provide classification/splitt
 
 Make sure to do pre-requisite steps and set variables:
 ```shell
+cd utils/documentai
 export PROJECT_ID=
+export API_DPMAIN=
 export GOOGLE_APPLICATION_CREDENTIALS=
+source ../../SET
 ```
 
 ### Classifier/Splitter Test
@@ -109,10 +112,8 @@ export GOOGLE_APPLICATION_CREDENTIALS=
 **Description**: 
 Will use PDF form on he GCS bucket as an input and provide classification/splitter output using `classifier` processor from the CDA config file.
 
-You will need a pdf form stored on the GCS bucket (provided under -f option):
 ```shell
-source ../../SET
-python python utils/documentai/classify_test.py -f  gs://<bucket-name>/<path-to>/<form_name>.pdf 
+EXTERNAL=True;BASE_URL=https:/; python classify.py -f gs://<path_to_form>.pdf 
 ```
 
 **Sample output:**
@@ -131,12 +132,11 @@ gs://docs_for_testing/Package-combined.pdf
 ### Extraction Test
 Make sure to do pre-requisite steps and set variables:
 ```shell
-export PROJECT_ID=
-export GOOGLE_APPLICATION_CREDENTIALS=
+EXTERNAL=True;BASE_URL=https:/; python extract.py  -f gs://<path_to_form>.pdf -c form_class_name
 ```
 
+**Sample output:**
 
-CONFIG_BUCKET=$CONFIG_BUCKET python "$DIR"/extract.py -f gs://$PROJECT_ID/sample_data/bsc_demo/bsc-dme-pa-form-1.pdf -c bsc_pa_form
 
 ### Sort and Copy PDF files
 TODO
@@ -149,8 +149,8 @@ TODO
 ```
 
 
-
-
+### Delete specific Firestore documents
+utils/database_cleanup_case_id_prefix.py - to delete specific records from the database using case_id prefix 
 
 
 Setup cross Project access if you have not done so:

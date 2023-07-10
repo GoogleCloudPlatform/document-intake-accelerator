@@ -24,4 +24,4 @@ class ProcessTask(BaseModel):
   """ Argument class for split-upload API
   """
   configs: List[Dict]
-  doc_class: str
+  parser_name: str

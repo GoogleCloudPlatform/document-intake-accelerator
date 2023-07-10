@@ -4,7 +4,7 @@ python-multipart==0.0.5
 fireo==1.4.1
 google-cloud-bigquery==2.20.0
 Wand==0.6.7
-google-cloud-documentai==2.9.0
+google-cloud-documentai==2.15.0
 img2pdf==0.4.3
 flatten-json==0.1.13
 google-cloud-storage==2.1.0

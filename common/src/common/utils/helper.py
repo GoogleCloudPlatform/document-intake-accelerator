@@ -2,6 +2,8 @@ import re
 import os
 from google.cloud import storage
 
+storage_client = storage.Client()
+
 
 def split_uri_2_bucket_prefix(uri: str):
   match = re.match(r"gs://([^/]+)/(.+)", uri)
@@ -12,6 +14,17 @@ def split_uri_2_bucket_prefix(uri: str):
   bucket = match.group(1)
   prefix = match.group(2)
   return bucket, prefix
+
+
+def get_id_from_file_path(uri: str):
+  match = re.match(r"gs://([^/]+)/([^/]+)/([^/]+)/(.+)", uri)
+  if len(match.groups()) < 4:
+    return None, None
+
+  bucket = match.group(1)
+  case_id = match.group(2)
+  uid = match.group(3)
+  return case_id, uid
 
 
 def split_uri_2_path_filename(uri: str):
@@ -28,12 +41,5 @@ def get_processor_location(processor_path):
   return None
 
 
-storage_client = storage.Client()
 
 
-def upload_to_gcs(local_file, file_uri, bucket_name):
-  bucket = storage_client.bucket(bucket_name)
-  if os.path.isfile(local_file):
-    blob = bucket.blob(file_uri)
-    print(f"Uploading {local_file} to gs://{bucket_name}/{blob.name} ...")
-    blob.upload_from_filename(local_file)

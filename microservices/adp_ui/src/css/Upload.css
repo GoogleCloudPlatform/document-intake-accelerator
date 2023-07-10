@@ -54,7 +54,12 @@ input {
     padding-left: 10px;
 }
 
-#dropdown-basic-button {
+#dropdown-basic-button-class {
+    height: 32px;
+    padding-left: 10px;
+}
+
+#dropdown-basic-button-type {
     height: 32px;
     padding-left: 10px;
 }

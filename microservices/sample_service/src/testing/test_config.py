@@ -73,7 +73,6 @@ TEST_INPUT_CLAIM = {
         "EWA_DocType_3": {
             "_created_on": "2012-04-23T18:25:43.511Z",
             "_uri": "/file/path",
-            "document_type": "nycid",
             "address": "1628 CABRINI BOULEVARD NEW YORK, NY 10007",
             "dob": "1988-03-16",
             "expiration_date": "2021-02-01",
@@ -124,7 +123,6 @@ TEST_INPUT_CLAIM = {
             "_created_on": "2021-06-16",
             "_uri": "gs://bv-erap-tf/sample-documents/marriage_regis.pdf",
             "date_of_marriage": "2021-06-15",
-            "document_type": "marriage_certificate",
             "person1": {
                 "address": "",
                 "dob": "1966-10-28",

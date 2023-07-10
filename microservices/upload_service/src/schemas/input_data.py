@@ -25,7 +25,6 @@ class InputData(BaseModel):
   """json input  Pydantic Model"""
   case_id: Optional[str]
   name: str
-  document_type: str
   document_class: str
   context: str
   dob: str
@@ -51,7 +50,6 @@ class InputData(BaseModel):
             "employer_phone_no": "9282112222",
             "context": "Callifornia",
             "dob": "7 Feb 1997",
-            "document_type": "application/ supporting",
             "document_class": "unemployment",
             "ssn": "1234567",
             "phone_no": "9730388333",

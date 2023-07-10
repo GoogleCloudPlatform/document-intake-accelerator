@@ -41,16 +41,18 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.w
 
 let inputData = [];
 let viewer = '';
-let dropDown = '';
+let dropDownClass = '';
+let dropDownType = '';
 var context = '';
 let canvas = '';
 var thePdf = null;
 let optionsSorted = [];
 
 function  Classified() {
-  const { uid, caseid } = useParams();
+  const { uid, caseid, document_class, document_type } = useParams();
   const [notes, setNotes] = useState('');
   const [docType, setDocType] = useState('');
+  const [docClass, setDocClass] = useState('');
   const history = useHistory();
 
   useEffect(() => {
@@ -58,12 +60,33 @@ function  Classified() {
     let url = `${baseURL}/hitl_service/v1/fetch_file?case_id=${caseid}&uid=${uid}`
     optionsSorted = options.then((res) => {
       optionsSorted=res;
-      dropDown = document.getElementById('dropdown-basic-button');
+      dropDownClass = document.getElementById('dropdown-basic-button-class');
       res.forEach(item => {
-          dropDown.appendChild(new Option(item["display_name"] , item["value"]));
-          console.log("drop-down:", item["display_name"], item["value"])
+        dropDownClass.appendChild(new Option(item["display_name"] , item["value"]));
+          console.info("document_class:", item["display_name"], ",", item["value"])
       })
-      console.log("optionsSorted", optionsSorted)
+      dropDownClass.value = document_class;
+      setDocClass(dropDownClass.value)
+      //Todo make types based on class selection, now is a hack
+      dropDownType = document.getElementById('dropdown-basic-button-type');
+      res.forEach(item => {
+        const optionLabels = Array.from(dropDownType.options).map((opt) => opt.text);
+        // console.info("optionLabels", optionLabels)
+        // console.info("types", item["doc_type"])
+        if (dropDownClass.value === item["value"]) {
+          for (const i in item["doc_type"]) {
+            let element = item["doc_type"][i]
+            const index = optionLabels.indexOf(element);
+            if (index === -1) {
+              dropDownType.appendChild(new Option(element, element));
+              console.info("document_type:", element, ",", element)
+            }
+          }
+        }
+      })
+      dropDownType.value = document_type;
+      setDocType(dropDownType.value)
+
     });
 
 
@@ -127,7 +150,7 @@ function  Classified() {
 
       currPage++;
       if (thePdf !== null && currPage <= thePdf.numPages) {
-        console.log("currpage")
+        console.log("current page")
 
         thePdf.getPage(currPage).then(renderPage);
       }
@@ -136,22 +159,54 @@ function  Classified() {
 
   // This is the checkpoint to know if the document needs the manual classification or not
   const docTypeChange = (e) => {
-    console.log("doc type changed", e.target.value)
+    console.info("doc type changed", e.target.value)
     setDocType(e.target.value)
+  }
+
+  // This is the checkpoint to know if the document needs the manual classification or not
+  const docClassChange = (e) => {
+    const new_value = e.target.value
+    console.info("doc class changed", new_value)
+    setDocClass(new_value)
+    console.info("optionsSorted", optionsSorted)
+    dropDownType.disabled = new_value !== document_class;
+    if (new_value === document_class){
+      for(const key in optionsSorted) {
+        if (optionsSorted[key]["value"] === new_value) {
+          console.info("---> optionsSorted[key]", optionsSorted[key]["value"],
+              "new_value", new_value)
+          dropDownType.lenth = 0;
+          var length = dropDownType.options.length;
+          for (var i = length-1; i >= 0; i--) {
+            dropDownType.options[i] = null;
+          }
+          for (const i in optionsSorted[key]["doc_type"]) {
+            const optionLabels = Array.from(dropDownType.options).map(
+                (opt) => opt.text);
+            let element = optionsSorted[key]["doc_type"][i]
+            const index = optionLabels.indexOf(element);
+            if (index === -1) {
+              console.info("Adding", element)
+              dropDownType.appendChild(new Option(element, element));
+            }
+          }
+
+        }
+      }
+    }
   }
 
   // To manual classify a document
   const classifyDoc = () => {
-    console.log("DOC TYPE SELECTED", docType)
-    console.log("CASEID", caseid)
-    console.log("uid", uid)
-    axios.post(`${baseURL}/hitl_service/v1/update_hitl_classification?case_id=${caseid}&uid=${uid}&document_class=${docType}`).then((classifiedDocData) => {
-      console.log("CLassified doc data", classifiedDocData)
+    console.info("doc type selected", docType)
+    console.info("doc class selected", docClass)
+    console.info("caseid", caseid)
+    console.info("uid", uid)
+    axios.post(`${baseURL}/hitl_service/v1/update_hitl_classification?case_id=${caseid}&uid=${uid}&document_class=${docClass}&document_type=${docType}`).then((classifiedDocData) => {
+      console.info("Classified doc data", classifiedDocData)
       history.push('/');
     })
   }
-
-
 
   return (
     <div>
@@ -173,13 +228,19 @@ function  Classified() {
                 </div>
 
                 <div className="col-5" style={{ marginTop: '33px' }}>
-                  <label className="labelBold"> Choose Document Type/Class</label>
-                  <select id="dropdown-basic-button" title="Choose Document Class" onChange={(e) => docTypeChange(e)} style={{ width: '100%', borderRadius: '16px' }}>
+
+                  <label className="labelBold"> Choose Document Class</label>
+                  <select id="dropdown-basic-button-class" title="Choose Document Class" onChange={(e) => docClassChange(e)} style={{ width: '100%', borderRadius: '16px' }}>
                     <option></option>
                     {/*{optionsSorted.map(({ value, doc_type, doc_class }, index) => <option key={value} value={value} >{doc_type} {'>'} {doc_class}</option>)}*/}
-
                   </select>
                   <br /> <br />
+                  <label className="labelBold"> Choose Document Type</label>
+                  <select id="dropdown-basic-button-type" title="Choose Document Type" onChange={(e) => docTypeChange(e)} style={{ width: '100%', borderRadius: '16px' }}>
+                    <option></option>
+                    {/*{optionsSorted.map(({ value, doc_type, doc_class }, index) => <option key={value} value={value} >{doc_type} {'>'} {doc_class}</option>)}*/}
+                  </select>
+                  <br /> <br /> <br />
                   <Row>
                     <FloatingLabel controlId="floatingTextarea" label="Notes" className="mb-3">
                       <Form.Control as="textarea" value={notes} style={{ borderRadius: '12px', height: '8rem' }} onInput={e => setNotes(e.target.value)} placeholder="Leave a comment here" />
