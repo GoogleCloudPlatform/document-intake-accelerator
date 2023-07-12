@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 """
-Function to format data to be inserted in Bigqury
+Function to format data to be inserted in BigQuery
 """
 
 import json

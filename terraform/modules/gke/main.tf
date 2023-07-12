@@ -118,5 +118,7 @@ module "gke-workload-identity" {
     "roles/pubsub.admin",
     "roles/stackdriver.resourceMetadata.writer",
     "roles/storage.admin",
+    "roles/contentwarehouse.documentAdmin",
+    "roles/documentai.apiUser"
   ]
 }

@@ -172,6 +172,24 @@ def get_document_types_config():
   return get_config("document_types_config")
 
 
+def get_document_type_from_config(doc_class: str):
+  doc_type = get_doc_type_by_doc_class(doc_class)
+  doc_types = []
+  if type(doc_type) == list:
+    for d_type in doc_type:
+      doc_types.append(d_type)
+  return doc_type
+
+
+def get_docai_warehouse(doc_class):
+  doc = get_document_types_config().get(doc_class)
+  if not doc:
+    Logger.error(
+        f"doc_class {doc_class} not present in document_types_config")
+    return None
+  return doc.get("document_ai_warehouse")
+
+
 def get_parser_by_doc_class(doc_class):
   Logger.debug(f"get_parser_by_doc_class {doc_class}")
   doc = get_document_types_config().get(doc_class)

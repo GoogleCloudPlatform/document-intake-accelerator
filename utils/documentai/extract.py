@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+
 from docai_helper import get_upload_file_path
 
 sys.path.append(os.path.join(os.path.dirname(__file__),
@@ -14,9 +15,6 @@ from common.utils.logging_handler import Logger
 from common.utils.helper import get_processor_location
 import asyncio
 from google.cloud import documentai_v1 as documentai
-
-
-from common import models
 
 from google.cloud import storage
 
