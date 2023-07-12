@@ -31,6 +31,7 @@
     + [Adding Support for Additional Type of Forms](#adding-support-for-additional-type-of-forms)
     + [General Settings](#general-settings)
   * [Cross-Project Setup](#cross-project-setup)
+  * [Setting-Up Document AI Warehouse](#setting-up-document-au-warehouse)
 - [CDA Usage](#cda-usage)
   * [When Using Private Access](#when-using-private-access)
   * [Out of the box Demo Flow](#out-of-the-box-demo-flow)
@@ -631,6 +632,84 @@ Go to `Project CDA` Console Shell and run following commands:
 ```shell
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-docai-output --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.admin"
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-document-upload --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"
+```
+
+## Setting-Up Document AI Warehouse
+
+### Create document_schema, folder_schema and folder
+You could use either existing PROJECT_ID or create a separate standlone project for the Document Ai Warehouse (recommended).
+
+- Enable [Document AI Warehouse API](https://pantheon.corp.google.com/apis/library/contentwarehouse.googleapis.com) in your Google Cloud project and click Next.
+```shell
+  gcloud services enable contentwarehouse.googleapis.com
+```
+- Provision the Instance:
+  - For now, use `Universal Access: No document level access control` for the ACL modes in DocAI Warehouse and click Provision, then Next.
+  - Provision DocAI warehouse Instance [Document AI Warehouse console](https://documentwarehouse.cloud.google.com) (which is external to the Google Cloud console).
+  - You can skip Optional step for Service Account creation  and click Next
+  - Click Done
+- Follow link to Configure the Web Application: 
+  - Select Location ( same as the location of the CDA and DocAI processors)
+  - Click Done
+- [Create document_schema](https://codelabs.developers.google.com/codelabs/docai-warehouse#4) 
+  - This will be an empty schema without any additional properties
+  - Note down schema_id => you will use schema_id in the `config.json` file
+- Create folder_schema
+  - Go to "Admin" -> Schema -> Add new -> Schema Type = Folder
+  - This will be an empty schema without any additional properties
+- Crate folder using previously created folder_schema:
+  - Add New -> Create a new Folder
+    - Note down folder id => you will use folder_id in the `config.json` file
+
+#### When using a dedicated Project for Document AI Warehouse 
+For cross-organizations only: 
+* Modify  policy constraint inside the Argolis to allow cross org access:
+  ```shell
+  export PROJECT_ID=
+  gcloud services enable orgpolicy.googleapis.com
+  gcloud org-policies reset constraints/iam.allowedPolicyMemberDomains --project=$PROJECT_ID
+  ```
+
+* Grant accesses for DocAI Warehouse service account to the Cloud Storage for view/write access:
+```shell
+  export DOCAI_WH_PROJECT_ID=
+  export DOCAI_WH_PROJECT_NUMBER=$(gcloud projects describe ${DOCAI_WH_PROJECT_ID} --format='get(projectNumber)')
+  echo DOCAI_WH_PROJECT_NUMBER=${DOCAI_WH_PROJECT_NUMBER}
+  gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-docai-output --member="serviceAccount:service-${DOCAI_WH_PROJECT_NUMBER}@gcp-sa-cloud-cw.iam.gserviceaccount.com" --role="roles/storage.objectViewer"
+  gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-document-upload --member="serviceAccount:service-${DOCAI_WH_PROJECT_NUMBER}@gcp-sa-cloud-cw.iam.gserviceaccount.com" --role="roles/storage.objectViewer"
+```
+
+* Grant following roles to the GKE Service Account inside Warehouse Project:
+```shell
+  gcloud projects add-iam-policy-binding $DOCAI_WH_PROJECT_ID --member="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"  --role="roles/documentai.apiUser"
+  gcloud projects add-iam-policy-binding $DOCAI_WH_PROJECT_ID --member="serviceAccount:gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"  --role="roles/contentwarehouse.documentAdmin"
+```
+
+### Setting up config
+
+Each entity inside `document_types_config` (corresponding to a different supported form type), can have optional Document AI Warehouse integration:
+```shell
+  "document_types_config": {
+    "generic_form": {
+      "display_name": "Generic Form",
+      "parser": "claims_form_parser",
+      "classifier_label": "Generic",
+      "doc_type": {
+        "default": "Non-urgent",
+        "rules": [
+          {
+            "ocr_text": "urgent",
+            "name": "Urgent-Generic"
+          }
+        ]
+      },
+      "document_ai_warehouse": {
+        "project_number": "DOCAI_WH_PROJECT_NUMBER",
+        "folder_id": "FOLDER_ID",
+        "document_schema_id": "SCHEMA_ID",
+        "api_location": "us"
+      }
+    },
 ```
 
 

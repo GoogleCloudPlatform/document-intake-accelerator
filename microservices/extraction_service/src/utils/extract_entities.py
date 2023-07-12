@@ -15,31 +15,36 @@ limitations under the License.
 """
 import datetime
 import json
+import os.path
 import re
 import traceback
 import warnings
 from typing import Any
 from typing import Dict
 from typing import List
+
 import proto
-from common import models
+from google.api_core.operation import Operation
 from google.cloud import documentai_v1 as documentai
 from google.cloud import storage
-from common.db_client import bq_client
-from common.utils.stream_to_bq import stream_document_to_bigquery
-from common.utils.format_data_for_bq import format_data_for_bq
-from google.api_core.operation import Operation
-from common.utils import process_extraction_result_helper
-from common.config import STATUS_SUCCESS, STATUS_ERROR
 
+from common.utils.docai_warehouse_helper import process_document
+from common import models
 from common.config import PDF_MIME_TYPE
-from common.config import get_docai_entity_mapping
+from common.config import STATUS_ERROR
+from common.config import STATUS_SUCCESS
+from common.config import get_doc_type_by_doc_class
+from common.config import get_docai_entity_mapping, get_docai_warehouse
+from common.db_client import bq_client
 from common.docai_config import DOCAI_ATTRIBUTES_TO_IGNORE
 from common.docai_config import DOCAI_OUTPUT_BUCKET_NAME
 from common.docai_config import ExtractionOutput
-from common.utils.helper import get_id_from_file_path
+from common.utils import process_extraction_result_helper
+from common.utils.format_data_for_bq import format_data_for_bq
+from common.utils.helper import get_document_by_uri, split_uri_2_bucket_prefix
 from common.utils.helper import split_uri_2_path_filename
 from common.utils.logging_handler import Logger
+from common.utils.stream_to_bq import stream_document_to_bigquery
 from . import utils_functions
 from .change_json_format import correct_json_format_for_db
 from .change_json_format import get_json_format_for_processing
@@ -48,21 +53,13 @@ from .utils_functions import clean_form_parser_keys
 from .utils_functions import extraction_accuracy_calc
 from .utils_functions import form_parser_entities_mapping
 from .utils_functions import strip_value
-from common.config import get_doc_type_by_doc_class
-import re
+
 warnings.simplefilter(action="ignore")
+
+SERVICE_ACCOUNT_EMAIL_GKE = os.getenv("SERVICE_ACCOUNT_EMAIL_GKE")
 
 storage_client = storage.Client()
 bq = bq_client()
-
-
-def get_document_type_from_config(doc_class: str):
-  doc_type = get_doc_type_by_doc_class(doc_class)
-  doc_types = []
-  if type(doc_type) == list:
-    for d_type in doc_type:
-      doc_types.append(d_type)
-  return doc_type
 
 
 def find_document_type(doc_class: str, ocr_txt: str):
@@ -127,6 +124,7 @@ def handle_extraction_results(extraction_output: List[ExtractionOutput]):
                                                                 None)
       continue
 
+    # Stream Data to BQ
     entities_for_bq = format_data_for_bq(extraction_item.extracted_entities)
     count += 1
     Logger.info(
@@ -303,12 +301,11 @@ def specialized_parser_extraction(
   """
 
   for input_gcs_source in processed_documents:
-    case_id, uid = get_id_from_file_path(input_gcs_source)
-    if uid is None:
+    db_document = get_document_by_uri(input_gcs_source)
+    if not db_document:
       Logger.error(
           f"specialized_parser_extraction - Could not retrieve back matching document for {input_gcs_source}")
       continue
-    db_document = models.Document.find_by_uid(uid)
 
     Logger.info(f"specialized_parser_extraction - Handling results for "
                 f"{input_gcs_source} with uid={db_document.uid}")
@@ -382,6 +379,8 @@ def get_callback_fn(operation: Operation, processor_type: str):
             documents[input_gcs_source] = []
           documents[input_gcs_source].append(document)
 
+          stream_data_to_documentai_warehouse(document, input_gcs_source)
+
       Logger.info(
           f"post_process_extract - Loaded {sum([len(documents[x]) for x in documents if isinstance(documents[x], list)])} DocAI document objects retrieved from json. ")
 
@@ -398,12 +397,33 @@ def get_callback_fn(operation: Operation, processor_type: str):
         form_parser_extraction(documents,
                                desired_entities_list)
       handle_extraction_results(desired_entities_list)
+
     except Exception as ex:
       Logger.error(ex)
       err = traceback.format_exc().replace("\n", " ")
       Logger.error(err)
 
   return post_process_extract
+
+
+def stream_data_to_documentai_warehouse(document_ai_output,
+                                        uri: str):
+  Logger.info(f"stream_data_to_documentai_warehouse - {uri}")
+  document = get_document_by_uri(uri)
+  if not document:
+    return
+  docai_warehouse_properties = get_docai_warehouse(document.document_class)
+  bucket_name, document_path = split_uri_2_bucket_prefix(uri)
+  display_name = os.path.basename(document_path)
+  if docai_warehouse_properties:
+    process_document(
+        docai_warehouse_properties.get("project_number"),
+        docai_warehouse_properties.get("api_location"),
+        docai_warehouse_properties.get("folder_id"),
+        display_name,
+        docai_warehouse_properties.get("document_schema_id"),
+        f"user:{SERVICE_ACCOUNT_EMAIL_GKE}",
+        bucket_name, document_path, document_ai_output)
 
 
 async def batch_extraction(processor: documentai.types.processor.Processor,
@@ -471,39 +491,6 @@ async def batch_extraction(processor: documentai.types.processor.Processor,
     Logger.error(err)
 
 
-# Todo stream to BigQuery as well
-def ocr_extraction(
-    processed_documents: Dict[str, List[documentai.Document]],
-    entities: List[tuple]):
-
-  for input_gcs_source in processed_documents:
-    case_id, uid = get_id_from_file_path(input_gcs_source)
-    if uid is None:
-      Logger.error(
-          f"specialized_parser_extraction - Could not retrieve back matching document for {input_gcs_source}")
-      continue
-    db_document = models.Document.find_by_uid(uid)
-
-    ocr_text = ""
-    try:
-      # json might be sharded
-      Logger.info(f"ocr_extraction - Handling results for "
-                  f"{input_gcs_source} uid={db_document.uid}")
-      for ai_document in processed_documents[input_gcs_source]:
-        ocr_text += ai_document.text
-      if ocr_expression_match(ocr_text, "Urgent"):
-        db_document.document_type = "urgent"
-        db_document.update()
-      entities.append((db_document.uid, ocr_text))
-
-    except Exception as e:
-      Logger.error(f"ocr_extraction - Extraction failed for "
-                   f"{input_gcs_source} uid={db_document.uid}: "
-                   f"{e}")
-      err = traceback.format_exc().replace("\n", " ")
-      Logger.error(err)
-
-
 def ocr_expression_match(text: str, regex):
   if text.lower().find(regex.lower()) != -1:
     return True
@@ -551,12 +538,11 @@ def form_parser_extraction(
   #   return response
 
   for input_gcs_source in processed_documents:
-    case_id, uid = get_id_from_file_path(input_gcs_source)
-    if uid is None:
+    db_document = get_document_by_uri(input_gcs_source)
+    if not db_document:
       Logger.error(
           f"specialized_parser_extraction - Could not retrieve back matching document for {input_gcs_source}")
       continue
-    db_document = models.Document.find_by_uid(uid)
 
     extracted_entity_list = []
     form_parser_text = ""

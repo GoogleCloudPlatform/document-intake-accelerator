@@ -14,6 +14,8 @@ export IAP_SECRET_NAME="cda-iap-secret"
 export SA_START_PIPELINE="serviceAccount:cloudrun-startpipeline-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 export SA_QUEUE="serviceAccount:cloudrun-queue-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 export APPLICATION_NAME="CDA Application"
+export SA_GKE="gke-sa"
+export SERVICE_ACCOUNT_EMAIL_GKE="${SA_GKE}@${PROJECT_ID}.service_account_name_gke"
 
 #Big Query
 export BIGQUERY_DATASET=validation
@@ -30,6 +32,7 @@ export TF_VAR_config_bucket="${PROJECT_ID}-config"
 export TF_VAR_region=$REGION
 export TF_VAR_iap_secret_name="${IAP_SECRET_NAME}"
 export TF_VAR_dataset_id="${BIGQUERY_DATASET}"
+export TF_VAR_service_account_name_gke=${SA_GKE}
 
 # used by Microservices
 export CONFIG_BUCKET=${TF_VAR_config_bucket}
