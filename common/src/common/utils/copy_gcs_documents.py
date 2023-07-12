@@ -15,11 +15,13 @@ limitations under the License.
 """
 
 """GCS bucket move files function """
-from google.cloud import storage
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
-from common.utils.logging_handler import Logger
-import os
 import glob
+import os
+
+from google.cloud import storage
+
+from common.config import STATUS_SUCCESS
+from common.utils.logging_handler import Logger
 
 storage_client = storage.Client()
 

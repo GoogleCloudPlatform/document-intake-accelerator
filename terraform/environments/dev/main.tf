@@ -50,6 +50,7 @@ locals {
     "dns.googleapis.com",                  # Cloud DNS
     "iap.googleapis.com",                  # IAP
     "secretmanager.googleapis.com",        # Secret Manager
+    "contentwarehouse.googleapis.com",     # DocAI Warehouse
   ]
 
   services_docai = [

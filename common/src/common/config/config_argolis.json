@@ -38,6 +38,12 @@
             "name": "Urgent-Generic"
           }
         ]
+      },
+      "document_ai_warehouse": {
+        "project_number": "35407211402",
+        "folder_id": "5vbacjupjhi4g",
+        "document_schema_id": "1dlvfb4c51b30",
+        "api_location": "us"
       }
     },
     "pa_form_cda": {
@@ -52,7 +58,13 @@
       },
       "display_name": "Prior Auth Form BsC",
       "classifier_label": "pa_form_cda",
-      "parser": "cda_extractor"
+      "parser": "cda_extractor",
+      "document_ai_warehouse": {
+        "project_number": "35407211402",
+        "folder_id": "310uv5tmjpuqo",
+        "document_schema_id": "1dlvfb4c51b30",
+        "api_location": "us"
+      }
     },
     "pa_form_texas": {
       "doc_type": {
@@ -66,7 +78,13 @@
       },
       "display_name": "Prior Auth Form Texas",
       "classifier_label": "pa_form_texas",
-      "parser": "pa_extractor"
+      "parser": "pa_extractor",
+      "document_ai_warehouse": {
+        "project_number": "35407211402",
+        "folder_id": "2om58moct5ni0",
+        "document_schema_id": "1dlvfb4c51b30",
+        "api_location": "us"
+      }
     },
     "fax_cover_page": {
       "doc_type": {
@@ -80,7 +98,13 @@
       },
       "display_name": "Fax Cover Page",
       "classifier_label": "fax_cover_page",
-      "parser": "claims_form_parser"
+      "parser": "claims_form_parser",
+      "document_ai_warehouse": {
+        "project_number": "35407211402",
+        "folder_id": "1m36oe1fkk3tg",
+        "document_schema_id": "1dlvfb4c51b30",
+        "api_location": "us"
+      }
     },
     "health_intake_form": {
       "doc_type": {
@@ -94,7 +118,13 @@
       },
       "display_name": "Health Intake Form",
       "classifier_label": "health_intake_form",
-      "parser": "claims_form_parser"
+      "parser": "claims_form_parser",
+      "document_ai_warehouse": {
+        "project_number": "35407211402",
+        "folder_id": "0u1e2ndoo9igg",
+        "document_schema_id": "1dlvfb4c51b30",
+        "api_location": "us"
+      }
     }
   }
 }
