@@ -31,7 +31,7 @@
     + [Adding Support for Additional Type of Forms](#adding-support-for-additional-type-of-forms)
     + [General Settings](#general-settings)
   * [Cross-Project Setup](#cross-project-setup)
-  * [Setting-Up Document AI Warehouse](#setting-up-document-au-warehouse)
+  * [Setting-Up Document AI Warehouse](#setting-up-document-ai-warehouse)
 - [CDA Usage](#cda-usage)
   * [When Using Private Access](#when-using-private-access)
   * [Out of the box Demo Flow](#out-of-the-box-demo-flow)
