@@ -44,16 +44,13 @@ def stream_claim_to_bigquery(client, claim_dict, operation, timestamp):
 
 def delete_claim_in_bigquery(client, claim_id, timestamp):
   table_id = f"{PROJECT_ID}.{DATABASE_PREFIX}rules_engine.claims"
-  claim_dict = {}
-  claim_dict["claim_id"] = claim_id
-  claim_dict["operation"] = "DELETE"
-  claim_dict["timestamp"] = timestamp
-  claim_dict["created_timestamp"] = timestamp
-  claim_dict["last_updated_timestamp"] = timestamp
+  claim_dict = {"claim_id": claim_id, "operation": "DELETE",
+                "timestamp": timestamp, "created_timestamp": timestamp,
+                "last_updated_timestamp": timestamp}
   rows_to_insert = [claim_dict]
   # Make an API request
   errors = client.insert_rows_json(table_id, rows_to_insert)
-  if errors == []:
+  if not errors:
     Logger.info("New rows have been added.")
   elif isinstance(errors, list):
     error = errors[0].get("errors")
@@ -61,7 +58,8 @@ def delete_claim_in_bigquery(client, claim_id, timestamp):
 
 
 def stream_document_to_bigquery(client, case_id, uid,
-    document_class, document_type, entites, gcs_doc_path = None):
+    document_class, document_type, entities,
+    gcs_doc_path, ocr_text, classification_score, is_hitl_classified=False):
   """
     Function insert's data in Bigquery database
     Args :
@@ -75,9 +73,11 @@ def stream_document_to_bigquery(client, case_id, uid,
       if fails : returns error
   """
   table_id = f"{PROJECT_ID}.{DATABASE_PREFIX}{BIGQUERY_DB}"
-  Logger.info(f"stream_document_to_bigquery case_id={case_id} ,uid={uid}, "
-              f"document_class={document_class}, document_type={document_type}"
-              f"table_id={table_id}, gcs_doc_path={gcs_doc_path}")
+  Logger.info(f"stream_document_to_bigquery case_id={case_id}, uid={uid}, "
+              f"document_class={document_class}, document_type={document_type}, "
+              f"table_id={table_id}, gcs_doc_path={gcs_doc_path}, "
+              f"ocr_text={ocr_text}, classification_score={classification_score},"
+              f"is_hitl_classified={is_hitl_classified}")
 
   now = datetime.datetime.now(datetime.timezone.utc)
   rows_to_insert = [
@@ -85,12 +85,16 @@ def stream_document_to_bigquery(client, case_id, uid,
        "uid": uid,
        "document_class": document_class,
        "document_type": document_type,
-       "entities": entites,
+       "entities": entities,
        "timestamp": now.strftime('%Y-%m-%d %H:%M:%S.%f'),
-       "gcs_doc_path": gcs_doc_path}
+       "gcs_doc_path": gcs_doc_path,
+       "ocr_text": ocr_text,
+       "classification_score": classification_score,
+       "is_hitl_classified": is_hitl_classified
+       }
   ]
   errors = client.insert_rows_json(table_id, rows_to_insert)
-  if errors == []:
+  if not errors:
     Logger.info(f"New rows have been added for "
                 f"case_id {case_id} and {uid}")
   elif isinstance(errors, list):

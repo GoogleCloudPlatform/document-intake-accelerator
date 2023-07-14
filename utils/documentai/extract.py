@@ -1,7 +1,8 @@
 import argparse
 import os
 import sys
-import uuid
+
+from docai_helper import get_upload_file_path
 
 sys.path.append(os.path.join(os.path.dirname(__file__),
                              '../../microservices/extraction_service/src'))
@@ -9,9 +10,16 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../common/src'))
 
 from utils import extract_entities
 from common.utils import helper
-from common.utils.format_data_for_bq import format_data_for_bq
-from common.config import DocumentWrapper
+import common.config
+from common.utils.logging_handler import Logger
+from common.utils.helper import get_processor_location
+import asyncio
+from google.cloud import documentai_v1 as documentai
 
+from google.cloud import storage
+
+
+storage_client = storage.Client()
 # python utils/extract.py -f gs://
 # Make sure to SET GOOGLE_APPLICATION_CREDENTIALS
 # export DEBUG=true
@@ -59,16 +67,12 @@ def get_args():
   args_parser.add_argument('-d', dest="dir_uri",
                            help="Path to gs directory uri")
   args_parser.add_argument('-f', dest="file_uri", help="Path to gs uri")
+  args_parser.add_argument('-p', dest="parser_name",
+                           help="name of the parser as specified in the config.json",
+                           default="claims_form_parser")
   args_parser.add_argument('-c', dest="doc_class",
-                           help="name of the document class",
-                           default="generic_form")
-
+                           help="name of the document class")
   return args_parser
-
-
-from google.cloud import storage
-
-storage_client = storage.Client()
 
 
 # python utils/extract.py -f gs://prior-auth-poc-pa-forms/demo/form.pdf -c claims_form
@@ -78,15 +82,21 @@ storage_client = storage.Client()
 # python utils/extract.py -d gs://$PROJECT_ID/sample_data/pa-forms -c prior_auth_form
 
 
-def process_dir(dir_uri):
+async def process_dir():
   bucket_name, prefix = helper.split_uri_2_bucket_prefix(dir_uri)
   blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
   file_uris = [f"gs://{bucket_name}/{blob.name}" for blob in blobs]
-  process(file_uris)
+  upload_uris = []
+  for uri in file_uris:
+    uid, path = get_upload_file_path(uri, doc_class=doc_class)
+    upload_uris.append(path)
+    uids.append(uid)
+
+  await process(upload_uris)
 
 
-def process_file(file_uri, doc_class):
-  print(f"file_uri={file_uri} doc_class={doc_class}")
+async def process_file():
+  print(f"file_uri={file_uri} parser_name={parser_name}")
   bucket_name, name = helper.split_uri_2_bucket_prefix(file_uri)
   bucket = storage_client.bucket(bucket_name)
   stats = storage.Blob(bucket=bucket, name=name).exists(storage_client)
@@ -94,30 +104,42 @@ def process_file(file_uri, doc_class):
   if not stats:
     print(f"ERROR: File URI {file_uri} does not exist on GCP CLoud Storage")
   else:
-    process([file_uri])
+    uid, file_uri_upload = get_upload_file_path(file_uri, doc_class=doc_class)
+    uids.append(uid)
+    await process([file_uri_upload])
 
 
-def process(file_uris):
-  context = "california"
-  # extract_enitities.extract(file_uri, args.doc_class, context)
+async def start(processor, dai_client, input_uris):
+  await extract_entities.batch_extraction(processor, dai_client, input_uris)
 
-  configs = []
-  for uri in file_uris:
-    case_id = str(uuid.uuid1())
-    uid = str(uuid.uuid1())
-    gcs_url = uri
-    document_type = "supporting_documents"
-    configs.append(DocumentWrapper(case_id=case_id,
-                                   uid=uid,
-                                   gcs_url=gcs_url,
-                                   document_type=document_type,
-                                   context=context,
-                                   ))
-  extraction_output = extract_entities.extract_entities(configs, doc_class)
-  for conf in extraction_output:
-    entities_fo_bq = extraction_output[conf][0]
-    formated_data = format_data_for_bq(entities_fo_bq)
-    print(formated_data)
+
+async def process(input_uris):
+  parser_details = common.config.get_parser_by_name(parser_name)
+
+  if not parser_details:
+    Logger.error(f"extraction_api - Parser {parser_name} not defined in config")
+    return
+
+  processor_path = parser_details["processor_id"]
+  location = parser_details.get("location",
+                                get_processor_location(processor_path))
+  if not location:
+    Logger.error(
+        f"extraction_api - Unidentified location for parser {processor_path}")
+    return
+
+  opts = {"api_endpoint": f"{location}-documentai.googleapis.com"}
+
+  dai_client = documentai.DocumentProcessorServiceClient(
+      client_options=opts)
+  processor = dai_client.get_processor(name=processor_path)
+
+  await extract_entities.batch_extraction(processor, dai_client, input_uris)
+  # extraction_output = extract_entities.extract_entities(configs, doc_class)
+  # for item in extraction_output:
+  #   entities_fo_bq = item.extracted_entities
+  #   formated_data = format_data_for_bq(entities_fo_bq)
+  #   print(formated_data)
   # is_tuple = isinstance(extraction_output, tuple)
   #
   # if is_tuple and isinstance(extraction_output[0], list):
@@ -134,13 +156,27 @@ if __name__ == "__main__":
   file_uri = args.file_uri
   dir_uri = args.dir_uri
   doc_class = args.doc_class
+  parser_name = args.parser_name
+  if doc_class:
+    parser_name = common.config.get_parser_name_by_doc_class(doc_class)
 
   if not file_uri and not dir_uri:
     parser.print_help()
     exit()
 
-  if file_uri:
-    process_file(file_uri, doc_class)
-
-  if dir_uri:
-    process_dir(dir_uri, doc_class)
+  loop = asyncio.get_event_loop()
+  uids = []
+  try:
+    if file_uri:
+      asyncio.ensure_future(process_file())
+    if dir_uri:
+      asyncio.ensure_future(process_dir())
+    loop.run_forever()
+  except KeyboardInterrupt:
+    pass
+  finally:
+    # uids_str = ",".join(uids)
+    # for uid in uids:
+    #   print(f"Cleaning up following uid from Firestore {uid}")
+    #   models.Document.delete_by_id(uid)
+    loop.close()

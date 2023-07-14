@@ -15,15 +15,23 @@ limitations under the License.
 """
 
 """ Document status endpoints """
-from common.config import BUCKET_NAME
-from common.models import Document
-from common.utils.logging_handler import Logger
-from common.config import STATUS_SUCCESS, STATUS_ERROR, STATUS_SPLIT
-import fireo
-from fastapi import APIRouter, HTTPException
-from typing import Optional, List, Dict
 import datetime
 import traceback
+from typing import Dict
+from typing import List
+from typing import Optional
+
+import fireo
+from fastapi import APIRouter
+from fastapi import HTTPException
+
+from common.config import BUCKET_NAME
+from common.config import STATUS_ERROR
+from common.config import STATUS_SPLIT
+from common.config import STATUS_SUCCESS
+from common.config import get_display_name_by_doc_class
+from common.models import Document
+from common.utils.logging_handler import Logger
 
 # disabling for linting to pass
 # pylint: disable = broad-except
@@ -80,18 +88,12 @@ async def update_classification_status(
     status: str,
     is_hitl: Optional[bool] = False,
     document_class: Optional[str] = None,
-    document_type: Optional[str] = None,
+    classification_score: Optional[float] = None,
 ):
-  """takes case_id , uid , document_class ,document_type ,status of
+  """takes case_id , uid , document_class  ,status of
         classification service as input
-        updates the document class ,document_type
+        updates the document class
         ,status in database
-        checks if the document with same case_id ,uid,
-        document_class
-        ,document_type already exists in database
-        if it exists mark previous as inactive  and
-        current as active in database
-
      Args:
        case_id (str): Case id of the files
        filename : get the filename form upload files api
@@ -104,9 +106,10 @@ async def update_classification_status(
   try:
     document = Document.find_by_uid(uid)
     if status in [STATUS_SUCCESS, STATUS_SPLIT]:
-      #update  the document type and document class
+      #update document class
       document.document_class = document_class
-      document.document_type = document_type
+      document.classification_score = classification_score
+      document.document_display_name = get_display_name_by_doc_class(document_class)
       document.is_hitl_classified = is_hitl
       system_status = {
           "is_hitl": is_hitl,
@@ -116,28 +119,7 @@ async def update_classification_status(
       }
       document.system_status = fireo.ListUnion([system_status])
       document.update()
-      #Check if document with same case_id , document type and
-      #document class already exists
-      #in db if yes mark the old documents as inactive
-      documents = Document.collection.filter(case_id=case_id).filter(
-          document_type=document_type).filter(
-              document_class=document_class).fetch()
-      documents_list = list(documents)
-      for i in documents_list:
-        if i.uid == uid:
-          i.active = "active"
-          i.update()
-        else:
-          i.active = "inactive"
-          i.update()
-    else:
-      system_status = {
-          "stage": "classification",
-          "status": status,
-          "timestamp": datetime.datetime.utcnow()
-      }
-      document.system_status = fireo.ListUnion([system_status])
-      document.update()
+
     return {
         "status": STATUS_SUCCESS,
         "status_code": 200,
@@ -163,9 +145,9 @@ async def update_extraction_status(case_id: str,
                                    entity: Optional[List[Dict]] = None,
                                    extraction_score: Optional[float] = None,
                                    extraction_status: Optional[str] = None):
-  """takes case_id , uid , extraction_score ,document_type ,status
+  """takes case_id , uid , extraction_score ,status
     of classification service as input
-    updates the document class ,document_type ,status in database
+    updates the document class, status in database
 
          Args:
            case_id (str): Case id of the files
@@ -363,8 +345,7 @@ async def update_autoapproved(case_id: str, uid: str, status: str,
 
 
 @router.post("/create_documet_json_input")
-async def create_documet_json_input(case_id: str, document_class: str,
-                                    document_type: str, entity: List[dict],
+async def create_documet_json_input(case_id: str, document_class: str, entity: List[dict],
                                     context: str):
   """takes case_id , uid , entity, status  of matching
    service as input and updates in database
@@ -389,7 +370,6 @@ async def create_documet_json_input(case_id: str, document_class: str,
     document.system_status = fireo.ListUnion([system_status])
     document.active = "active"
     document.document_class = document_class
-    document.document_type = document_type
     document.context = context
     document.uid = document.save().id
     gcs_base_url = f"gs://{BUCKET_NAME}"

@@ -80,7 +80,6 @@ function DocumentReview() {
   useEffect(() => {
     // based on the uid, get the document for the page
     let url = `${baseURL}/hitl_service/v1/fetch_file?case_id=${caseid}&uid=${uid}`;
-    applicationFormAPICall();
 
     console.log(`Calling ${baseURL}/hitl_service/v1/get_document?uid=${uid}`);
     axios.post(`${baseURL}/hitl_service/v1/get_document?uid=${uid}`, {
@@ -90,7 +89,7 @@ function DocumentReview() {
 
       console.info("API RESPONSE DATA", res.data);
       inputData = res.data.data;
-      if (inputData && inputData.document_type !== null) {
+      if (inputData && inputData.document_class !== null) {
         inputDocClass = inputData.document_class.split('_').join(" ");
         inputDocType = inputData.document_type.split('_').join(" ")
       }
@@ -129,25 +128,10 @@ function DocumentReview() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const applicationFormAPICall = () => {
-    axios.post(`${baseURL}/hitl_service/v1/search`, { filter_key: "case_id", filter_value: caseid }).then((appForm) => {
-      console.log("searchFilterText", appForm.data.data)
-      let appForms = appForm.data.data;
-      appForms.forEach((ele) => {
-        if (ele.document_type === 'application_form') {
-          setApplicationForm(ele.uid);
-        }
-      })
-
-    }).catch((error) => {
-      console.log("error", error);
-    })
-  }
-
   let currPage = 1;
   // Based on the pagenumbers the PDF can be rendered
   function renderPage() {
-    headerHeight = (inputData.document_type === 'supporting_documents' ? '220px' : '170px')
+    headerHeight = ('220px')
 
     //pageNumber = 1;
     thePdf.getPage(currPage).then(function (page) {
@@ -229,9 +213,9 @@ function DocumentReview() {
           context.strokeRect(x, y, w, h);
         }
         currPage++;
-        console.log("currpageeeeee", currPage, thePdf.numPages, thePdf)
+        console.log("currpagee", currPage, thePdf.numPages, thePdf)
         if (thePdf !== null && currPage <= thePdf.numPages) {
-          console.log("currpagesssssssssssss", currPage)
+          console.log("currpages", currPage)
           thePdf.getPage(currPage).then(againrenderPage(currPage, pageNumber, obj, color));
         }
       });
@@ -384,24 +368,6 @@ function DocumentReview() {
               <Back fill="#aaa" />
             </Link>{' '}
 
-            {inputData && inputData.document_type === 'supporting_documents' ?
-              <>
-                <label className={["subTitle", "drSpace"].join(" ")}> <span> <File /></span>{inputDocType + ' > ' + inputDocClass}  </label>
-
-                <label className="applicationVerticalLine">&nbsp;</label>
-                <span style={{ marginLeft: '3rem' }} >
-                  <label className="applicationLabel" style={{ marginTop: '10px' }}>Application (Case ID):</label>
-                  {applicationForm.length === 0 ? 'N/A' :
-                    <Link target="_blank" to={{
-                      pathname: `/documentreview/${applicationForm}/${caseid}`,
-                    }}>{caseid}</Link>
-                  }
-                </span>
-              </>
-              :
-              <>
-                <label className={["subTitle", "drSpace"].join(" ")}> <span> <File /></span>{(inputDocType || 'No Type') + ' > ' + (inputDocClass || 'Unclassfied') + ' > ' + caseid} </label>
-              </>}
           </div>
           <div className="col-4" style={{ paddingBottom: '0px', textAlign: 'end', width: '20%;' }}>
             <label className="approveLeftVerticalLine">&nbsp;</label>
@@ -454,19 +420,6 @@ function DocumentReview() {
                     <label style={{ color: inputData['extraction_score'] > 0.90 ? ' #93c47d' : (inputData['extraction_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.extraction_score === null ? '-' : (inputData.extraction_score * 100).toFixed(1) + '%'}</label>
                   </Col>
 
-                  {/*{inputData.document_type === 'application_form' ? '' :*/}
-                  {/*  <Col className={["col-3", "verticalLines"].join(" ")}>*/}
-                  {/*    <label className="labelBold">Matching Score</label><br />*/}
-                  {/*    <label style={{ color: inputData['matching_score'] > 0.90 ? ' #93c47d' : (inputData['matching_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.matching_score === null ? '-' : (inputData.matching_score * 100).toFixed(1) + '%'}</label>*/}
-                  {/*  </Col>*/}
-                  {/*}*/}
-
-                  {/*{inputData.document_type === 'application_form' ? '' :*/}
-                  {/*  <Col className="col-3">*/}
-                  {/*    <label className="labelBold">Validation Score</label> <br />*/}
-                  {/*    <label style={{ color: inputData['validation_score'] > 0.90 ? ' #93c47d' : (inputData['validation_score'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)'), fontSize: '30px' }}> {inputData.validation_score === null ? '-' : (inputData.validation_score * 100).toFixed(1) + '%'} </label>*/}
-                  {/*  </Col>*/}
-                  {/*}*/}
                 </Row>
                 {inputData.entities === null ? '' :
                   <Row className="labelVerticalLine">
@@ -474,16 +427,6 @@ function DocumentReview() {
                       <label className="">Fields</label>
                     </Col>
 
-                    {/*{inputData.document_type === 'application_form' ? '' :*/}
-                    {/*  <Col className={["col-3", "verticalLines"].join(" ")}>*/}
-                    {/*    <label className="">Matching Detail</label>*/}
-                    {/*  </Col>*/}
-                    {/*}*/}
-                    {/*{inputData.document_type === 'application_form' ? '' :*/}
-                    {/*  <Col className="col-3">*/}
-                    {/*    <label className="">Validation Detail</label>*/}
-                    {/*  </Col>*/}
-                    {/*}*/}
                   </Row>
                 }
                 {inputList && inputList.map((x, i) => {
@@ -523,33 +466,7 @@ function DocumentReview() {
                           <label style={{ fontSize: '10px', color: x['extraction_confidence'] > 0.90 ? ' #93c47d' : (x['extraction_confidence'] < 0.70 ? 'hsl(0, 100%, 50%)' : 'hsl(39, 100%, 50%)') }}>Extraction Score: {(x['extraction_confidence'] * 100).toFixed(1)}{'%'}</label>
                         </div>
                       </Col>
-                      {/*{inputData.document_type === 'application_form' ? '' :*/}
-                      {/*  <Col className={["col-3", "verticalLines"].join(" ")}>*/}
-                      {/*    <Row >*/}
-                      {/*      <Col className={["col-8", "score1"].join(" ")} style={{ textAlign: 'center' }}>*/}
-                      {/*        {x['matching_score'] === null ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '42px' }} > - </span> :*/}
-                      {/*          (x['matching_score'] < 0.70 ? <ProgressBar variant="danger" now={x['matching_score'] * 100} /> : x['matching_score'] > 0.90 ? <ProgressBar variant="success" now={x['matching_score'] * 100} /> : <ProgressBar now={x['matching_score'] * 100} variant="warning" />)}*/}
 
-                      {/*      </Col>*/}
-                      {/*      <Col className="col-4 score" >*/}
-
-                      {/*        {x['matching_score'] === null ? '' : <label>{(x['matching_score'] * 100).toFixed(0)} % </label>}*/}
-
-                      {/*      </Col>*/}
-                      {/*    </Row>*/}
-                      {/*  </Col>*/}
-                      {/*}*/}
-                      {/*{inputData.document_type === 'application_form' ? '' :*/}
-                      {/*  <Col className="col-3">*/}
-                      {/*    <Row>*/}
-                      {/*      <Col style={{ textAlign: 'center' }}>*/}
-                      {/*        {x['validation_score'] === null ? <span> - </span> : (x['validation_score'] === 1 ? <Check fill="#93c47d" /> : <Cross fill="#DB4437" />)}*/}
-                      {/*      </Col>*/}
-                      {/*    </Row>*/}
-                      {/*    <Row>*/}
-                      {/*    </Row>*/}
-                      {/*  </Col>*/}
-                      {/*}*/}
                     </Row>
                   );
                 })}

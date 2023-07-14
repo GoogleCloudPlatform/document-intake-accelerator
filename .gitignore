@@ -35,3 +35,4 @@ microservices/adp_ui/.env
 /terraform/environments/dev/terraform.tfvars
 /init.log
 /deploy.log
+common/src/common/config/backup_config.json

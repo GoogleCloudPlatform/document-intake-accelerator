@@ -25,7 +25,7 @@ import numpy as np
 from functools import reduce
 from google.cloud import storage
 from common.utils.logging_handler import Logger
-
+from google.cloud import documentai_v1 as documentai
 
 def pattern_based_entities(parser_data, pattern):
   """
@@ -756,7 +756,7 @@ def strip_value(value):
   return corrected_value
 
 
-def extract_form_fields(doc_element: dict, document: dict):
+def extract_form_fields(doc_element: documentai.Document.Page.Layout, document: documentai.Document):
   """
    # Extract form fields from form parser raw json
     Parameters

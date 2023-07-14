@@ -75,19 +75,17 @@ function DocumentReview() {
   const [comments, setComment] = useState([]);
   const [inputList, setInputList] = useState([]);
   const [notes, setNotes] = useState('');
-  const [applicationForm, setApplicationForm] = useState('')
 
 
   useEffect(() => {
     // based on the uid, get the document for the page
     let url = `${baseURL}/hitl_service/v1/fetch_file?case_id=${caseid}&uid=${uid}`
-    applicationFormAPICall()
 
     axios.post(`${baseURL}/hitl_service/v1/get_document?uid=${uid}`, {
     }).then(res => {
       console.log("API RESPONSE DATA", res.data);
       inputData = res.data.data;
-      if (inputData && inputData.document_type !== null) {
+      if (inputData && inputData.document_class !== null) {
         inputDocClass = inputData.document_class.split('_').join(" ");
         inputDocType = inputData.document_type.split('_').join(" ")
       }
@@ -124,20 +122,6 @@ function DocumentReview() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const applicationFormAPICall = () => {
-    axios.post(`${baseURL}/hitl_service/v1/search`, { filter_key: "case_id", filter_value: caseid }).then((appForm) => {
-      console.log("searchFilterText", appForm.data.data)
-      let appForms = appForm.data.data;
-      appForms.forEach((ele) => {
-        if (ele.document_type === 'application_form') {
-          setApplicationForm(ele.uid);
-        }
-      })
-
-    }).catch((error) => {
-      console.log("error", error);
-    })
-  }
 
   let currPage = 1;
   // Based on the pagenumbers the PDF can be rendered
@@ -363,19 +347,7 @@ function DocumentReview() {
         <Link to={{ pathname: '/', }} className="drBack"> {'<'} Back</Link>{' '}
         <Row>
           <Col>
-            <label className={["subTitle", "drSpace"].join(" ")}> <span> <File /></span>{inputDocType + ' > ' + inputDocClass}  </label>
-
-            {inputData && inputData.document_type === 'supporting_documents' ?
-              <span style={{ marginLeft: '1rem' }} >
-                <label className="applicationLabel" style={{ marginTop: '10px' }}>Application (Case ID):</label>
-                {applicationForm.length === 0 ? 'N/A' :
-                  <Link target="_blank" to={{
-                    pathname: `/documentreview/${applicationForm}/${caseid}`,
-
-                  }} >{applicationForm}</Link>
-                }
-              </span>
-              : null}
+            <label className={["subTitle", "drSpace"].join(" ")}> <span> <File /></span>{inputDocClass}  </label>
           </Col>
           {/* <Col className="col-5"></Col> */}
 

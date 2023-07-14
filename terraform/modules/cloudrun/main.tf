@@ -135,7 +135,9 @@ resource "google_cloud_run_service" "cloudrun-service" {
     metadata {
       annotations = {
         # Limit scale up to prevent any cost blow outs!
-        "autoscaling.knative.dev/maxScale" = "5"
+        "autoscaling.knative.dev/maxScale" = "10"
+        # Prevent Cold Start
+        "autoscaling.knative.dev/minScale" = "1"
         # Use the VPC Connector
         "run.googleapis.com/vpc-access-connector" = var.vpc_connector_name
         # all egress from the service should go through the VPC Connector
@@ -146,11 +148,13 @@ resource "google_cloud_run_service" "cloudrun-service" {
       }
     }
     spec {
+      timeout_seconds = 600
       containers {
         image = "gcr.io/${var.project_id}/${var.name}-image:latest" #Image to connect pubsub to cloud run to processtask API and fetch data from firestore
         ports {
           container_port = 8000
         }
+
         env {
           name  = "BATCH_PROCESS_QUOTA" # Concurrent Batch Process QUOTA
           value = "5"

@@ -23,6 +23,10 @@ output "eventarc_subscription" {
   value = module.cloudrun-startspipeline-eventarc.event-subscription
 }
 
+output "queue_subscription" {
+  value = module.cloudrun-queue-pubsub.queue-subscription
+}
+
 output "ingress-ip" {
   value = module.ingress.ingress_ip_address
 }

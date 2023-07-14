@@ -42,4 +42,7 @@ cd "${DIR}" || exit
 # Build
 gcloud builds submit --region=$REGION  --substitutions=_IMAGE=${IMAGE},_PROJECT_ID=${PROJECT_ID}
 gcloud run deploy ${CLOUD_RUN} --image="gcr.io/${PROJECT_ID}/${IMAGE}" \
- --allow-unauthenticated   --service-account=${SERVICE_ACCOUNT}   --set-env-vars=API_DOMAIN=${API_DOMAIN}   --set-env-vars=PROJECT_ID=${PROJECT_ID} --set-env-vars=IAP_SECRET_NAME=cda-iap-secret --set-env-vars=PROTOCOL=https
+ --allow-unauthenticated   --service-account=${SERVICE_ACCOUNT}   --set-env-vars=API_DOMAIN=${API_DOMAIN}   \
+ --set-env-vars=PROJECT_ID=${PROJECT_ID} --set-env-vars=IAP_SECRET_NAME=cda-iap-secret --set-env-vars=PROTOCOL=https --min-instances=1 \
+ --max-instances=10 --ingress=internal --vpc-egress=all-traffic --labels=goog-packaged-solution="prior-authorization" \
+ --vpc-connector=cda-vpc-serverless

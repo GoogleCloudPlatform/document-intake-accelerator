@@ -95,15 +95,18 @@ async def match_document(case_id: str, uid: str):
                 500 : HTTPException: Internal Server Error if something fail
     """
   try:
-
+    # Disabling Matching for now
+    return {"status": STATUS_SUCCESS, "score": 0}
+    Logger.info(f"Matching document with case_id {case_id}"
+                f" and uid {uid}")
     # # Temp Disable Matching For Now
     # return {"status": STATUS_SUCCESS, "score": 0}
     #Get Application form data with the same caseid
     af_doc = Document.collection.filter(case_id=case_id).filter(
-        active="active").filter(document_type="application_form").get()
+        active="active").get()
 
     if af_doc and af_doc.entities is not None:
-      Logger.info(f"Matching document with case_id {case_id}"\
+      Logger.info(f"Matching document with case_id {case_id}"
         f" and uid {uid} with the corresponding Application form")
 
       #Get Supporting Document data from DB
@@ -135,13 +138,13 @@ async def match_document(case_id: str, uid: str):
 
         if dsm_status.status_code == status.HTTP_200_OK:
           Logger.info(
-              f"Matching document with case_id {case_id} and "\
+              f"Matching document with case_id {case_id} and "
                 f"uid {uid} was successful"
           )
           return {"status": STATUS_SUCCESS, "score": overall_score}
         else:
           Logger.error(
-              f"Matching document with case_id {case_id} and "\
+              f"Matching document with case_id {case_id} and "
                 f"uid {uid} Failed. Doc status not updated"
           )
           raise HTTPException(
@@ -157,7 +160,7 @@ async def match_document(case_id: str, uid: str):
         #   "Error in getting matching score")
 
     else:
-      Logger.error(f"Matching with case_id {case_id} and uid {uid}: "\
+      Logger.warning(f"Matching with case_id {case_id} and uid {uid}: "
           f"Application form with entities not found with given case_id: {case_id}")
       return {"status": STATUS_SUCCESS, "score": 0}
       # No matching => Nothing to match unless it is Configured!

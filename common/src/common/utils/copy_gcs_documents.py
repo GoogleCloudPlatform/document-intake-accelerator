@@ -15,18 +15,22 @@ limitations under the License.
 """
 
 """GCS bucket move files function """
+import glob
+import os
+
 from google.cloud import storage
-from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+
+from common.config import STATUS_SUCCESS
 from common.utils.logging_handler import Logger
 
-# disabling for linting to pass for blob_copy variable
-# pylint: disable = unused-variable
+storage_client = storage.Client()
+
+
 def copy_blob(bucket_name, source_blob_name, destination_blob_name,
     dest_bucket_name=None, delete_original=False):
   dest_bucket_name_str = bucket_name if not dest_bucket_name else dest_bucket_name
   Logger.info(f"Copying {source_blob_name} in bucket {bucket_name} to "
               f"{destination_blob_name} inside bucket {dest_bucket_name_str}")
-  storage_client = storage.Client()
   source_bucket = storage_client.bucket(bucket_name)
   source_blob = source_bucket.blob(source_blob_name)
   if dest_bucket_name is None:
@@ -45,3 +49,22 @@ def move_blob(bucket_name, source_blob_name, destination_blob_name,
   copy_blob(bucket_name, source_blob_name, destination_blob_name,
             dest_bucket_name=dest_bucket_name, delete_original=True)
   return STATUS_SUCCESS
+
+
+def upload_file(local_file, bucket_name, prefix):
+  assert os.path.isfile(local_file)
+  bucket = storage_client.bucket(bucket_name)
+  blob = bucket.blob(prefix)
+  print(f"Uploading {local_file} to gs://{bucket_name}/{blob.name} ...")
+  blob.upload_from_filename(local_file)
+
+
+def upload_dir(local_path, bucket_name, prefix):
+  assert os.path.isdir(local_path)
+  bucket = storage_client.bucket(bucket_name)
+  for local_file in glob.glob(local_path + '/**'):
+    if not os.path.isfile(local_file):
+      upload_dir(local_file, bucket,
+                 prefix + "/" + os.path.basename(local_file))
+    else:
+      upload_file(local_file, bucket_name, prefix)

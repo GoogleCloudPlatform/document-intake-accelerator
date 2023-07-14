@@ -76,7 +76,7 @@ gcloud services enable domains.googleapis.com
   * If you want to use Argolis DNS (<ldap>.demo.altostrat.com), follow the guide [go/argolis-dns](go/argolis-dns). 
     * Navigate to [Cloud DNS](https://console.cloud.google.com/net-services/dns/zones) and create ZONE as described in the guide for <ldap>.demo.altostrat.com
     * Request DNS managed zone (as described in [go/argolis-dns](go/argolis-dns))
-  * Otherwise, purchase a [Cloud Domain](https://cloud.google.com/domains/docs/overview) 
+  * Otherwise, purchase a [Cloud Domain](https://cloud.google.com/domains/docs/overview)  -> Cloud DNS type
     * Navigate to [Cloud Domain](https://console.cloud.google.com/net-services/domains/registrations), pick desired name and fill in the forms:
 
 
@@ -100,6 +100,24 @@ export API_DOMAIN=<YOUR_DOMAIN>
 ``` 
 
 ### Terraform
+
+Copy terraform sample variable file as `terraform.tfvars`:
+ ```shell
+cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
+vi terraform/environments/dev/terraform.tfvars
+```
+
+Verify `cda_external_ip` points to the reserved External IP name inside `terraform/environments/dev/terraform.tfvars`:
+ ```
+ cda_external_ip = "cda-ip"   #IP-ADDRESS-NAME-HERE
+ ```
+
+For quickstart simple demo, you want to change and make end point public (change from `false` to `true`):
+```shell
+cda_external_ui = true       # Expose UI to the Internet: true or false
+```
+
+
 > If you are missing `~/.kube/config` file on your system (never run `gcloud cluster get-credentials`), you will need to modify terraform file.
 >
 > If following command does not locate a file:
@@ -140,9 +158,14 @@ sed 's|PROJECT_ID|'"$PROJECT_ID"'|g; s|API_DOMAIN|'"$API_DOMAIN"'|g; ' microserv
 - Go to Settings > Authorized domain, add the following to the Authorized domains:
   - Web App Domain (e.g. adp-dev.cloudpssolutions.com) - the one registered previously as `API_DOMAIN`
 - Go to Project Overview > Project settings, copy  `Web API Key` you will use this info in the next step.
-- In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. `vi`), and change the following values accordingly.
-  - REACT_APP_FIREBASE_API_KEY=`"Web API Key copied above"`
 
+```shell
+vi microservices/adp_ui/.env
+```
+- In the codebase, open up microservices/adp_ui/.env in an Editor (e.g. `vi`), and change the following values accordingly.
+```shell
+REACT_APP_FIREBASE_API_KEY=`"Web API Key copied above"`
+```
 ### Deploy microservices
 Build/deploy microservices (using skaffold + kustomize):
 ```shell
@@ -250,7 +273,7 @@ gcloud identity groups memberships add --group-email="${GROUP_EMAIL}" --member-e
 
 ### Modifying config.json file
 * Configuration file is stored in the GCS bucket and dynamically used by the pipeline: `gs://${PROJECT_ID}-config/config.json`
-
+  
 
 * For the DocAI access, use the pre-configured file:  
 

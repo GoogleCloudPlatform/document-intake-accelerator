@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+
 """ Process task api endpoint """
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -31,7 +32,7 @@ SUCCESS_RESPONSE = {"status": STATUS_SUCCESS}
 FAILED_RESPONSE = {"status": STATUS_ERROR}
 
 
-@router.post("/process_task", status_code=status.HTTP_202_ACCEPTED)
+@router.post("/process_task", status_code=status.HTTP_202_ACCEPTED, )
 async def process_task(payload: ProcessTask,
                        background_task: BackgroundTasks,
                        is_hitl: bool = False,
@@ -54,3 +55,6 @@ async def process_task(payload: ProcessTask,
   # Run the pipeline in the background
   background_task.add_task(run_pipeline, payload, is_hitl, is_reassign)
   return {"message": "Processing your document"}
+
+
+

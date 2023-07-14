@@ -334,10 +334,11 @@ function DataTables() {
               'process_status': `${element.process_status}`,
               "statuslastupdate": `${element.status_last_updated_by}`,
               "document_display_name": `${element.document_display_name}`,
+              "document_type": `${element.document_type}`,
               "extractionscore": `${element.extraction_score === null ? '-' : parseFloat(element.extraction_score * 100).toFixed(1) + '%'}`,
               "extractionstatus": `${element.extraction_status === null ? '-' : element.extraction_status}`,
               "matchscore": `${element.matching_score === null ? '-' : parseFloat(element.matching_score * 100).toFixed(1) + '%'}`,
-              "validationscore": `${element.validation_score === null ? '-' : parseFloat(element.validation_score * 100).toFixed(1) + '%'}`,
+              "classificationscore": `${element.classification_score === null ? '-' : parseFloat(element.classification_score * 100).toFixed(1) + '%'}`,
               "uploaddate": `${(element.upload_timestamp)}`,
               "last_update_timestamp": `${(element.last_update_timestamp)}`,
               "classifyhumansystem": `${element.is_hitl_classified === null ? '-' : element.is_hitl_classified}`,
@@ -349,7 +350,7 @@ function DataTables() {
           resolve([statusUnclassifiedTableBody]);
         }).catch((err) => {
           setIsLoading(false);
-          console.log("errorssssss", err);
+          console.log("errors", err);
           if (err.message === 'Request failed with status code 500') {
             toast.error('Error during fetching from Firestore')
           }
@@ -442,7 +443,7 @@ function DataTables() {
           "actions": (
             <div>
 
-              {element.document_type !== null ?
+              {element.document_class !== null ?
                 <div>
                   <Link to={{
                     pathname: `/documentreview/${element.uid}/${element.case_id}`,
@@ -454,26 +455,16 @@ function DataTables() {
 
                   {' | '}
 
-                  <OverlayTrigger trigger="click" rootClose={true} onHide={200} placement="top" overlay={popover}>
-                    <Link to={{
-                      pathname: `${element.document_type === 'application_form' ? '' : '/reassign'}`,
-                      state: {
-                        uid: `${element.uid}`,
-                        caseid: `${element.case_id}`
-                      }
-                    }} style={{ ...actionButtonStyles, color: `${element.document_type === 'application_form' ? '#E0E0E0' : ''}` }}>Reassign</Link>
-                  </OverlayTrigger>
-
                   {/* {' | '}
 
                   <a href={`${baseURL}/hitl_service/v1/fetch_file?case_id=${element.case_id}&uid=${element.uid}&download=true`} target={"_blank"} style={{ ...actionButtonStyles }}>
                     Download
                   </a> */}
 
-                  {' | '}
+                  {/*{' | '}*/}
 
                   <Link to={{
-                    pathname: `/classify/${element.uid}/${element.case_id}`,
+                    pathname: `/classify/${element.uid}/${element.case_id}/${element.document_class}/${element.document_type}`,
                     //  state: {
                     //    uid: `${element.uid}`,
                     //    caseid: `${element.case_id}`
@@ -483,7 +474,7 @@ function DataTables() {
                 :
                 <>
                   <Link to={{
-                    pathname: `/classify/${element.uid}/${element.case_id}`,
+                    pathname: `/classify/${element.uid}/${element.case_id}?document_class=${element.document_class}&document_type=${element.document_type}`,
                     //  state: {
                     //    uid: `${element.uid}`,
                     //    caseid: `${element.case_id}`
@@ -500,10 +491,11 @@ function DataTables() {
           'process_status': `${element.process_status}`,
           "statuslastupdate": `${element.status_last_updated_by}`,
           "document_display_name": `${element.document_display_name}`,
+          "document_type": `${element.document_type}`,
           "extractionscore": `${element.extraction_score === null ? '-' : parseFloat(element.extraction_score * 100).toFixed(1) + '%'}`,
           "extractionstatus": `${element.extraction_status === null ? '-' : element.extraction_status}`,
           "matchscore": `${element.matching_score === null ? '-' : parseFloat(element.matching_score * 100).toFixed(1) + '%'}`,
-          "validationscore": `${element.validation_score === null ? '-' : parseFloat(element.validation_score * 100).toFixed(1) + '%'}`,
+          "classificationscore": `${element.classification_score === null ? '-' : parseFloat(element.classification_score * 100).toFixed(1) + '%'}`,
           "uploaddate": `${(element.upload_timestamp)}`,
           "last_update_timestamp": `${(element.last_update_timestamp)}`,
           "classifyhumansystem": `${element.is_hitl_classified === null ? '-' : element.is_hitl_classified}`,
@@ -576,8 +568,12 @@ function DataTables() {
     return <span>{rowData.last_update_timestamp ? moment.utc(rowData.last_update_timestamp).local().format('YYYY-MM-DD HH:mm:ss') : '-'}</span>
   }
 
-  const doctypeBodyTemplate = (rowData) => {
+  const docclassBodyTemplate = (rowData) => {
     return <span>{rowData.document_display_name}</span>;
+  }
+
+  const doctypeBodyTemplate = (rowData) => {
+    return <span>{rowData.document_type}</span>;
   }
 
   const manualClassifyBodyTemplate = (rowData) => {
@@ -607,7 +603,7 @@ function DataTables() {
           <label className="labels" style={{ fontSize: '14px', paddingLeft: '5px' }}>Search documents:</label>
           <br />
           <div>
-            <input type="text" onChange={onFilter} className="searchInput" onKeyPress={enterKeyPressed} id='searchterm' value={searchTerm} name="searchterm" placeholder="Search by Case ID, or other attributes..." />
+            <input type="text" onChange={onFilter} className="searchInput" onKeyPress={enterKeyPressed} id='searchterm' value={searchTerm} name="searchterm" placeholder="Search by Document Class, Case ID, etc." />
             {'  '}
             <Button
               variant="secondary"
@@ -721,17 +717,17 @@ function DataTables() {
               >
                 {/* <Column field="uid" header="Document ID" body={documentIdBodyTemplate} sortable></Column> */}
                 <Column field="actions" header="Actions"></Column>
-                <Column field="applicantname" header="Applicant Name" sortable></Column>
-                <Column field="documenttype" header="Document Class" body={doctypeBodyTemplate} sortable></Column>
+                {/*<Column field="applicantname" header="Applicant Name" sortable></Column>*/}
+                <Column field="documenttype" header="Document Class" body={docclassBodyTemplate} sortable></Column>
+                <Column field="documentclass" header="Document Type" body={doctypeBodyTemplate} sortable></Column>
                 <Column field="current_status" header="Status" body={statusBodyTemplate} sortable></Column>
                 <Column field="process_status" header="Process Detail" sortable></Column>
                 <Column field="caseid" header="Case ID" sortable></Column>
                 <Column field="last_update_timestamp" header="Last Modified" body={lastUpdateTimestampBodyTemplate} sortable></Column>
                 <Column field="statuslastupdate" header="Last Updated By" sortable></Column>
                 <Column field="extractionscore" header="Extraction" sortable></Column>
-                <Column field="extractionstatus" header="Extraction Status" body={extractionStatusBodyTemplate}></Column>
-                <Column field="matchscore" header="Matching" sortable></Column>
-                <Column field="validationscore" header="Validation" sortable></Column>
+                {/*<Column field="extractionstatus" header="Extraction Status" body={extractionStatusBodyTemplate}></Column>*/}
+                <Column field="classificationscore" header="Classification" sortable></Column>
                 <Column field="uploaddate" header="Upload Date" body={uploadTimestampBodyTemplate} sortable></Column>
                 <Column field="classifyhumansystem" header="Manual Classification" body={manualClassifyBodyTemplate}></Column>
 
