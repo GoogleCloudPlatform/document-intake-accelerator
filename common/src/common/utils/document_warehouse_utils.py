@@ -20,7 +20,7 @@ from typing import Optional, List
 
 from google.cloud import contentwarehouse_v1
 import google.cloud.documentai_v1 as docai
-
+from google.cloud import contentwarehouse
 from .document_ai_utils import DocumentaiUtils
 
 
@@ -55,6 +55,9 @@ class DocumentWarehouseUtils:
                 contentwarehouse_v1.DocumentSchemaServiceClient()
             )
         return self.document_schema_service_client
+
+    def location_path(self) -> str:
+        return self.get_document_service_client().location_path(self.project_number, self.api_location)
 
     def fetch_acl(
         self, document_id: str, caller_user_id: str
@@ -197,6 +200,53 @@ class DocumentWarehouseUtils:
         # Handle the response
         return response
 
+    def create_folder_link_document(self, folder_name: str, document_name: str, user_id: str
+    ) -> None:
+
+        # Create a Link Service client
+        link_client = contentwarehouse.DocumentLinkServiceClient()
+
+        # Initialize request argument(s)
+        link = contentwarehouse.DocumentLink(
+            source_document_reference=contentwarehouse.DocumentReference(
+                document_name=folder_name,
+            ),
+            target_document_reference=contentwarehouse.DocumentReference(
+                document_name=document_name,
+            ),
+        )
+
+        # Initialize document link request
+        create_document_link_request = contentwarehouse.CreateDocumentLinkRequest(
+            parent=folder_name,
+            document_link=link,
+            request_metadata=contentwarehouse.RequestMetadata(
+                user_info=contentwarehouse.UserInfo(id=user_id)
+            ),
+        )
+
+        # Make the Document Link request
+        create_link_response = link_client.create_document_link(
+            request=create_document_link_request
+        )
+
+        # print(f"Link Created: {create_link_response}")
+
+        # Initialize list linked targets request
+        linked_targets_request = contentwarehouse.ListLinkedTargetsRequest(
+            parent=folder_name,
+            request_metadata=contentwarehouse.RequestMetadata(
+                user_info=contentwarehouse.UserInfo(id=user_id)
+            ),
+        )
+
+        # Make the request
+        linked_targets_response = link_client.list_linked_targets(
+            request=linked_targets_request
+        )
+
+        # print(f"Validate Link Created: {linked_targets_response}")
+
     def link_document_to_folder(
         self, document_id: str, folder_document_id: str, caller_user_id: str
     ):
@@ -292,7 +342,7 @@ class DocumentWarehouseUtils:
         raw_inline_bytes: str = None,
         document_text: str = None,
         append_docai_entities_to_doc_properties: bool = False,
-        docai_document: Optional[docai.Document] = None,
+        docai_document: Optional[docai.Document] = None
     ) -> contentwarehouse_v1.Document:
 
         # Create a client
@@ -359,7 +409,7 @@ class DocumentWarehouseUtils:
         # define schema
         request.document_schema = contentwarehouse_v1.DocumentSchema.from_json(schema)
 
-        print(request)
+        # print(request)
 
         # Make the request
         response = client.create_document_schema(request=request)
@@ -416,3 +466,24 @@ class DocumentWarehouseUtils:
 
         # Handle the response
         return response
+
+    def list_document_schemas(self):
+        document_schema_client = self.get_document_schema_service_client()
+        parent = document_schema_client.common_location_path(
+            project=self.project_number, location=self.api_location
+        )
+        request = contentwarehouse_v1.ListDocumentSchemasRequest(
+            parent=parent,
+        )
+
+        # Make the request
+        page_result = document_schema_client.list_document_schemas(
+            request=request)
+        # Print response
+        responses = []
+        # print("Document Schemas:")
+        for response in page_result:
+            # print(response)
+            responses.append(response)
+
+        return responses

@@ -96,9 +96,9 @@ async def match_document(case_id: str, uid: str):
     """
   try:
     # Disabling Matching for now
-    return {"status": STATUS_SUCCESS, "score": 0}
     Logger.info(f"Matching document with case_id {case_id}"
                 f" and uid {uid}")
+    return {"status": STATUS_SUCCESS, "score": 0}
     # # Temp Disable Matching For Now
     # return {"status": STATUS_SUCCESS, "score": 0}
     #Get Application form data with the same caseid

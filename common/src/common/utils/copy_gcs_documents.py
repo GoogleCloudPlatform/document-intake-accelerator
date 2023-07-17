@@ -55,8 +55,10 @@ def upload_file(local_file, bucket_name, prefix):
   assert os.path.isfile(local_file)
   bucket = storage_client.bucket(bucket_name)
   blob = bucket.blob(prefix)
-  print(f"Uploading {local_file} to gs://{bucket_name}/{blob.name} ...")
+  uri = f"gs://{bucket_name}/{blob.name}"
+  print(f"Uploading {local_file} to {uri} ...")
   blob.upload_from_filename(local_file)
+  return uri
 
 
 def upload_dir(local_path, bucket_name, prefix):

@@ -1,68 +1,127 @@
-# Document AI Test Utilities
+# Table of contents
+
+- [Document AI Utilities](#document-ai-utilities)
+  - [Prerequisites](#prerequisites)
+    - [Install required libraries](#install-required-libraries)
+    - [Set env variables](#set-env-variables)
+    - [Create Service Account Key](#create-service-account-key)
+    - [Assign required roles](#assign-required-roles)
+    - [Verify assigned roles/permissions](#verify-assigned-rolespermissions)
+    - [Setup application default authentication](#setup-application-default-authentication)
+  - [Utilities and tools for CDA](#utilities-and-tools-for-cda)
+    - [DocAI Utilities for CDA Debugging/Troubleshooting](#docai-utilities-for-cda-debuggingtroubleshooting)
+      - [Prerequisites](#prerequisites)
+      - [Classifier/Splitter Test](#classifiersplitter-test)
+      - [Extraction Test](#extraction-test)
+      - [Sort and Copy PDF files](#sort-and-copy-pdf-files)
+      - [Get raw JSON output](#get-raw-json-output)
+      - [Delete specific Firestore documents](#delete-specific-firestore-documents)
+
+# Document AI Utilities
 
 Below utility scripts help you debug DocumentAI for CDA Engine.
 
 ## Prerequisites
 
-You will need to have service account key with access to the GCS and DocumentAI
-
- ### 1. Install required libraries: 
+ ### Install required libraries 
 ```shell
-    cd utils/documentai
-    pip install -r requirements.txt
+  cd utils/documentai
+  pip install -r requirements.txt
 ```
 
-### 2. Set env variables:
+### Set env variables
+Project you will be running experiments in:
 ```shell
-    export DOCAI_PROJECT_ID=
-    export PROJECT_ID=    
+  export PROJECT_ID=
+  gcloud config set project $PROJECT_ID    
  ```
 
-### 3. Set Service Account Key for executing scripts
+For each utility you might need an additional environment variables, they will be listed then.
+
+### Create Service Account Key
 You will need service account and service account key to execute utility scripts (via `GOOGLE_APPLICATION_CREDENTIALS` environment variable pointing to the service account key).
 
-Following Roles need to be granted:
+* Make sure to disable Organization Policy  preventing Service Account Key Creation
+```shell
+  gcloud services enable orgpolicy.googleapis.com
+  gcloud org-policies reset constraints/iam.disableServiceAccountKeyCreation --project=$PROJECT_ID
+```
+
+* Create Service Account 
+
+```shell
+  export SA_NAME=docai-utility-sa
+  export SA_EMAIL=${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com
+  gcloud iam service-accounts create $SA_NAME \
+          --description="Service Account for calling DocAI API and Document Warehouse API" \
+          --display-name="docai-utility-sa"  
+
+```
+
+* Generate and Download Service Account key
+```shell
+    export KEY=${PROJECT_ID}_${SA_NAME}.json                     
+    gcloud iam service-accounts keys create ${KEY}  --iam-account=${SA_EMAIL}
+    export GOOGLE_APPLICATION_CREDENTIALS=${KEY}
+```
+
+### Assign required roles
+
+```shell
+  gcloud projects add-iam-policy-binding $PROJECT_ID \
+          --member="serviceAccount:${SA_EMAIL}" \
+          --role="roles/logging.logWriter"
+                  
+  gcloud projects add-iam-policy-binding $PROJECT_ID \
+          --member="serviceAccount:${SA_EMAIL}" \
+          --role="roles/storage.objectViewer"        
+```
+
+For each utility additional dedicated roles will be listed when required. 
+
+
+### Verify assigned roles/permissions
+
+* Verify assigned roles/permissions (you will need to have `getIamPolicy` role for both projects to see a list of assigned permissions):
+```shell
+  gcloud projects get-iam-policy $PROJECT_ID --flatten="bindings[].members" --format='table(bindings.role)' --filter="bindings.members:${SA_EMAIL}"
+  gcloud projects get-iam-policy $DOCAI_PROJECT_ID --flatten="bindings[].members" --format='table(bindings.role)' --filter="bindings.members:${SA_EMAIL}"
+```
+
+### Setup application default authentication
+```shell
+gcloud auth application-default login
+```
+
+## Utilities and tools for CDA
+
+
+### DocAI Utilities for CDA Debugging/Troubleshooting 
+
+#### Prerequisites 
+1. Make sure to follow ALL steps as described in the [prerequisites](#prerequisites) and export all variables as listed in there.
+- `GOOGLE_APPLICATION_CREDENTIALS`
+- `SA_NAME`
+- `SA_EMAIL`
+- `PROJECT_ID`
+
+2. Set additional env variables:
+```shell
+  cd utils/documentai
+  export DOCAI_PROJECT_ID=
+  export API_DOMAIN=
+  source ../../SET
+```
+
+3. Add required roles/permissions for the service account created in [prerequisites](#prerequisites) steps:
+
 * For The DOCAI_PROJECT_ID:
   * `roles/documentai.apiUser`
   * `roles/documentai.editor`
   * `roles/logging.viewer`
-* For the PROJECT_ID Project:
   * `roles/storage.objectViewer`
-
-Fastest (and best for testing to verify that all required permissions are in place) is to use existing service account under PROJECT_ID (on which behalf all microservices for DOCAI processing are run under GKE ): `gke-sa@${PROJECT_ID}.iam.gserviceaccount.com` 
-
-
-* Make sure to disable Organization Policy  preventing Service Account Key Creation
+  ~~~~
 ```shell
-gcloud services enable orgpolicy.googleapis.com
-gcloud org-policies reset constraints/iam.disableServiceAccountKeyCreation --project=$PROJECT_ID
-```
-* Generate and assign the Key
-```shell
-export SA_NAME=gke-sa
-export SA_EMAIL=${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com
-export KEY=${PROJECT_ID}_${SA_NAME}.json                     
-gcloud iam service-accounts keys create ${KEY}  --iam-account=${SA_EMAIL}
-export GOOGLE_APPLICATION_CREDENTIALS=${KEY}
-```
-
-* Verify assigned roles/permissions (you will need to have `getIamPolicy` role for both projects to see a list of assigned permissions):
-```shell
-gcloud projects get-iam-policy $PROJECT_ID --flatten="bindings[].members" --format='table(bindings.role)' --filter="bindings.members:${SA_EMAIL}"
-gcloud projects get-iam-policy $DOCAI_PROJECT_ID --flatten="bindings[].members" --format='table(bindings.role)' --filter="bindings.members:${SA_EMAIL}"
-```
-
-As an alternative, following commands below will create Service Account with required permissions (though account executing commands must have permissions to vreate the role bindings, which might not always be a case):
-```shell
-SA_NAME=cda-docai
-SA_EMAIL=${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com
-
-gcloud config set project $PROJECT_ID
-gcloud iam service-accounts create $SA_NAME \
-        --description="Doc AI invoker" \
-        --display-name="cda docai invoker"
-    
-# DOCAI Access
 gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID \
         --member="serviceAccount:${SA_EMAIL}" \
         --role="roles/documentai.apiUser"
@@ -70,44 +129,17 @@ gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID \
         --member="serviceAccount:${SA_EMAIL}" \
         --role="roles/documentai.editor"
 
-gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID \
+gcloud projects add-iam-policy-binding $PROJECT_ID \
         --member="serviceAccount:${SA_EMAIL}" \
         --role="roles/logging.viewer"
         
 gcloud projects add-iam-policy-binding $PROJECT_ID \
         --member="serviceAccount:${SA_EMAIL}" \
         --role="roles/storage.objectViewer"
-        
-     
-export KEY=${PROJECT_ID}_${SA_NAME}.json                     
-gcloud iam service-accounts keys create ${KEY} \
-        --iam-account=${SA_EMAIL}
-                
-export GOOGLE_APPLICATION_CREDENTIALS=${KEY}
 
 ```
 
-
-### 4. Setup application default authentication
-```shell
-gcloud auth application-default login
-```
-
-## Utilities and tools for Testing/Debugging of CDA
-
-**Description**:
-Will use PDF form on he GCS bucket as an input and provide classification/splitter output using `classifier` processor from the CDA config file.
-
-Make sure to do pre-requisite steps and set variables:
-```shell
-cd utils/documentai
-export PROJECT_ID=
-export API_DPMAIN=
-export GOOGLE_APPLICATION_CREDENTIALS=
-source ../../SET
-```
-
-### Classifier/Splitter Test
+#### Classifier/Splitter Test
 
 **Description**: 
 Will use PDF form on he GCS bucket as an input and provide classification/splitter output using `classifier` processor from the CDA config file.
@@ -129,7 +161,7 @@ gs://docs_for_testing/Package-combined.pdf
 
 ```
 
-### Extraction Test
+#### Extraction Test
 Make sure to do pre-requisite steps and set variables:
 ```shell
 EXTERNAL=True;BASE_URL=https:/; python extract.py  -f gs://<path_to_form>.pdf -c form_class_name
@@ -138,18 +170,18 @@ EXTERNAL=True;BASE_URL=https:/; python extract.py  -f gs://<path_to_form>.pdf -c
 **Sample output:**
 
 
-### Sort and Copy PDF files
+#### Sort and Copy PDF files
 TODO
 
-### Get raw JSON output
+#### Get raw JSON output
 ```shell
   export PROCESSOR_ID=
-  export PROJECT_ID=<DOCAI_PROJECT_ID>>
+  export PROJECT_ID=<DOCAI_PROJECT_ID>
   python get_docai_json_response.py -f /local/path/to/file.pdf
 ```
 
 
-### Delete specific Firestore documents
+#### Delete specific Firestore documents
 utils/database_cleanup_case_id_prefix.py - to delete specific records from the database using case_id prefix 
 
 
