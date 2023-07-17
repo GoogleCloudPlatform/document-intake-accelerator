@@ -54,7 +54,7 @@ This is a utility that allows a batch upload of Folders/Files stored in GCS buck
 ### Create OCR processor for extracting text data from the PDF forms
 - You can either use same project as used for DocAI Warehouse, or use an existing Project with a processor. 
 - Create a processor to parse the documents, such as OCR processor. 
-- Note down Processor ID
+- Note down Processor ID.
 
 
 ### Set Env Variables
@@ -70,13 +70,17 @@ export DATA_PROJECT_ID=      # Project ID with GCS Data to be Loaded
 export DOCAI_PROJECT_ID=     # Project ID of the GCP Project with DocAI Processor used for document parsing
 ```
 ## Setup 
-Whenever setup is changed (env variables change as setup in the previous step), you will have to re-run setup script below.
+* The setup step takes care of the required access permissions and roles (user running the script must have owner rights to the projects and be able to modify org policy and add IAM permissions).
+* As the output the Service Account Key  (`$KEY_PATH`) is generated in the current directory, which is used in the execution step. 
+* Whenever setup is changed (env variables change as setup in the previous step), you will have to re-run setup script below.
+
 ```shell
 cd utils/docai-wh
 ./setup_docai_wh.sh
 ```
 
 ## Execution
+
 ```shell
 source SET
 GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH}  python docai_wa_loaddocs.py -d gs://<PATH-TO-FOLDER> [-n <NAME-OF-THE-ROOT-FOLDER]

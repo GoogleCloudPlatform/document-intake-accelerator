@@ -48,8 +48,8 @@ fi
 
 
 
-echo "Generating and Downloading Service Account key"  | tee -a "$LOG"
-gcloud iam service-accounts keys create "${KEY_NAME}"  --iam-account=${SA_EMAIL} | tee -a "$LOG"
+echo "Generating and Downloading Service Account key into ${KEY_PATH}"  | tee -a "$LOG"
+gcloud iam service-accounts keys create "${KEY_PATH}"  --iam-account=${SA_EMAIL} | tee -a "$LOG"
 
 
 echo "Assigning required roles to ${SA_EMAIL}" | tee -a "$LOG"
@@ -94,4 +94,5 @@ if [ "$DOCAI_PROJECT_ID" != "$DOCAI_WH_PROJECT_ID" ]; then
 fi
 
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
+
 echo "$timestamp Finished. Saved Log into $LOG"  | tee -a "$LOG"
