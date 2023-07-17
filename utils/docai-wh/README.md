@@ -21,8 +21,9 @@ This is a utility that allows a batch upload of Folders/Files stored in GCS buck
 - GCS with data could be in the external project as well.
 - Currently, only PDF files are handled.
 
-This is a quick start guide with wrapper scripts, hiding all the magic.
-If you want to follow the step-by-step guide yourself, refer to the following [steps](./STEP_BY_STEP_GUIDE.md).
+[//]: # (This is a quick start guide with wrapper scripts, hiding all the magic.)
+
+[//]: # (If you want to follow the step-by-step guide yourself, refer to the following [steps]&#40;./STEP_BY_STEP_GUIDE.md&#41;.)
 
 ## Prerequisites
 
