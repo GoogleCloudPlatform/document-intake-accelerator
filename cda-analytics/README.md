@@ -15,3 +15,9 @@ to configure your Looker instance.
 First, you need to connect your Looker instance to the BigQuery Dataset and then you can import the lookml files into your instance to explore the dashboards.
 
 The lookml files may need minor changes depending on the name of your BigQuery connection configuration.
+
+You may need to use the following or similar command to change the Content-Type of pdf files in GCS bucket so that it can be renderred in the web browser when clicked from the looker dashboards:
+
+```bash
+gsutil -m setmeta -h Content-Type:application/pdf gs://$PROJECT_ID-document-upload/*/*/*.pdf
+```
