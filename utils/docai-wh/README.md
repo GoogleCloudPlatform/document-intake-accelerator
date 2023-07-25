@@ -4,19 +4,19 @@
 
 - [Introduction](#introduction)
 - [Prerequisites](#prerequisites)
-  * [Provision DocAI Warehouse](#provision-docai-warehouse)
-  * [Prepare GCS Bucket with Data](#prepare-gcs-bucket-with-data)
-  * [Create OCR processor for extracting text data from the PDF forms](#create-ocr-processor-for-extracting-text-data-from-the-pdf-forms)
+  * [Provision DocAI Warehouse (`DOCAI_WH_PROJECT_ID`)](#provision-docai-warehouse---docai-wh-project-id--)
+  * [Prepare GCS Bucket with Data (`DATA_PROJECT_ID`)](#prepare-gcs-bucket-with-data---data-project-id--)
+  * [Create OCR processor for extracting text data from the PDF forms (`DOCAI_PROJECT_ID`)](#create-ocr-processor-for-extracting-text-data-from-the-pdf-forms---docai-project-id--)
   * [Set Env Variables](#set-env-variables)
-  * [Cross-Org Access (Only when required)](#cross-org-access-only-when-required)
-- [Setup ](#setup)
+  * [Cross-Org Access (Only when required)](#cross-org-access--only-when-required-)
+- [Setup](#setup)
 - [Execution](#execution)
-  * [Batch load of PDF Data using OCR Parser (No Properties Extraction)](#batch-load-of-pdf-data-using-ocr-parser-no-properties-extraction)
-  * [Generate draft document schema using DocAi output](#generate-draft-document-schema-using-docai-output)
-  * [Upload document schema](#upload-document-schema)
-  * [Batch Upload using document schema (With properties extraction)](#batch-upload-using-document-schema)
-- [Troubleshooting ](#troubleshooting)
-  * [Error 403 IAM_PERMISSION_DENIED Permission Denied](#error-403-iam_permission_denied-permission-denied)
+  * [Batch directory upload using OCR Parser (No Properties Extraction)](#batch-directory-upload-using-ocr-parser--no-properties-extraction-)
+  * [Generate draft document schema using DocAi output of the CDE Processor](#generate-draft-document-schema-using-docai-output-of-the-cde-processor)
+  * [Upload document schema to DocAI WH](#upload-document-schema-to-docai-wh)
+  * [Batch Upload using document schema (With properties extraction) and CDE processor](#batch-upload-using-document-schema--with-properties-extraction--and-cde-processor)
+- [Troubleshooting](#troubleshooting)
+  * [Error 403 IAM_PERMISSION_DENIED Permission Denied](#error-403-iam-permission-denied-permission-denied)
 
 <!-- TOC end -->
 
@@ -43,7 +43,7 @@ Limitations:
 
 ## Prerequisites
 
-### Provision DocAI Warehouse
+### Provision DocAI Warehouse (`DOCAI_WH_PROJECT_ID`)
 - Create GCP Project wth a linked Billing Account
 - Enable [Document AI Warehouse API](https://pantheon.corp.google.com/apis/library/contentwarehouse.googleapis.com) in your Google Cloud project and click Next.
 
@@ -57,7 +57,7 @@ Limitations:
     - Click Create
     - Click "Search" in the top right corner -> This is where all documents will appear after the script execution is finished. 
 
-### Prepare GCS Bucket with Data
+### Prepare GCS Bucket with Data (`DATA_PROJECT_ID`)
 - You can either use same project as created in previous step, or a different project under the same organization.
 - Upload into GCS bucket files you want to load into the DocumentAI warehouse.
   - Currently, only PDF documents are supported.
@@ -67,7 +67,7 @@ Limitations:
 - Docai WH Schema both for folders and documents will be the default one, without any properties. 
 
 
-### Create OCR processor for extracting text data from the PDF forms
+### Create OCR processor for extracting text data from the PDF forms (`DOCAI_PROJECT_ID`)
 - You can either use same project as used for DocAI Warehouse, or use an existing Project with a processor. 
 - Create a processor to parse the documents, such as OCR processor. 
 - Note down Processor ID.
@@ -78,13 +78,14 @@ Limitations:
 Following env variables need to be set for both setup and execution. 
 
 ```shell
-export PROJECT_ID=  # This is the default ID for all Projects
-export PROCESSOR_ID=
+export PROJECT_ID=     # This is the default ID for all Projects if you want to have all in the same project
 
-# Optional in case if different
+# Otherwise, manually setup the following: 
 export DOCAI_WH_PROJECT_ID=  # Project ID of the GCP Project in which DocAI WH has been provisioned
 export DATA_PROJECT_ID=      # Project ID with GCS Data to be Loaded
 export DOCAI_PROJECT_ID=     # Project ID of the GCP Project with DocAI Processor used for document parsing
+
+export PROCESSOR_ID=   # OCR processor ID inside DOCAI_PROJECT_ID
 ```
 
 ### Cross-Org Access (Only when required)
@@ -111,23 +112,22 @@ cd utils/docai-wh
 
 Following set of loading commands/options are covering most expected use cases:
 
-### Batch load of PDF Data using OCR Parser (No Properties Extraction)
+### Batch directory upload using OCR Parser (No Properties Extraction)
 Works well for Large (<200 pages) pdf documents, that could be loaded into DocAI WH with text information used for GenAI search.
+> NB! OCR processor must be inside the `DOCAI_PROJECT_ID`
 
-Make sure to create OCR processor inside `DOCAI_PROJECT_ID`
 ```shell
 export PROCESSOR_ID=<OCR_PROCESSOR>
-export DOCAI_PROJECT_ID
 source SET
 GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH}  load_docs.py -d gs://<PATH-TO-FOLDER> [-n <NAME-OF-THE-ROOT-FOLDER]
 ```
 Parameters:
 ```shell
--d -  Path to the GCS storage folder, containing data with PDF documents to be loaded. All original structure of sub-folders will be preserved.
--n -  (optional) `Name` of the root folder inside DW inside which documents will be loaded. When omitted, will use the same name of the folder/bucket being loaded from.
--s -  (optional) `Schema_id` to be used when uploading document. By default application relies on the processor.display_name and searches for schema with same name. 
--o -  (optional) When set, will overwrite files if already exist. By default, will skip files based on the file path and file name, when al;ready existing.
---options - (optional) - When set, will automatically fill in document properties using schema options. Otherwise (by default) uses default schema with no options.
+  -d -  Path to the GCS storage folder, containing data with PDF documents to be loaded. All original structure of sub-folders will be preserved.
+  -n -  (optional) `Name` of the root folder inside DW inside which documents will be loaded. When omitted, will use the same name of the folder/bucket being loaded from.
+  -s -  (optional) `Schema_id` to be used when uploading document. By default application relies on the processor.display_name and searches for schema with same name. 
+  -o -  (optional) When set, will overwrite files if already exist. By default, will skip files based on the file path and file name, when al;ready existing.
+  --options - (optional) - When set, will automatically fill in document properties using schema options. Otherwise (by default) uses default schema with no options.
 When on the other steps you generate and upload schema, it automatically gets display_name based on the processor beeing used.
 ```
 
@@ -136,9 +136,9 @@ Example:
 GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH}  python load_docs.py -d gs://ek-test-docwh-01 -n UM_Guidelines
 ```
 
-### Generate draft document schema using DocAi output
-Using sample document and DocAi output, following command will dump a draft document schema with properties.
-This schema should be manually verified for the correctness of property types and then uploaded to document WH.
+### Generate draft document schema using DocAi output of the CDE Processor
+Using sample document and CDE Processor  output, following command will dump a draft document schema with properties.
+This schema should be manually verified for the correctness of property types and then uploaded to document WH in the following step below.
 > NB! `PATH_TO_PDF` must be inside the DATA_PROJECT_ID
 
 ```shell
@@ -165,9 +165,10 @@ batch_extraction - Handling DocAI results for gs://ek-cda-engine-001-sample-form
 Generated /Users/xxx/document-intake-accelerator/utils/docai-wh/schema_files/cda_extractor.json with document schema for gs://ek-cda-engine-001-sample-forms/forms-batch1/bsc-dme-pa-form-9.pdf
 ```
 
-### Upload document schema
-After you have generated and verified and manually fixed the types for the document schema, it is time to upload it to the DocAI WH.
-To avoid confusions, if there is already existing schema with same display_name, oepration will be skipped. So make sure to delete any existing same display name schemas for the document.
+### Upload document schema to DocAI WH
+After you have generated and verified  document schema, it is time to upload it to the DocAI WH.
+To avoid confusions, if there is already existing schema with same display_name, operation will be skipped (unless -o option is used).
+Please note, that overwriting with `-o` option will not be possible, if there are already existing documents using that schema.
 
 ```shell
 source SET
@@ -184,17 +185,20 @@ GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python upload_schema.py -f /Users/xxx
 ````
 
 
-### Batch Upload using document schema (With properties extraction)
+### Batch Upload using document schema (With properties extraction) and CDE processor
 - `display_name` of the document schema generated and uploaded on the previous steps corresponds to the display name of the processor.
 - If you have not changed json file before uploading of the schema, when using PROCESSOR_ID, everything will work out-of the box.
 - If you have changed display_name of the schema prior to uploading it, you will need to provide schema_id as input parameter instead of PROCESSOR_ID set as env variable.
 
 ```shell
 source SET
-PROCESSOR_ID=<CDE_PROCESSOR> GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python generate_schema.py -f gs://<PATH-TO-PDF>.pdf --options -n Test-Forms
+PROCESSOR_ID=<CDE_PROCESSOR> GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python generate_schema.py -f gs://<PATH-TO-PDF>.pdf --options -n Test-Forms 
 ```
 
-
+if you want to specify schema explicitely:
+```shell
+PROCESSOR_ID=<CDE_PROCESSOR> GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python generate_schema.py -f gs://<PATH-TO-PDF>.pdf --options -n Test-Forms -s schema_id
+```
 
 ## Troubleshooting 
 ### Error 403 IAM_PERMISSION_DENIED Permission Denied
