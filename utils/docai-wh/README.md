@@ -28,12 +28,13 @@ Supported Features:
 - Batch upload using GCS uri as an input (can be in different project) and preserving original structure with subdirectories.
 - There is no limit on 15 pages per document, since asynchronous batch processing is used by the DocAI parser.
 - When folder contains high mount of documents, it might take a while for a batch operation to complete.
-  - When using Cloud Shell, this might timeout the session.
+  - When using Cloud Shell, this might time out the session.
 - Processor could be in an external from the different project.
 ### Limitations:
 - Only PDF files are handled.
-- max amount of pages per document is 200.
-- Folder names on GCS can not contain spaces. 
+- Max amount of pages per document is 200.
+
+[//]: # (- Folder names on GCS can not contain spaces. )
 
 
 
@@ -84,8 +85,6 @@ export PROJECT_ID=     # This is the default ID for all Projects if you want to 
 export DOCAI_WH_PROJECT_ID=  # Project ID of the GCP Project in which DocAI WH has been provisioned
 export DATA_PROJECT_ID=      # Project ID with GCS Data to be Loaded
 export DOCAI_PROJECT_ID=     # Project ID of the GCP Project with DocAI Processor used for document parsing
-
-export PROCESSOR_ID=   # OCR processor ID inside DOCAI_PROJECT_ID
 ```
 
 ### Cross-Org Access (Only when required)
@@ -99,10 +98,10 @@ gcloud org-policies reset constraints/iam.allowedPolicyMemberDomains --project=$
 
 
 ## Setup 
-* The setup step takes care of the required access permissions and roles (user running the script must have owner rights to the projects and be able to modify org policy and add IAM permissions).
+* The setup step takes care of the required access permissions and roles (user must have owner rights to the projects and be able to modify org policy and add IAM permissions).
 * As the output the Service Account Key  (`$KEY_PATH`) is generated in the current directory, which is used in the execution step. 
-* Whenever setup is changed (env variables change as setup in the previous step), you will have to re-run setup script below.
-
+* Whenever setup is changed (different DATA_PROJECT_ID to be used for example), env variables need to be updated and below utility needs to be run again.
+* 
 ```shell
 cd utils/docai-wh
 ./setup_docai_wh.sh
@@ -110,16 +109,17 @@ cd utils/docai-wh
 
 ## Execution
 
-Following set of loading commands/options are covering most expected use cases:
 
 ### Batch directory upload using OCR Parser (No Properties Extraction)
-Works well for Large (<200 pages) pdf documents, that could be loaded into DocAI WH with text information used for GenAI search.
-> NB! OCR processor must be inside the `DOCAI_PROJECT_ID`
+- Works well for Large (<200 pages) pdf documents, that could be loaded into DocAI WH with text information used for GenAI search.
+- Preserves the original directory structure (with sub-folders) on gcs.
+
+> NB! OCR processor `PROCESSOR_ID` must be inside the `DOCAI_PROJECT_ID`
 
 ```shell
-export PROCESSOR_ID=<OCR_PROCESSOR>
+export PROCESSOR_ID=<OCR_PROCESSOR_ID>
 source SET
-GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH}  load_docs.py -d gs://<PATH-TO-FOLDER> [-n <NAME-OF-THE-ROOT-FOLDER]
+GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python load_docs.py -d gs://<PATH-TO-FOLDER> [-n <NAME-OF-THE-ROOT-FOLDER] [-o] [--options]
 ```
 Parameters:
 ```shell
@@ -136,14 +136,16 @@ GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH}  python load_docs.py -d gs://ek-test-
 ```
 
 ### Generate draft document schema using DocAi output of the CDE Processor
-Using sample document and CDE Processor  output, following command will dump a draft document schema with properties.
-This schema should be manually verified for the correctness of property types and then uploaded to document WH in the following step below.
-> NB! `PATH_TO_PDF` must be inside the DATA_PROJECT_ID
+- Using sample document and CDE Processor  output, following command will dump a draft document schema with properties.
+- The schema should be manually verified for the correctness of property types and then uploaded to document WH in the following step below.
+
+> NB! `PATH_TO_PDF` must be inside the `DATA_PROJECT_ID`
+> CDE processor `PROCESSOR_ID` must be inside the `DOCAI_PROJECT_ID`
 
 ```shell
-export PROCESSOR_ID=<CDE_PROCESSOR>
+export PROCESSOR_ID=<CDE_PROCESSOR_ID>
 source SET
-GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python generate_schema.py -f gs://<PATH-TO-PDF> -o 
+GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python generate_schema.py -f gs://<PATH-TO-PDF> 
 ```
 Parameters:
 ```shell
@@ -176,7 +178,7 @@ GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python upload_schema.py -f gs://<PATH
 Parameters:
 ```shell
 -f -  Path to JSON file locally with document schema.
--o -  (optional) When set, will overwrite if schema with same display name already exists, otherwise (default) will skip upload action. However if there are already files using that schema, the application would not be able to overwrite schema.
+-o -  (optional) When set, will overwrite existing schema with the same display name, otherwise (default) will skip upload action. However if there are already files using that schema, the application would not be able to overwrite schema and will skip.
 ```
 Example:
 ```shell
@@ -185,18 +187,18 @@ GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python upload_schema.py -f /Users/xxx
 
 
 ### Batch Upload using document schema (With properties extraction) and CDE processor
-- `display_name` of the document schema generated and uploaded on the previous steps corresponds to the display name of the processor.
-- If you have not changed json file before uploading of the schema, when using PROCESSOR_ID, everything will work out-of the box.
-- If you have changed display_name of the schema prior to uploading it, you will need to provide schema_id as input parameter instead of PROCESSOR_ID set as env variable.
+- `display_name` of the document schema generated and uploaded on the previous step corresponds to the display name of the processor.
+- If you have not changed json file before uploading the schema, when using same PROCESSOR_ID, everything will work out-of the box.
+- If you have changed `display_name` of the schema prior to uploading it, you will need to provide `schema_id` as input parameter.
 
 ```shell
 source SET
-PROCESSOR_ID=<CDE_PROCESSOR> GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python generate_schema.py -f gs://<PATH-TO-PDF>.pdf --options -n Test-Forms 
+PROCESSOR_ID=<CDE_PROCESSOR> GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python load_documents.py -f gs://<PATH-TO-PDF>.pdf --options -n Test-Forms 
 ```
 
-if you want to specify schema explicitely:
+When specifying schema explicitly:
 ```shell
-PROCESSOR_ID=<CDE_PROCESSOR> GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python generate_schema.py -f gs://<PATH-TO-PDF>.pdf --options -n Test-Forms -s schema_id
+PROCESSOR_ID=<CDE_PROCESSOR> GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python load_documents.py -f gs://<PATH-TO-PDF>.pdf --options -n Test-Forms -s schema_id
 ```
 
 ## Troubleshooting 
