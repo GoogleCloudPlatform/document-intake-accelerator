@@ -23,16 +23,16 @@
 ## Introduction
 This is a utility that allows a batch upload of Folders/Files stored in GCS bucket into the Document WH using Processor to extract structured data.
 Supported Features:
-- Generation of the document schema based on the DocAi output
-- Filling in document properties using schema and DocAi output
-- Batch upload using GCS uri as an input (can be in different project) and preserving original structure with subdirectories
+- Generation of the document schema based on the DocAi output.
+- Filling in document properties using schema and DocAi output.
+- Batch upload using GCS uri as an input (can be in different project) and preserving original structure with subdirectories.
 - There is no limit on 15 pages per document, since asynchronous batch processing is used by the DocAI parser.
 - When folder contains high mount of documents, it might take a while for a batch operation to complete.
   - When using Cloud Shell, this might timeout the session.
 - Processor could be in an external from the different project.
 Limitations:
 - Only PDF files are handled.
-- max amount of pages per document is 200
+- max amount of pages per document is 200.
 - Folder names on GCS can not contain spaces. 
 
 
