@@ -63,7 +63,7 @@ storage_client = storage.Client()
 bq = bq_client()
 
 
-def find_document_type(doc_class: str, ocr_txt: str):
+def find_document_type(doc_class: str, extraction_item: ExtractionOutput):
   doc_type = get_doc_type_by_doc_class(doc_class)
   default = doc_type.get("default", "")
   rules = doc_type.get("rules", [])
@@ -71,17 +71,26 @@ def find_document_type(doc_class: str, ocr_txt: str):
     name = rule.get("name")
     ocr_text = rule.get("ocr_text")
     if ocr_text:
-      if ocr_text.lower() in ocr_txt.lower():
+      if ocr_text.lower() in extraction_item.ocr_text.lower():
         return name
     ocr_regex = rule.get("ocr_regex")
     if ocr_regex:
-      if re.search(ocr_regex, ocr_txt):
+      if re.search(ocr_regex, extraction_item.ocr_text):
         return name
+
+    entities = rule.get("entities")
+    if entities:
+      entity_name = entities.get("name")
+      entity_value = entities.get("value")
+      for item in extraction_item.extracted_entities:
+        if item["entity"] == entity_name and item["value"] == entity_value:
+          return name
+
   return default
 
 
-def set_document_type(doc_class: str, ocr_txt: str, document: models.Document):
-  doc_type = find_document_type(doc_class, ocr_txt)
+def set_document_type(doc_class: str, extraction_item: ExtractionOutput, document: models.Document):
+  doc_type = find_document_type(doc_class, extraction_item)
   document.type = doc_type
   document.update()
   return doc_type
@@ -107,7 +116,7 @@ def handle_extraction_results(extraction_output: List[ExtractionOutput]):
     gcs_url = document.url
     doc_class = document.document_class
 
-    document_type = set_document_type(doc_class, extraction_item.ocr_text, document)
+    document_type = set_document_type(doc_class, extraction_item, document)
     document.document_type = document_type
     document.ocr_text = extraction_item.ocr_text
     document.update()

@@ -466,7 +466,40 @@ Since currently Classifier is not in GA and has to be manually created, followin
      # ... document configurations here ... 
      
     "<document_type_name>": {
-        "doc_type": "supporting_documents",
+        "doc_type": {
+          "default": "Non-urgent",
+          "rules": [
+            {
+              "ocr_text": "urgent",
+              "name": "Urgent-Generic"
+            }
+          ]
+        },
+        "display_name": "<Name of the Form>",
+        "classifier_label": "<Label-as-trained>",
+        "parser": "<parser_name>"
+    }  
+}
+
+```
+
+```shell
+"document_types_config": {
+     # ... document configurations here ... 
+     
+    "<document_type_name>": {
+        "doc_type": {
+          "default": "Non-urgent",
+          "rules": [
+            {
+              "entities": {
+                "name": "reviewTypeUrgent",
+                "value": true
+              },
+              "name": "Urgent-PA"
+            }
+          ]
+        },
         "display_name": "<Name of the Form>",
         "classifier_label": "<Label-as-trained>",
         "parser": "<parser_name>"
@@ -475,7 +508,7 @@ Since currently Classifier is not in GA and has to be manually created, followin
 
 ```
 Where:
-- **doc_type** - Can be of "application_form" or "supporting_documents".
+- **doc_type** - Specifies rules for type detection (could be based on OCR text or on entity key_name/value)
 - **display_name** - Text to be displayed in the UI for the 'Choose Document Type/Class' drop-down when manually Re-Classifying.
 - **classifier_label** - As defined in the Classifier when training on the documents.
 - **parser** - Parser name as defined in the `parser_config` section.

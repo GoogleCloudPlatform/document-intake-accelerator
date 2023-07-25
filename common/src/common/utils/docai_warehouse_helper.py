@@ -67,8 +67,8 @@ def get_metadata_properties(key_values, schema) -> List[
 
   for key, value in key_values:
     value_type = get_type_using_schema(key)
-    Logger.info(f"get_metadata_properties key={key}, value={value}, type={value_type}")
     if value_type is not None:
+      Logger.info(f"get_metadata_properties key={key}, value={value}, type={value_type}")
       one_property = contentwarehouse_v1.Property()
       one_property.name = key
 
@@ -77,30 +77,33 @@ def get_metadata_properties(key_values, schema) -> List[
           one_property.text_values = contentwarehouse_v1.TextArray(values=[str(value)])
         elif value_type == "float_type_options":
           one_property.float_values = contentwarehouse_v1.FloatArray(
-            values=[float(value)])
+              values=[float(value)])
         elif value_type == "integer_type_options":
           one_property.integer_values = contentwarehouse_v1.IntegerArray(
-            values=[int(value)])
+              values=[int(value)])
         elif value_type == "date_time_type_options":
-            date_time = pd.to_datetime(value)
+          date_time = pd.to_datetime(value)
 
-            dt = datetime_pb2.DateTime(year=date_time.year,
-                                       month=date_time.month,
-                                       day=date_time.day,
-                                       hours=date_time.hour,
-                                       minutes=date_time.minute,
-                                       seconds=date_time.second,
-                                       utc_offset={})
-            one_property.date_time_values = contentwarehouse_v1.DateTimeArray(values=[dt])
+          dt = datetime_pb2.DateTime(year=date_time.year,
+                                     month=date_time.month,
+                                     day=date_time.day,
+                                     hours=date_time.hour,
+                                     minutes=date_time.minute,
+                                     seconds=date_time.second,
+                                     utc_offset={})
+          one_property.date_time_values = contentwarehouse_v1.DateTimeArray(values=[dt])
         else:
           Logger.warning(
-            f"Unsupported property type {value_type} for  {key} = {value} Skipping. ")
+              f"Unsupported property type {value_type} for  {key} = {value} Skipping. ")
           continue
         metadata_properties.append(one_property)
 
       except Exception as ex:
         Logger.warning(f"Could not load {key} = {value} of type {value_type} as property. Skipping. Exception = {ex}")
         continue
+    else:
+      Logger.warning((f"get_metadata_properties key={key}, value={value}, Type not detected"))
+
 
   return metadata_properties
 
