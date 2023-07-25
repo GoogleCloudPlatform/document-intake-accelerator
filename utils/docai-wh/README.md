@@ -30,7 +30,7 @@ Supported Features:
 - When folder contains high mount of documents, it might take a while for a batch operation to complete.
   - When using Cloud Shell, this might timeout the session.
 - Processor could be in an external from the different project.
-Limitations:
+### Limitations:
 - Only PDF files are handled.
 - max amount of pages per document is 200.
 - Folder names on GCS can not contain spaces. 
