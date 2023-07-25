@@ -123,12 +123,11 @@ GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH}  load_docs.py -d gs://<PATH-TO-FOLDER
 ```
 Parameters:
 ```shell
-  -d -  Path to the GCS storage folder, containing data with PDF documents to be loaded. All original structure of sub-folders will be preserved.
-  -n -  (optional) `Name` of the root folder inside DW inside which documents will be loaded. When omitted, will use the same name of the folder/bucket being loaded from.
-  -s -  (optional) `Schema_id` to be used when uploading document. By default application relies on the processor.display_name and searches for schema with same name. 
-  -o -  (optional) When set, will overwrite files if already exist. By default, will skip files based on the file path and file name, when al;ready existing.
-  --options - (optional) - When set, will automatically fill in document properties using schema options. Otherwise (by default) uses default schema with no options.
-When on the other steps you generate and upload schema, it automatically gets display_name based on the processor beeing used.
+-d -  Path to the GCS storage folder, containing data with PDF documents to be loaded. All original structure of sub-folders will be preserved.
+-n -  (optional) `Name` of the root folder inside DW to upload the documents/folders. When omitted, will the name of the folder/bucket being loaded from.
+-s -  (optional) `Schema_id` to be used when the uploading document. By default application relies on the processor.display_name and searches for schema with that name. 
+-o -  (optional) When set, will overwrite files if already exist. By default, will skip files based on the file path and file name.
+--options - (optional) - When set, will automatically fill in document properties using schema options. Otherwise (by default) uses default schema with no options. Can be used with CDE processor only and valid existing corresponding schema.
 ```
 
 Example:
