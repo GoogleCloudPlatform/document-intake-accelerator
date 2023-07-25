@@ -232,6 +232,11 @@ Otherwise, terraform will fail, since it will try to create resources, which alr
 export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors> #
 ```
 
+If enabling integration with DocumentAI Warehouse:
+```shell
+export DOCAI_WH_PROJECT_ID=
+```
+
 
 ## Installation
 ### Terraform

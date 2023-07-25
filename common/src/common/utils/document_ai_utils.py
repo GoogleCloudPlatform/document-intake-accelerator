@@ -15,6 +15,7 @@ limitations under the License.
 """
 import json
 import re
+from typing import Dict
 from typing import List
 
 from google.cloud import documentai_v1
@@ -28,6 +29,7 @@ from common.utils.helper import split_uri_2_bucket_prefix
 from google.cloud import storage
 from google.api_core.exceptions import InternalServerError
 from google.api_core.exceptions import RetryError
+from typing import Any
 
 
 storage_client = storage.Client()
@@ -53,7 +55,9 @@ class DocumentaiUtils:
 
     def get_processor(self, processor_id):
         # compose full name for processor
-        processor_name = self.document_ai_client.processor_path(
+        client = self.get_docai_client()
+
+        processor_name = client.processor_path(
             self.project_number, self.api_location, processor_id
         )
         # Initialize request argument(s)
@@ -120,6 +124,7 @@ class DocumentaiUtils:
         parent = self.get_parent()
 
         name = f"{parent}/processors/{processor_id}"
+        Logger.info(f"batch_extraction - processor name = {name}")
         processor = client.get_processor(name=name)
         input_docs = [documentai.GcsDocument(gcs_uri=doc_uri,
                                              mime_type=PDF_MIME_TYPE)
@@ -139,9 +144,9 @@ class DocumentaiUtils:
         Logger.info(f"batch_extraction - input_config = {input_config}")
         Logger.info(f"batch_extraction - output_config = {output_config}")
         Logger.info(
-            f"batch_extraction - Calling Processor API for {len(input_uris)} documents "
-            f"batch_extraction - Calling DocAI API for {len(input_uris)} documents "
-            f" using {processor.display_name} processor"
+            f"batch_extraction - Calling Processor API for {len(input_uris)} document(s) "
+            f"batch_extraction - Calling DocAI API for {len(input_uris)} document(s) "
+            f" using {processor.display_name} processor "
             f"type={processor.type_}, path={processor.name}")
 
         start = time.time()
@@ -184,16 +189,17 @@ class DocumentaiUtils:
         for process in metadata.individual_process_statuses:
             # output_gcs_destination format: gs://BUCKET/PREFIX/OPERATION_NUMBER/INPUT_FILE_NUMBER/
             # The Cloud Storage API requires the bucket name and URI prefix separately
+            input_gcs_source = process.input_gcs_source
             matches = re.match(r"gs://(.*?)/(.*)", process.output_gcs_destination)
             if not matches:
-                print(
-                    f"batch_extraction - Could not parse output GCS destination:[{process.output_gcs_destination}]")
+                Logger.error(f"batch_extraction - Could not parse output GCS destination:[{process.output_gcs_destination}] for {input_gcs_source}")
+                Logger.error(f"batch_extraction - {process.status}")
                 continue
 
             output_bucket, output_prefix = matches.groups()
             output_gcs_destination = process.output_gcs_destination
-            input_gcs_source = process.input_gcs_source
-            print(
+
+            Logger.info(
                 f"batch_extraction - Handling DocAI results for {input_gcs_source} using "
                 f"process output {output_gcs_destination}")
             # Get List of Document Objects from the Output Bucket
@@ -250,3 +256,52 @@ def merge_json_files(files):
         doc_json, ignore_unknown_fields=True
     )
     return document
+
+
+# Handling Nested labels for CDE processor
+def get_key_values_dic(entity: documentai.Document.Entity,
+    document_entities: Dict[str, Any],
+    parent_key: str = None
+) -> None:
+    # Fields detected. For a full list of fields for each processor see
+    # the processor documentation:
+    # https://cloud.google.com/document-ai/docs/processors-list
+
+    entity_key = entity.get("type", "").replace("/", "_")
+    confidence = entity.get("confidence")
+    normalized_value = entity.get("normalizedValue")
+
+    if normalized_value:
+        if isinstance(normalized_value,
+                      dict) and "booleanValue" in normalized_value.keys():
+            normalized_value = normalized_value.get("booleanValue")
+        else:
+            normalized_value = normalized_value.get("text")
+
+    if parent_key is not None and parent_key in document_entities.keys():
+        key = parent_key
+        new_entity_value = (
+            entity_key,
+            normalized_value if normalized_value is not None else entity.get(
+                "mentionText"),
+            confidence,
+        )
+    else:
+        key = entity_key
+        new_entity_value = (
+            normalized_value if normalized_value is not None else entity.get(
+                "mentionText"),
+            confidence,
+        )
+
+    existing_entity = document_entities.get(key)
+    if not existing_entity:
+        document_entities[key] = []
+        existing_entity = document_entities.get(key)
+
+    if len(entity.get("properties", [])) > 0:
+        # Sub-labels (only down one level)
+        for prop in entity.get("properties", []):
+            get_key_values_dic(prop, document_entities, entity_key)
+    else:
+        existing_entity.append(new_entity_value)

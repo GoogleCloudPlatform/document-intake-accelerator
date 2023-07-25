@@ -8,34 +8,47 @@ timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
 echo "$timestamp - Running $filename ... " | tee "$LOG"
 
 source "${DIR}/SET"
+gcloud config set project $DOCAI_WH_PROJECT_ID
 
-if [[ -z "${PROJECT_ID}" ]]; then
-  echo PROJECT_ID env variable is not set.  | tee -a "$LOG"
+if [[ -z "${DOCAI_WH_PROJECT_ID}" ]]; then
+  echo DOCAI_WH_PROJECT_ID env variable is not set.  | tee -a "$LOG"
   exit
 fi
 
-if [[ -z "${PROCESSOR_ID}" ]]; then
-  echo PROCESSOR_ID env variable is not set.  | tee -a "$LOG"
+if [[ -z "${DOCAI_PROJECT_ID}" ]]; then
+  echo DOCAI_PROJECT_ID env variable is not set.  | tee -a "$LOG"
   exit
 fi
 
-pip install -r requirements.txt  | tee -a "$LOG"
+if [[ -z "${DATA_PROJECT_ID}" ]]; then
+  echo DATA_PROJECT_ID env variable is not set.  | tee -a "$LOG"
+  exit
+fi
+
+export PROJECT_ID=$DOCAI_WH_PROJECT_ID
+
+#if [[ -z "${PROCESSOR_ID}" ]]; then
+#  echo PROCESSOR_ID env variable is not set.  | tee -a "$LOG"
+#  exit
+#fi
+
+#pip install -r requirements.txt  | tee -a "$LOG"
 
 #gcloud auth application-default login
 
 echo "Disabling Organization Policy preventing Service Account Key Creation.. " | tee -a "$LOG"
-gcloud services enable orgpolicy.googleapis.com | tee -a "$LOG"
-
-enabled=$(gcloud services list --enabled | grep orgpolicy)
-while [ -z "$enabled" ]; do
-  enabled=$(gcloud services list --enabled | grep orgpolicy)
-  sleep 5;
-done
-
-gcloud org-policies reset constraints/iam.disableServiceAccountKeyCreation --project=$PROJECT_ID | tee -a "$LOG"
-
-echo "Waiting for policy change to get propagated...."  | tee -a "$LOG"
-sleep 30
+#gcloud services enable orgpolicy.googleapis.com | tee -a "$LOG"
+#
+#enabled=$(gcloud services list --enabled | grep orgpolicy)
+#while [ -z "$enabled" ]; do
+#  enabled=$(gcloud services list --enabled | grep orgpolicy)
+#  sleep 5;
+#done
+#
+#gcloud org-policies reset constraints/iam.disableServiceAccountKeyCreation --project=$PROJECT_ID | tee -a "$LOG"
+#
+#echo "Waiting for policy change to get propagated...."  | tee -a "$LOG"
+#sleep 30
 
 if gcloud iam service-accounts list --project $PROJECT_ID | grep -q $SA_NAME; then
   echo "Service account $SA_NAME has been found." | tee -a "$LOG"
@@ -47,9 +60,13 @@ else
 fi
 
 
+if [ -f "$KEY_PATH" ]; then
+  echo "Key  ${KEY_PATH}  already exists locally, skipping" | tee -a "$LOG"
+else
+  echo "Generating and Downloading Service Account key into ${KEY_PATH}"  | tee -a "$LOG"
+  gcloud iam service-accounts keys create "${KEY_PATH}"  --iam-account=${SA_EMAIL} | tee -a "$LOG"
+fi
 
-echo "Generating and Downloading Service Account key into ${KEY_PATH}"  | tee -a "$LOG"
-gcloud iam service-accounts keys create "${KEY_PATH}"  --iam-account=${SA_EMAIL} | tee -a "$LOG"
 
 
 echo "Assigning required roles to ${SA_EMAIL}" | tee -a "$LOG"
@@ -89,8 +106,9 @@ if [ "$DATA_PROJECT_ID" != "$DOCAI_PROJECT_ID" ]; then
 fi
 
 if [ "$DOCAI_PROJECT_ID" != "$DOCAI_WH_PROJECT_ID" ]; then
-  gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:${SA_EMAIL}"  --role="roles/documentai.viewer"  2>&1
-  gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:${SA_EMAIL}"  --role="roles/documentai.apiUser"  2>&1
+  gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:${SA_EMAIL}"  --role="roles/documentai.viewer"  2>&1 | tee -a "$LOG"
+  gcloud projects add-iam-policy-binding $DOCAI_PROJECT_ID --member="serviceAccount:${SA_EMAIL}"  --role="roles/documentai.apiUser"  2>&1 | tee -a "$LOG"
+  gcloud projects add-iam-policy-binding "$DOCAI_WH_PROJECT_ID" --member="serviceAccount:${SA_DOCAI}"  --role="roles/storage.admin" | tee -a "$LOG"
 fi
 
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")

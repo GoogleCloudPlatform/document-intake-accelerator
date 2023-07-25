@@ -45,6 +45,11 @@ cd claims-data-activator
 export PROJECT_ID=<YOUR_PROJECT_ID>
 ``` 
 
+If enabling integration with DocumentAI Warehouse:
+```shell
+export DOCAI_WH_PROJECT_ID=<>
+```
+
 * Reserve External IP:
 ```shell
 gcloud config set project $PROJECT_ID

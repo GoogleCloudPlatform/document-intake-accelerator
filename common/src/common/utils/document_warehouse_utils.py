@@ -16,13 +16,16 @@ limitations under the License.
 
 
 import json
+import traceback
 from typing import Optional, List
 
 from google.cloud import contentwarehouse_v1
 import google.cloud.documentai_v1 as docai
 from google.cloud import contentwarehouse
-from .document_ai_utils import DocumentaiUtils
+from google.cloud.contentwarehouse_v1 import CreateDocumentResponse
 
+from .document_ai_utils import DocumentaiUtils
+from common.utils.logging_handler import Logger
 
 class DocumentWarehouseUtils:
     def __init__(self, project_number: str, api_location: str):
@@ -343,8 +346,9 @@ class DocumentWarehouseUtils:
         document_text: str = None,
         append_docai_entities_to_doc_properties: bool = False,
         docai_document: Optional[docai.Document] = None
-    ) -> contentwarehouse_v1.Document:
+    ) -> CreateDocumentResponse:
 
+        Logger.info(f"create_document {display_name}")
         # Create a client
         client = self.get_document_service_client()
         parent = client.common_location_path(self.project_number, self.api_location)
@@ -388,10 +392,8 @@ class DocumentWarehouseUtils:
             caller_user_id=caller_user_id
         )
 
-        # Make the request
         response = client.create_document(request=request)
 
-        # Handle the response
         return response
 
     def create_document_schema(self, schema: str) -> contentwarehouse_v1.DocumentSchema:
@@ -414,7 +416,6 @@ class DocumentWarehouseUtils:
         # Make the request
         response = client.create_document_schema(request=request)
 
-        # Handle the response
         return response
 
     def get_document_schema(self, schema_id: str):

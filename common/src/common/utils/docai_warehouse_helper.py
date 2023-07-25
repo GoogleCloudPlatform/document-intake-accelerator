@@ -13,15 +13,96 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import json
 import traceback
+from typing import Any
+from typing import Dict
 from typing import List
 
-"""
-Document Warehouse APi calls
-"""
+import pandas as pd
+import proto
+from google.cloud import contentwarehouse_v1
+from google.type import datetime_pb2
 
-from .document_warehouse_utils import DocumentWarehouseUtils
+from common.utils.document_ai_utils import get_key_values_dic
 from common.utils.logging_handler import Logger
+from .document_warehouse_utils import DocumentWarehouseUtils
+
+
+def get_key_value_pairs(document_ai_output):
+  json_string = proto.Message.to_json(document_ai_output)
+  data = json.loads(json_string)
+  document_entities: Dict[str, Any] = {}
+  for entity in data.get('entities'):
+    get_key_values_dic(entity, document_entities)
+
+  names = []
+  for key in document_entities.keys():
+    for val in document_entities[key]:
+      if len(val) == 2:  # Flat Labels
+        key_name = key
+        key_value = val[0]
+      elif len(val) == 3:  # Nested Labels
+        key_name = val[0]
+        key_value = val[1]
+      else:
+        continue
+
+      if key_name not in [x[0] for x in names]:  # Filter duplicates
+        names.append((key_name, key_value))
+  return names
+
+
+def get_metadata_properties(key_values, schema) -> List[
+  contentwarehouse_v1.Property]:
+  def get_type_using_schema(property_name):
+    for prop in schema.property_definitions:
+      if prop.name == property_name:
+        for t in ["text_type_options", "date_time_type_options",
+                  "float_type_options", "integer_type_options", ]:
+          if t in prop:
+            return t
+    return None
+  metadata_properties = []
+
+  for key, value in key_values:
+    value_type = get_type_using_schema(key)
+    Logger.info(f"get_metadata_properties key={key}, value={value}, type={value_type}")
+    if value_type is not None:
+      one_property = contentwarehouse_v1.Property()
+      one_property.name = key
+
+      try:
+        if value_type == "text_type_options":
+          one_property.text_values = contentwarehouse_v1.TextArray(values=[str(value)])
+        elif value_type == "float_type_options":
+          one_property.float_values = contentwarehouse_v1.FloatArray(
+            values=[float(value)])
+        elif value_type == "integer_type_options":
+          one_property.integer_values = contentwarehouse_v1.IntegerArray(
+            values=[int(value)])
+        elif value_type == "date_time_type_options":
+            date_time = pd.to_datetime(value)
+
+            dt = datetime_pb2.DateTime(year=date_time.year,
+                                       month=date_time.month,
+                                       day=date_time.day,
+                                       hours=date_time.hour,
+                                       minutes=date_time.minute,
+                                       seconds=date_time.second,
+                                       utc_offset={})
+            one_property.date_time_values = contentwarehouse_v1.DateTimeArray(values=[dt])
+        else:
+          Logger.warning(
+            f"Unsupported property type {value_type} for  {key} = {value} Skipping. ")
+          continue
+        metadata_properties.append(one_property)
+
+      except Exception as ex:
+        Logger.warning(f"Could not load {key} = {value} of type {value_type} as property. Skipping. Exception = {ex}")
+        continue
+
+  return metadata_properties
 
 
 def process_document(project_number: str,
@@ -41,25 +122,31 @@ def process_document(project_number: str,
     dw_utils = DocumentWarehouseUtils(project_number=project_number,
                                       api_location=api_location)
 
+    schema = dw_utils.get_document_schema(document_schema_id)
+    keys = get_key_value_pairs(document_ai_output)
+    metadata_properties = get_metadata_properties(keys, schema)
+
     create_document_response = dw_utils.create_document(
         display_name=display_name,
         mime_type="application/pdf",
         document_schema_id=document_schema_id,
         raw_document_path=f"gs://{bucket_name}/{document_path}",
         docai_document=document_ai_output,
-        caller_user_id=caller_user)
+        caller_user_id=caller_user,
+        metadata_properties=metadata_properties)
 
     Logger.info(f"process_document create_document_response"
                 f"={create_document_response}")
-    document_id = create_document_response.document.name.split("/")[-1]
+    if create_document_response is not None:
+      document_id = create_document_response.document.name.split("/")[-1]
 
-    # TODO how to link one document to multiple folders
-    link_document_response = dw_utils.link_document_to_folder(
-        document_id=document_id,
-        folder_document_id=folder_id,
-        caller_user_id=caller_user)
-    Logger.info(f"process_document link_document_response"
-                f"={link_document_response}")
+      # TODO how to link one document to multiple folders
+      link_document_response = dw_utils.link_document_to_folder(
+          document_id=document_id,
+          folder_document_id=folder_id,
+          caller_user_id=caller_user)
+      Logger.info(f"process_document link_document_response"
+                  f"={link_document_response}")
   except Exception as e:
     Logger.error(
         f"process_document - Error for {document_path}:  {e}")
