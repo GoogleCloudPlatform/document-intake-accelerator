@@ -53,15 +53,51 @@ def get_key_value_pairs(document_ai_output):
   return names
 
 
+def extract_entities_as_properties(
+        document_schema: contentwarehouse_v1.DocumentSchema,
+        entities: Dict[str, List[any]],
+        key_names: Dict[str, str]):
+    properties = []
+
+    for property in document_schema.property_definitions:
+        if property.name.lower() in key_names:
+            key = key_names[property.name.lower()]
+            values = entities[key]
+            one_property = contentwarehouse_v1.Property()
+            one_property.name = property.name
+
+            try:
+                if 'integer_type_options' in property:
+                    one_property.integer_values.values[:] = [int(v) for v in values]
+
+                elif 'float_type_options' in property:
+                    one_property.float_values.values[:] = [float(v) for v in values]
+
+                elif 'text_type_options' in property:
+                    one_property.text_values.values[:] = values
+
+                elif 'date_time_type_options' in property:
+                    one_property.date_time_values.values[:] = values
+
+                # TODO: handle 'enum_type_options' and 'timestamp_type_options'
+
+                properties.append(one_property)
+            except Exception as e:
+                # Skip adding this property if the value does not fit to the type
+                print(str(e))
+
+    return properties
+
+from google.protobuf.json_format import MessageToJson
 def get_metadata_properties(key_values, schema) -> List[
   contentwarehouse_v1.Property]:
   def get_type_using_schema(property_name):
     for prop in schema.property_definitions:
-      if prop.name == property_name:
-        for t in ["text_type_options", "date_time_type_options",
-                  "float_type_options", "integer_type_options", ]:
-          if t in prop:
-            return t
+        if prop.name == property_name:
+            for t in ["text_type_options", "date_time_type_options",
+                      "float_type_options", "integer_type_options", ]:
+                if t in prop:
+                    return t
     return None
   metadata_properties = []
 

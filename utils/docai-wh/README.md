@@ -27,9 +27,10 @@ Supported Features:
 - Filling in document properties using schema and DocAi output.
 - Batch upload using GCS uri as an input (can be in different project) and preserving original structure with subdirectories.
 - There is no limit on 15 pages per document, since asynchronous batch processing is used by the DocAI parser.
-- When folder contains high mount of documents, it might take a while for a batch operation to complete.
-  - When using Cloud Shell, this might time out the session.
-- Processor could be in an external from the different project.
+- When folder contains high amount of documents, it might take a while for a batch operation to complete.
+  - When using Cloud Shell, this might time out on the session.
+- Processors can be in a different project.
+
 ### Limitations:
 - Only PDF files are handled.
 - Max amount of pages per document is 200.
@@ -43,6 +44,15 @@ Supported Features:
 [//]: # (If you want to follow the step-by-step guide yourself, refer to the following [steps]&#40;./STEP_BY_STEP_GUIDE.md&#41;.)
 
 ## Prerequisites
+
+### Prepare Python Environment
+
+```shell
+cd utils/docai-wh
+python3 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+```
 
 ### Provision DocAI Warehouse (`DOCAI_WH_PROJECT_ID`)
 - Create GCP Project wth a linked Billing Account
@@ -59,17 +69,15 @@ Supported Features:
     - Click "Search" in the top right corner -> This is where all documents will appear after the script execution is finished. 
 
 ### Prepare GCS Bucket with Data (`DATA_PROJECT_ID`)
-- You can either use same project as created in previous step, or a different project under the same organization.
-- Upload into GCS bucket files you want to load into the DocumentAI warehouse.
+- You can either use same project as created in previous step, or a different project.
+- Upload pdf forms into GCS bucket for the ingestion into the DocumentAI warehouse.
   - Currently, only PDF documents are supported.
+- GCS bucket can have hierarchical structure, which will be preserved when loaded into the DocAI Warehouse.
 
-
-- GCS bucket can have hierarchical structure, which will be reserved when loaded into the DocAI Warehouse.
-- Docai WH Schema both for folders and documents will be the default one, without any properties. 
 
 
 ### Create OCR processor for extracting text data from the PDF forms (`DOCAI_PROJECT_ID`)
-- You can either use same project as used for DocAI Warehouse, or use an existing Project with a processor. 
+- You can either use same project as used for DocAI Warehouse/Data Project, create a new one, or use an existing Project with the trained processors. 
 - Create a processor to parse the documents, such as OCR processor. 
 - Note down Processor ID.
 
@@ -119,7 +127,7 @@ cd utils/docai-wh
 ```shell
 export PROCESSOR_ID=<OCR_PROCESSOR_ID>
 source SET
-GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python load_docs.py -d gs://<PATH-TO-FOLDER> [-n <NAME-OF-THE-ROOT-FOLDER] [-o] [--options]
+GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python load_docs.py -d gs://<PATH-TO-FOLDER> [-n <NAME-OF-THE-ROOT-FOLDER] [-o] [--options] [-s schema_id]
 ```
 Parameters:
 ```shell
@@ -132,7 +140,7 @@ Parameters:
 
 Example:
 ```shell
-GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH}  python load_docs.py -d gs://ek-test-docwh-01 -n UM_Guidelines
+GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH}  python load_docs.py -d gs://ek-cda-engine-001-um-guidelines -n UM_Guidelines
 ```
 
 ### Generate draft document schema using DocAi output of the CDE Processor
@@ -210,6 +218,7 @@ PROCESSOR_ID=<CDE_PROCESSOR> GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python l
 * Make sure all rights are properly assigned:
 ```shell
 gcloud projects get-iam-policy $DOCAI_WH_PROJECT_ID --flatten="bindings[].members" --format='table(bindings.role)' --filter="bindings.members:${SA_EMAIL}"
+gcloud projects get-iam-policy dragen-ek-3 --flatten="bindings[].members" --format='table(bindings.role)' --filter="bindings.members:illumina-script-sa@dragen-ek-3.iam.gserviceaccount.com"
 ```
 
 Expected Output:

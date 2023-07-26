@@ -58,7 +58,7 @@ files_to_parse = {}
 processed_files = []
 processed_dirs = set()
 error_files = []
-created_schemas = []
+created_schemas = set()
 
 
 def main(root_name):
@@ -147,7 +147,7 @@ def main(root_name):
         else:
           schema_path = create_mapping_schema(processor.display_name, keys, options)
           document_schema_id = create_document_schema(schema_path)
-          created_schemas.append(document_schema_id)
+          created_schemas.add(document_schema_id)
 
       (parent_id, reference_id) = files_to_parse[f_uri]
       schema = dw_utils.get_document_schema(document_schema_id)

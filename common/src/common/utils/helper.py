@@ -74,7 +74,7 @@ def get_processor_location(processor_path):
   return None
 
 
-def is_date(string:str):
+def is_date(string: str):
   """
   Return whether the string can be interpreted as a date.
   """
@@ -82,6 +82,6 @@ def is_date(string:str):
     converted = pd.to_datetime(string)
     return True
 
-  except ValueError:
+  except Exception:
     return False
 

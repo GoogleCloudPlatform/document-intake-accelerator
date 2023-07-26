@@ -2,7 +2,7 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-LOG="$DIR/deploy.log"
+LOG="$DIR/setup.log"
 filename=$(basename $0)
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
 echo "$timestamp - Running $filename ... " | tee "$LOG"
@@ -37,18 +37,18 @@ export PROJECT_ID=$DOCAI_WH_PROJECT_ID
 #gcloud auth application-default login
 
 echo "Disabling Organization Policy preventing Service Account Key Creation.. " | tee -a "$LOG"
-#gcloud services enable orgpolicy.googleapis.com | tee -a "$LOG"
-#
-#enabled=$(gcloud services list --enabled | grep orgpolicy)
-#while [ -z "$enabled" ]; do
-#  enabled=$(gcloud services list --enabled | grep orgpolicy)
-#  sleep 5;
-#done
-#
-#gcloud org-policies reset constraints/iam.disableServiceAccountKeyCreation --project=$PROJECT_ID | tee -a "$LOG"
-#
-#echo "Waiting for policy change to get propagated...."  | tee -a "$LOG"
-#sleep 30
+gcloud services enable orgpolicy.googleapis.com | tee -a "$LOG"
+
+enabled=$(gcloud services list --enabled | grep orgpolicy)
+while [ -z "$enabled" ]; do
+  enabled=$(gcloud services list --enabled | grep orgpolicy)
+  sleep 5;
+done
+
+gcloud org-policies reset constraints/iam.disableServiceAccountKeyCreation --project=$PROJECT_ID | tee -a "$LOG"
+
+echo "Waiting for policy change to get propagated...."  | tee -a "$LOG"
+sleep 45
 
 if gcloud iam service-accounts list --project $PROJECT_ID | grep -q $SA_NAME; then
   echo "Service account $SA_NAME has been found." | tee -a "$LOG"
@@ -59,8 +59,8 @@ else
           --display-name="docai-utility-sa"  | tee -a "$LOG"
 fi
 
-
-if [ -f "$KEY_PATH" ]; then
+gcloud services enable "documentai.googleapis.com" --project $DOCAI_WH_PROJECT_ID
+if [ -f "$KEY_PATH" ] && [ -s "$KEY_PATH" ]; then
   echo "Key  ${KEY_PATH}  already exists locally, skipping" | tee -a "$LOG"
 else
   echo "Generating and Downloading Service Account key into ${KEY_PATH}"  | tee -a "$LOG"
@@ -77,6 +77,11 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 gcloud projects add-iam-policy-binding $PROJECT_ID \
         --member="serviceAccount:${SA_EMAIL}" \
         --role="roles/storage.objectViewer" | tee -a "$LOG"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+        --member="serviceAccount:${SA_EMAIL}" \
+        --role="roles/serviceusage.serviceUsageConsumer" | tee -a "$LOG"
+
 
 
 echo "Creating DocAI output bucket  ${DOCAI_OUTPUT_BUCKET}" | tee -a "$LOG"
