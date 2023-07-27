@@ -272,11 +272,11 @@ def upload_document_gcs(file_uri: str, document_schema_id: str,
   if create_document_response is not None:
     document_id = create_document_response.document.name.split("/")[-1]
     document_id_list.append(document_id)
-    Logger.info(f"Created document {file_uri} with reference_id={reference_id}")
 
     dw_utils.link_document_to_folder(document_id=document_id,
                                      folder_document_id=folder_id,
                                      caller_user_id=CALLER_USER)
+    Logger.info(f"Created document {file_uri} with reference_id={reference_id} inside folder_id={folder_id} and using schema_id={document_schema_id}")
     return document_id
 
 

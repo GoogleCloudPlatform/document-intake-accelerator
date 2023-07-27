@@ -162,8 +162,24 @@ Parameters:
 
 Example:
 ```shell
-GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python generate_schema.py -f gs://ek-cda-engine-001-sample-forms/forms-batch1/bsc-dme-pa-form-9.pdf
+GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python load_documents.py -f gs://ek-cda-engine-001-sample-forms/bsc-dme-pa-form-9.pdf
 ````
+
+```shell
+PROCESSOR_ID=<OCR_PROCESSOR_ID> python load_documents.py -d gs://bucket-name/um -n UM_Guidelines
+```
+
+```shell
+PROCESSOR_ID=<CDE_PROCESSOR_ID> python generate_schema.py -f gs://bucket-name/bsc-forms/form1.pdf 
+```
+
+```shell
+PROCESSOR_ID=<CDE_PROCESSOR_ID> python upload_schema.py -f schema/bsc-cde.json 
+```
+
+```shell
+PROCESSOR_ID=<CDE_PROCESSOR_ID> python load_documents.py -d gs://bucket-name/bsc-forms --options -n BSC-Forms
+```
 
 Sample output:
 ```shell
@@ -201,12 +217,12 @@ GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python upload_schema.py -f /Users/xxx
 
 ```shell
 source SET
-PROCESSOR_ID=<CDE_PROCESSOR> GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python load_documents.py -f gs://<PATH-TO-PDF>.pdf --options -n Test-Forms 
+PROCESSOR_ID=<CDE_PROCESSOR> GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python load_documents.py -d gs://<PATH-TO-FORMS> --options -n Test-Forms 
 ```
 
 When specifying schema explicitly:
 ```shell
-PROCESSOR_ID=<CDE_PROCESSOR> GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python load_documents.py -f gs://<PATH-TO-PDF>.pdf --options -n Test-Forms -s schema_id
+PROCESSOR_ID=<CDE_PROCESSOR> GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH} python load_documents.py -d gs://<PATH-TO-PDF>.pdf --options -n Test-Forms -s schema_id
 ```
 
 ## Troubleshooting 
