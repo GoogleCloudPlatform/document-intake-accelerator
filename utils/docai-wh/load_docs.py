@@ -63,7 +63,7 @@ created_schemas = set()
 
 def main(root_name):
   Logger.info(f"Batch load into DocumentAI WH using \n root_name={root_name}, "
-              f"dir_uri={dir_uri}, overwrite={overwrite}, options={options}, \n"
+              f"dir_uri={dir_uri}, overwrite={overwrite}, options={options}, flatten={flatten} \n"
               f"DOCAI_WH_PROJECT_NUMBER={DOCAI_WH_PROJECT_NUMBER}, "
               f"DOCAI_PROJECT_NUMBER={DOCAI_PROJECT_NUMBER}, "
               f"PROCESSOR_ID={PROCESSOR_ID}, \n"
@@ -89,9 +89,13 @@ def main(root_name):
 
     try:
       if filename.endswith(".pdf"):
-        dirs = filename.split("/")
+        if flatten:
+            dirs = [filename.replace("/", "__")]
+        else:
+            dirs = filename.split("/")
         if " " in dirs[:-1]:
-          Logger.warning(f"Skipping {filename} since directory contains space, currently this is not supported.")
+          Logger.warning(f"Skipping {filename} since name contains space, currently this is not supported.")
+
         parent_id = create_folder(folder_schema_id, root_name, root_name)
         parent = dw_utils.get_document(parent_id, CALLER_USER)
 
@@ -119,8 +123,7 @@ def main(root_name):
                   f"Skipping gs://{bucket_name}/{filename} since it already exists...")
                 continue
 
-            files_to_parse[f"gs://{bucket_name}/{filename}"] = (
-            parent_id, reference_id)
+            files_to_parse[f"gs://{bucket_name}/{filename}"] = (parent_id, reference_id)
 
             processed_files.append(filename)
     except Exception as ex:
@@ -363,6 +366,9 @@ def get_args():
   args_parser.add_argument('-o', '--overwrite', dest="overwrite",
                            help="Overwrite files if already exist.",
                            action='store_true', default=False)
+  args_parser.add_argument('--flatten', dest="flatten",
+                           help="Flatten the directory structure.",
+                           action='store_true', default=False)
   args_parser.add_argument('--options', dest="options",
                            help="Fill in document properties using schema options.",
                            action='store_true', default=False)
@@ -382,5 +388,6 @@ if __name__ == "__main__":
   schema_id = args.schema_id
   overwrite = args.overwrite
   options = args.options
+  flatten = args.flatten
 
   main(root_name)

@@ -136,6 +136,7 @@ Parameters:
 -s -  (optional) `Schema_id` to be used when the uploading document. By default application relies on the processor.display_name and searches for schema with that name. 
 -o -  (optional) When set, will overwrite files if already exist. By default, will skip files based on the file path and file name.
 --options - (optional) - When set, will automatically fill in document properties using schema options. Otherwise (by default) uses default schema with no options. Can be used with CDE processor only and valid existing corresponding schema.
+--flatten - (optional) - When set, will flatten sub-directories. Otherwise (by default) preserves the original structure.
 ```
 
 Example:
