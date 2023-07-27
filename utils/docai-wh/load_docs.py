@@ -160,7 +160,7 @@ def main(root_name):
 
   process_time = time.time() - initial_start_time
   time_elapsed = round(process_time)
-  Logger.info(f"Job Completed in {str(round(time_elapsed / 60))} minutes: \n"
+  Logger.info(f"Job Completed in {str(round(time_elapsed / 60))} minute(s): \n"
               f"  - created document schemas={len(created_schemas)} \n"
               f"  - processed gcs files={len(processed_files)} \n"
               f"  - created dw documents={len(document_id_list)} \n"
@@ -169,7 +169,7 @@ def main(root_name):
 
   if len(error_files) != 0:
     Logger.info(
-      f"Following files could not be handled (Document page number exceeding limit of 15 pages?")
+      f"Following files could not be handled (Document page number exceeding limit of 200 pages?")
     ",".join(error_files)
 
 
