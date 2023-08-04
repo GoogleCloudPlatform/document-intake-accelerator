@@ -16,6 +16,7 @@ export SA_QUEUE="serviceAccount:cloudrun-queue-sa@${PROJECT_ID}.iam.gserviceacco
 export APPLICATION_NAME="CDA Application"
 export SA_GKE="gke-sa"
 export SERVICE_ACCOUNT_EMAIL_GKE="${SA_GKE}@${PROJECT_ID}.iam.gserviceaccount.com"
+export SA_DOCAI="service-${DOCAI_PROJECT_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com"
 
 #Big Query
 export BIGQUERY_DATASET=validation
@@ -38,9 +39,10 @@ export TF_VAR_service_account_name_gke=${SA_GKE}
 export CONFIG_BUCKET=${TF_VAR_config_bucket}
 export DEBUG=True
 
-if [ -n "$DOCAI_WH_PROJECT_ID" ]; then
-  export DOCAI_WH_PROJECT_NUMBER=$(gcloud projects describe  "${DOCAI_WH_PROJECT_ID}" --format='get(projectNumber)')
-fi
+export DOCAI_WH_PROJECT_ID=${DOCAI_WH_PROJECT_ID:-$PROJECT_ID}
+export DOCAI_WH_PROJECT_NUMBER=$(gcloud projects describe  "${DOCAI_WH_PROJECT_ID}" --format='get(projectNumber)')
+export SA_DOCAI_WH="service-${DOCAI_WH_PROJECT_NUMBER}@gcp-sa-cloud-cw.iam.gserviceaccount.com"
+
 echo "Using       PROJECT_ID=$TF_VAR_project_id, CONFIG_BUCKET=$CONFIG_BUCKET, API_DOMAIN=$TF_VAR_api_domain"
 echo "(Optional)  HOST_PROJECT_ID=$HOST_PROJECT_ID, DOCAI_PROJECT_ID=$TF_VAR_docai_project_id"
 echo "(Optional)  DOCAI_WH_PROJECT_ID=$DOCAI_WH_PROJECT_ID, DOCAI_WH_PROJECT_NUMBER=$DOCAI_WH_PROJECT_NUMBER"

@@ -118,4 +118,10 @@ fi
 
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
 
+if [ -f "$KEY_PATH" ] && [ -s "$KEY_PATH" ]; then
+  :
+else
+  echo "ERROR: Could not generate Service Account key $KEY_PATH for ${SA_EMAIL}. Maybe, Maximum count of generated keys reached? please, fix the issue and re-run the script"
+fi
+
 echo "$timestamp Finished. Saved Log into $LOG"  | tee -a "$LOG"

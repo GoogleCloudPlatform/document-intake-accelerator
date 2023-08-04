@@ -95,6 +95,7 @@ if [ -n "$DOCAI_WH_PROJECT_ID" ]; then
   echo "Adding required roles/permissions for ${SERVICE_ACCOUNT_EMAIL_GKE} " | tee -a "$LOG"
   gcloud projects add-iam-policy-binding $DOCAI_WH_PROJECT_ID --project=$PROJECT_ID  --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL_GKE}"  --role="roles/contentwarehouse.documentAdmin"  | tee -a "$LOG"
   gcloud projects add-iam-policy-binding $DOCAI_WH_PROJECT_ID --project=$PROJECT_ID --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL_GKE}"  --role="roles/contentwarehouse.admin"  | tee -a "$LOG"
+  gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${SA_DOCAI_WH}"  --role="roles/storage.objectViewer" | tee -a "$LOG"
 fi
 
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
