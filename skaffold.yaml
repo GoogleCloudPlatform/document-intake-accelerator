@@ -1,0 +1,8 @@
+# Master Skaffold
+apiVersion: skaffold/v4beta1
+kind: Config
+metadata:
+  name: all-services
+
+requires: []
+

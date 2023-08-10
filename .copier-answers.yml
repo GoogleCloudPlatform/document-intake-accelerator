@@ -1,0 +1,17 @@
+# Changes here will be overwritten by Copier
+_src_path: /Users/jonchen/workspace/solutions-builder/solutions_builder/cli/../template_root
+advanced_settings: false
+create_vpc_network: true
+folder_name: docai-workflow-dev
+gcp_region: us-central1
+has_common: false
+ip_cidr_range: 10.0.0.0/16
+master_ipv4_cidr_block: 172.16.0.0/28
+project_id: docai-workflow-dev
+project_name: docai-workflow-dev
+project_number: '667022277989'
+secondary_pod_ip_cidr_range: 10.1.0.0/16
+secondary_service_ip_cidr_range: 10.2.0.0/16
+terraform_backend_gcs: true
+vpc_network: default-vpc
+vpc_subnetwork: default-vpc-subset
