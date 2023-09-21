@@ -29,6 +29,7 @@ from google.cloud import documentai_v1 as documentai
 from google.cloud import storage
 
 from common.utils.docai_warehouse_helper import process_document
+from common.utils.document_ai_utils import get_key_values_dic
 from common import models
 from common.config import PDF_MIME_TYPE
 from common.config import STATUS_ERROR
@@ -62,7 +63,7 @@ storage_client = storage.Client()
 bq = bq_client()
 
 
-def find_document_type(doc_class: str, ocr_txt: str):
+def find_document_type(doc_class: str, extraction_item: ExtractionOutput):
   doc_type = get_doc_type_by_doc_class(doc_class)
   default = doc_type.get("default", "")
   rules = doc_type.get("rules", [])
@@ -70,17 +71,26 @@ def find_document_type(doc_class: str, ocr_txt: str):
     name = rule.get("name")
     ocr_text = rule.get("ocr_text")
     if ocr_text:
-      if ocr_text.lower() in ocr_txt.lower():
+      if ocr_text.lower() in extraction_item.ocr_text.lower():
         return name
     ocr_regex = rule.get("ocr_regex")
     if ocr_regex:
-      if re.search(ocr_regex, ocr_txt):
+      if re.search(ocr_regex, extraction_item.ocr_text):
         return name
+
+    entities = rule.get("entities")
+    if entities:
+      entity_name = entities.get("name")
+      entity_value = entities.get("value")
+      for item in extraction_item.extracted_entities:
+        if item["entity"] == entity_name and item["value"] == entity_value:
+          return name
+
   return default
 
 
-def set_document_type(doc_class: str, ocr_txt: str, document: models.Document):
-  doc_type = find_document_type(doc_class, ocr_txt)
+def set_document_type(doc_class: str, extraction_item: ExtractionOutput, document: models.Document):
+  doc_type = find_document_type(doc_class, extraction_item)
   document.type = doc_type
   document.update()
   return doc_type
@@ -106,7 +116,7 @@ def handle_extraction_results(extraction_output: List[ExtractionOutput]):
     gcs_url = document.url
     doc_class = document.document_class
 
-    document_type = set_document_type(doc_class, extraction_item.ocr_text, document)
+    document_type = set_document_type(doc_class, extraction_item, document)
     document.document_type = document_type
     document.ocr_text = extraction_item.ocr_text
     document.update()
@@ -159,55 +169,6 @@ def handle_extraction_results(extraction_output: List[ExtractionOutput]):
                                                               extraction_item.extraction_field_min_score,
                                                               extraction_item.extracted_entities,
                                                               doc_class)
-
-
-# Handling Nested labels for CDE processor
-def get_key_values_dic(entity: documentai.Document.Entity,
-    document_entities: Dict[str, Any],
-    parent_key: str = None
-) -> None:
-  # Fields detected. For a full list of fields for each processor see
-  # the processor documentation:
-  # https://cloud.google.com/document-ai/docs/processors-list
-
-  entity_key = entity.get("type", "").replace("/", "_")
-  confidence = entity.get("confidence")
-  normalized_value = entity.get("normalizedValue")
-
-  if normalized_value:
-    if isinstance(normalized_value,
-                  dict) and "booleanValue" in normalized_value.keys():
-      normalized_value = normalized_value.get("booleanValue")
-    else:
-      normalized_value = normalized_value.get("text")
-
-  if parent_key is not None and parent_key in document_entities.keys():
-    key = parent_key
-    new_entity_value = (
-        entity_key,
-        normalized_value if normalized_value is not None else entity.get(
-            "mentionText"),
-        confidence,
-    )
-  else:
-    key = entity_key
-    new_entity_value = (
-        normalized_value if normalized_value is not None else entity.get(
-            "mentionText"),
-        confidence,
-    )
-
-  existing_entity = document_entities.get(key)
-  if not existing_entity:
-    document_entities[key] = []
-    existing_entity = document_entities.get(key)
-
-  if len(entity.get("properties", [])) > 0:
-    # Sub-labels (only down one level)
-    for prop in entity.get("properties", []):
-      get_key_values_dic(prop, document_entities, entity_key)
-  else:
-    existing_entity.append(new_entity_value)
 
 
 def specialized_parser_extraction_from_json(data, db_document: models.Document):
@@ -345,8 +306,9 @@ def get_callback_fn(operation: Operation, processor_type: str):
         # The Cloud Storage API requires the bucket name and URI prefix separately
         matches = re.match(r"gs://(.*?)/(.*)", process.output_gcs_destination)
         if not matches:
-          print(
+          Logger.warning(
               f"post_process_extract - Could not parse output GCS destination:[{process.output_gcs_destination}]")
+          Logger.warning(f"post_process_extract - {process.status}")
           continue
 
         output_bucket, output_prefix = matches.groups()
@@ -466,7 +428,7 @@ async def batch_extraction(processor: documentai.types.processor.Processor,
     Logger.info(f"batch_extraction - output_config = {output_config}")
     Logger.info(
         f"batch_extraction - Calling DocAI API for {len(input_uris)} document(s) "
-        f" using {processor.display_name} processor"
+        f" using {processor.display_name} processor "
         f"type={processor.type_}, path={processor.name}")
 
     # request for Doc AI

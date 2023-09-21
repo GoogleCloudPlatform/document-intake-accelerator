@@ -1,5 +1,4 @@
 import argparse
-import datetime
 import os
 import sys
 
@@ -8,7 +7,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__),
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../common/src'))
 from docai_helper import get_upload_file_path
-from common import models
 from common.utils.logging_handler import Logger
 from common.utils import helper
 from google.cloud import storage
@@ -16,12 +14,11 @@ from common.config import CLASSIFIER
 from common.utils.helper import get_processor_location
 from utils.classification.split_and_classify import \
   batch_classification
-from common.utils.helper import get_id_from_file_path
 
 import asyncio
 from google.cloud import documentai_v1 as documentai
 import common.config
-from common.docai_config import DOCAI_OUTPUT_BUCKET_NAME
+
 # python utils/classify_test.py -f gs://
 # Make sure to SET GOOGLE_APPLICATION_CREDENTIALS
 # Make sure to source SET
@@ -39,7 +36,6 @@ print(f'CONFIG_BUCKET={os.environ.get("CONFIG_BUCKET")}')
 PDF_MIME_TYPE = "application/pdf"
 
 storage_client = storage.Client()
-from common.models import Document
 
 
 def get_args():

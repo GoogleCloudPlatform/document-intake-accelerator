@@ -75,7 +75,7 @@ async def batch_classification(processor: documentai.types.processor.Processor,
   Logger.info(f"batch_classification - output_config = {output_config}")
   Logger.info(
       f"batch_classification - Calling DocAI API for {len(input_uris)} document(s) "
-      f" using {processor.display_name} processor"
+      f" using {processor.display_name} processor "
       f"type={processor.type_}, path={processor.name}")
 
   # request for Doc AI
@@ -118,6 +118,7 @@ def get_callback_fn():
           Logger.warning(
               f"post_process_classify - "
               f"Could not parse output GCS destination:[{process.output_gcs_destination}]")
+          Logger.warning(f"post_process_classify - {process.status}")
           continue
 
         output_bucket, output_prefix = matches.groups()

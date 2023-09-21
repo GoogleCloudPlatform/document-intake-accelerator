@@ -45,6 +45,11 @@ cd claims-data-activator
 export PROJECT_ID=<YOUR_PROJECT_ID>
 ``` 
 
+If enabling integration with DocumentAI Warehouse:
+```shell
+export DOCAI_WH_PROJECT_ID=<>
+```
+
 * Reserve External IP:
 ```shell
 gcloud config set project $PROJECT_ID
@@ -375,3 +380,11 @@ Events:
   ----    ------  ----  ----                            -------
   Normal  Create  23m   managed-certificate-controller  Create SslCertificate mcrt-7dee5265-3f52-4876-9bb3-d698a91922f3
 ```
+
+### ERROR: googleapi: Error 400: Master version "1.XX.XX-gke.XXX" is unsupported.
+This might be related to the deperacated version of GKE. 
+
+To fix this error, try running '.init.sh' after updating the kubernetes engine version in the following terraform file:
+./terraform/environments/dev/main.tf - around line #203
+
+You can find the latest stable GKE version from [here.](https://cloud.google.com/kubernetes-engine/docs/release-notes-stable)

@@ -20,6 +20,7 @@ import os
 from google.cloud import storage
 from common.utils.logging_handler import Logger
 from common import models
+import pandas as pd
 
 storage_client = storage.Client()
 
@@ -73,5 +74,14 @@ def get_processor_location(processor_path):
   return None
 
 
+def is_date(string: str):
+  """
+  Return whether the string can be interpreted as a date.
+  """
+  try:
+    converted = pd.to_datetime(string)
+    return True
 
+  except Exception:
+    return False
 
