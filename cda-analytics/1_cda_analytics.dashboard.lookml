@@ -362,8 +362,8 @@
     col: 10
     width: 3
     height: 2
-  - title: PA Forms by State
-    name: PA Forms by State
+  - title: Texas PA Forms by State
+    name: Texas PA Forms by State
     model: healthcare_demo_prior_auth_forms
     explore: all_forms
     type: looker_google_map

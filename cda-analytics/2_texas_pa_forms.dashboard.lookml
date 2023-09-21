@@ -240,3 +240,36 @@
     col: 17
     width: 7
     height: 6
+  - title: Texas PA Forms by State
+    name: Texas PA Forms by State
+    model: healthcare_demo_prior_auth_forms
+    explore: all_forms
+    type: looker_google_map
+    fields: [count_of_uid, all_forms.value]
+    filters:
+      all_forms.name: "%beneficiaryState%,%State%"
+    sorts: [count_of_uid desc 0]
+    limit: 500
+    column_limit: 50
+    dynamic_fields: [{measure: count_of_uid, based_on: all_forms.uid, expression: '',
+        label: Count of Uid, type: count_distinct, _kind_hint: measure, _type_hint: number}]
+    hidden_fields: []
+    hidden_points_if_no: []
+    series_labels: {}
+    show_view_names: true
+    hidden_pivots: {}
+    custom_color_enabled: true
+    show_single_value_title: true
+    show_comparison: false
+    comparison_type: value
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    enable_conditional_formatting: false
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
+    defaults_version: 0
+    series_types: {}
+    row: 7
+    col: 13
+    width: 11
+    height: 7
