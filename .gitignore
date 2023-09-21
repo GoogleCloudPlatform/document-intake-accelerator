@@ -1,4 +1,5 @@
 __pycache__
+./.gitignore
 keys
 test
 .vscode
@@ -17,7 +18,8 @@ ui-debug.log
 
 # Local .terraform directories
 **/.terraform/*
-
+install_kustomize
+tf.log
 # .tfstate files
 *.tfstate
 *.tfstate.*
