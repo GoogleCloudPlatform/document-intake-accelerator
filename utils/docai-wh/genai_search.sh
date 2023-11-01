@@ -67,3 +67,7 @@ curl -X POST \
 
 echo "Here is the answer:"
 cat response.json | jq -r '.questionAnswer'
+
+rm documents.txt
+rm temp.json
+rm response.json
