@@ -17,7 +17,7 @@ export SA_EMAIL=${SA_NAME}@${DOCAI_WH_PROJECT_ID}.iam.gserviceaccount.com
 export KEY_NAME=${DOCAI_WH_PROJECT_ID}_${SA_NAME}.json
 export KEY_PATH=${DIR}/${KEY_NAME}
 export CALLER_USER=${SA_EMAIL}
-
+export GOOGLE_APPLICATION_CREDENTIALS=${KEY_PATH}
 
 ######################################################################
 # DOCAI Project - GCP Project with DocAI Processor used for document parsing
