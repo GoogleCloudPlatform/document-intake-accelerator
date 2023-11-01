@@ -1,24 +1,30 @@
-# Quickstart Guide to Batch Upload Documents into the DocAi Warehouse
+# Using DocAi Warehouse (With GenAI)
 
-<!-- TOC start (generated with https://github.com/derlin/bitdowntoc) -->
-
-- [Introduction](#introduction)
-- [Prerequisites](#prerequisites)
-  * [Provision DocAI Warehouse (`DOCAI_WH_PROJECT_ID`)](#provision-docai-warehouse---docai-wh-project-id--)
-  * [Prepare GCS Bucket with Data (`DATA_PROJECT_ID`)](#prepare-gcs-bucket-with-data---data-project-id--)
-  * [Create OCR processor for extracting text data from the PDF forms (`DOCAI_PROJECT_ID`)](#create-ocr-processor-for-extracting-text-data-from-the-pdf-forms---docai-project-id--)
-  * [Set Env Variables](#set-env-variables)
-  * [Cross-Org Access (Only when required)](#cross-org-access--only-when-required-)
-- [Setup](#setup)
-- [Execution](#execution)
-  * [Batch directory upload using OCR Parser (No Properties Extraction)](#batch-directory-upload-using-ocr-parser--no-properties-extraction-)
-  * [Generate draft document schema using DocAi output of the CDE Processor](#generate-draft-document-schema-using-docai-output-of-the-cde-processor)
-  * [Upload document schema to DocAI WH](#upload-document-schema-to-docai-wh)
-  * [Batch Upload using document schema (With properties extraction) and CDE processor](#batch-upload-using-document-schema--with-properties-extraction--and-cde-processor)
-- [Troubleshooting](#troubleshooting)
-  * [Error 403 IAM_PERMISSION_DENIED Permission Denied](#error-403-iam-permission-denied-permission-denied)
-
-<!-- TOC end -->
+<!-- TOC -->
+* [Using DocAi Warehouse (With GenAI)](#using-docai-warehouse--with-genai-)
+  * [Introduction](#introduction)
+    * [Use Cases](#use-cases)
+    * [Limitations](#limitations)
+  * [Prerequisites](#prerequisites)
+    * [Prepare Python Environment](#prepare-python-environment)
+    * [Provision DocAI Warehouse](#provision-docai-warehouse)
+  * [Quickstart Example](#quickstart-example)
+  * [Elaborated Flow](#elaborated-flow)
+    * [Setup](#setup)
+      * [Set env Variables](#set-env-variables)
+      * [Prepare GCS Bucket with Data](#prepare-gcs-bucket-with-data)
+      * [Create Processor](#create-processor)
+      * [Cross-Org Access (Only when required)](#cross-org-access--only-when-required-)
+    * [Provision Infrastructure and Set Access Rights](#provision-infrastructure-and-set-access-rights)
+    * [Execution](#execution)
+      * [Generate Draft Document Schema](#generate-draft-document-schema)
+      * [Upload Document Schema to DocAI WH](#upload-document-schema-to-docai-wh)
+      * [Batch Document Ingestion](#batch-document-ingestion)
+      * [Delete Document Schema](#delete-document-schema)
+  * [Troubleshooting](#troubleshooting)
+    * [Error 403 IAM_PERMISSION_DENIED Permission Denied](#error-403-iampermissiondenied-permission-denied)
+  * [GenAI Search](#genai-search)
+<!-- TOC -->
 
 ## Introduction
 This is a utility that allows a batch upload of Folders/Files stored in GCS bucket into the Document WH using Processor to extract structured data.
@@ -115,7 +121,6 @@ python upload_schema.py -f schema_files/my_invoice.json
 ```shell
 python load_docs.py -d gs://${PROJECT_ID}-data/invoices -n invoices -sn my_invoice
 ```
-~~~~
 
 Below you will see more details explained and more options available.
 
@@ -318,3 +323,16 @@ ROLE: roles/documentai.apiUser
 ROLE: roles/logging.logWriter
 ROLE: roles/documentai.viewer
 ```
+
+## GenAI Search 
+
+Currently, GenAI is private-preview, so need to request the feature first.
+
+Example of GenAI search using the API:
+
+```shell
+export DOCAI_WH_PROJECT_ID=
+./genai_search.sh
+```
+
+Input the question and get the answer (same as from the UI)
