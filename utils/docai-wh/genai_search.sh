@@ -2,6 +2,11 @@
 
 #QUESTION="Tell me about Linda Ortiz?"
 
+if [[ -z "${DOCAI_WH_PROJECT_ID}" ]]; then
+  echo DOCAI_WH_PROJECT_ID env variable is not set.
+  exit
+fi
+
 TOKEN=$(gcloud auth application-default print-access-token)
 USER=`whoami`
 PROJECT_NUM=$(gcloud projects describe "$DOCAI_WH_PROJECT_ID" --format='get(projectNumber)')
@@ -38,22 +43,6 @@ curl -s -X POST \
 
 cat temp.json | jq -r '.matchingDocuments[] | "\"\(.document.name)\","'  > documents.txt
 
-
-REQUEST='{
-  "document_query":
-  {
-    "query": "tell me about Linda Ortiz?",
-    "is_nl_query": "true"
-  },
-  "document_name_filter" : ['`cat documents.txt`']},
-  "qa_size_limit": "1",
-  "request_metadata": {
-    "user_info": {
-      "id": "user:'"$USER"'@google.com",
-      "group_ids": []
-    }
-  }
-}'
 
 DOCUMENTS=$(cat documents.txt)
 REQUEST='{
