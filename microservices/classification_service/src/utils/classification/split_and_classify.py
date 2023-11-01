@@ -26,7 +26,7 @@ from pikepdf import Pdf
 from .api_calls import upload_document, update_classification_status
 from common.utils.api_calls import extract_documents
 import common.config
-
+from common.config import get_classification_default_class, get_classification_confidence_threshold
 from common.config import DOC_CLASS_SPLIT_DISPLAY_NAME
 from common.config import PDF_MIME_TYPE
 from common.config import STATUS_SPLIT
@@ -48,12 +48,10 @@ storage_client = storage.Client()
 async def batch_classification(processor: documentai.types.processor.Processor,
     dai_client, input_uris: List[str]):
   Logger.info(f"batch_classification - input_uris = {input_uris}")
-  input_docs = [documentai.GcsDocument(gcs_uri=doc_uri,
-                                       mime_type=PDF_MIME_TYPE)
+  input_docs = [documentai.GcsDocument(gcs_uri=doc_uri, mime_type=PDF_MIME_TYPE)
                 for doc_uri in list(input_uris)]
   gcs_documents = documentai.GcsDocuments(documents=input_docs)
-  input_config = documentai.BatchDocumentsInputConfig \
-    (gcs_documents=gcs_documents)
+  input_config = documentai.BatchDocumentsInputConfig(gcs_documents=gcs_documents)
 
   # create a temp folder to store parser op, delete folder once processing done
   # call create gcs bucket function to create bucket,
@@ -268,6 +266,7 @@ def get_documents_for_extraction(classification_dic, extraction_dic):
 
 
 def handle_classification_results(documents, result):
+  classification_confidence_threshold = get_classification_confidence_threshold()
   for uri in documents:
     # For each document get classification output -> the highest classified score
     result[uri] = {}
@@ -280,14 +279,17 @@ def handle_classification_results(documents, result):
                                     'predicted_score': -1.0}
       for index, pages in enumerate(documents[uri]["pages"]):
         if pages == unique_page:
-          if documents[uri]["scores"][index] > result[uri][unique_page][
-            'predicted_score']:
-            result[uri][unique_page]['predicted_score'] = \
-              documents[uri]["scores"][index]
+          if documents[uri]["scores"][index] > result[uri][unique_page]['predicted_score']:
+            score = documents[uri]["scores"][index]
+            result[uri][unique_page]['predicted_score'] = documents[uri]["scores"][index]
             predicted_label = documents[uri]["labels"][index]
-            predicted_class = get_document_class_by_classifier_label(
-                predicted_label)
+            if score < classification_confidence_threshold:
+                predicted_class = get_classification_default_class()
+            else:
+                predicted_class = get_document_class_by_classifier_label(predicted_label)
             result[uri][unique_page]['predicted_class'] = predicted_class
+
+
 
     # # Sample raw prediction_result for document that needs to be split:
     # { 'gs://ek-cda-engine-001-document-upload/7ce08d84-1086-11ee-9f25-b66184e8964f/JVkbJf7wLXqLrExC6oq1/Package-combined.pdf':
