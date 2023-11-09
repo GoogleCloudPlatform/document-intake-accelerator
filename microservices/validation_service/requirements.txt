@@ -4,5 +4,5 @@ python-multipart==0.0.5
 fireo==1.4.1
 google-cloud-bigquery==2.20.0
 google-cloud-storage==1.42.2
-pyarrow==7.0.0
+pyarrow==14.0.1
 jinjasql==0.1.8
