@@ -39,11 +39,6 @@ cd claims-data-activator
 * Set env variable for _PROJECT_ID_:
 ```shell
 export PROJECT_ID=<YOUR_PROJECT_ID>
-``` 
-
-If enabling integration with DocumentAI Warehouse:
-```shell
-export DOCAI_WH_PROJECT_ID=<>
 ```
 
 * Reserve External IP:
