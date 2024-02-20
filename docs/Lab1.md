@@ -2,7 +2,6 @@
 
 - [About](#about)
 - [Pre-requisites](#pre-requisites)
-  - [Access to Git Repo](#access-to-git-repo)
   - [Create new Project in Argolis](#create-new-project-in-argolis)
 - [Installation](#installation)
   - [Setting up](#setting-up)
@@ -23,9 +22,6 @@ This is a customized version of installation Guide that installs CDA engine usin
 For other flavours and more detailed steps, check the original full [README](../README.md).
 
 ## Pre-requisites
-
-### Access to Git Repo
-* Request access to [this](https://github.com/hcls-solutions/claims-data-activator) Git Repo by reaching out to [dharmeshpatel](dharmeshpatel@google.com) or [evekhm](evekhm@google.com).
 
 ### Create New Project in Argolis
 * You will need access to Argolis environment and project owner rights.
