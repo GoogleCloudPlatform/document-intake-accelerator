@@ -2,7 +2,6 @@
 
 - [About](#about)
 - [Pre-requisites](#pre-requisites)
-  - [Access to Git Repo](#access-to-git-repo)
   - [Create new Project in Argolis](#create-new-project-in-argolis)
 - [Installation](#installation)
   - [Setting up](#setting-up)
@@ -24,9 +23,6 @@ For other flavours and more detailed steps, check the original full [README](../
 
 ## Pre-requisites
 
-### Access to Git Repo
-* Request access to [this](https://github.com/hcls-solutions/claims-data-activator) Git Repo by reaching out to [dharmeshpatel](dharmeshpatel@google.com) or [evekhm](evekhm@google.com).
-
 ### Create New Project in Argolis
 * You will need access to Argolis environment and project owner rights.
 * Installation will happen in the newly created Argolis project.
@@ -43,11 +39,6 @@ cd claims-data-activator
 * Set env variable for _PROJECT_ID_:
 ```shell
 export PROJECT_ID=<YOUR_PROJECT_ID>
-``` 
-
-If enabling integration with DocumentAI Warehouse:
-```shell
-export DOCAI_WH_PROJECT_ID=<>
 ```
 
 * Reserve External IP:
