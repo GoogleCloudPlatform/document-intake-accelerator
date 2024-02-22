@@ -31,7 +31,7 @@ if [[ $RETURN -gt 0 ]]; then
     (terraform output -json parser_config | python -m json.tool) > "${CONFIG_DIR}/parser_config.json"
 
     cd "${CONFIG_DIR}" || exit
-    jq -n 'reduce inputs as $s (.; (.[input_filename|rtrimstr(".json")]) += $s)'  parser_config.json  settings_config.json document_types_config.json docai_entity_mapping.json > "${GLOBAL_CONFIG_FILE}"
+    jq -n 'reduce inputs as $s (.; (.[input_filename|rtrimstr(".json")]) += $s)'  parser_config.json  settings_config.json document_types_config.json > "${GLOBAL_CONFIG_FILE}"
     gsutil cp "${GLOBAL_CONFIG_FILE}" "${PARSER_CONFIG}"
 
     cd "$PWD" || exit

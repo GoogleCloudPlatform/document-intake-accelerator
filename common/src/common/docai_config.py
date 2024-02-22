@@ -39,6 +39,12 @@ class ExtractionOutput:
     self.extraction_score = extraction_score
     self.ocr_text = ocr_text
 
+  def __str__(self):
+    return f"uid={self.uid}, extraction_status={self.extraction_status}, " \
+           f"extraction_field_min_score={self.extraction_field_min_score}, " \
+           f"extraction_score={self.extraction_score}"
+
+
 # This is depricated, using docai_entity_mapping.json and DOCAI_ENTITY_MAPPING_FILE instead
 # Full mapping of entity's and column names, grouped by document class.
 # DOCAI_ENTITY_MAPPING = {

@@ -64,32 +64,43 @@ bq = bq_client()
 
 
 def find_document_type(doc_class: str, extraction_item: ExtractionOutput):
+  Logger.info(f"find_document_type - doc_class={doc_class}")
   doc_type = get_doc_type_by_doc_class(doc_class)
-  default = doc_type.get("default", "")
-  rules = doc_type.get("rules", [])
-  for rule in rules:
-    name = rule.get("name")
-    ocr_text = rule.get("ocr_text")
-    if ocr_text:
-      if ocr_text.lower() in extraction_item.ocr_text.lower():
-        return name
-    ocr_regex = rule.get("ocr_regex")
-    if ocr_regex:
-      if re.search(ocr_regex, extraction_item.ocr_text):
-        return name
-
-    entities = rule.get("entities")
-    if entities:
-      entity_name = entities.get("name")
-      entity_value = entities.get("value")
-      for item in extraction_item.extracted_entities:
-        if item["entity"] == entity_name and item["value"] == entity_value:
+  Logger.info(f"find_document_type - doc_type={doc_type}")
+  # When no specification is provided, just skip the step
+  if type(doc_type) == str:
+    return doc_type
+  # Assigning Urgent/non-urgent types based on config rules
+  elif type(doc_type) == dict:
+    default = doc_type.get("default", "")
+    rules = doc_type.get("rules", [])
+    for rule in rules:
+      name = rule.get("name")
+      ocr_text = rule.get("ocr_text")
+      if ocr_text:
+        if ocr_text.lower() in extraction_item.ocr_text.lower():
           return name
+      ocr_regex = rule.get("ocr_regex")
+      if ocr_regex:
+        if re.search(ocr_regex, extraction_item.ocr_text):
+          return name
+
+      entities = rule.get("entities")
+      if entities:
+        entity_name = entities.get("name")
+        entity_value = entities.get("value")
+        for item in extraction_item.extracted_entities:
+          if item["entity"] == entity_name and item["value"] == entity_value:
+            return name
+  else:
+    return ""
+
 
   return default
 
 
 def set_document_type(doc_class: str, extraction_item: ExtractionOutput, document: models.Document):
+  Logger.info(f"set_document_type - doc_class={doc_class}")
   doc_type = find_document_type(doc_class, extraction_item)
   document.type = doc_type
   document.update()

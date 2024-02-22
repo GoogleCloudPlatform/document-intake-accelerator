@@ -26,7 +26,7 @@ WITH latest AS (
     WHERE timestamp = (SELECT MAX(timestamp) FROM `validation.validation_table` WHERE uid = t.uid )
     ),
     flattened_1 AS (
-SELECT *,
+SELECT * except (ocr_text),
     JSON_VALUE(parent, "$.corrected_value") as corrected_value,
     CAST(JSON_VALUE(parent, "$.confidence") AS DECIMAL) as confidence,
     JSON_VALUE(parent, "$.name") as name,

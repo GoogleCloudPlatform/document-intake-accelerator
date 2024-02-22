@@ -22,11 +22,12 @@ from fastapi import HTTPException
 from models.process_task import ProcessTask
 from utils.classification.split_and_classify import batch_classification
 from utils.classification.split_and_classify import update_classification_status
+from common.utils.api_calls import extract_documents
 
 from common.config import CLASSIFIER
 from common.config import STATUS_ERROR
 from common.config import STATUS_SUCCESS
-from common.config import get_classification_default_class
+from common.config import get_classification_default_class, get_parser_name_by_doc_class
 from common.utils.docai_helper import get_docai_input
 from common.utils.helper import get_id_from_file_path
 from common.utils.logging_handler import Logger
@@ -70,6 +71,7 @@ async def classification(payload: ProcessTask, background_task: BackgroundTasks)
       Logger.warning(
         f"classification_api - No classification parser defined, exiting classification, "
         f"using {default_class}")
+      f_uids = []
       for uri in input_uris:
         case_id, uid = get_id_from_file_path(uri)
         if uid is None:
@@ -82,6 +84,12 @@ async def classification(payload: ProcessTask, background_task: BackgroundTasks)
                                      STATUS_SUCCESS,
                                      document_class=default_class,
                                      classification_score=-1)
+        f_uids.append(uid)
+        # Prepare for extraction
+        extraction_dic = {}
+        parser_name = get_parser_name_by_doc_class(default_class)
+        extract_documents(f_uids, parser_name)
+
       return SUCCESS_RESPONSE
 
     background_task.add_task(batch_classification,

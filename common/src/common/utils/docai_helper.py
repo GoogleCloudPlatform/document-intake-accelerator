@@ -23,7 +23,7 @@ def get_docai_input(processor_name: str, configs):
 
   if not parser_details:
     Logger.error(f"get_docai_input - Parser {processor_name} not defined in config")
-    return None, None, None
+    return None, None, input_uris
 
   processor_path = parser_details["processor_id"]
   location = parser_details.get("location",
@@ -31,7 +31,7 @@ def get_docai_input(processor_name: str, configs):
   if not location:
     Logger.error(
         f"get_docai_input - Unidentified location for parser {processor_path}")
-    return None, None, None
+    return None, None, input_uris
 
   opts = {"api_endpoint": f"{location}-documentai.googleapis.com"}
 
