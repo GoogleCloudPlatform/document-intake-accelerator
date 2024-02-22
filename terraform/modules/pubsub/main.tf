@@ -23,7 +23,7 @@ resource "google_pubsub_topic" "queue" {
 }
 
 resource "google_eventarc_trigger" "queue-topic-trigger" {
-  provider        = google-beta
+  provider        = google
   name            = "${var.topic}-trigger"
   project         = var.project_id
   location        = var.region

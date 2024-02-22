@@ -127,7 +127,7 @@ resource "time_sleep" "wait_for_project_services" {
     module.project_services,
     module.service_accounts
   ]
-  create_duration = "60s"
+  create_duration = "160s"
 }
 
 module "firebase" {
@@ -199,7 +199,7 @@ module "gke" {
   service_account_name = var.service_account_name_gke
 
   # See latest stable version at https://cloud.google.com/kubernetes-engine/docs/release-notes-stable
-  kubernetes_version = "1.27.4-gke.900"
+  kubernetes_version = "1.29.0-gke.1381000"
 
 }
 
@@ -256,7 +256,8 @@ module "cloudrun-start-pipeline" {
 data "google_cloud_run_service" "queue-run" {
   depends_on = [
     time_sleep.wait_for_project_services,
-    module.vpc_network
+    module.vpc_network,
+    module.cloudrun-queue
   ]
   name     = "queue-cloudrun"
   location = local.region
@@ -265,7 +266,8 @@ data "google_cloud_run_service" "queue-run" {
 data "google_cloud_run_service" "startpipeline-run" {
   depends_on = [
     time_sleep.wait_for_project_services,
-    module.vpc_network
+    module.vpc_network,
+    module.cloudrun-start-pipeline
   ]
   name     = "startpipeline-cloudrun"
   location = local.region

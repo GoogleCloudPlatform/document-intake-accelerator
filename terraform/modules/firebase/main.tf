@@ -18,7 +18,7 @@
 # Enabling a firebase project
 
 resource "google_app_engine_application" "firebase_init" {
-  provider      = google-beta
+  provider      = google
   project       = var.project_id
   location_id   = var.firestore_region
   database_type = "CLOUD_FIRESTORE"
@@ -46,7 +46,7 @@ resource "google_storage_bucket" "firestore-backup-bucket" {
 # main service account to be used by kubernetes pods running the aplpications
 module "firebase_backup_sa" {
   source       = "terraform-google-modules/service-accounts/google"
-  version      = "~> 3.0"
+  version       = "4.2.2"
   project_id   = var.project_id
   names        = ["firebase-backup"]
   display_name = "Firebase backup service account"

@@ -80,6 +80,8 @@ if [ -n "$DOCAI_PROJECT_ID"  ] && [ "$DOCAI_PROJECT_ID" != "$PROJECT_ID" ]; then
 fi
 
 cda_external_ui=$(terraform output -json cda_external_ui | python -m json.tool)
+gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
+
 if [ "$cda_external_ui" = "true" ]; then
   echo "Applying backend config for external ingress.."
   kubectl apply -f "$DIR"/iap/k8s/backend-config.yaml
@@ -88,15 +90,23 @@ else
   kubectl apply -f "$DIR"/iap/k8s/backend-config_internal.yaml
 fi
 
-gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
 
-#DocAI Warehouse integration
-if [ -n "$DOCAI_WH_PROJECT_ID" ]; then
-  echo "Adding required roles/permissions for ${SERVICE_ACCOUNT_EMAIL_GKE} " | tee -a "$LOG"
-  gcloud projects add-iam-policy-binding $DOCAI_WH_PROJECT_ID --project=$PROJECT_ID  --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL_GKE}"  --role="roles/contentwarehouse.documentAdmin"  | tee -a "$LOG"
-  gcloud projects add-iam-policy-binding $DOCAI_WH_PROJECT_ID --project=$PROJECT_ID --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL_GKE}"  --role="roles/contentwarehouse.admin"  | tee -a "$LOG"
-  gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${SA_DOCAI_WH}"  --role="roles/storage.objectViewer" | tee -a "$LOG"
-fi
+
+#DocAI Warehouse integration - commenting out
+#if [ -n "$DOCAI_WH_PROJECT_ID" ]; then
+#  echo "Adding required roles/permissions for ${SERVICE_ACCOUNT_EMAIL_GKE} " | tee -a "$LOG"
+#  gcloud projects add-iam-policy-binding $DOCAI_WH_PROJECT_ID --project=$PROJECT_ID  --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL_GKE}"  --role="roles/contentwarehouse.documentAdmin"  | tee -a "$LOG"
+#  gcloud projects add-iam-policy-binding $DOCAI_WH_PROJECT_ID --project=$PROJECT_ID --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL_GKE}"  --role="roles/contentwarehouse.admin"  | tee -a "$LOG"
+#  gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${SA_DOCAI_WH}"  --role="roles/storage.objectViewer" | tee -a "$LOG"
+#fi
+
+
+# With latest versions, there is now an issue with the managed cert initially it will always get into the Failed state
+# Workaround is to remove it and then re-created
+#kubectl delete managedcertificate gclb-managed-cert | tee -a "$LOG"
+#cd terraform/environments/dev/
+#terraform apply -auto-approve  2>&1 | tee -a "$LOG"
+#cd ../../..
 
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
 echo "$timestamp Completed! Saved Log into $LOG" | tee -a "$LOG"

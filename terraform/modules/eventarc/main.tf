@@ -77,7 +77,7 @@
 
 
 resource "google_eventarc_trigger" "pipeline-topic-trigger" {
-  provider        = google-beta
+  provider        = google
   name            = "startpipeline-topic-trigger"
   project         = var.project_id
   location        = var.region

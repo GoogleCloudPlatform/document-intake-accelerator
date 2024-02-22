@@ -39,10 +39,11 @@ export TF_VAR_service_account_name_gke=${SA_GKE}
 export CONFIG_BUCKET=${TF_VAR_config_bucket}
 export DEBUG=True
 
-export DOCAI_WH_PROJECT_ID=${DOCAI_WH_PROJECT_ID:-$PROJECT_ID}
+#export DOCAI_WH_PROJECT_ID=${DOCAI_WH_PROJECT_ID:-$PROJECT_ID} Disabling DocAI WH
+export DOCAI_WH_PROJECT_ID=$PROJECT_ID
 export DOCAI_WH_PROJECT_NUMBER=$(gcloud projects describe  "${DOCAI_WH_PROJECT_ID}" --format='get(projectNumber)')
 export SA_DOCAI_WH="service-${DOCAI_WH_PROJECT_NUMBER}@gcp-sa-cloud-cw.iam.gserviceaccount.com"
 
 echo "Using       PROJECT_ID=$TF_VAR_project_id, CONFIG_BUCKET=$CONFIG_BUCKET, API_DOMAIN=$TF_VAR_api_domain"
 echo "(Optional)  HOST_PROJECT_ID=$HOST_PROJECT_ID, DOCAI_PROJECT_ID=$TF_VAR_docai_project_id"
-echo "(Optional)  DOCAI_WH_PROJECT_ID=$DOCAI_WH_PROJECT_ID, DOCAI_WH_PROJECT_NUMBER=$DOCAI_WH_PROJECT_NUMBER"
+#echo "(Optional)  DOCAI_WH_PROJECT_ID=$DOCAI_WH_PROJECT_ID, DOCAI_WH_PROJECT_NUMBER=$DOCAI_WH_PROJECT_NUMBER"

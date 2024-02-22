@@ -2,6 +2,7 @@
 
 - [About](#about)
 - [Pre-requisites](#pre-requisites)
+  - [Access to Git Repo](#access-to-git-repo)
   - [Create new Project in Argolis](#create-new-project-in-argolis)
 - [Installation](#installation)
   - [Setting up](#setting-up)
@@ -23,9 +24,9 @@ For other flavours and more detailed steps, check the original full [README](../
 
 ## Pre-requisites
 
-### Create New Project in Argolis
-* You will need access to Argolis environment and project owner rights.
-* Installation will happen in the newly created Argolis project.
+### Create New Project 
+* You will need access the GCP environment and project owner rights.
+* Installation will happen in the newly created project.
 
 ## Installation
 ### Setting up
@@ -37,13 +38,23 @@ cd claims-data-activator
 ```
 
 * Set env variable for _PROJECT_ID_:
+* 
 ```shell
 export PROJECT_ID=<YOUR_PROJECT_ID>
+gcloud config set project $PROJECT_ID
+```
+
+* When running from the developer machine, run following commands:
+
+```shell
+gcloud auth application-default login
+gcloud auth login
+gcloud auth application-default set-quota-project $PROJECT_ID
 ```
 
 * Reserve External IP:
 ```shell
-gcloud config set project $PROJECT_ID
+
 gcloud services enable compute.googleapis.com
 gcloud compute addresses create cda-ip  --global
 ```
@@ -69,10 +80,7 @@ gcloud services enable domains.googleapis.com
 ```
 
 * Register a Cloud Domain:
-  * If you want to use Argolis DNS (<ldap>.demo.altostrat.com), follow the guide [go/argolis-dns](go/argolis-dns). 
-    * Navigate to [Cloud DNS](https://console.cloud.google.com/net-services/dns/zones) and create ZONE as described in the guide for <ldap>.demo.altostrat.com
-    * Request DNS managed zone (as described in [go/argolis-dns](go/argolis-dns))
-  * Otherwise, purchase a [Cloud Domain](https://cloud.google.com/domains/docs/overview)  -> Cloud DNS type
+  * Purchase a [Cloud Domain](https://cloud.google.com/domains/docs/overview)  -> Cloud DNS type
     * Navigate to [Cloud Domain](https://console.cloud.google.com/net-services/domains/registrations), pick desired name and fill in the forms:
 
 
@@ -80,7 +88,7 @@ gcloud services enable domains.googleapis.com
     - On the Zone details page, click on zone name (will be created by the previous step, after registering Cloud Domain).
     - Add record set.
     - Select A from the Resource Record Type menu.
-    - For IPv4 Address, enter the external IP address that has been reserved.
+    - For IPv4 Address, enter the external IP address that has been reserved (or can be selected via the UI).
 
 
 * Set env variable for _API_DOMAIN_ registered:
@@ -189,6 +197,10 @@ This relies on the available out-of-the box Form parser.
 
 * Click on the Field text box (on the Right under the Extraction Score Column) and a Bounding Box will appear on the Form, showing Location of the Label and extracted value.
 
+
+* You will notice the form appears as Non-urgent type, now try uploading an urgent form (that has anywhere `Urgent` mark) - [form.pdf](../sample_data/demo/form_urgent.pdf)
+* The form will have `Urgent` as document type. 
+
 * Navigate to BigQuery and check for the extracted data inside `validation` dataset and `validation_table`.
 
 * You could also run sample query from the Cloud Shell (to output all extracted entities from the form):
@@ -198,23 +210,27 @@ This relies on the available out-of-the box Form parser.
 * Sample output:
 
 ```shell
-+----------------------+--------------------------------------+----------------+----------------------+----------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------+------------+-----------------------------------------+
-|         uid          |               case_id                | document_class |    document_type     |         timestamp          |                                                      gcs_doc_path                               | corrected_value | confidence |          name            |                   value             |
-+----------------------+--------------------------------------+----------------+----------------------+----------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------+------------+-----------------------------------------+
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | Phone                    | (906) 917-3486                      |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | Emergency Contact        | Eva Walker                          |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | Marital Status           | Single                              |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | Gender                   | F                                   |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | Occupation               | Software Engineer                   |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | Referred By              | None                                |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | Date                     | 9/14/19                             |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | DOB                      | 09/04/1986                          |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | Address                  | 24 Barney Lane                      |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | City                     | Towaco                              |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | Name                     | Sally Walker                        |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | State                    | NJ                                  |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | Email                    | Sally, waller@cmail.com             |
-| Q1VDOuRJjE23uw3jjW3s | 0e20a0b6-eac3-11ed-81ff-6692b75136d6 | generic_form   | supporting_documents | 2023-05-04T21:32:28.441699 | gs://xxx-document-upload/0e20a0b6-eac3-11ed-81ff-6692b75136d6/Q1VDOuRJjE23uw3jjW3s/form.pdf     | NULL            |          1 | Zip                      | 07082                               |
++----------------------+--------------------------------------+----------------+----------------------+--------------------+----------------------+----------------------------+----------------------------------------------------------------------------------------------------------------------+-----------------+------------+---------------------------------------------------------------------------------+------------------------------------------------------------+
+|         uid          |               case_id                | document_class | classification_score | is_hitl_classified |    document_type     |         timestamp          |                                                     gcs_doc_path                                                     | corrected_value | confidence |                                      name                                       |                           value                            |
++----------------------+--------------------------------------+----------------+----------------------+--------------------+----------------------+----------------------------+----------------------------------------------------------------------------------------------------------------------+-----------------+------------+---------------------------------------------------------------------------------+------------------------------------------------------------+
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.94 | Are you currently taking any medication? (If yes, please describe               | Vyvanse (25mg) daily for attention.                        |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.93 | _Phone                                                                          | walker@cmail.com (906                                      |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.91 | Zip                                                                             | 07082                                                      |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |        0.9 | City                                                                            | Towaco                                                     |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.89 | State                                                                           | NJ                                                         |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.89 | DOB                                                                             | 09/04/1986                                                 |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.88 | Gender                                                                          | F                                                          |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.87 | Name                                                                            | Sally Walker                                               |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.85 | Marital Status                                                                  | Single                                                     |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.84 | Describe your medical concerns (symptoms, diagnoses, etc                        | Ranny nose, mucas in thwat, weakness, aches, chills, tired |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.83 | Date                                                                            | 9/14/19                                                    |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.82 | Address                                                                         | 24 Barney Lane                                             |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.81 | Occupation                                                                      | Software Engineer                                          |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.81 | Emergency Contact                                                               | Eva Walker                                                 |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |        0.8 | Email                                                                           | Sally, walker@cmail.com                                    |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.77 | Referred By                                                                     | None                                                       |
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   | -1                   |              false | Non-urgent           | 2024-02-22T01:01:14.314760 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf               | NULL            |       0.76 | Emergency Contact Phone                                                         | (906)334-8926                                              |
++----------------------+--------------------------------------+----------------+----------------------+--------------------+----------------------+----------------------------+----------------------------------------------------------------------------------------------------------------------+-----------------+------------+---------------------------------------------------------------------------------+------------------------------------------------------------+
 ```
 ## Human In the Loop (HITL) Demo
 * Go to Claims Data Activator main page.
@@ -226,11 +242,12 @@ This relies on the available out-of-the box Form parser.
   ```
 * Sample output:
 ```shell
-+----------------------+--------------------------------------+-----------------+----------------------------+----------------------------------------------------------------------------------------------------------------+--------------------+---------------+------------+--------+
-|         uid          |               case_id                | document_class  |         timestamp          |                                                  gcs_doc_path                                    |  corrected_value   |     value     | confidence |  name  |
-+----------------------+--------------------------------------+-----------------+----------------------------+----------------------------------------------------------------------------------------------------------------+--------------------+---------------+------------+--------+
-| Ap9QCwi3ybWjyvJimkLj | 92cc814e-eae7-11ed-a207-3ebe327e02d3 | prior_auth_form | 2023-05-05T02:27:43.236385 | gs://xxx-document-upload/92cc814e-eae7-11ed-a207-3ebe327e02d3/Ap9QCwi3ybWjyvJimkLj/pa-form-9.pdf | Inda Laec, PA Test | Inda Laec, PA |          1 | rpName |
-+----------------------+--------------------------------------+-----------------+----------------------------+----------------------------------------------------------------------------------------------------------------+--------------------+---------------+------------+--------+
++----------------------+--------------------------------------+----------------+--------------------+----------------------------+--------------------------------------------------------------------------------------------------------+------------------+-----------------------+------------+--------+
+|         uid          |               case_id                | document_class | is_hitl_classified |         timestamp          |                                              gcs_doc_path                                              | corrected_value  |         value         | confidence |  name  |
++----------------------+--------------------------------------+----------------+--------------------+----------------------------+--------------------------------------------------------------------------------------------------------+------------------+-----------------------+------------+--------+
+| 1Tw6wm3XEBn0PMVnYv6A | d1285180-d11d-11ee-adcf-4a83c9b583c0 | generic_form   |              false | 2024-02-22T01:11:53.245232 | gs://cda-ek-test-07-document-upload/d1285180-d11d-11ee-adcf-4a83c9b583c0/1Tw6wm3XEBn0PMVnYv6A/form.pdf | walker@cmail.com | walker@cmail.com (906 |       0.93 | _Phone |
++----------------------+--------------------------------------+----------------+--------------------+----------------------------+--------------------------------------------------------------------------------------------------------+------------------+-----------------------+------------+--------+
+
 ```
 
 * If you now re-run entities query, you will see corrected_value listed as well:
@@ -331,6 +348,33 @@ Sample Output:
 ```
 ## Troubleshooting
 
+### Ingress cannot get deployed
+
+If you see that Ingress does not become Green in the Console UI and running command below does not resolve to the external IP address, this means ingress failed to get deployed.
+
+```shell
+kubectl get ing
+```
+
+One way to fix it is to delete ingress (along with the certificate) and re-run terraform:
+
+Delete ingress (this operation will take ~ 5 minutes):
+```shell
+kubectl delete ing external-ingress
+```
+
+Wait untill operation completes and run:
+```shell
+kubectl delete managedcertificate gclb-managed-cert
+```
+
+Now we need to apply terraform:
+```shell
+source SET
+cd terraform/environments/dev/
+terraform apply
+```
+
 ### ERROR: This site can’t provide a secure  
 Error: This site can’t provide a secure connection ERR_SSL_VERSION_OR_CIPHER_MISMATCH
 
@@ -372,8 +416,47 @@ Events:
   Normal  Create  23m   managed-certificate-controller  Create SslCertificate mcrt-7dee5265-3f52-4876-9bb3-d698a91922f3
 ```
 
+If you are getting `FailedNotVisible`, something went wrong when Provisioning the cert:
+
+```text
+Status:
+  Certificate Name:    mcrt-1b1908e3-d7cb-4cb8-8a26-883ab57dda5f
+  Certificate Status:  Provisioning
+  Domain Status:
+    Domain:  cda-ek-test-07.com
+    Status:  FailedNotVisible
+Events:
+  Type    Reason  Age   From                            Message
+  ----    ------  ----  ----                            -------
+  Normal  Create  40m   managed-certificate-controller  Create SslCertificate mcrt-1b1908e3-d7cb-4cb8-8a26-883ab57dda5f
+```
+
+You could try fixing it by re-creating the cert:
+
+```shell
+kubectl delete managedcertificate gclb-managed-cert
+```
+
+Then re-applying terraform scripts:
+```shell
+source SET
+cd terraform/environments/dev/
+terraform apply
+```
+
+Re-view suggested changes by terraform, that will be creating of new managed certificate and re-building of two cloud run services (unfortunately Terraform does that each time).
+
+Type `yes` to confirm changes.
+
+Check the state of the re-created certificate:
+```shell
+kubectl describe managedcertificate
+```
+
+If it `Certificate Status:  Active`, issue is fixed!
+
 ### ERROR: googleapi: Error 400: Master version "1.XX.XX-gke.XXX" is unsupported.
-This might be related to the deperacated version of GKE. 
+This might be related to the deprecated version of GKE. 
 
 To fix this error, try running '.init.sh' after updating the kubernetes engine version in the following terraform file:
 ./terraform/environments/dev/main.tf - around line #203

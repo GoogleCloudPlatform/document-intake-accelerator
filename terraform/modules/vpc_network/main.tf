@@ -17,7 +17,7 @@
 
 module "vpc" {
   source       = "terraform-google-modules/network/google"
-  version      = "~> 4.0"
+  version      = "~> 9.0"
   project_id   = var.project_id
   network_name = var.vpc_network
   routing_mode = "GLOBAL"
@@ -184,7 +184,7 @@ module "vpc" {
 
 module "cloud-nat" {
   source                             = "terraform-google-modules/cloud-nat/google"
-  version                            = "~> 1.2"
+  version                            = "5.0.0"
   name                               = format("%s-%s-nat", var.project_id, var.region)
   create_router                      = true
   router                             = format("%s-%s-router", var.project_id, var.region)

@@ -28,7 +28,7 @@ data "google_project" "project" {}
 
 module "service_accounts" {
   source       = "terraform-google-modules/service-accounts/google"
-  version      = "~> 3.0"
+  version      = "4.2.2"
   project_id   = var.project_id
   names        = ["deployment-${var.env}"]
   display_name = "deployment-${var.env}"
