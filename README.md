@@ -74,7 +74,7 @@ While you will find end-to-end tools to help spin up a fully functional sandbox 
 
 # Quick Start
 
-For a Quick Start and Demo Guide refer to the [Workshop Lab1](docs/Lab1.md), that explains how to install CDA engine into the GCP Argolis environment with a public external end point. 
+For a Quick Start and Demo Guide refer to the [Workshop Lab1](docs/Lab1.md), that explains how to install CDA engine with a public external end point. 
 Use this README.md to explore in-depth customizations and installation options if needed.
 
 For **DocAI Warehouse utilities**, check [here](utils/docai-wh/README.md).
@@ -129,11 +129,11 @@ gcloud compute addresses describe cda-ip --global
 
 Copy terraform sample variable file as `terraform.tfvars`:
  ```shell
-cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
-vi terraform/environments/dev/terraform.tfvars
+cp terraform/stages/foundation/terraform.sample.tfvars terraform/stages/foundation/terraform.tfvars
+vi terraform/stages/foundation/terraform.tfvars
 ```
 
-Verify `cda_external_ip` points to the reserved External IP name inside `terraform/environments/dev/terraform.tfvars`:
+Verify `cda_external_ip` points to the reserved External IP name inside `terraform/stages/foundation/terraform.tfvars`:
  ```
  cda_external_ip = "cda-ip"   #IP-ADDRESS-NAME-HERE
  ```
@@ -145,7 +145,7 @@ on all the end points.
 When protected, you will need machine in the same internal network in order to access the UI (for testing, you could create Windows VM in the same network and access it via RDP using IAP tunnel).
 
 By default, the end-point is private (so then when upgrading customer accidentally end point does not become open unintentionally).
-The preference can be set in `terraform/environments/dev/terraform.tfvars` file via `cda_external_ui` parameter:
+The preference can be set in `terraform/stages/foundation/terraform.tfvars` file via `cda_external_ui` parameter:
 
 ```shell
 cda_external_ui = false       # Expose UI to the Internet: true or false
@@ -155,10 +155,10 @@ For simple demo purposes you probably want to expose the end point (`cda_externa
 
 ### When deploying using Shared VPC
 As is often the case in real-world configurations, this blueprint accepts as input an existing [Shared-VPC](https://cloud.google.com/vpc/docs/shared-vpc)
-via the `network_config` variable inside [terraform.tfvars](terraform/environments/dev/terraform.sample.tfvars).
+via the `network_config` variable inside [terraform.tfvars](terraform/stages/foundation/terraform.sample.tfvars).
 Follow [these steps](docs/SharedVPC_steps.md) to prepare environment with VPC Host Project and Service project.
 
-- Edit `terraform/environments/dev/terraform.tfvars` in the editor,
+- Edit `terraform/stages/foundation/terraform.tfvars` in the editor,
 - uncomment `network_config` and fill in required parameters inside `network_config` (when using the [steps above](docs/SharedVPC_steps.md),
 - only need to set `HOST_PROJECT_ID`, all other variables are pre-filled correctly):
  ```
@@ -235,14 +235,9 @@ Otherwise, terraform will fail, since it will try to create resources, which alr
 export DOCAI_PROJECT_ID=<GCP Project ID to host Document AI processors> #
 ```
 
-If enabling integration with DocumentAI Warehouse:
-```shell
-export DOCAI_WH_PROJECT_ID=
-```
-
 
 ## Installation
-### Terraform
+### Terraform Foundation
 
 > If you are missing `~/.kube/config` file on your system (never run `gcloud cluster get-credentials`), you will need to modify terraform file.
 >
@@ -251,7 +246,7 @@ export DOCAI_WH_PROJECT_ID=
 > ls ~/.kube/config
 > ```
 >
-> Uncomment Line 55 in `terraform/environments/dev/providers.tf` file:
+> Uncomment Line 55 in `terraform/stages/foundation/providers.tf` file:
 > ```shell
 >  load_config_file  = false  # Uncomment this line if you do not have .kube/config file
 > ```
@@ -259,19 +254,19 @@ export DOCAI_WH_PROJECT_ID=
 
 Run **init** step to provision required resources in GCP (will run terraform apply with auto-approve):
 ```shell
-bash -e ./init.sh
+bash -e ./init_foundation.sh
 ```
 This command will take **~15 minutes** to complete.
 After successfully execution, you should see line like this at the end:
 
 ```shell
-<...> Completed! Saved Log into /<...>/init.log
+<...> Completed! Saved Log into /<...>/init_foundation.log
 ```
 
 > If Cloud shell times out during the operation, a workaround is to use `nohup` command to make sure a command does not exit when Cloud Shell times out.
 >
 >  ```shell
->  nohup bash -c "time ./init.sh" &
+>  nohup bash -c "time ./init_foundation.sh" &
 >  tail -f nohup.out
 >  ```
 
@@ -335,9 +330,47 @@ Build/deploy microservices (using skaffold + kustomize):
 ./deploy.sh
 ```
 This command will take **~10 minutes** to complete, and it will take another **10-15 minutes** for ingress to get ready.  
+
+### Terraform Ingress
+
+Now, when foundation is there and services are deployed, we could deploy Ingress and managed Certificate:
+
+bash -e ./init_ingress.sh
+
+After successfully execution, you should see line like this at the end:
+
+```shell
+<...> Completed! Saved Log into /<...>/init_ingress.log
+```
+
 You could check status of ingress by either navigating using Cloud Shell to
 [GKE Ingress](https://console.cloud.google.com/kubernetes/ingress/us-central1/main-cluster/default/external-ingress/details) and waiting till it appears as solid green.
 
+Or by running following command making sure ingress has the external ip address assigned under `ADDRESS`:
+
+```shell
+kubectl get ingress
+```
+Output:
+```text
+NAME               CLASS    HOSTS                 ADDRESS         PORTS   AGE
+external-ingress   <none>   your_api_domain.com   xx.xx.xxx.xxx   80      140m
+```
+
+When ingress is ready, make sure the cert is in the `Active` status. If it shows as `Provisioning`, give it another 5-10 minutes and re-check:
+```shell
+kubectl describe managedcertificate
+```
+
+```text
+Status:
+  Certificate Name:    mcrt-de87364c-0c03-4dd8-ac37-c33a29fc94fe
+  Certificate Status:  Active
+  Domain Status:
+    Domain:     your_api_domain.com
+    Status:     Active
+
+```
 
 ## <a name="iap-setup"></a>(Optional) IAP setup
 
@@ -888,10 +921,11 @@ export API_DOMAIN=<set-api domain here>
 
 ## Upgrading Infrastructure
 In some cases new features/fixes will involve changes to the infrastructure.
-In that case you will need to re-run `./init.sh` command that does `terrafrom apply`.
+In that case you will need to re-run terraform for foundation and ingress: 
 
 ```shell
-./init.sh
+./init_foundation.sh
+./init_ingress.sh
 ```
  
 ## Deploy microservices
@@ -984,7 +1018,7 @@ kubectl describe ingress
 
 **Solution**: Import the existing project in Terraform:
 ```
-cd terraform/environments/dev
+cd terraform/stages/foundation
 terraform import module.firebase.google_app_engine_application.firebase_init $PROJECT_ID
 
 ```

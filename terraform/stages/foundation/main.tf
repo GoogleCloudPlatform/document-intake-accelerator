@@ -71,8 +71,8 @@ locals {
 
   network_config = {
     host_project      = (local.use_shared_vpc ? var.network_config.host_project : var.project_id)
-    network           = (local.use_shared_vpc ? var.network_config.network : var.network)
-    subnet            = (local.use_shared_vpc ? var.network_config.subnet : var.subnetwork)
+    network           = (local.use_shared_vpc ? var.network_config.network : var.vpc_network)
+    subnet            = (local.use_shared_vpc ? var.network_config.subnet : var.vpc_subnetwork)
     serverless_subnet = (local.use_shared_vpc ? var.network_config.serverless_subnet : var.serverless_subnet)
     gke_secondary_ranges = {
       pods     = (local.use_shared_vpc ? var.network_config.gke_secondary_ranges.pods : var.secondary_ranges_pods.range_name)
@@ -81,12 +81,6 @@ locals {
     region = (local.use_shared_vpc ? var.network_config.region : var.region)
   }
 
-  addresses = "http://localhost:4200,http://localhost:3000,http://${var.api_domain},https://${var.api_domain}"
-  cors_origin = (
-    var.cda_external_ip == null
-    ? local.addresses
-    : "${local.addresses},http://${var.cda_external_ip},https://${var.cda_external_ip}"
-  )
 
   //  INTERNAL
   //  adp_ui/.env must be HTTP
@@ -141,13 +135,13 @@ module "vpc_network" {
   count                     = local.use_shared_vpc ? 0 : 1
   source                    = "../../modules/vpc_network"
   project_id                = var.project_id
-  vpc_network               = var.network
+  vpc_network               = var.vpc_network
   region                    = var.region
-  subnetwork                = var.subnetwork
+  subnetwork                = var.vpc_subnetwork
   serverless_subnet         = var.serverless_subnet
   secondary_ranges_pods     = var.secondary_ranges_pods
   secondary_ranges_services = var.secondary_ranges_services
-  master_cidr_ranges        = ["${var.master_ipv4_cidr_block}"]
+  master_cidr_ranges        = [var.master_ipv4_cidr_block]
   node_pools_tags           = ["gke-${var.cluster_name}"]
 }
 
@@ -201,21 +195,6 @@ module "gke" {
   # See latest stable version at https://cloud.google.com/kubernetes-engine/docs/release-notes-stable
   kubernetes_version = "1.29.0-gke.1381000"
 
-}
-
-module "ingress" {
-  depends_on        = [module.gke]
-  source            = "../../modules/ingress"
-  project_id        = var.project_id
-  cert_issuer_email = var.admin_email
-
-  # Domains for API endpoint, excluding protocols.
-  cda_external_ui   = var.cda_external_ui
-  domain            = var.api_domain
-  region            = local.region
-  cors_allow_origin = local.cors_origin
-  external_ip_name  = var.cda_external_ip
-  internal_ip_name  = var.internal_ip_name
 }
 
 

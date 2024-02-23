@@ -103,18 +103,12 @@ variable "network_config" {
   default = null
 }
 
-variable "cda_external_ip" {
-  type        = string
-  description = "External Reserved IP address for the UI"
-  default     = "cda-ip"
-}
-
 variable "internal_ip_name" {
   type    = string
   default = "cda-internal-ip"
 }
 
-variable "network" {
+variable "vpc_network" {
   type    = string
   default = "default-vpc"
 }
@@ -142,7 +136,7 @@ variable "secondary_ranges_services" {
   }
 }
 
-variable "subnetwork" {
+variable "vpc_subnetwork" {
   type    = string
   default = "cde-subnetwork-01"
 }

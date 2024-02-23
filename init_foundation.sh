@@ -15,8 +15,9 @@
 
 set -e # Exit if error is detected during pipeline execution => terraform failing
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PWD=$(pwd)
 
-LOG="$DIR/init.log"
+LOG="$DIR/init_foundation.log"
 filename=$(basename $0)
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
 
@@ -53,7 +54,7 @@ export TF_VAR_admin_email=${ADMIN_EMAIL}
 
 bash "${DIR}"/setup/setup_terraform.sh  2>&1 | tee -a "$LOG"
 
-cd "${DIR}/terraform/environments/dev" || exit
+cd "${DIR}/terraform/stages/foundation" || exit
 
 terraform init -backend-config=bucket="$TF_BUCKET_NAME" -upgrade  2>&1 | tee -a "$LOG"
 terraform apply -target=module.project_services -target=module.service_accounts -target=module.project_services_docai -auto-approve  2>&1 | tee -a "$LOG"
@@ -79,9 +80,10 @@ if [ -n "$DOCAI_PROJECT_ID"  ] && [ "$DOCAI_PROJECT_ID" != "$PROJECT_ID" ]; then
   gcloud storage buckets add-iam-policy-binding  gs://${PROJECT_ID}-document-upload --member="serviceAccount:service-${PROJECT_DOCAI_NUMBER}@gcp-sa-prod-dai-core.iam.gserviceaccount.com" --role="roles/storage.objectViewer"  2>&1 | tee -a "$LOG"
 fi
 
-cda_external_ui=$(terraform output -json cda_external_ui | python -m json.tool)
+
 gcloud container clusters get-credentials main-cluster --region $REGION --project $PROJECT_ID
 
+cda_external_ui=$(terraform output -json cda_external_ui | python -m json.tool)
 if [ "$cda_external_ui" = "true" ]; then
   echo "Applying backend config for external ingress.."
   kubectl apply -f "$DIR"/iap/k8s/backend-config.yaml
@@ -89,7 +91,6 @@ else
   echo "Applying backend config for internal ingress.."
   kubectl apply -f "$DIR"/iap/k8s/backend-config_internal.yaml
 fi
-
 
 
 #DocAI Warehouse integration - commenting out
@@ -100,13 +101,7 @@ fi
 #  gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${SA_DOCAI_WH}"  --role="roles/storage.objectViewer" | tee -a "$LOG"
 #fi
 
-
-# With latest versions, there is now an issue with the managed cert initially it will always get into the Failed state
-# Workaround is to remove it and then re-created
-#kubectl delete managedcertificate gclb-managed-cert | tee -a "$LOG"
-#cd terraform/environments/dev/
-#terraform apply -auto-approve  2>&1 | tee -a "$LOG"
-#cd ../../..
+cd "$PWD" || exit
 
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
 echo "$timestamp Completed! Saved Log into $LOG" | tee -a "$LOG"

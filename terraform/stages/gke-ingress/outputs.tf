@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Google LLC
+ * Copyright 2023 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,6 @@
  *
  */
 
-output "parser_config" {
-  value = module.docai.parser_config
-}
-
-output "eventarc_subscription" {
-  value = module.cloudrun-startspipeline-eventarc.event-subscription
-}
-
-output "queue_subscription" {
-  value = module.cloudrun-queue-pubsub.queue-subscription
-}
-
-output "ingress-ip" {
+output "ingress_ip_address" {
   value = module.ingress.ingress_ip_address
 }
-
-output "cda_external_ui" {
-  value = module.ingress.cda_external_ui
-}
-
-//output "vertex_ai" {
-//  value = module.vertex_ai.output
-//}

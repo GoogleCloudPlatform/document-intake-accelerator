@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Google LLC
+ * Copyright 2023 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 terraform {
   backend "gcs" {
-    prefix = "env/dev"
+    bucket = "gcp-mira-evekhm-tfstate" # sb-var:project_id:{{project_id}}-tfstate
+    prefix = "stage/3-gke-ingress"
   }
 }

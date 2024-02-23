@@ -1,22 +1,28 @@
 # Table of contents
-
-- [About](#about)
-- [Pre-requisites](#pre-requisites)
-  - [Access to Git Repo](#access-to-git-repo)
-  - [Create new Project in Argolis](#create-new-project-in-argolis)
-- [Installation](#installation)
-  - [Setting up](#setting-up)
-  - [Terraform](#terraform)
-  - [Front End Config](#front-end-config)
-  - [Enable Firebase Auth](#enable-firebase-auth)
-  - [Deploy microservices](#deploy-microservices)
-- [Out of the box UI demo flow](#out-of-the-box-ui-demo-flow)
-- [Connecting to the existing DocAI processors](#connecting-to-the-existing-docai-processors)
-  - [Granting Cross-Org permissions](#granting-cross-org-permissions)
-  - [Modifying config.json file](#modifying-configjson-file)
-  - [Testing New Configuration](#testing-new-configuration)
-- [Troubleshooting](#troubleshooting)
-  - [ERROR: This site can’t provide a secure](#error-this-site-cant-provide-a-secure)
+<!-- TOC -->
+* [Table of contents](#table-of-contents)
+  * [About](#about)
+  * [Pre-requisites](#pre-requisites)
+    * [Create New Project](#create-new-project)
+  * [Installation](#installation)
+    * [Setting up](#setting-up)
+    * [Terraform Foundation](#terraform-foundation)
+    * [Front End Config](#front-end-config)
+    * [Enable Firebase Auth](#enable-firebase-auth)
+    * [Deploy microservices](#deploy-microservices)
+    * [Terraform Ingress](#terraform-ingress)
+  * [Out of the box UI demo flow](#out-of-the-box-ui-demo-flow)
+  * [Human In the Loop (HITL) Demo](#human-in-the-loop--hitl--demo)
+  * [Connecting to the existing DocAI processors](#connecting-to-the-existing-docai-processors)
+    * [Granting Cross-Org permissions](#granting-cross-org-permissions)
+    * [Modifying config.json file](#modifying-configjson-file)
+    * [Testing New Configuration](#testing-new-configuration)
+  * [Data Visualization](#data-visualization)
+  * [Troubleshooting](#troubleshooting)
+    * [Ingress cannot get deployed](#ingress-cannot-get-deployed)
+    * [ERROR: This site can’t provide a secure](#error--this-site-cant-provide-a-secure)
+    * [ERROR: googleapi: Error 400: Master version "1.XX.XX-gke.XXX" is unsupported.](#error--googleapi--error-400--master-version--1xxxx-gkexxx--is-unsupported)
+<!-- TOC -->
 ## About
 
 This is a customized version of installation Guide that installs CDA engine using Public End point and connects to the existing DocAI Processor Project.
@@ -54,7 +60,6 @@ gcloud auth application-default set-quota-project $PROJECT_ID
 
 * Reserve External IP:
 ```shell
-
 gcloud services enable compute.googleapis.com
 gcloud compute addresses create cda-ip  --global
 ```
@@ -73,7 +78,9 @@ creationTimestamp: '2023-04-28T14:31:23.985-07:00'
 description: ''
   ...(output omitted)..
 ```
+
 * Get ready with DNS Domain by enabling APIs:
+* 
 ```shell
 gcloud services enable dns.googleapis.com
 gcloud services enable domains.googleapis.com
@@ -103,15 +110,15 @@ export API_DOMAIN=<YOUR_DOMAIN>
   ...(output omitted)..
 ``` 
 
-### Terraform
+### Terraform Foundation
 
 Copy terraform sample variable file as `terraform.tfvars`:
  ```shell
-cp terraform/environments/dev/terraform.sample.tfvars terraform/environments/dev/terraform.tfvars
-vi terraform/environments/dev/terraform.tfvars
+cp terraform/stages/foundation/terraform.sample.tfvars terraform/stages/foundation/terraform.tfvars
+vi terraform/stages/foundation/terraform.tfvars
 ```
 
-Verify `cda_external_ip` points to the reserved External IP name inside `terraform/environments/dev/terraform.tfvars`:
+Verify `cda_external_ip` points to the reserved External IP name inside `terraform/stages/foundation/terraform.tfvars`:
  ```
  cda_external_ip = "cda-ip"   #IP-ADDRESS-NAME-HERE
  ```
@@ -129,20 +136,20 @@ cda_external_ui = true       # Expose UI to the Internet: true or false
 > ls ~/.kube/config
 > ```
 >
-> Uncomment Line 55 in `terraform/environments/dev/providers.tf` file:
+> Uncomment Line 55 in `terraform/stages/foundation/providers.tf` file:
 > ```shell
 >  load_config_file  = false  # Uncomment this line if you do not have .kube/config file
 > ```
 
-* Run **init** step to provision required resources in GCP (will run terraform apply with auto-approve):
+* Run **init** step to provision foundational required resources in GCP, including GKE (will run terraform apply with auto-approve):
 ```shell
-bash -e ./init.sh
+bash -e ./init_foundation.sh
 ```
 This command will take **~15 minutes** to complete.
 After successfully execution, you should see line like this at the end:
 
 ```shell
-<...> Completed! Saved Log into /<...>/init.log
+<...> Completed! Saved Log into /<...>/init_foundation.log
 ```
 
 ### Front End Config
@@ -177,12 +184,55 @@ Build/deploy microservices (using skaffold + kustomize):
 ```
 This command will take **~10 minutes** to complete, and it will take another **10-15 minutes** for ingress to get ready and for the cert to be provisioned.  
 
+### Terraform Ingress
+
+Now, when foundation is there and services are deployed, we could deploy Ingress and managed Certificate:
+
+```shell
+bash -e ./init_ingress.sh
+```
+
+After successfully execution, you should see line like this at the end:
+
+```shell
+<...> Completed! Saved Log into /<...>/init_ingress.log
+```
+
 You could check status of ingress by either navigating using Cloud Shell to
 [GKE Ingress](https://console.cloud.google.com/kubernetes/ingress/us-central1/main-cluster/default/external-ingress/details) and waiting till it appears as solid green.
 
-When ingress is Green and ready, make sure the cert is in the `Active` status. If it shows as `Provisioning`, give it another 5-10 minutes and re-check:
+Or by running following command making sure ingress has the external ip address assigned under `ADDRESS`:
+
+```shell
+kubectl get ingress
+```
+Output:
+```text
+NAME               CLASS    HOSTS                 ADDRESS         PORTS   AGE
+external-ingress   <none>   your_api_domain.com   xx.xx.xxx.xxx   80      140m
+```
+
+When ingress is ready, make sure the cert is in the `Active` status. If it shows as `Provisioning`, give it another 5-10 minutes and re-check:
 ```shell
 kubectl describe managedcertificate
+```
+
+```text
+Status:
+  Certificate Name:    mcrt-de87364c-0c03-4dd8-ac37-c33a29fc94fe
+  Certificate Status:  Provisioning
+  Domain Status:
+    Domain:  your_api_domain.com
+    Status:  Provisioning
+```
+
+```text
+Status:
+  Certificate Name:    mcrt-de87364c-0c03-4dd8-ac37-c33a29fc94fe
+  Certificate Status:  Active
+  Domain Status:
+    Domain:     your_api_domain.com
+    Status:     Active
 ```
 
 ## Out of the box UI demo flow
@@ -350,7 +400,7 @@ Sample Output:
 
 ### Ingress cannot get deployed
 
-If you see that Ingress does not become Green in the Console UI and running command below does not resolve to the external IP address, this means ingress failed to get deployed.
+If you see that Ingress does not become Green in the Console UI and running command below does not resolve to the external IP address `ADDRESS`, this means ingress failed to get deployed.
 
 ```shell
 kubectl get ing
@@ -363,16 +413,14 @@ Delete ingress (this operation will take ~ 5 minutes):
 kubectl delete ing external-ingress
 ```
 
-Wait untill operation completes and run:
+Wait until operation completes and run:
 ```shell
 kubectl delete managedcertificate gclb-managed-cert
 ```
 
 Now we need to apply terraform:
 ```shell
-source SET
-cd terraform/environments/dev/
-terraform apply
+bash -e ./init_ingress.sh
 ```
 
 ### ERROR: This site can’t provide a secure  
@@ -402,7 +450,7 @@ Metadata:
   UID:                 d327b407-ebb0-4555-86e2-d69010893674
 Spec:
   Domains:
-    evekhm.demo.altostrat.com
+    yor_domain.com
 Status:
   Certificate Name:    mcrt-7dee5265-3f52-4876-9bb3-d698a91922f3
   Certificate Status:  Active
@@ -423,7 +471,7 @@ Status:
   Certificate Name:    mcrt-1b1908e3-d7cb-4cb8-8a26-883ab57dda5f
   Certificate Status:  Provisioning
   Domain Status:
-    Domain:  cda-ek-test-07.com
+    Domain:  YOUR-DOMAIN
     Status:  FailedNotVisible
 Events:
   Type    Reason  Age   From                            Message
@@ -439,9 +487,7 @@ kubectl delete managedcertificate gclb-managed-cert
 
 Then re-applying terraform scripts:
 ```shell
-source SET
-cd terraform/environments/dev/
-terraform apply
+bash -e ./init_ingress.sh
 ```
 
 Re-view suggested changes by terraform, that will be creating of new managed certificate and re-building of two cloud run services (unfortunately Terraform does that each time).
@@ -458,7 +504,10 @@ If it `Certificate Status:  Active`, issue is fixed!
 ### ERROR: googleapi: Error 400: Master version "1.XX.XX-gke.XXX" is unsupported.
 This might be related to the deprecated version of GKE. 
 
-To fix this error, try running '.init.sh' after updating the kubernetes engine version in the following terraform file:
-./terraform/environments/dev/main.tf - around line #203
+To fix this error, try running './init_foundation.sh' after updating the kubernetes engine version in the following terraform file:
+`terraform/stages/foundation/main.tf` - inside `module gke`
 
+```text
+kubernetes_version = "1.29.0-gke.1381000"
+```
 You can find the latest stable GKE version from [here.](https://cloud.google.com/kubernetes-engine/docs/release-notes-stable)

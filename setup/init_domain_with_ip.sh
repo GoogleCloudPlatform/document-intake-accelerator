@@ -16,7 +16,7 @@ export API_DOMAIN=$(kubectl describe ingress default-ingress | grep Address | aw
 export TF_VAR_api_domain=$API_DOMAIN
 
 echo "Using IP address = $TF_VAR_api_domain"  | tee -a "$LOG"
-cd terraform/environments/dev || exit
+cd terraform/stages/foundation || exit
 terraform apply -target=module.ingress -target=module.cloudrun-queue -target=module.cloudrun-start-pipeline -auto-approve  | tee -a "$LOG"
 cd ../../../
 timestamp=$(date +"%m-%d-%Y_%H:%M:%S")
