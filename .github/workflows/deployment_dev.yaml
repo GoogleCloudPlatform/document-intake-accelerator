@@ -52,7 +52,7 @@ jobs:
 
       - name: Download Skaffold cache if exists
         run: |
-          gsutil cp $SKAFFOLD_CACHE_GCS ~/.skaffold/ || true
+          gcloud storage cp $SKAFFOLD_CACHE_GCS ~/.skaffold/ || true
 
       - name: Build and deploy to cluster
         run: |
@@ -64,4 +64,4 @@ jobs:
 
       - name: Upload Skaffold cache
         run: |
-          gsutil cp ~/.skaffold/cache $SKAFFOLD_CACHE_GCS
+          gcloud storage cp ~/.skaffold/cache $SKAFFOLD_CACHE_GCS
