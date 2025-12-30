@@ -18,7 +18,7 @@
 # Copying sample model to GCS bucket.
 resource "null_resource" "upload_ml_model" {
   provisioner "local-exec" {
-    command = "gsutil cp -r ../../../sample_data/classification_model ${var.model_gcs_path}/classification_model"
+    command = "gcloud storage cp --recursive ../../../sample_data/classification_model ${var.model_gcs_path}/classification_model"
   }
 }
 
