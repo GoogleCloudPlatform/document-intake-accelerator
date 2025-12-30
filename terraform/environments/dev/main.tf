@@ -233,6 +233,6 @@ resource "null_resource" "validation_rules" {
     google_storage_bucket.default
   ]
   provisioner "local-exec" {
-    command = "gsutil cp ../../../common/src/common/validation_rules/* gs://${var.project_id}/Validation"
+    command = "gcloud storage cp ../../../common/src/common/validation_rules/* gs://${var.project_id}/Validation"
   }
 }
