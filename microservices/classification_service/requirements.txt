@@ -30,7 +30,7 @@ googleapis-common-protos==1.53.0
 grpc-google-iam-v1==0.12.3
 grpcio==1.39.0
 httplib2==0.19.1
-idna==3.2
+idna==3.15
 importlib-metadata==4.9.0
 libcst==0.3.19
 msgpack==1.0.2
