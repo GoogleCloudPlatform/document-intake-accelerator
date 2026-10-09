@@ -24,6 +24,7 @@ import traceback
 from fastapi import APIRouter, HTTPException
 
 from common.utils.logging_handler import Logger
+from common.utils.gcs_validation import is_allowed_document_url
 from common.config import DOC_CLASS_STANDARDISATION_MAP,\
   APPLICATION_FORMS,SUPPORTING_DOCS
 from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
@@ -106,12 +107,12 @@ async def classifiction(case_id: str, uid: str, gcs_url: str):
     update_classification_status(case_id, uid, STATUS_ERROR)
     raise HTTPException(status_code=400, detail="Parameters Missing")
 
-  if not gcs_url.endswith(".pdf") or not gcs_url.startswith("gs://"):
+  if not gcs_url.endswith(".pdf") or not is_allowed_document_url(gcs_url):
     Logger.error("Classification failed GCS path is invalid")
     update_classification_status(case_id, uid, STATUS_ERROR)
     raise HTTPException(status_code=400, detail="GCS pdf path is incorrect")
 
-  if case_id != gcs_url.split("/")[3] or uid != gcs_url.split("/")[4]:
+  if not is_allowed_document_url(gcs_url, case_id, uid):
     Logger.error("Classification failed parameters mismatched")
     update_classification_status(case_id, uid, STATUS_ERROR)
     raise HTTPException(status_code=400, detail="Parameters Mismatched")

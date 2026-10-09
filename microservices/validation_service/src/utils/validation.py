@@ -20,7 +20,7 @@ This Script is Used to Calculate the Validation Score
 
 import json
 import pandas as pd
-from google.cloud import storage
+from google.cloud import bigquery, storage
 from common.config import PATH, VALIDATION_TABLE
 from common.utils.logging_handler import Logger
 from common.db_client import bq_client
@@ -86,9 +86,15 @@ def get_values(documentlabel, cid, uid, entity):
     # path = "gs://async_form_parser/Jsons/trial44.json"
     path = PATH
     data = read_json(path)
-    merge_query = f"and case_id ='{cid}' and uid='{uid}'"
+    # case_id and uid are user-controlled: never interpolate them into the
+    # SQL text. They are bound as BigQuery query parameters in get_scoring.
+    merge_query = " and case_id = @case_id and uid = @uid"
+    query_parameters = [
+        bigquery.ScalarQueryParameter("case_id", "STRING", cid),
+        bigquery.ScalarQueryParameter("uid", "STRING", uid),
+    ]
     validation_score,final_dict = \
-    get_scoring(data,merge_query,documentlabel,entity)
+    get_scoring(data,merge_query,documentlabel,entity,query_parameters)
     Logger.info(f"Validation completed for document with case id {cid}"
                 f"and uid {uid}")
   except Exception as e:  # pylint: disable=broad-except
@@ -113,13 +119,15 @@ def get_individual_dict(query):
   return dict1
 
 
-def get_scoring(data, merge_query, documentlabel, entity):
+def get_scoring(data, merge_query, documentlabel, entity,
+                query_parameters=None):
   '''
   Fire the Rules on BQ table and calculate the Validation Scores
   input:
   data : Rules dict
   merge_query : the addtional query part with case id and uid appended
   documentlabel: Document type
+  query_parameters: BigQuery query parameters referenced in merge_query
   output:
   validation score
   '''
@@ -129,12 +137,14 @@ def get_scoring(data, merge_query, documentlabel, entity):
 
   assert validation_rule, f"Unable to find validation rule for document type: {documentlabel}"
 
+  job_config = bigquery.QueryJobConfig(
+      query_parameters=query_parameters or [])
   for i in data[documentlabel]:
     query = data[documentlabel][i] + merge_query
     query = query.replace("project_table", VALIDATION_TABLE)
     dict1 = get_individual_dict(query)
     try:
-      query_results = bigquery_client.query((query))
+      query_results = bigquery_client.query(query, job_config=job_config)
       df = query_results.to_dataframe()
     except Exception as e:  # pylint: disable=broad-except
       Logger.error(e)
