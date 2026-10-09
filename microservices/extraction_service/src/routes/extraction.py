@@ -22,6 +22,7 @@ from common.db_client import bq_client
 from common.utils.logging_handler import Logger
 from common.utils.stream_to_bq import stream_document_to_bigquery
 from common.utils.format_data_for_bq import format_data_for_bq
+from common.utils.gcs_validation import is_allowed_document_url
 from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
 
 from utils.extract_entities import extract_entities
@@ -46,6 +47,11 @@ async def extraction(case_id: str, uid: str, doc_class: str, document_type: str,
             500  : HTTPException: 500 Internal Server Error if something fails
             404 : Parser not available for given document
       """
+  if not is_allowed_document_url(gcs_url, case_id, uid):
+    Logger.error(f"Extraction rejected: invalid gcs_url for case_id "
+                 f"{case_id} and uid {uid}")
+    raise HTTPException(status_code=400,
+                        detail="gcs_url is not an allowed document path")
   try:
     client = bq_client()
     # document = Document.find_by_uid(uid)
