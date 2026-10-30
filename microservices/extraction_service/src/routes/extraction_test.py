@@ -26,6 +26,7 @@ from unittest import mock
 from unittest.mock import Mock, patch
 from common.models import Document
 from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+from common.config import BUCKET_NAME
 
 # assigning url
 api_url = "http://localhost:8080/extraction_service/v1/"
@@ -71,7 +72,7 @@ def test_extraction_api_success(client_with_emulator):
                 f"{api_url}extraction_api?case_id=123A&uid=aSCh3o"
                 f"6BxjPEqjMAQhtC&doc_class=driving_license&"
                 f"document_type=supporting_documents&context=arkansas&"
-                f"gcs_url=gs://bucket_name/123A/aSCh3o6BxjPEqjMAQhtC/test.pdf")
+                f"gcs_url=gs://{BUCKET_NAME}/123A/aSCh3o6BxjPEqjMAQhtC/test.pdf")
             print(response)
   assert response.status_code == 200
 
@@ -95,7 +96,7 @@ def test_extraction_api_parser_not_available(client_with_emulator):
                 f"{api_url}extraction_api?case_id=123A&"
                 f"uid=aSCh3o6BxjPEqjMAQhtC&doc_class=driving_license&"
                 f"document_type=supporting_documents&context=arkansas&"
-                f"gcs_url=gs://bucket_name/123A/aSCh3o6BxjPEqjMAQhtC/test.pdf")
+                f"gcs_url=gs://{BUCKET_NAME}/123A/aSCh3o6BxjPEqjMAQhtC/test.pdf")
             print(response)
             assert response.status_code == 404
 
@@ -118,5 +119,5 @@ def test_extraction_api_fail(client_with_emulator):
                 f"{api_url}extraction_api?case_id=123A"
                 f"&uid=aSCh3o6BxjPEqjMAQhtC&doc_class=driving_license&"
                 f"document_type=supporting_documents&context=arkansas"
-                f"&gcs_url=gs://bucket_name/123A/aSCh3o6BxjPEqjMAQhtC/test.pdf")
+                f"&gcs_url=gs://{BUCKET_NAME}/123A/aSCh3o6BxjPEqjMAQhtC/test.pdf")
             assert response.status_code == 500

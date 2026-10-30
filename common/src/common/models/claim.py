@@ -21,6 +21,7 @@ Claim object in the ORM
 import os
 
 import common.config as global_config
+from google.cloud import bigquery
 from common.db_client import bq_client
 from common.models import BaseModel
 from fireo.fields import Field, TextField
@@ -65,10 +66,13 @@ class Claim(BaseModel):
   # pylint: disable = line-too-long
   @classmethod
   def get_rules_engine_score(cls, claim_id):
-    query = f"SELECT * FROM {global_config.PROJECT_ID}.{global_config.DATABASE_PREFIX}rules_engine.final_rules_engine_score WHERE claim_id = \"{claim_id}\""
+    query = f"SELECT * FROM `{global_config.PROJECT_ID}.{global_config.DATABASE_PREFIX}rules_engine.final_rules_engine_score` WHERE claim_id = @claim_id"
+    job_config = bigquery.QueryJobConfig(query_parameters=[
+        bigquery.ScalarQueryParameter("claim_id", "STRING", claim_id)
+    ])
 
     client = bq_client()
-    query_job = client.query(query)
+    query_job = client.query(query, job_config=job_config)
     results = query_job.result()
     records = [dict(row) for row in results]
     if records != []:

@@ -24,6 +24,7 @@ from testing.fastapi_fixtures import client_with_emulator
 from common.testing.firestore_emulator import firestore_emulator, clean_firestore
 from unittest.mock import Mock, patch
 from common.config import STATUS_IN_PROGRESS, STATUS_SUCCESS, STATUS_ERROR
+from common.config import BUCKET_NAME
 
 # assigning url
 api_url = "http://localhost:8080/classification_service/v1/"\
@@ -53,7 +54,7 @@ def test_classify_all_parameters(client_with_emulator):
       with patch("routes.classification.Logger"):
         response = client_with_emulator.post(
             f"{api_url}?case_id=abc&uid=def&gcs_url="\
-              "gs://document-upload-test/abc/def/arkansas_dl_converted.pdf"
+              f"gs://{BUCKET_NAME}/abc/def/arkansas_dl_converted.pdf"
         )
         assert response.status_code == 200
 
@@ -77,7 +78,7 @@ def test_classify_with_missing_parameters_caseid(client_with_emulator):
       with patch("routes.classification.Logger"):
         response = client_with_emulator.post(
             f"{api_url}?case_id=&uid=def&gcs_url="\
-              "gs://document-upload-test/abc/def/arkansas_dl_converted.pdf"
+              f"gs://{BUCKET_NAME}/abc/def/arkansas_dl_converted.pdf"
         )
         assert response.status_code == 400
 
@@ -101,7 +102,7 @@ def test_classify_with_missing_parameters_uid(client_with_emulator):
       with patch("routes.classification.Logger"):
         response = client_with_emulator.post(
             f"{api_url}?case_id=abc&uid=&gcs_url="\
-              "gs://document-upload-test/abc/def/arkansas_dl_converted.pdf"
+              f"gs://{BUCKET_NAME}/abc/def/arkansas_dl_converted.pdf"
         )
         assert response.status_code == 400
 
@@ -125,6 +126,6 @@ def test_classify_with_invalid_gcs_uri(client_with_emulator):
       with patch("routes.classification.Logger"):
         response = client_with_emulator.post(
           f"{api_url}?case_id=&uid=def&gcs_url="\
-            "gs://document-upload-test/abc/def/arkansas_dl_converted"
+            f"gs://{BUCKET_NAME}/abc/def/arkansas_dl_converted"
         )
         assert response.status_code == 400

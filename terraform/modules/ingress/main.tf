@@ -107,47 +107,10 @@ resource "kubernetes_ingress_v1" "default_ingress" {
           path      = "/upload_service"
         }
 
-        # classification Service
-        path {
-          backend {
-            service {
-              name = "classification-service"
-              port {
-                number = 80
-              }
-            }
-          }
-          path_type = "Prefix"
-          path      = "/classification_service"
-        }
-
-        # validation Service
-        path {
-          backend {
-            service {
-              name = "validation-service"
-              port {
-                number = 80
-              }
-            }
-          }
-          path_type = "Prefix"
-          path      = "/validation_service"
-        }
-
-        # extraction Service
-        path {
-          backend {
-            service {
-              name = "extraction-service"
-              port {
-                number = 80
-              }
-            }
-          }
-          path_type = "Prefix"
-          path      = "/extraction_service"
-        }
+        # Only services called directly by the UI (or the Cloud Run queue)
+        # are exposed publicly. classification, validation, extraction,
+        # document-status, matching and sample services are internal-only
+        # and reachable solely through in-cluster service DNS.
 
         # hitl Service
         path {
@@ -161,47 +124,6 @@ resource "kubernetes_ingress_v1" "default_ingress" {
           }
           path_type = "Prefix"
           path      = "/hitl_service"
-        }
-
-        # document-status Service
-        path {
-          backend {
-            service {
-              name = "document-status-service"
-              port {
-                number = 80
-              }
-            }
-          }
-          path_type = "Prefix"
-          path      = "/document_status_service"
-        }
-
-        # matching Service
-        path {
-          backend {
-            service {
-              name = "matching-service"
-              port {
-                number = 80
-              }
-            }
-          }
-          path = "/matching_service"
-        }
-
-        # Sample Service
-        path {
-          backend {
-            service {
-              name = "sample-service"
-              port {
-                number = 80
-              }
-            }
-          }
-          path_type = "Prefix"
-          path      = "/sample_service"
         }
       }
     }
